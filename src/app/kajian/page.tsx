@@ -347,24 +347,26 @@ export default function KajianListPage() {
                                         </div>
                                     </div>
 
-                                    <h3 className="text-2xl font-black text-slate-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors">
-                                        {kajian.masjid}
-                                    </h3>
-
-                                    {kajian.imageUrl && (
-                                        <div className="mb-4 relative group/img overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
-                                            <img
-                                                src={kajian.imageUrl}
-                                                alt={kajian.tema}
-                                                className="w-full h-48 object-cover group-hover/img:scale-105 transition-transform duration-700"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                                    <div className="flex gap-6 mb-6">
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-2xl font-black text-slate-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors">
+                                                {kajian.masjid}
+                                            </h3>
+                                            <div className="flex items-start text-slate-500 group/loc">
+                                                <MapPin className="w-4 h-4 mr-2 mt-1 flex-shrink-0 group-hover/loc:text-blue-500 transition-colors" />
+                                                <p className="text-xs leading-relaxed font-medium">{kajian.address}</p>
+                                            </div>
                                         </div>
-                                    )}
-
-                                    <div className="flex items-start text-slate-500 mb-6 group/loc">
-                                        <MapPin className="w-4 h-4 mr-2 mt-1 flex-shrink-0 group-hover/loc:text-blue-500 transition-colors" />
-                                        <p className="text-xs leading-relaxed font-medium">{kajian.address}</p>
+                                        {kajian.imageUrl && (
+                                            <div className="shrink-0 group/img relative cursor-pointer" onClick={() => window.open(kajian.imageUrl, '_blank')}>
+                                                <img
+                                                    src={kajian.imageUrl}
+                                                    alt={kajian.tema}
+                                                    className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-2xl border border-slate-100 shadow-sm group-hover/img:scale-105 transition-transform duration-500"
+                                                />
+                                                <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 rounded-2xl transition-colors" />
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="mt-auto pt-6 border-t border-slate-50 space-y-5">
