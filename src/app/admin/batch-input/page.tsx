@@ -1,0 +1,515 @@
+'use client';
+import { useState, useEffect } from 'react';
+import { parseKajianBroadcast, KajianEntry } from '@/lib/parser';
+import { parseWithGemini } from '@/lib/ai-parser';
+import { Clipboard, Save, Play, CheckCircle, AlertCircle, FileText, Calendar, Clock, MapPin, LogOut, LayoutDashboard, ExternalLink, Database, PlusCircle, History, Info, Trash2, Image as ImageIcon, Loader2, Upload, X, Sparkles } from 'lucide-react';
+import { geocodeAddress } from '@/lib/geocoding';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Tesseract from 'tesseract.js';
+
+export default function BatchInputPage() {
+    const router = useRouter();
+    const [inputText, setInputText] = useState('');
+    const [entries, setEntries] = useState<KajianEntry[]>([]);
+    const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
+    const [message, setMessage] = useState('');
+    const [isGeocoding, setIsGeocoding] = useState(false);
+    const [isOcrLoading, setIsOcrLoading] = useState(false);
+    const [isAiLoading, setIsAiLoading] = useState(false);
+    const [ocrProgress, setOcrProgress] = useState(0);
+
+    // Stats and Recent Data
+    const [stats, setStats] = useState({ total: 0, today: 0 });
+
+    useEffect(() => {
+        fetchStats();
+    }, []);
+
+    const fetchStats = async () => {
+        try {
+            const res = await fetch('/api/kajian');
+            const data = await res.json();
+
+            if (Array.isArray(data)) {
+                setStats({
+                    total: data.length,
+                    today: data.filter((k: any) => k.date?.toLowerCase().includes('hari ini')).length || 0
+                });
+            } else {
+                console.error('Stats data is not an array:', data);
+            }
+        } catch (e) {
+            console.error('Failed to fetch stats', e);
+        }
+    };
+
+    const handleLogout = async () => {
+        await fetch('/api/login', { method: 'DELETE' });
+        router.push('/login');
+        router.refresh();
+    };
+
+    const handleImageUpload = async (file: File) => {
+        setIsOcrLoading(true);
+        setOcrProgress(0);
+        try {
+            const result = await Tesseract.recognize(
+                file,
+                'ind+eng',
+                {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            setOcrProgress(Math.round(m.progress * 100));
+                        }
+                    }
+                }
+            );
+            setInputText(prev => prev + (prev ? '\n\n' : '') + result.data.text);
+            setMessage('Alhamdulillah, teks berhasil dibaca dari gambar! Sekarang silakan periksa dan klik "Ekstrak Jadwal".');
+        } catch (e) {
+            console.error(e);
+            setMessage('Gagal membaca gambar. Pastikan format gambar benar.');
+        } finally {
+            setIsOcrLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        const handlePaste = (e: ClipboardEvent) => {
+            const items = e.clipboardData?.items;
+            if (!items) return;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const file = items[i].getAsFile();
+                    if (file) handleImageUpload(file);
+                }
+            }
+        };
+
+        window.addEventListener('paste', handlePaste);
+        return () => window.removeEventListener('paste', handlePaste);
+    }, []);
+
+    const handleProcess = async () => {
+        try {
+            const parsed = parseKajianBroadcast(inputText);
+            setEntries(parsed);
+            setSelectedIndices(new Set(parsed.map((_, i) => i)));
+            setMessage(`Berhasil mengekstrak ${parsed.length} jadwal. Memulai pencarian koordinat lokasi...`);
+
+            setIsGeocoding(true);
+            const enrichedEntries = [...parsed];
+
+            for (let i = 0; i < enrichedEntries.length; i++) {
+                const entry = enrichedEntries[i];
+                const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
+                if (coords) {
+                    enrichedEntries[i] = { ...entry, lat: coords.lat, lng: coords.lng };
+                    setEntries([...enrichedEntries]); // Live update UI
+                }
+            }
+
+            setIsGeocoding(false);
+            setMessage(`Ekstraksi selesai. Lokasi masjid telah dipetakan.`);
+        } catch (e) {
+            setMessage('Gagal memproses teks. Pastikan format sesuai.');
+            setIsGeocoding(false);
+            console.error(e);
+        }
+    };
+
+    const handleAiProcess = async () => {
+        try {
+            setIsAiLoading(true);
+            setMessage('Sedang meminta bantuan AI Gemini untuk mengekstrak data... (Mohon tunggu sebentar)');
+
+            const parsed = await parseWithGemini(inputText);
+            setEntries(parsed);
+            setSelectedIndices(new Set(parsed.map((_, i) => i)));
+            setMessage(`Alhamdulillah! AI berhasil mengekstrak ${parsed.length} jadwal. Memulai pencarian koordinat lokasi...`);
+
+            setIsGeocoding(true);
+            const enrichedEntries = [...parsed];
+
+            for (let i = 0; i < enrichedEntries.length; i++) {
+                const entry = enrichedEntries[i];
+                const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
+                if (coords) {
+                    enrichedEntries[i] = { ...entry, lat: coords.lat, lng: coords.lng };
+                    setEntries([...enrichedEntries]); // Live update UI
+                }
+            }
+
+            setIsGeocoding(false);
+            setMessage(`Ekstraksi AI selesai. Lokasi masjid telah dipetakan.`);
+        } catch (e: any) {
+            setMessage(`Gagal memproses dengan AI: ${e.message || 'Kesalahan tidak diketahui'}`);
+            setIsGeocoding(false);
+            console.error(e);
+        } finally {
+            setIsAiLoading(false);
+        }
+    };
+
+    const toggleSelection = (index: number) => {
+        const newSelected = new Set(selectedIndices);
+        if (newSelected.has(index)) {
+            newSelected.delete(index);
+        } else {
+            newSelected.add(index);
+        }
+        setSelectedIndices(newSelected);
+    };
+
+    const toggleAll = () => {
+        if (selectedIndices.size === entries.length) {
+            setSelectedIndices(new Set());
+        } else {
+            setSelectedIndices(new Set(entries.map((_, i) => i)));
+        }
+    };
+
+    const handleSave = async () => {
+        const entriesToSave = entries.filter((_, i) => selectedIndices.has(i));
+
+        if (entriesToSave.length === 0) {
+            setMessage('Pilih setidaknya satu jadwal untuk disimpan.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/kajian', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(entriesToSave),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                setMessage(`Gagal menyimpan: ${errorData.error || 'Server error'}`);
+                return;
+            }
+
+            setMessage(`Alhamdulillah, ${entriesToSave.length} jadwal berhasil disimpan!`);
+            fetchStats();
+            setEntries([]);
+            setInputText('');
+        } catch (e) {
+            setMessage('Kesalahan koneksi atau sistem saat menyimpan.');
+            console.error(e);
+        }
+    };
+
+    const updateEntry = (index: number, field: keyof KajianEntry, value: string) => {
+        const newEntries = [...entries];
+        newEntries[index] = { ...newEntries[index], [field]: value };
+        setEntries(newEntries);
+    };
+
+    const handleAddManual = () => {
+        const newEntry: KajianEntry = {
+            region: 'INDONESIA',
+            city: 'Jakarta',
+            masjid: '',
+            address: '',
+            pemateri: '',
+            tema: '',
+            waktu: '',
+            date: '',
+            cp: '',
+            gmapsUrl: ''
+        };
+        setEntries([newEntry, ...entries]);
+        setSelectedIndices(new Set([0, ...Array.from(selectedIndices).map(i => i + 1)]));
+        setMessage('Baru: Baris kosong ditambahkan. Silakan isi detailnya.');
+    };
+
+    const handleDiscard = (index: number) => {
+        const newEntries = entries.filter((_, i) => i !== index);
+        setEntries(newEntries);
+        const newSelected = new Set<number>();
+        selectedIndices.forEach(i => {
+            if (i < index) newSelected.add(i);
+            else if (i > index) newSelected.add(i - 1);
+        });
+        setSelectedIndices(newSelected);
+    };
+
+    return (
+        <div className="min-h-screen bg-slate-50 flex flex-col">
+            <nav className="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50 shadow-sm">
+                <div className="max-w-7xl mx-auto flex items-center justify-between">
+                    <div className="flex items-center gap-8">
+                        <div className="flex items-center gap-2">
+                            <div className="bg-blue-600 p-2 rounded-lg text-white">
+                                <LayoutDashboard className="w-5 h-5" />
+                            </div>
+                            <span className="font-black text-slate-900 tracking-tight text-xl">Admin Dashboard</span>
+                        </div>
+                        <div className="hidden md:flex items-center gap-8">
+                            <Link href="/admin/batch-input" className="text-blue-600 font-black text-xs uppercase tracking-widest border-b-2 border-blue-600 pb-1">Input Jadwal</Link>
+                            <Link href="/kajian" className="text-slate-500 hover:text-blue-600 font-black text-xs uppercase tracking-widest flex items-center gap-1 group transition-all">
+                                Lihat Info Publik <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                            </Link>
+                        </div>
+                    </div>
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all font-black text-[10px] uppercase tracking-widest"
+                    >
+                        <LogOut className="w-4 h-4" /> Keluar
+                    </button>
+                </div>
+            </nav>
+
+            <div className="flex-1 p-8">
+                <div className="max-w-7xl mx-auto space-y-8">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div>
+                            <h2 className="text-4xl font-black text-slate-900 tracking-tighter">Assalamu'alaikum, Admin</h2>
+                            <p className="text-slate-500 mt-2 font-bold">Panel manajemen jadwal kajian - Siap berdakwah hari ini?</p>
+                        </div>
+                        <div className="flex gap-4">
+                            <div className="bg-white px-8 py-5 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4">
+                                <div className="bg-blue-50 p-3 rounded-2xl text-blue-600">
+                                    <Database className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Jadwal</p>
+                                    <p className="text-2xl font-black text-slate-900">{stats.total}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+                        <div className="xl:col-span-4 space-y-6">
+                            <div className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 space-y-8">
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="bg-blue-600 p-2 rounded-lg text-white">
+                                            <Upload className="w-4 h-4" />
+                                        </div>
+                                        <h3 className="font-black text-lg tracking-tight text-slate-900">Scan Poster / Flyer</h3>
+                                    </div>
+
+                                    <div
+                                        onClick={() => document.getElementById('poster-upload')?.click()}
+                                        className={`relative border-4 border-dashed rounded-[2rem] p-8 flex flex-col items-center justify-center transition-all cursor-pointer group ${isOcrLoading ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-100 hover:border-blue-200 hover:bg-white'}`}
+                                    >
+                                        <input
+                                            id="poster-upload"
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                                        />
+
+                                        {isOcrLoading ? (
+                                            <div className="flex flex-col items-center">
+                                                <div className="relative w-12 h-12 mb-3">
+                                                    <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+                                                    <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-blue-600">
+                                                        {ocrProgress}%
+                                                    </div>
+                                                </div>
+                                                <p className="text-blue-600 font-black uppercase tracking-widest text-[10px]">Membaca...</p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <ImageIcon className="w-8 h-8 text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
+                                                <p className="text-slate-900 font-extrabold text-xs text-center">Klik / Tarik Poster ke Sini</p>
+                                                <p className="text-slate-400 font-bold text-[9px] text-center mt-1 uppercase tracking-widest">Atau Ctrl+V (Paste) Gambar</p>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="bg-blue-600 p-2 rounded-lg text-white">
+                                            <PlusCircle className="w-4 h-4" />
+                                        </div>
+                                        <h3 className="font-black text-lg tracking-tight text-slate-900">Input Broadcast</h3>
+                                    </div>
+
+                                    <textarea
+                                        className="w-full h-[350px] p-6 bg-slate-50 border border-slate-200 rounded-[2rem] font-mono text-sm focus:ring-4 focus:ring-blue-50 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300"
+                                        placeholder="Paste pesan broadcast di sini..."
+                                        value={inputText}
+                                        onChange={(e) => setInputText(e.target.value)}
+                                    />
+
+                                    <button
+                                        onClick={handleProcess}
+                                        disabled={!inputText || isGeocoding}
+                                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white font-black py-4 rounded-[1.5rem] shadow-xl shadow-blue-100 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group"
+                                    >
+                                        {isGeocoding ? (
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                        )}
+                                        {isGeocoding ? 'Sedang Memproses...' : 'Ekstrak Jadwal (Regex)'}
+                                    </button>
+
+                                    <button
+                                        onClick={handleAiProcess}
+                                        disabled={!inputText || isGeocoding || isAiLoading}
+                                        className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400 text-white font-black py-4 rounded-[1.5rem] shadow-xl shadow-purple-100 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group mt-3"
+                                    >
+                                        {isAiLoading ? (
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            <Sparkles className="w-4 h-4 group-hover:scale-125 transition-transform text-yellow-300" />
+                                        )}
+                                        {isAiLoading ? 'AI Sedang Berpikir...' : 'Ekstrak dengan AI Gemini'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="xl:col-span-8">
+                            <div className="bg-white p-10 rounded-[3.5rem] shadow-sm border border-slate-100 flex flex-col min-h-[750px]">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                                    <div className="flex items-center gap-4">
+                                        <div className="bg-emerald-500 p-3 rounded-2xl text-white shadow-lg shadow-emerald-100">
+                                            <CheckCircle className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-black text-2xl tracking-tighter text-slate-900">List Input Jadwal</h3>
+                                            <p className="text-xs text-slate-400 font-black uppercase tracking-widest">{entries.length} entri ditemukan</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={handleAddManual}
+                                            className="bg-white border-2 border-slate-100 hover:border-blue-200 text-blue-600 font-black py-4 px-6 rounded-2xl transition-all active:scale-95 flex items-center gap-2 text-sm"
+                                        >
+                                            <PlusCircle className="w-5 h-5" /> Tambah Manual
+                                        </button>
+                                        {entries.length > 0 && (
+                                            <button
+                                                onClick={handleSave}
+                                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 px-10 rounded-2xl transition-all shadow-xl shadow-emerald-100 active:scale-95 flex items-center gap-3"
+                                            >
+                                                <Save className="w-6 h-6" /> Simpan {selectedIndices.size} Jadwal Baru
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {entries.length > 0 ? (
+                                    <div className="overflow-x-auto rounded-[2.5rem] border border-slate-100">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="bg-slate-50 border-b border-slate-100">
+                                                    <th className="p-8 w-16">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedIndices.size === entries.length && entries.length > 0}
+                                                            onChange={toggleAll}
+                                                            className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                        />
+                                                    </th>
+                                                    <th className="p-8 font-black text-slate-400 uppercase tracking-widest text-[11px]">Rincian Jadwal</th>
+                                                    <th className="p-8 w-16 text-right"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {entries.map((entry, idx) => (
+                                                    <tr key={idx} className={`transition-all group/row ${selectedIndices.has(idx) ? 'bg-white' : 'opacity-40 hover:opacity-100'}`}>
+                                                        <td className="p-8 align-top">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedIndices.has(idx)}
+                                                                onChange={() => toggleSelection(idx)}
+                                                                className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                            />
+                                                        </td>
+                                                        <td className="p-8 space-y-6">
+                                                            <div className="grid grid-cols-2 gap-6">
+                                                                <div className="col-span-2">
+                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 mb-2">
+                                                                        Masjid / Lokasi
+                                                                        {entry.lat && <MapPin className="w-3.5 h-3.5 text-blue-500 animate-pulse" />}
+                                                                        {entry.khususAkhwat && <span className="ml-2 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[9px] font-black border border-pink-200">👩 KHUSUS AKHWAT</span>}
+                                                                    </label>
+                                                                    <input type="text" value={entry.masjid} onChange={(e) => updateEntry(idx, 'masjid', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-black text-slate-900 transition-all text-lg" />
+                                                                </div>
+                                                                <div className="col-span-1">
+                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pemateri</label>
+                                                                    <input type="text" value={entry.pemateri} onChange={(e) => updateEntry(idx, 'pemateri', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
+                                                                </div>
+                                                                <div className="col-span-1">
+                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Kota</label>
+                                                                    <input type="text" value={entry.city} onChange={(e) => updateEntry(idx, 'city', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-black text-blue-600 transition-all" />
+                                                                </div>
+                                                                <div className="col-span-2">
+                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tema</label>
+                                                                    <input type="text" value={entry.tema} onChange={(e) => updateEntry(idx, 'tema', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium italic text-slate-600 transition-all" />
+                                                                </div>
+                                                                <div className="col-span-1">
+                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
+                                                                    <input type="text" value={entry.date} onChange={(e) => updateEntry(idx, 'date', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
+                                                                </div>
+                                                                <div className="col-span-1">
+                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Waktu</label>
+                                                                    <input type="text" value={entry.waktu} onChange={(e) => updateEntry(idx, 'waktu', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
+                                                                </div>
+                                                                <div className="col-span-2">
+                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Alamat</label>
+                                                                    <input type="text" value={entry.address} onChange={(e) => updateEntry(idx, 'address', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium text-slate-600 transition-all" />
+                                                                </div>
+                                                                <div className="col-span-2">
+                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">CP / Maps</label>
+                                                                    <div className="flex gap-4">
+                                                                        <input type="text" placeholder="CP" value={entry.cp} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="flex-1 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-emerald-600" />
+                                                                        <input type="text" placeholder="Maps URL" value={entry.gmapsUrl} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium text-blue-500 text-sm" />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="col-span-2">
+                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Link Pendaftaran / Streaming</label>
+                                                                    <input type="text" placeholder="https://..." value={entry.linkInfo || ''} onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-purple-500 rounded-2xl px-5 py-3 outline-none font-medium text-purple-600 text-sm" />
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-8 align-top text-right">
+                                                            <button onClick={() => handleDiscard(idx)} className="p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover/row:opacity-100">
+                                                                <Trash2 className="w-5 h-5" />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div className="flex-1 flex flex-col items-center justify-center text-slate-200 border-4 border-dashed border-slate-50 rounded-[3.5rem] bg-slate-50/20 py-20">
+                                        <div className="bg-white p-10 rounded-[2.5rem] shadow-sm mb-6">
+                                            <Database className="w-16 h-16 opacity-10" />
+                                        </div>
+                                        <p className="text-2xl font-black tracking-tighter text-slate-400">Siap Menunggu Data</p>
+                                        <p className="text-slate-400 font-bold max-w-xs text-center mt-2 leading-relaxed">Belum ada jadwal yang diekstrak. Silakan tempel teks atau scan poster.</p>
+                                    </div>
+                                )}
+
+                                {message && (
+                                    <div className={`mt-10 p-6 rounded-[2rem] text-sm font-black flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-500 ${message.includes('Gagal') ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-blue-50 text-blue-600 border border-blue-100 shadow-lg shadow-blue-50'}`}>
+                                        <div className={`p-2 rounded-xl ${message.includes('Gagal') ? 'bg-red-100' : 'bg-blue-100'}`}>
+                                            <Info className="w-5 h-5" />
+                                        </div>
+                                        {message}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
