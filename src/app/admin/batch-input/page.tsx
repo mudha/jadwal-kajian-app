@@ -436,7 +436,7 @@ export default function BatchInputPage() {
                                                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 mb-2">
                                                                         Masjid / Lokasi
                                                                         {entry.lat && <MapPin className="w-3.5 h-3.5 text-blue-500 animate-pulse" />}
-                                                                        {entry.khususAkhwat && <span className="ml-2 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[9px] font-black border border-pink-200">👩 KHUSUS AKHWAT</span>}
+                                                                        {entry.khususAkhwat && <span className="ml-2 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[9px] font-black border border-pink-200">🌸 KHUSUS AKHWAT</span>}
                                                                     </label>
                                                                     <input type="text" value={entry.masjid} onChange={(e) => updateEntry(idx, 'masjid', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-black text-slate-900 transition-all text-lg" />
                                                                 </div>

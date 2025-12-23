@@ -328,7 +328,7 @@ export default function KajianListPage() {
                                             </div>
                                             {kajian.khususAkhwat && (
                                                 <div className="px-3 py-1 bg-pink-50 text-pink-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-pink-100">
-                                                    👩 Akhwat
+                                                    🌸 Akhwat
                                                 </div>
                                             )}
                                             {status === 'PAST' && (
@@ -588,7 +588,7 @@ export default function KajianListPage() {
                                         checked={editingKajian.khususAkhwat || false}
                                         onChange={e => setEditingKajian({ ...editingKajian, khususAkhwat: e.target.checked })}
                                     />
-                                    <span className="text-sm font-black text-pink-700 uppercase tracking-widest">👩 Khusus Akhwat</span>
+                                    <span className="text-sm font-black text-pink-700 uppercase tracking-widest">🌸 Khusus Akhwat</span>
                                 </label>
                             </div>
 
