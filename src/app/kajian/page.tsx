@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { KajianEntry } from '@/lib/parser';
-import { Calendar, MapPin, User, Clock, Search, Trash2, ArrowLeft, History, ListFilter, MessageCircle, Edit, X, Save, Map as MapIcon, Share2, ExternalLink } from 'lucide-react';
+import { Calendar, MapPin, User, Clock, Search, Trash2, ArrowLeft, History, ListFilter, MessageCircle, Edit, X, Save, Map as MapIcon, Share2, ExternalLink, ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import { getKajianStatus } from '@/lib/date-utils';
 import dynamic from 'next/dynamic';
@@ -22,6 +22,7 @@ export default function KajianListPage() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingKajian, setEditingKajian] = useState<KajianWithId | null>(null);
     const [showMap, setShowMap] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     const fetchData = async () => {
         try {
@@ -357,14 +358,19 @@ export default function KajianListPage() {
                                                 <p className="text-xs leading-relaxed font-medium">{kajian.address}</p>
                                             </div>
                                         </div>
-                                        {kajian.imageUrl && (
-                                            <div className="shrink-0 group/img relative cursor-pointer" onClick={() => window.open(kajian.imageUrl, '_blank')}>
+                                        {kajian.imageUrl ? (
+                                            <div className="shrink-0 group/img relative cursor-pointer" onClick={() => setSelectedImage(kajian.imageUrl || null)}>
                                                 <img
                                                     src={kajian.imageUrl}
                                                     alt={kajian.tema}
                                                     className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-2xl border border-slate-100 shadow-sm group-hover/img:scale-105 transition-transform duration-500"
                                                 />
                                                 <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 rounded-2xl transition-colors" />
+                                            </div>
+                                        ) : (
+                                            <div className="shrink-0 w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-100 flex flex-col items-center justify-center text-slate-300 shadow-sm">
+                                                <ImageIcon className="w-8 h-8 mb-1 opacity-50" />
+                                                <span className="text-[8px] font-black uppercase tracking-widest opacity-50">No Flyer</span>
                                             </div>
                                         )}
                                     </div>
@@ -639,6 +645,26 @@ export default function KajianListPage() {
                             </div>
                         </form>
                     </div>
+                </div>
+            )}
+
+            {/* Image Modal (Lightbox) */}
+            {selectedImage && (
+                <div
+                    className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+                    onClick={() => setSelectedImage(null)}
+                >
+                    <button
+                        onClick={() => setSelectedImage(null)}
+                        className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all"
+                    >
+                        <X className="w-8 h-8" />
+                    </button>
+                    <img
+                        src={selectedImage}
+                        className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300"
+                        onClick={(e) => e.stopPropagation()}
+                    />
                 </div>
             )}
         </div>
