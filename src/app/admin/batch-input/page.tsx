@@ -18,6 +18,8 @@ export default function BatchInputPage() {
     const [isOcrLoading, setIsOcrLoading] = useState(false);
     const [isAiLoading, setIsAiLoading] = useState(false);
     const [ocrProgress, setOcrProgress] = useState(0);
+    const [lastImageUrl, setLastImageUrl] = useState<string | null>(null);
+    const [isImageUploading, setIsImageUploading] = useState(false);
 
     // Stats and Recent Data
     const [stats, setStats] = useState({ total: 0, today: 0 });
@@ -52,8 +54,28 @@ export default function BatchInputPage() {
 
     const handleImageUpload = async (file: File) => {
         setIsOcrLoading(true);
+        setIsImageUploading(true);
         setOcrProgress(0);
         try {
+            // 1. Upload to Cloudinary (Unsigned Preset)
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'jadwal_kajian_preset');
+
+            const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+            if (cloudName) {
+                const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const uploadData = await uploadRes.json();
+                if (uploadData.secure_url) {
+                    setLastImageUrl(uploadData.secure_url);
+                }
+            }
+            setIsImageUploading(false);
+
+            // 2. Tesseract OCR
             const result = await Tesseract.recognize(
                 file,
                 'ind+eng',
@@ -66,12 +88,13 @@ export default function BatchInputPage() {
                 }
             );
             setInputText(prev => prev + (prev ? '\n\n' : '') + result.data.text);
-            setMessage('Alhamdulillah, teks berhasil dibaca dari gambar! Sekarang silakan periksa dan klik "Ekstrak Jadwal".');
+            setMessage('Alhamdulillah, gambar berhasil diupload dan teks berhasil dibaca! Sekarang silakan klik "Ekstrak Jadwal".');
         } catch (e) {
             console.error(e);
-            setMessage('Gagal membaca gambar. Pastikan format gambar benar.');
+            setMessage('Gagal memproses gambar. Pastikan format benar dan konfigurasi Cloudinary sesuai.');
         } finally {
             setIsOcrLoading(false);
+            setIsImageUploading(false);
         }
     };
 
@@ -94,23 +117,25 @@ export default function BatchInputPage() {
     const handleProcess = async () => {
         try {
             const parsed = parseKajianBroadcast(inputText);
-            setEntries(parsed);
-            setSelectedIndices(new Set(parsed.map((_, i) => i)));
+            const enrichedEntries = parsed.map(entry => ({ ...entry, imageUrl: lastImageUrl || undefined }));
+            setEntries(enrichedEntries);
+            setSelectedIndices(new Set(enrichedEntries.map((_, i) => i)));
             setMessage(`Berhasil mengekstrak ${parsed.length} jadwal. Memulai pencarian koordinat lokasi...`);
 
             setIsGeocoding(true);
-            const enrichedEntries = [...parsed];
+            const withCoords = [...enrichedEntries];
 
-            for (let i = 0; i < enrichedEntries.length; i++) {
-                const entry = enrichedEntries[i];
+            for (let i = 0; i < withCoords.length; i++) {
+                const entry = withCoords[i];
                 const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
                 if (coords) {
-                    enrichedEntries[i] = { ...entry, lat: coords.lat, lng: coords.lng };
-                    setEntries([...enrichedEntries]); // Live update UI
+                    withCoords[i] = { ...entry, lat: coords.lat, lng: coords.lng };
+                    setEntries([...withCoords]); // Live update UI
                 }
             }
 
             setIsGeocoding(false);
+            setLastImageUrl(null); // Reset after processing
             setMessage(`Ekstraksi selesai. Lokasi masjid telah dipetakan.`);
         } catch (e) {
             setMessage('Gagal memproses teks. Pastikan format sesuai.');
@@ -125,22 +150,23 @@ export default function BatchInputPage() {
             setMessage('Sedang meminta bantuan AI Gemini untuk mengekstrak data... (Mohon tunggu sebentar)');
 
             const parsed = await parseWithGemini(inputText);
-            setEntries(parsed);
-            setSelectedIndices(new Set(parsed.map((_, i) => i)));
+            const enrichedEntries = parsed.map(entry => ({ ...entry, imageUrl: lastImageUrl || undefined }));
+            setEntries(enrichedEntries);
+            setSelectedIndices(new Set(enrichedEntries.map((_, i) => i)));
             setMessage(`Alhamdulillah! AI berhasil mengekstrak ${parsed.length} jadwal. Memulai pencarian koordinat lokasi...`);
 
             setIsGeocoding(true);
-            const enrichedEntries = [...parsed];
+            const withCoords = [...enrichedEntries];
 
-            for (let i = 0; i < enrichedEntries.length; i++) {
-                const entry = enrichedEntries[i];
+            for (let i = 0; i < withCoords.length; i++) {
+                const entry = withCoords[i];
                 const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
                 if (coords) {
-                    enrichedEntries[i] = { ...entry, lat: coords.lat, lng: coords.lng };
-                    setEntries([...enrichedEntries]); // Live update UI
+                    withCoords[i] = { ...entry, lat: coords.lat, lng: coords.lng };
+                    setEntries([...withCoords]); // Live update UI
                 }
             }
-
+            setLastImageUrl(null); // Reset after processing
             setIsGeocoding(false);
             setMessage(`Ekstraksi AI selesai. Lokasi masjid telah dipetakan.`);
         } catch (e: any) {
@@ -336,12 +362,28 @@ export default function BatchInputPage() {
                                         <h3 className="font-black text-lg tracking-tight text-slate-900">Input Broadcast</h3>
                                     </div>
 
-                                    <textarea
-                                        className="w-full h-[350px] p-6 bg-slate-50 border border-slate-200 rounded-[2rem] font-mono text-sm focus:ring-4 focus:ring-blue-50 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300"
-                                        placeholder="Paste pesan broadcast di sini..."
-                                        value={inputText}
-                                        onChange={(e) => setInputText(e.target.value)}
-                                    />
+                                    <div className="relative">
+                                        <textarea
+                                            className="w-full h-[350px] p-6 bg-slate-50 border border-slate-200 rounded-[2rem] font-mono text-sm focus:ring-4 focus:ring-blue-50 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300"
+                                            placeholder="Paste pesan broadcast di sini..."
+                                            value={inputText}
+                                            onChange={(e) => setInputText(e.target.value)}
+                                        />
+                                        {lastImageUrl && (
+                                            <div className="absolute top-4 right-4 group">
+                                                <div className="relative">
+                                                    <img src={lastImageUrl} className="w-24 h-24 object-cover rounded-2xl border-4 border-white shadow-2xl animate-in zoom-in-50 duration-300" />
+                                                    <button
+                                                        onClick={() => setLastImageUrl(null)}
+                                                        className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                                <p className="text-[8px] font-black text-slate-400 mt-1 uppercase text-center tracking-widest bg-white/80 py-0.5 rounded-full px-2">Image Linked</p>
+                                            </div>
+                                        )}
+                                    </div>
 
                                     <button
                                         onClick={handleProcess}
@@ -430,50 +472,62 @@ export default function BatchInputPage() {
                                                                 className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
                                                             />
                                                         </td>
-                                                        <td className="p-8 space-y-6">
-                                                            <div className="grid grid-cols-2 gap-6">
-                                                                <div className="col-span-2">
-                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 mb-2">
-                                                                        Masjid / Lokasi
-                                                                        {entry.lat && <MapPin className="w-3.5 h-3.5 text-blue-500 animate-pulse" />}
-                                                                        {entry.khususAkhwat && <span className="ml-2 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[9px] font-black border border-pink-200">🌸 KHUSUS AKHWAT</span>}
-                                                                    </label>
-                                                                    <input type="text" value={entry.masjid} onChange={(e) => updateEntry(idx, 'masjid', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-black text-slate-900 transition-all text-lg" />
-                                                                </div>
-                                                                <div className="col-span-1">
-                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pemateri</label>
-                                                                    <input type="text" value={entry.pemateri} onChange={(e) => updateEntry(idx, 'pemateri', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
-                                                                </div>
-                                                                <div className="col-span-1">
-                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Kota</label>
-                                                                    <input type="text" value={entry.city} onChange={(e) => updateEntry(idx, 'city', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-black text-blue-600 transition-all" />
-                                                                </div>
-                                                                <div className="col-span-2">
-                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tema</label>
-                                                                    <input type="text" value={entry.tema} onChange={(e) => updateEntry(idx, 'tema', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium italic text-slate-600 transition-all" />
-                                                                </div>
-                                                                <div className="col-span-1">
-                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
-                                                                    <input type="text" value={entry.date} onChange={(e) => updateEntry(idx, 'date', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
-                                                                </div>
-                                                                <div className="col-span-1">
-                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Waktu</label>
-                                                                    <input type="text" value={entry.waktu} onChange={(e) => updateEntry(idx, 'waktu', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
-                                                                </div>
-                                                                <div className="col-span-2">
-                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Alamat</label>
-                                                                    <input type="text" value={entry.address} onChange={(e) => updateEntry(idx, 'address', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium text-slate-600 transition-all" />
-                                                                </div>
-                                                                <div className="col-span-2">
-                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">CP / Maps</label>
-                                                                    <div className="flex gap-4">
-                                                                        <input type="text" placeholder="CP" value={entry.cp} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="flex-1 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-emerald-600" />
-                                                                        <input type="text" placeholder="Maps URL" value={entry.gmapsUrl} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium text-blue-500 text-sm" />
+                                                        <td className="p-8 space-y-6 flex gap-6">
+                                                            {entry.imageUrl && (
+                                                                <div className="shrink-0 group/img relative">
+                                                                    <img src={entry.imageUrl} className="w-24 h-32 object-cover rounded-2xl border border-slate-200 shadow-sm" />
+                                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
+                                                                        <button onClick={() => updateEntry(idx, 'imageUrl', '')} className="text-white hover:text-red-400 transition-colors">
+                                                                            <Trash2 className="w-5 h-5" />
+                                                                        </button>
                                                                     </div>
                                                                 </div>
-                                                                <div className="col-span-2">
-                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Link Pendaftaran / Streaming</label>
-                                                                    <input type="text" placeholder="https://..." value={entry.linkInfo || ''} onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-purple-500 rounded-2xl px-5 py-3 outline-none font-medium text-purple-600 text-sm" />
+                                                            )}
+                                                            <div className="flex-1 space-y-6">
+                                                                <div className="grid grid-cols-2 gap-6">
+                                                                    <div className="col-span-2">
+                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 mb-2">
+                                                                            Masjid / Lokasi
+                                                                            {entry.lat && <MapPin className="w-3.5 h-3.5 text-blue-500 animate-pulse" />}
+                                                                            {entry.khususAkhwat && <span className="ml-2 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[9px] font-black border border-pink-200">🌸 KHUSUS AKHWAT</span>}
+                                                                        </label>
+                                                                        <input type="text" value={entry.masjid} onChange={(e) => updateEntry(idx, 'masjid', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-black text-slate-900 transition-all text-lg" />
+                                                                    </div>
+                                                                    <div className="col-span-1">
+                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pemateri</label>
+                                                                        <input type="text" value={entry.pemateri} onChange={(e) => updateEntry(idx, 'pemateri', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
+                                                                    </div>
+                                                                    <div className="col-span-1">
+                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Kota</label>
+                                                                        <input type="text" value={entry.city} onChange={(e) => updateEntry(idx, 'city', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-black text-blue-600 transition-all" />
+                                                                    </div>
+                                                                    <div className="col-span-2">
+                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tema</label>
+                                                                        <input type="text" value={entry.tema} onChange={(e) => updateEntry(idx, 'tema', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium italic text-slate-600 transition-all" />
+                                                                    </div>
+                                                                    <div className="col-span-1">
+                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
+                                                                        <input type="text" value={entry.date} onChange={(e) => updateEntry(idx, 'date', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
+                                                                    </div>
+                                                                    <div className="col-span-1">
+                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Waktu</label>
+                                                                        <input type="text" value={entry.waktu} onChange={(e) => updateEntry(idx, 'waktu', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
+                                                                    </div>
+                                                                    <div className="col-span-2">
+                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Alamat</label>
+                                                                        <input type="text" value={entry.address} onChange={(e) => updateEntry(idx, 'address', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium text-slate-600 transition-all" />
+                                                                    </div>
+                                                                    <div className="col-span-2">
+                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">CP / Maps</label>
+                                                                        <div className="flex gap-4">
+                                                                            <input type="text" placeholder="CP" value={entry.cp} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="flex-1 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-emerald-600" />
+                                                                            <input type="text" placeholder="Maps URL" value={entry.gmapsUrl} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium text-blue-500 text-sm" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="col-span-2">
+                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Link Pendaftaran / Streaming</label>
+                                                                        <input type="text" placeholder="https://..." value={entry.linkInfo || ''} onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-purple-500 rounded-2xl px-5 py-3 outline-none font-medium text-purple-600 text-sm" />
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </td>

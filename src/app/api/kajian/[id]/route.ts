@@ -31,7 +31,7 @@ export async function PATCH(
         await db.execute({
             sql: `
             UPDATE kajian 
-            SET masjid = ?, address = ?, pemateri = ?, tema = ?, waktu = ?, date = ?, city = ?, cp = ?, gmapsUrl = ?, lat = ?, lng = ?, khususAkhwat = ?, linkInfo = ?
+            SET masjid = ?, address = ?, pemateri = ?, tema = ?, waktu = ?, date = ?, city = ?, cp = ?, gmapsUrl = ?, lat = ?, lng = ?, khususAkhwat = ?, linkInfo = ?, imageUrl = ?
             WHERE id = ?
         `,
             args: [
@@ -48,6 +48,7 @@ export async function PATCH(
                 body.lng || null,
                 body.khususAkhwat ? 1 : 0,
                 body.linkInfo || null,
+                body.imageUrl || null,
                 id
             ]
         });

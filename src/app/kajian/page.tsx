@@ -351,6 +351,17 @@ export default function KajianListPage() {
                                         {kajian.masjid}
                                     </h3>
 
+                                    {kajian.imageUrl && (
+                                        <div className="mb-4 relative group/img overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
+                                            <img
+                                                src={kajian.imageUrl}
+                                                alt={kajian.tema}
+                                                className="w-full h-48 object-cover group-hover/img:scale-105 transition-transform duration-700"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                                        </div>
+                                    )}
+
                                     <div className="flex items-start text-slate-500 mb-6 group/loc">
                                         <MapPin className="w-4 h-4 mr-2 mt-1 flex-shrink-0 group-hover/loc:text-blue-500 transition-colors" />
                                         <p className="text-xs leading-relaxed font-medium">{kajian.address}</p>
@@ -571,7 +582,7 @@ export default function KajianListPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Pendaftaran / Streaming / Info (linkInfo)</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Pendaftaran / Streaming / Info</label>
                                     <input
                                         type="text"
                                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none font-medium text-xs text-purple-600"
@@ -579,6 +590,23 @@ export default function KajianListPage() {
                                         value={editingKajian.linkInfo || ''}
                                         onChange={e => setEditingKajian({ ...editingKajian, linkInfo: e.target.value })}
                                     />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">URL Gambar (Cloudinary)</label>
+                                    <div className="flex gap-3">
+                                        <input
+                                            type="text"
+                                            className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-xs"
+                                            value={editingKajian.imageUrl || ''}
+                                            onChange={e => setEditingKajian({ ...editingKajian, imageUrl: e.target.value })}
+                                        />
+                                        {editingKajian.imageUrl && (
+                                            <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-200">
+                                                <img src={editingKajian.imageUrl} className="w-full h-full object-cover" />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <label className="flex items-center gap-3 p-4 bg-pink-50/50 border border-pink-100 rounded-2xl cursor-pointer group hover:bg-pink-50 transition-all">

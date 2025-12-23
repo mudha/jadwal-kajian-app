@@ -33,6 +33,7 @@ const initDb = async () => {
       date TEXT,
       khususAkhwat BOOLEAN,
       linkInfo TEXT,
+      imageUrl TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -43,6 +44,7 @@ const initDb = async () => {
   try { await db.execute("ALTER TABLE kajian ADD COLUMN lng REAL"); } catch (e) { }
   try { await db.execute("ALTER TABLE kajian ADD COLUMN khususAkhwat BOOLEAN"); } catch (e) { }
   try { await db.execute("ALTER TABLE kajian ADD COLUMN linkInfo TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE kajian ADD COLUMN imageUrl TEXT"); } catch (e) { }
 };
 
 // Auto-init on import (Note: top-level await needs ES modules or handling in app startup)
