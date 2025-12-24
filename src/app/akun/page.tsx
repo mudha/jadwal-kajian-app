@@ -7,7 +7,7 @@ export default function AkunPage() {
         { icon: Cloud, label: 'Bacaan Dzikir Pagi', href: '#' },
         { icon: Moon, label: 'Bacaan Dzikir Petang', href: '#' },
         { icon: Search, label: 'Cari Artikel Islam', href: '#' },
-        { icon: Info, label: 'Tentang Hanif', href: '#' },
+        { icon: Info, label: 'Tentang Aplikasi', href: '#' },
         { icon: MessageCircle, label: 'Hubungi Kami', href: '#' },
     ];
 

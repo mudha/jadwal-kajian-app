@@ -27,7 +27,7 @@ export default function Navbar() {
                 <div className="flex justify-between h-16">
                     <div className="flex">
                         <div className="flex-shrink-0 flex items-center">
-                            <span className="font-bold text-teal-600 text-xl">Hanif App</span>
+                            <span className="font-bold text-teal-600 text-xl">Jadwal Kajian Sunnah</span>
                         </div>
                         <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
                             {navItems.map((item) => {
@@ -38,8 +38,8 @@ export default function Navbar() {
                                         key={item.href}
                                         href={item.href}
                                         className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors ${isActive
-                                                ? 'border-teal-500 text-gray-900'
-                                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                                            ? 'border-teal-500 text-gray-900'
+                                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                                             }`}
                                     >
                                         <Icon className="w-4 h-4 mr-2" />

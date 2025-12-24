@@ -41,7 +41,7 @@ export default function BerandaPage() {
           </div>
           <div>
             <p className="text-xs text-white/80">Assalamu'alaikum</p>
-            <p className="font-bold">Hanif</p>
+            <p className="font-bold">Hamba Allah</p>
           </div>
         </div>
         <Link href="/kajian" className="p-2 hover:bg-white/10 rounded-full transition-colors">
@@ -56,7 +56,7 @@ export default function BerandaPage() {
           {/* Hero Section on Desktop */}
           <div className="hidden md:block bg-teal-600 rounded-3xl p-8 text-white relative overflow-hidden">
             <div className="relative z-10">
-              <h1 className="text-3xl font-bold mb-4">Selamat Datang di Hanif App</h1>
+              <h1 className="text-3xl font-bold mb-4">Selamat Datang di Jadwal Kajian Sunnah App</h1>
               <p className="text-teal-100 max-w-lg mb-6">Temukan jadwal kajian sunnah terdekat, artikel islami, dan fitur ibadah lainnya dalam satu aplikasi.</p>
               <Link href="/kajian" className="inline-block bg-white text-teal-600 font-bold px-6 py-3 rounded-xl hover:bg-teal-50 transition-colors">
                 Cari Kajian Sekarang
