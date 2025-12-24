@@ -161,7 +161,7 @@ export default function KajianListPage() {
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
             {/* Mobile Header */}
-            <header className="bg-teal-600 text-white px-4 py-3 sticky top-0 z-40">
+            <header className="bg-teal-600 text-white px-4 py-3 sticky top-0 z-40 md:hidden">
                 <div className="flex items-center gap-3 mb-3">
                     <Link href="/" className="p-2 hover:bg-white/10 rounded-full transition-colors">
                         <ArrowLeft className="w-5 h-5" />
@@ -188,7 +188,33 @@ export default function KajianListPage() {
                 </div>
             </header>
 
-            <main className="px-4 py-4 pb-24">
+            {/* Desktop Header */}
+            <div className="hidden md:flex items-center justify-between py-8">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900 mb-2">Jadwal Kajian Sunnah</h1>
+                    <p className="text-slate-500">Temukan jadwal kajian ilmiah di berbagai kota di Indonesia</p>
+                </div>
+                <div className="flex gap-4">
+                    <div className="relative w-80">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Cari..."
+                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        />
+                    </div>
+                    <button
+                        onClick={() => setShowMap(!showMap)}
+                        className={`p-2.5 rounded-xl border border-slate-200 transition-all ${showMap ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-slate-600 hover:border-teal-300'}`}
+                    >
+                        <MapIcon className="w-5 h-5" />
+                    </button>
+                </div>
+            </div>
+
+            <main className="px-4 py-4 pb-24 md:px-0 md:py-0">
                 {/* Map Section */}
                 <div className="mb-12">
                     <button
@@ -275,7 +301,7 @@ export default function KajianListPage() {
                             </Link>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {filteredKajian.map((kajian, idx) => {
                                 const status = getKajianStatus(kajian.date, kajian.waktu);
                                 return (

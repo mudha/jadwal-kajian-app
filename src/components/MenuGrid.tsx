@@ -26,7 +26,7 @@ const menuItems: MenuItem[] = [
 
 export default function MenuGrid() {
     return (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-4 md:grid-cols-3 gap-4">
             {menuItems.map(({ icon: Icon, label, href }) => (
                 <Link
                     key={label}

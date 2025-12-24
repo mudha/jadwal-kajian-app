@@ -32,9 +32,9 @@ export default function BerandaPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-      {/* Header */}
-      <header className="bg-teal-600 text-white px-6 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-slate-50 pb-24 md:pb-0">
+      {/* Header (Mobile Only) */}
+      <header className="bg-teal-600 text-white px-6 py-4 flex items-center justify-between md:hidden">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
             <User className="w-6 h-6" />
@@ -49,46 +49,103 @@ export default function BerandaPage() {
         </Link>
       </header>
 
-      <div className="px-4 py-6 space-y-6">
-        {/* Featured Kajian Cards */}
-        {featuredKajian.length > 0 && (
-          <section>
-            <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide">
-              {featuredKajian.map((kajian) => (
-                <KajianCard
-                  key={kajian.id}
-                  date={`${kajian.date} - Jam ${kajian.date.includes('Hari Ini') ? '09:30' : ''}`}
-                  location={`${kajian.masjid} - Kota ${kajian.city}`}
-                  title={kajian.tema}
-                  ustadz={kajian.pemateri}
-                  imageUrl={kajian.imageUrl}
-                />
-              ))}
-            </div>
-          </section>
-        )}
+      <div className="px-4 py-6 md:py-8 md:px-0 space-y-6 md:space-y-0 md:grid md:grid-cols-12 md:gap-8">
 
-        {/* Prayer Time Widget */}
-        <PrayerTimeWidget />
-
-        {/* Kitab Referensi Banner */}
-        <Link
-          href="#"
-          className="block bg-gradient-to-r from-teal-500 to-emerald-500 rounded-2xl p-4 text-white"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-bold text-lg">Kitab Referensi Belajar Islam</p>
-              <p className="text-sm text-white/90">Pelajari lebih lanjut</p>
+        {/* Left Column (Desktop) / Top Section (Mobile) */}
+        <div className="md:col-span-8 space-y-6">
+          {/* Hero Section on Desktop */}
+          <div className="hidden md:block bg-teal-600 rounded-3xl p-8 text-white relative overflow-hidden">
+            <div className="relative z-10">
+              <h1 className="text-3xl font-bold mb-4">Selamat Datang di Hanif App</h1>
+              <p className="text-teal-100 max-w-lg mb-6">Temukan jadwal kajian sunnah terdekat, artikel islami, dan fitur ibadah lainnya dalam satu aplikasi.</p>
+              <Link href="/kajian" className="inline-block bg-white text-teal-600 font-bold px-6 py-3 rounded-xl hover:bg-teal-50 transition-colors">
+                Cari Kajian Sekarang
+              </Link>
             </div>
-            <button className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-bold transition-colors">
-              Klik di sini
-            </button>
+            <div className="absolute right-0 bottom-0 opacity-10">
+              <Search className="w-64 h-64 -mb-12 -mr-12" />
+            </div>
           </div>
-        </Link>
 
-        {/* Menu Grid */}
-        <MenuGrid />
+          {/* Featured Kajian Cards */}
+          {featuredKajian.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <h2 className="font-bold text-lg text-slate-800">Kajian Pilihan</h2>
+                <Link href="/kajian" className="text-sm text-teal-600 font-medium hover:text-teal-700">Lihat Semua</Link>
+              </div>
+
+              {/* Mobile: Horizontal Scroll */}
+              <div className="flex md:hidden overflow-x-auto gap-4 pb-4 scrollbar-hide">
+                {featuredKajian.map((kajian) => (
+                  <KajianCard
+                    key={kajian.id}
+                    date={`${kajian.date} - Jam ${kajian.date.includes('Hari Ini') ? '09:30' : ''}`}
+                    location={`${kajian.masjid} - Kota ${kajian.city}`}
+                    title={kajian.tema}
+                    ustadz={kajian.pemateri}
+                    imageUrl={kajian.imageUrl}
+                  />
+                ))}
+              </div>
+
+              {/* Desktop: Grid View */}
+              <div className="hidden md:grid grid-cols-2 gap-6">
+                {featuredKajian.map((kajian) => (
+                  <div key={kajian.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex gap-4">
+                    <div className="w-24 h-24 bg-slate-200 rounded-xl shrink-0 overflow-hidden">
+                      {kajian.imageUrl ? (
+                        <img src={kajian.imageUrl} alt={kajian.tema} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center">
+                          <span className="text-white font-bold text-xs text-center p-1">No Image</span>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-teal-600 mb-1">{kajian.date}</p>
+                      <h3 className="font-bold text-slate-900 line-clamp-2 mb-1">{kajian.tema}</h3>
+                      <p className="text-xs text-slate-500 mb-2">{kajian.pemateri}</p>
+                      <p className="text-[10px] text-slate-400 flex items-center gap-1">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                        {kajian.masjid}, {kajian.city}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+
+        {/* Right Column (Desktop) / Bottom Section (Mobile) */}
+        <div className="md:col-span-4 space-y-6">
+          {/* Prayer Time Widget */}
+          <PrayerTimeWidget />
+
+          {/* Kitab Referensi Banner */}
+          <Link
+            href="#"
+            className="block bg-gradient-to-r from-teal-500 to-emerald-500 rounded-2xl p-4 text-white hover:opacity-95 transition-opacity"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold text-lg">Kitab Referensi</p>
+                <p className="text-sm text-white/90">Pelajari lebih lanjut</p>
+              </div>
+              <button className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-bold transition-colors">
+                Baca
+              </button>
+            </div>
+          </Link>
+
+          {/* Menu Grid */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+            <h3 className="font-bold text-slate-900 mb-4">Menu Utama</h3>
+            <MenuGrid />
+          </div>
+        </div>
+
       </div>
     </div>
   );
