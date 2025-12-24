@@ -160,56 +160,36 @@ export default function KajianListPage() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
-            <div className="max-w-6xl mx-auto px-4 py-8">
-                <header className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div>
-                        <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium mb-4 group">
-                            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" /> Kembali ke Home
-                        </Link>
-                        <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Daftar Jadwal Kajian</h1>
-                        <p className="text-slate-500 mt-2">Menampilkan {filteredKajian.length} jadwal kajian.</p>
-                    </div>
+            {/* Mobile Header */}
+            <header className="bg-teal-600 text-white px-4 py-3 sticky top-0 z-40">
+                <div className="flex items-center gap-3 mb-3">
+                    <Link href="/" className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                        <ArrowLeft className="w-5 h-5" />
+                    </Link>
+                    <h1 className="text-lg font-bold flex-1">Daftar Jadwal Kajian</h1>
+                    <button
+                        onClick={() => setShowMap(!showMap)}
+                        className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    >
+                        <MapIcon className="w-5 h-5" />
+                    </button>
+                </div>
 
-                    <div className="flex items-center gap-3">
-                        <div className="flex-1 md:flex-none flex gap-2">
-                            <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Cari masjid, ustadz, atau kota..."
-                                    className="pl-10 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-80 transition-all font-medium"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                                {searchTerm && (
-                                    <button
-                                        onClick={() => setSearchTerm('')}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
-                                        title="Hapus pencarian"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                )}
-                            </div>
-                            <button
-                                onClick={handleGetLocation}
-                                disabled={isLocating}
-                                className={`p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm ${isLocating ? 'animate-pulse opacity-50' : ''}`}
-                                title="Gunakan Lokasi Saya"
-                            >
-                                <MapPin className={`w-6 h-6 ${isLocating ? 'text-blue-500' : ''}`} />
-                            </button>
-                        </div>
-                        <button
-                            onClick={clearData}
-                            className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                            title="Hapus Semua Data"
-                        >
-                            <Trash2 className="w-6 h-6" />
-                        </button>
-                    </div>
-                </header>
+                {/* Search Bar */}
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Cari masjid, ustadz,atau kota..."
+                        className="w-full pl-11 pr-4 py-2.5 bg-white text-slate-900 rounded-full placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white/50"
+                    />
+                </div>
+            </header>
 
+            <main className="px-4 py-4 pb-24">
+                {/* Map Section */}
                 <div className="mb-12">
                     <button
                         onClick={() => setShowMap(!showMap)}
@@ -230,30 +210,32 @@ export default function KajianListPage() {
                 </div>
 
                 {/* Filter Kota (Pills) */}
-                {kajianList.length > 0 && (
-                    <div className="mb-6">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Filter Berdasarkan Kota</p>
-                        <div className="flex flex-wrap gap-2">
-                            {Array.from(new Set(kajianList.map(k => k.city)))
-                                .sort()
-                                .map(city => {
-                                    const isActive = searchTerm.toLowerCase() === city.toLowerCase();
-                                    return (
-                                        <button
-                                            key={city}
-                                            onClick={() => setSearchTerm(isActive ? '' : city)}
-                                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border shadow-sm ${isActive
-                                                ? 'bg-blue-600 text-white border-blue-600 shadow-blue-100 ring-2 ring-blue-600 ring-offset-2'
-                                                : 'bg-white text-slate-600 border-slate-100 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600'
-                                                }`}
-                                        >
-                                            {city}
-                                        </button>
-                                    );
-                                })}
+                {
+                    kajianList.length > 0 && (
+                        <div className="mb-6">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Filter Berdasarkan Kota</p>
+                            <div className="flex flex-wrap gap-2">
+                                {Array.from(new Set(kajianList.map(k => k.city)))
+                                    .sort()
+                                    .map(city => {
+                                        const isActive = searchTerm.toLowerCase() === city.toLowerCase();
+                                        return (
+                                            <button
+                                                key={city}
+                                                onClick={() => setSearchTerm(isActive ? '' : city)}
+                                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border shadow-sm ${isActive
+                                                    ? 'bg-blue-600 text-white border-blue-600 shadow-blue-100 ring-2 ring-blue-600 ring-offset-2'
+                                                    : 'bg-white text-slate-600 border-slate-100 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600'
+                                                    }`}
+                                            >
+                                                {city}
+                                            </button>
+                                        );
+                                    })}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )
+                }
 
                 {/* Tabs Filter */}
                 <div className="flex flex-wrap gap-2 mb-8 bg-white/50 p-1.5 rounded-2xl border border-slate-200 w-fit">
@@ -277,396 +259,402 @@ export default function KajianListPage() {
                     ))}
                 </div>
 
-                {filteredKajian.length === 0 ? (
-                    <div className="bg-white rounded-3xl p-16 text-center border-2 border-dashed border-slate-200 shadow-sm">
-                        <div className="bg-slate-50 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-300">
-                            <Calendar className="w-10 h-10" />
+                {
+                    filteredKajian.length === 0 ? (
+                        <div className="bg-white rounded-3xl p-16 text-center border-2 border-dashed border-slate-200 shadow-sm">
+                            <div className="bg-slate-50 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-300">
+                                <Calendar className="w-10 h-10" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-slate-900 mb-2">Tidak ditemukan jadwal</h2>
+                            <p className="text-slate-500 mb-8 max-w-sm mx-auto">Coba ubah kriteria pencarian atau pindah kategori filter.</p>
+                            <Link
+                                href="/admin/batch-input"
+                                className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-lg shadow-blue-200 transition-all active:scale-95"
+                            >
+                                Input Jadwal Baru
+                            </Link>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-900 mb-2">Tidak ditemukan jadwal</h2>
-                        <p className="text-slate-500 mb-8 max-w-sm mx-auto">Coba ubah kriteria pencarian atau pindah kategori filter.</p>
-                        <Link
-                            href="/admin/batch-input"
-                            className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-lg shadow-blue-200 transition-all active:scale-95"
-                        >
-                            Input Jadwal Baru
-                        </Link>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-                        {filteredKajian.map((kajian, idx) => {
-                            const status = getKajianStatus(kajian.date, kajian.waktu);
-                            return (
-                                <div key={kajian.id} className={`bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col relative overflow-hidden group ${status === 'PAST' ? 'opacity-75 grayscale-[0.3]' : ''}`}>
-                                    {/* Action Buttons Overlay */}
-                                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                        <button
-                                            onClick={() => openEditModal(kajian)}
-                                            className="p-2 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all"
-                                            title="Edit"
-                                        >
-                                            <Edit className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => deleteIndividual(kajian.id)}
-                                            className="p-2 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-lg text-slate-600 hover:text-red-600 hover:bg-red-50 transition-all"
-                                            title="Hapus"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                            {filteredKajian.map((kajian, idx) => {
+                                const status = getKajianStatus(kajian.date, kajian.waktu);
+                                return (
+                                    <div key={kajian.id} className={`bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col relative overflow-hidden group ${status === 'PAST' ? 'opacity-75 grayscale-[0.3]' : ''}`}>
+                                        {/* Action Buttons Overlay */}
+                                        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                            <button
+                                                onClick={() => openEditModal(kajian)}
+                                                className="p-2 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all"
+                                                title="Edit"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => deleteIndividual(kajian.id)}
+                                                className="p-2 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-lg text-slate-600 hover:text-red-600 hover:bg-red-50 transition-all"
+                                                title="Hapus"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
 
-                                    {/* Status Badge */}
-                                    {status === 'TODAY' && (
-                                        <div className="absolute top-0 right-0 bg-red-600 text-white px-6 py-1 text-[10px] font-black uppercase tracking-widest rotate-45 translate-x-12 translate-y-4 shadow-md">
-                                            Hari Ini
+                                        {/* Status Badge */}
+                                        {status === 'TODAY' && (
+                                            <div className="absolute top-0 right-0 bg-red-600 text-white px-6 py-1 text-[10px] font-black uppercase tracking-widest rotate-45 translate-x-12 translate-y-4 shadow-md">
+                                                Hari Ini
+                                            </div>
+                                        )}
+
+                                        <div className="flex justify-between items-start mb-6">
+                                            <div className="flex gap-2">
+                                                <div className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-green-100">
+                                                    {kajian.city}
+                                                </div>
+                                                {kajian.khususAkhwat && (
+                                                    <div className="px-3 py-1 bg-pink-50 text-pink-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-pink-100">
+                                                        🌸 Akhwat
+                                                    </div>
+                                                )}
+                                                {status === 'PAST' && (
+                                                    <div className="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black rounded-lg uppercase tracking-wider border border-slate-200">
+                                                        Selesai
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col items-end text-right gap-0.5">
+                                                <div className="flex items-center text-slate-500 text-[11px] font-bold">
+                                                    <Calendar className="w-3.5 h-3.5 mr-1.5 text-blue-500" /> {kajian.date}
+                                                </div>
+                                                <div className="flex items-center text-slate-400 text-[11px] font-medium">
+                                                    <Clock className="w-3.5 h-3.5 mr-1.5" /> {kajian.waktu}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-6 mb-6">
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="text-2xl font-black text-slate-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors">
+                                                    {kajian.masjid}
+                                                </h3>
+                                                <div className="flex items-start text-slate-500 group/loc">
+                                                    <MapPin className="w-4 h-4 mr-2 mt-1 flex-shrink-0 group-hover/loc:text-blue-500 transition-colors" />
+                                                    <p className="text-xs leading-relaxed font-medium">{kajian.address}</p>
+                                                </div>
+                                            </div>
+                                            {kajian.imageUrl ? (
+                                                <div className="shrink-0 group/img relative cursor-pointer" onClick={() => setSelectedImage(kajian.imageUrl || null)}>
+                                                    <img
+                                                        src={kajian.imageUrl}
+                                                        alt={kajian.tema}
+                                                        className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-2xl border border-slate-100 shadow-sm group-hover/img:scale-105 transition-transform duration-500"
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 rounded-2xl transition-colors" />
+                                                </div>
+                                            ) : (
+                                                <div className="shrink-0 w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-100 flex flex-col items-center justify-center text-slate-300 shadow-sm">
+                                                    <ImageIcon className="w-8 h-8 mb-1 opacity-50" />
+                                                    <span className="text-[8px] font-black uppercase tracking-widest opacity-50">No Flyer</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="mt-auto pt-6 border-t border-slate-50 space-y-5">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-100 shadow-sm">
+                                                    <User className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-0.5">Pemateri</p>
+                                                    <p className="text-slate-900 font-extrabold text-lg leading-tight">{kajian.pemateri}</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 group-hover:bg-blue-50/50 transition-colors">
+                                                <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-2">Tema Kajian</p>
+                                                <p className="text-slate-800 text-sm leading-relaxed font-bold">
+                                                    {kajian.tema}
+                                                </p>
+                                            </div>
+
+                                            {kajian.cp && (
+                                                <div className="flex items-center justify-between p-4 bg-green-50/50 rounded-2xl border border-green-100/50 group-hover:border-green-200 transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center text-green-600 shadow-sm">
+                                                            <MessageCircle className="w-4 h-4" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[10px] uppercase font-black text-green-500/70 tracking-widest">Kontak Admin</p>
+                                                            <p className="text-slate-700 text-xs font-bold truncate max-w-[200px]">{kajian.cp}</p>
+                                                        </div>
+                                                    </div>
+                                                    {(() => {
+                                                        const numbers = kajian.cp.match(/\d+/g);
+                                                        if (numbers && numbers[0]) {
+                                                            let num = numbers[0];
+                                                            if (num.startsWith('0')) num = '62' + num.substring(1);
+                                                            return (
+                                                                <a
+                                                                    href={`https://wa.me/${num}?text=Assalamu'alaikum, mau tanya terkait kajian di ${kajian.masjid} ustadz ${kajian.pemateri}...`}
+                                                                    target="_blank"
+                                                                    className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black rounded-lg uppercase tracking-wider shadow-md shadow-green-200 transition-all active:scale-95"
+                                                                >
+                                                                    Chat WA
+                                                                </a>
+                                                            );
+                                                        }
+                                                        return null;
+                                                    })()}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="grid grid-cols-3 gap-2 mt-6">
+                                            {kajian.gmapsUrl && (
+                                                <a
+                                                    href={kajian.gmapsUrl}
+                                                    target="_blank"
+                                                    className="flex items-center justify-center py-4 bg-white border-2 border-slate-100 rounded-2xl text-slate-700 font-black text-[10px] uppercase tracking-tighter hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all shadow-sm hover:shadow-lg group/btn"
+                                                    title="Lihat Lokasi"
+                                                >
+                                                    <MapPin className="w-3.5 h-3.5 mr-1" />
+                                                    Lokasi
+                                                </a>
+                                            )}
+                                            <button
+                                                onClick={() => {
+                                                    const text = `*INFO KAJIAN SUNNAH*\n\n🕌 *Masjid:* ${kajian.masjid}\n👤 *Pemateri:* ${kajian.pemateri}\n📚 *Tema:* ${kajian.tema}\n🗓 *Hari/Tgl:* ${kajian.date}\n⏰ *Waktu:* ${kajian.waktu}\n📍 *Lokasi:* ${kajian.gmapsUrl || kajian.address}\n\n_Disebarkan melalui Aplikasi Jadwal Kajian_`;
+                                                    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                                                }}
+                                                className="flex items-center justify-center py-4 bg-white border-2 border-slate-100 rounded-2xl text-slate-700 font-black text-[10px] uppercase tracking-tighter hover:bg-green-600 hover:border-green-600 hover:text-white transition-all shadow-sm"
+                                            >
+                                                <Share2 className="w-3.5 h-3.5 mr-1" />
+                                                Share
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    const [day, month, year] = kajian.date.split(' ').slice(-3); // Simple extraction
+                                                    // This is a bit simplified, but Google Calendar link is the way to go
+                                                    const title = encodeURIComponent(`Kajian: ${kajian.pemateri} @ ${kajian.masjid}`);
+                                                    const details = encodeURIComponent(`Tema: ${kajian.tema}\nLokasi: ${kajian.address}`);
+                                                    const gCalUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${encodeURIComponent(kajian.address)}&sf=true&output=xml`;
+                                                    window.open(gCalUrl, '_blank');
+                                                }}
+                                                className="flex items-center justify-center py-4 bg-white border-2 border-slate-100 rounded-2xl text-slate-700 font-black text-[10px] uppercase tracking-tighter hover:bg-orange-500 hover:border-orange-500 hover:text-white transition-all shadow-sm"
+                                            >
+                                                <Calendar className="w-3.5 h-3.5 mr-1" />
+                                                Ingatkan
+                                            </button>
+                                            {kajian.linkInfo && (
+                                                <a
+                                                    href={kajian.linkInfo}
+                                                    target="_blank"
+                                                    className="col-span-3 flex items-center justify-center py-4 bg-purple-600 border-2 border-purple-600 rounded-2xl text-white font-black text-[10px] uppercase tracking-widest hover:bg-purple-700 transition-all shadow-md shadow-purple-100"
+                                                >
+                                                    <ExternalLink className="w-3.5 h-3.5 mr-2" />
+                                                    Daftar / Streaming
+                                                </a>
+                                            )}
+                                        </div>
+
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )
+                }
+        </div >
+
+        {/* Edit Modal */ }
+    {
+        isEditModalOpen && editingKajian && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
+                    <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+                        <h2 className="text-2xl font-black text-slate-900">Edit Jadwal Kajian</h2>
+                        <button
+                            onClick={() => setIsEditModalOpen(false)}
+                            className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
+
+                    <form onSubmit={handleUpdate} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Masjid / Lokasi</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                    value={editingKajian.masjid}
+                                    onChange={e => setEditingKajian({ ...editingKajian, masjid: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Kota / Wilayah</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                    value={editingKajian.city}
+                                    onChange={e => setEditingKajian({ ...editingKajian, city: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Alamat Lengkap</label>
+                            <textarea
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-sm"
+                                rows={2}
+                                value={editingKajian.address}
+                                onChange={e => setEditingKajian({ ...editingKajian, address: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Pemateri</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                    value={editingKajian.pemateri}
+                                    onChange={e => setEditingKajian({ ...editingKajian, pemateri: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Waktu</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                    value={editingKajian.waktu}
+                                    onChange={e => setEditingKajian({ ...editingKajian, waktu: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tanggal</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                    value={editingKajian.date}
+                                    onChange={e => setEditingKajian({ ...editingKajian, date: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Kontak (CP)</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                    value={editingKajian.cp}
+                                    onChange={e => setEditingKajian({ ...editingKajian, cp: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tema Kajian</label>
+                            <textarea
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                rows={3}
+                                value={editingKajian.tema}
+                                onChange={e => setEditingKajian({ ...editingKajian, tema: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Google Maps</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-xs text-blue-600"
+                                    value={editingKajian.gmapsUrl}
+                                    onChange={e => setEditingKajian({ ...editingKajian, gmapsUrl: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Pendaftaran / Streaming / Info</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none font-medium text-xs text-purple-600"
+                                    placeholder="https://..."
+                                    value={editingKajian.linkInfo || ''}
+                                    onChange={e => setEditingKajian({ ...editingKajian, linkInfo: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">URL Gambar (Cloudinary)</label>
+                                <div className="flex gap-3">
+                                    <input
+                                        type="text"
+                                        className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-xs"
+                                        value={editingKajian.imageUrl || ''}
+                                        onChange={e => setEditingKajian({ ...editingKajian, imageUrl: e.target.value })}
+                                    />
+                                    {editingKajian.imageUrl && (
+                                        <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-200">
+                                            <img src={editingKajian.imageUrl} className="w-full h-full object-cover" />
                                         </div>
                                     )}
-
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="flex gap-2">
-                                            <div className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-green-100">
-                                                {kajian.city}
-                                            </div>
-                                            {kajian.khususAkhwat && (
-                                                <div className="px-3 py-1 bg-pink-50 text-pink-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-pink-100">
-                                                    🌸 Akhwat
-                                                </div>
-                                            )}
-                                            {status === 'PAST' && (
-                                                <div className="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black rounded-lg uppercase tracking-wider border border-slate-200">
-                                                    Selesai
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex flex-col items-end text-right gap-0.5">
-                                            <div className="flex items-center text-slate-500 text-[11px] font-bold">
-                                                <Calendar className="w-3.5 h-3.5 mr-1.5 text-blue-500" /> {kajian.date}
-                                            </div>
-                                            <div className="flex items-center text-slate-400 text-[11px] font-medium">
-                                                <Clock className="w-3.5 h-3.5 mr-1.5" /> {kajian.waktu}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-6 mb-6">
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="text-2xl font-black text-slate-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors">
-                                                {kajian.masjid}
-                                            </h3>
-                                            <div className="flex items-start text-slate-500 group/loc">
-                                                <MapPin className="w-4 h-4 mr-2 mt-1 flex-shrink-0 group-hover/loc:text-blue-500 transition-colors" />
-                                                <p className="text-xs leading-relaxed font-medium">{kajian.address}</p>
-                                            </div>
-                                        </div>
-                                        {kajian.imageUrl ? (
-                                            <div className="shrink-0 group/img relative cursor-pointer" onClick={() => setSelectedImage(kajian.imageUrl || null)}>
-                                                <img
-                                                    src={kajian.imageUrl}
-                                                    alt={kajian.tema}
-                                                    className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-2xl border border-slate-100 shadow-sm group-hover/img:scale-105 transition-transform duration-500"
-                                                />
-                                                <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 rounded-2xl transition-colors" />
-                                            </div>
-                                        ) : (
-                                            <div className="shrink-0 w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-100 flex flex-col items-center justify-center text-slate-300 shadow-sm">
-                                                <ImageIcon className="w-8 h-8 mb-1 opacity-50" />
-                                                <span className="text-[8px] font-black uppercase tracking-widest opacity-50">No Flyer</span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="mt-auto pt-6 border-t border-slate-50 space-y-5">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-100 shadow-sm">
-                                                <User className="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-0.5">Pemateri</p>
-                                                <p className="text-slate-900 font-extrabold text-lg leading-tight">{kajian.pemateri}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 group-hover:bg-blue-50/50 transition-colors">
-                                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-2">Tema Kajian</p>
-                                            <p className="text-slate-800 text-sm leading-relaxed font-bold">
-                                                {kajian.tema}
-                                            </p>
-                                        </div>
-
-                                        {kajian.cp && (
-                                            <div className="flex items-center justify-between p-4 bg-green-50/50 rounded-2xl border border-green-100/50 group-hover:border-green-200 transition-colors">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center text-green-600 shadow-sm">
-                                                        <MessageCircle className="w-4 h-4" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-[10px] uppercase font-black text-green-500/70 tracking-widest">Kontak Admin</p>
-                                                        <p className="text-slate-700 text-xs font-bold truncate max-w-[200px]">{kajian.cp}</p>
-                                                    </div>
-                                                </div>
-                                                {(() => {
-                                                    const numbers = kajian.cp.match(/\d+/g);
-                                                    if (numbers && numbers[0]) {
-                                                        let num = numbers[0];
-                                                        if (num.startsWith('0')) num = '62' + num.substring(1);
-                                                        return (
-                                                            <a
-                                                                href={`https://wa.me/${num}?text=Assalamu'alaikum, mau tanya terkait kajian di ${kajian.masjid} ustadz ${kajian.pemateri}...`}
-                                                                target="_blank"
-                                                                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black rounded-lg uppercase tracking-wider shadow-md shadow-green-200 transition-all active:scale-95"
-                                                            >
-                                                                Chat WA
-                                                            </a>
-                                                        );
-                                                    }
-                                                    return null;
-                                                })()}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="grid grid-cols-3 gap-2 mt-6">
-                                        {kajian.gmapsUrl && (
-                                            <a
-                                                href={kajian.gmapsUrl}
-                                                target="_blank"
-                                                className="flex items-center justify-center py-4 bg-white border-2 border-slate-100 rounded-2xl text-slate-700 font-black text-[10px] uppercase tracking-tighter hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all shadow-sm hover:shadow-lg group/btn"
-                                                title="Lihat Lokasi"
-                                            >
-                                                <MapPin className="w-3.5 h-3.5 mr-1" />
-                                                Lokasi
-                                            </a>
-                                        )}
-                                        <button
-                                            onClick={() => {
-                                                const text = `*INFO KAJIAN SUNNAH*\n\n🕌 *Masjid:* ${kajian.masjid}\n👤 *Pemateri:* ${kajian.pemateri}\n📚 *Tema:* ${kajian.tema}\n🗓 *Hari/Tgl:* ${kajian.date}\n⏰ *Waktu:* ${kajian.waktu}\n📍 *Lokasi:* ${kajian.gmapsUrl || kajian.address}\n\n_Disebarkan melalui Aplikasi Jadwal Kajian_`;
-                                                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-                                            }}
-                                            className="flex items-center justify-center py-4 bg-white border-2 border-slate-100 rounded-2xl text-slate-700 font-black text-[10px] uppercase tracking-tighter hover:bg-green-600 hover:border-green-600 hover:text-white transition-all shadow-sm"
-                                        >
-                                            <Share2 className="w-3.5 h-3.5 mr-1" />
-                                            Share
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                const [day, month, year] = kajian.date.split(' ').slice(-3); // Simple extraction
-                                                // This is a bit simplified, but Google Calendar link is the way to go
-                                                const title = encodeURIComponent(`Kajian: ${kajian.pemateri} @ ${kajian.masjid}`);
-                                                const details = encodeURIComponent(`Tema: ${kajian.tema}\nLokasi: ${kajian.address}`);
-                                                const gCalUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${encodeURIComponent(kajian.address)}&sf=true&output=xml`;
-                                                window.open(gCalUrl, '_blank');
-                                            }}
-                                            className="flex items-center justify-center py-4 bg-white border-2 border-slate-100 rounded-2xl text-slate-700 font-black text-[10px] uppercase tracking-tighter hover:bg-orange-500 hover:border-orange-500 hover:text-white transition-all shadow-sm"
-                                        >
-                                            <Calendar className="w-3.5 h-3.5 mr-1" />
-                                            Ingatkan
-                                        </button>
-                                        {kajian.linkInfo && (
-                                            <a
-                                                href={kajian.linkInfo}
-                                                target="_blank"
-                                                className="col-span-3 flex items-center justify-center py-4 bg-purple-600 border-2 border-purple-600 rounded-2xl text-white font-black text-[10px] uppercase tracking-widest hover:bg-purple-700 transition-all shadow-md shadow-purple-100"
-                                            >
-                                                <ExternalLink className="w-3.5 h-3.5 mr-2" />
-                                                Daftar / Streaming
-                                            </a>
-                                        )}
-                                    </div>
-
                                 </div>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
+                            </div>
 
-            {/* Edit Modal */}
-            {isEditModalOpen && editingKajian && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
-                        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
-                            <h2 className="text-2xl font-black text-slate-900">Edit Jadwal Kajian</h2>
-                            <button
-                                onClick={() => setIsEditModalOpen(false)}
-                                className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all"
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
+                            <label className="flex items-center gap-3 p-4 bg-pink-50/50 border border-pink-100 rounded-2xl cursor-pointer group hover:bg-pink-50 transition-all">
+                                <input
+                                    type="checkbox"
+                                    className="w-5 h-5 rounded-lg border-pink-200 text-pink-600 focus:ring-pink-500"
+                                    checked={editingKajian.khususAkhwat || false}
+                                    onChange={e => setEditingKajian({ ...editingKajian, khususAkhwat: e.target.checked })}
+                                />
+                                <span className="text-sm font-black text-pink-700 uppercase tracking-widest">🌸 Khusus Akhwat</span>
+                            </label>
                         </div>
 
-                        <form onSubmit={handleUpdate} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Masjid / Lokasi</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                        value={editingKajian.masjid}
-                                        onChange={e => setEditingKajian({ ...editingKajian, masjid: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Kota / Wilayah</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                        value={editingKajian.city}
-                                        onChange={e => setEditingKajian({ ...editingKajian, city: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Alamat Lengkap</label>
-                                <textarea
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-sm"
-                                    rows={2}
-                                    value={editingKajian.address}
-                                    onChange={e => setEditingKajian({ ...editingKajian, address: e.target.value })}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Pemateri</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                        value={editingKajian.pemateri}
-                                        onChange={e => setEditingKajian({ ...editingKajian, pemateri: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Waktu</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                        value={editingKajian.waktu}
-                                        onChange={e => setEditingKajian({ ...editingKajian, waktu: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tanggal</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                        value={editingKajian.date}
-                                        onChange={e => setEditingKajian({ ...editingKajian, date: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Kontak (CP)</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                        value={editingKajian.cp}
-                                        onChange={e => setEditingKajian({ ...editingKajian, cp: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tema Kajian</label>
-                                <textarea
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                    rows={3}
-                                    value={editingKajian.tema}
-                                    onChange={e => setEditingKajian({ ...editingKajian, tema: e.target.value })}
-                                />
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Google Maps</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-xs text-blue-600"
-                                        value={editingKajian.gmapsUrl}
-                                        onChange={e => setEditingKajian({ ...editingKajian, gmapsUrl: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Pendaftaran / Streaming / Info</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none font-medium text-xs text-purple-600"
-                                        placeholder="https://..."
-                                        value={editingKajian.linkInfo || ''}
-                                        onChange={e => setEditingKajian({ ...editingKajian, linkInfo: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">URL Gambar (Cloudinary)</label>
-                                    <div className="flex gap-3">
-                                        <input
-                                            type="text"
-                                            className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-xs"
-                                            value={editingKajian.imageUrl || ''}
-                                            onChange={e => setEditingKajian({ ...editingKajian, imageUrl: e.target.value })}
-                                        />
-                                        {editingKajian.imageUrl && (
-                                            <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-200">
-                                                <img src={editingKajian.imageUrl} className="w-full h-full object-cover" />
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <label className="flex items-center gap-3 p-4 bg-pink-50/50 border border-pink-100 rounded-2xl cursor-pointer group hover:bg-pink-50 transition-all">
-                                    <input
-                                        type="checkbox"
-                                        className="w-5 h-5 rounded-lg border-pink-200 text-pink-600 focus:ring-pink-500"
-                                        checked={editingKajian.khususAkhwat || false}
-                                        onChange={e => setEditingKajian({ ...editingKajian, khususAkhwat: e.target.checked })}
-                                    />
-                                    <span className="text-sm font-black text-pink-700 uppercase tracking-widest">🌸 Khusus Akhwat</span>
-                                </label>
-                            </div>
-
-                            <div className="pt-6 flex gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsEditModalOpen(false)}
-                                    className="flex-1 px-6 py-4 border-2 border-slate-100 rounded-2xl text-slate-600 font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="flex-[2] px-6 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
-                                >
-                                    <Save className="w-4 h-4" /> Simpan Perubahan
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        <div className="pt-6 flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsEditModalOpen(false)}
+                                className="flex-1 px-6 py-4 border-2 border-slate-100 rounded-2xl text-slate-600 font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="submit"
+                                className="flex-[2] px-6 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Save className="w-4 h-4" /> Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            )}
+            </div>
+        )
+    }
 
-            {/* Image Modal (Lightbox) */}
-            {selectedImage && (
-                <div
-                    className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+    {/* Image Modal (Lightbox) */ }
+    {
+        selectedImage && (
+            <div
+                className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+                onClick={() => setSelectedImage(null)}
+            >
+                <button
                     onClick={() => setSelectedImage(null)}
+                    className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all"
                 >
-                    <button
-                        onClick={() => setSelectedImage(null)}
-                        className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all"
-                    >
-                        <X className="w-8 h-8" />
-                    </button>
-                    <img
-                        src={selectedImage}
-                        className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300"
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                </div>
-            )}
-        </div>
+                    <X className="w-8 h-8" />
+                </button>
+                <img
+                    src={selectedImage}
+                    className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300"
+                    onClick={(e) => e.stopPropagation()}
+                />
+            </div>
+        )
+    }
+        </div >
     );
 }
