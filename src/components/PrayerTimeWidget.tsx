@@ -1,60 +1,68 @@
 'use client';
-import { Clock, MapPin } from 'lucide-react';
-import { useEffect, useState } from 'react';
-
-interface PrayerTime {
-    name: string;
-    time: string;
-}
+import { Clock, MapPin, Loader2 } from 'lucide-react';
+import { usePrayerTimes } from '@/hooks/usePrayerTimes';
+import { useState, useEffect } from 'react';
 
 export default function PrayerTimeWidget() {
-    const [nextPrayer, setNextPrayer] = useState<PrayerTime>({ name: 'Maghrib', time: '18:15' });
-    const [timeLeft, setTimeLeft] = useState('2:45:30');
+    const { nextPrayer, timeLeft, locationName, loading, error } = usePrayerTimes();
     const [currentTime, setCurrentTime] = useState('');
 
     useEffect(() => {
-        // Update current time every second
+        // Update current time every second for the clock
         const timer = setInterval(() => {
             const now = new Date();
             setCurrentTime(now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
         }, 1000);
-
         return () => clearInterval(timer);
     }, []);
 
+    // Safe default values
+    const displayName = nextPrayer ? nextPrayer.name : 'Memuat...';
+    const displayTime = nextPrayer ? nextPrayer.time : '--:--';
+
     return (
-        <div className="relative bg-gradient-to-br from-teal-500 to-teal-600 rounded-3xl p-6 text-white overflow-hidden">
+        <div className="relative bg-gradient-to-br from-teal-500 to-teal-600 rounded-3xl p-6 text-white overflow-hidden shadow-lg shadow-teal-100">
             {/* Decorative Pattern */}
             <div className="absolute top-0 right-0 opacity-10">
                 <svg width="120" height="120" viewBox="0 0 120 120" className="fill-white">
-                    <path d="M60 0 L60 30 M60 90 L60 120 M0 60 L30 60 M90 60 L120 60 M25 25 L35 35 M85 25 L75 35 M25 95 L35 85 M85 95 L75 85" stroke="currentColor" strokeWidth="2" />
+                    <path d="M60 0 L60 30 M60 90 L60 120 M0 60 L30 60 M90 60 L120 60 M25 25 L35 35 M85 25 L75 35 M25 95 L35 85 L85 95 L75 85" stroke="currentColor" strokeWidth="2" />
                 </svg>
             </div>
 
             <div className="relative z-10">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-start justify-between mb-6">
                     <div>
-                        <p className="text-white/80 text-xs font-medium mb-1">{currentTime}</p>
-                        <p className="text-2xl font-bold">Tengah Malam</p>
+                        <p className="text-white/80 text-xs font-medium mb-1 font-mono tracking-wider">{currentTime || '--:--'}</p>
+                        <h2 className="text-2xl font-bold tracking-tight">Waktu Sholat</h2>
                     </div>
                     <div className="text-right">
-                        <p className="text-white/80 text-xs font-medium mb-1">Kota Tangerang Selatan</p>
-                        <p className="text-xs font-bold">-6.29°N, 106.71°E</p>
+                        <div className="flex items-center justify-end gap-1 text-white/80 text-[10px] font-medium mb-1">
+                            <MapPin className="w-3 h-3" />
+                            <span>Lokasi Anda</span>
+                        </div>
+                        <p className="text-xs font-bold truncate max-w-[120px]">{locationName}</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3 bg-white/20 backdrop-blur-sm rounded-2xl p-4 mt-4">
-                    <div className="bg-white/30 p-3 rounded-xl">
-                        <Clock className="w-6 h-6" />
+                <div className="flex items-center gap-4 bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+                    <div className="bg-white/30 p-3 rounded-xl shrink-0">
+                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Clock className="w-6 h-6" />}
                     </div>
-                    <div className="flex-1">
-                        <p className="text-white/80 text-xs font-medium">Waktu Sholat Selanjutnya</p>
-                        <p className="text-xl font-bold">{nextPrayer.name} - {nextPrayer.time}</p>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-white/80 text-[10px] font-medium uppercase tracking-widest mb-0.5">Selanjutnya</p>
+                        <p className="text-xl font-bold truncate">{displayName} <span className="font-light opacity-80">{displayTime}</span></p>
                     </div>
-                    <div className="text-right">
-                        <p className="text-2xl font-bold">{timeLeft}</p>
+                    <div className="text-right shrink-0">
+                        <p className="text-white/60 text-[10px] font-medium mb-0.5">Menuju Adzan</p>
+                        <p className="text-2xl font-black font-mono tracking-tight">{timeLeft}</p>
                     </div>
                 </div>
+
+                {error && (
+                    <p className="text-[10px] text-red-200 mt-2 text-center bg-red-900/20 py-1 rounded-lg">
+                        {error}
+                    </p>
+                )}
             </div>
         </div>
     );

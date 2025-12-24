@@ -13,7 +13,7 @@ const menuItems: MenuItem[] = [
     { icon: Navigation, label: 'Kajian Terdekat', href: '/kajian?filter=nearby' },
     { icon: Users, label: 'Kajian Muslimah', href: '/kajian?filter=akhwat' },
     { icon: MapPin, label: 'Lokasi Terdekat', href: '/kajian' },
-    { icon: Clock, label: 'Jadwal Sholat', href: '#' },
+    { icon: Clock, label: 'Jadwal Sholat', href: '/jadwal-sholat' },
     { icon: Bell, label: 'Pengingat Ibadah', href: '/agenda' },
     { icon: Map, label: 'Update Lokasi Saya', href: '#' },
     { icon: Book, label: 'Dzikir Pagi', href: '#' },
