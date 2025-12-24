@@ -1,0 +1,29 @@
+'use client';
+
+interface KajianCardProps {
+    date: string;
+    location: string;
+    title: string;
+    ustadz: string;
+    imageUrl?: string;
+}
+
+export default function KajianCard({ date, location, title, ustadz, imageUrl }: KajianCardProps) {
+    return (
+        <div className="flex-shrink-0 w-80 bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100">
+            {imageUrl && (
+                <img
+                    src={imageUrl}
+                    alt={title}
+                    className="w-full h-32 object-cover"
+                />
+            )}
+            <div className="p-4">
+                <p className="text-xs text-teal-600 font-bold mb-1">{date}</p>
+                <p className="text-xs text-slate-500 mb-3">{location}</p>
+                <h3 className="font-bold text-slate-900 mb-2 line-clamp-2">{title}</h3>
+                <p className="text-sm text-slate-600">{ustadz}</p>
+            </div>
+        </div>
+    );
+}
