@@ -48,6 +48,20 @@ export default async function AdminLayout({
                         <FileInput className="w-5 h-5" />
                         <span className="font-medium">Input Massal</span>
                     </Link>
+                    <Link
+                        href="/admin/ustadz"
+                        className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl transition-all"
+                    >
+                        <ListMusic className="w-5 h-5" />
+                        <span className="font-medium">Kelola Ustadz</span>
+                    </Link>
+                    <Link
+                        href="/admin/masjid"
+                        className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl transition-all"
+                    >
+                        <Calendar className="w-5 h-5" />
+                        <span className="font-medium">Kelola Masjid</span>
+                    </Link>
                 </nav>
 
                 <div className="p-4 border-t border-slate-800">
