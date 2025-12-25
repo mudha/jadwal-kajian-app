@@ -265,302 +265,276 @@ export default function BatchInputPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col">
-            <nav className="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50 shadow-sm">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-8">
-                        <div className="flex items-center gap-2">
-                            <div className="bg-blue-600 p-2 rounded-lg text-white">
-                                <LayoutDashboard className="w-5 h-5" />
-                            </div>
-                            <span className="font-black text-slate-900 tracking-tight text-xl">Admin Dashboard</span>
-                        </div>
-                        <div className="hidden md:flex items-center gap-8">
-                            <Link href="/admin/batch-input" className="text-blue-600 font-black text-xs uppercase tracking-widest border-b-2 border-blue-600 pb-1">Input Jadwal</Link>
-                            <Link href="/kajian" className="text-slate-500 hover:text-blue-600 font-black text-xs uppercase tracking-widest flex items-center gap-1 group transition-all">
-                                Lihat Info Publik <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                            </Link>
-                        </div>
-                    </div>
-                    <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all font-black text-[10px] uppercase tracking-widest"
-                    >
-                        <LogOut className="w-4 h-4" /> Keluar
-                    </button>
+        <div className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <h2 className="text-4xl font-black text-slate-900 tracking-tighter">Assalamu'alaikum, Admin</h2>
+                    <p className="text-slate-500 mt-2 font-bold">Panel manajemen jadwal kajian - Siap berdakwah hari ini?</p>
                 </div>
-            </nav>
-
-            <div className="flex-1 p-8">
-                <div className="max-w-7xl mx-auto space-y-8">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                        <div>
-                            <h2 className="text-4xl font-black text-slate-900 tracking-tighter">Assalamu'alaikum, Admin</h2>
-                            <p className="text-slate-500 mt-2 font-bold">Panel manajemen jadwal kajian - Siap berdakwah hari ini?</p>
+                <div className="flex gap-4 items-center">
+                    <Link href="/kajian" className="hidden md:flex items-center gap-2 px-6 py-4 bg-white border border-slate-100 rounded-[2rem] text-slate-500 hover:text-blue-600 font-black text-xs uppercase tracking-widest transition-all shadow-sm hover:shadow-md active:scale-95">
+                        Lihat Info Publik <ExternalLink className="w-4 h-4" />
+                    </Link>
+                    <div className="bg-white px-8 py-5 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4">
+                        <div className="bg-blue-50 p-3 rounded-2xl text-blue-600">
+                            <Database className="w-6 h-6" />
                         </div>
-                        <div className="flex gap-4">
-                            <div className="bg-white px-8 py-5 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4">
-                                <div className="bg-blue-50 p-3 rounded-2xl text-blue-600">
-                                    <Database className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Jadwal</p>
-                                    <p className="text-2xl font-black text-slate-900">{stats.total}</p>
-                                </div>
-                            </div>
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Jadwal</p>
+                            <p className="text-2xl font-black text-slate-900">{stats.total}</p>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-                        <div className="xl:col-span-4 space-y-6">
-                            <div className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 space-y-8">
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="bg-blue-600 p-2 rounded-lg text-white">
-                                            <Upload className="w-4 h-4" />
-                                        </div>
-                                        <h3 className="font-black text-lg tracking-tight text-slate-900">Scan Poster / Flyer</h3>
-                                    </div>
-
-                                    <div
-                                        onClick={() => document.getElementById('poster-upload')?.click()}
-                                        className={`relative border-4 border-dashed rounded-[2rem] p-8 flex flex-col items-center justify-center transition-all cursor-pointer group ${isOcrLoading ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-100 hover:border-blue-200 hover:bg-white'}`}
-                                    >
-                                        <input
-                                            id="poster-upload"
-                                            type="file"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-                                        />
-
-                                        {isOcrLoading ? (
-                                            <div className="flex flex-col items-center">
-                                                <div className="relative w-12 h-12 mb-3">
-                                                    <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-                                                    <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-blue-600">
-                                                        {ocrProgress}%
-                                                    </div>
-                                                </div>
-                                                <p className="text-blue-600 font-black uppercase tracking-widest text-[10px]">Membaca...</p>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <ImageIcon className="w-8 h-8 text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
-                                                <p className="text-slate-900 font-extrabold text-xs text-center">Klik / Tarik Poster ke Sini</p>
-                                                <p className="text-slate-400 font-bold text-[9px] text-center mt-1 uppercase tracking-widest">Atau Ctrl+V (Paste) Gambar</p>
-                                            </>
-                                        )}
-                                    </div>
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+                <div className="xl:col-span-4 space-y-6">
+                    <div className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 space-y-8">
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-blue-600 p-2 rounded-lg text-white">
+                                    <Upload className="w-4 h-4" />
                                 </div>
-
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="bg-blue-600 p-2 rounded-lg text-white">
-                                            <PlusCircle className="w-4 h-4" />
-                                        </div>
-                                        <h3 className="font-black text-lg tracking-tight text-slate-900">Input Broadcast</h3>
-                                    </div>
-
-                                    <div className="relative">
-                                        <textarea
-                                            className="w-full h-[350px] p-6 bg-slate-50 border border-slate-200 rounded-[2rem] font-mono text-sm focus:ring-4 focus:ring-blue-50 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300"
-                                            placeholder="Paste pesan broadcast di sini..."
-                                            value={inputText}
-                                            onChange={(e) => setInputText(e.target.value)}
-                                        />
-                                        {lastImageUrl && (
-                                            <div className="absolute top-4 right-4 group">
-                                                <div className="relative">
-                                                    <img src={lastImageUrl} className="w-24 h-24 object-cover rounded-2xl border-4 border-white shadow-2xl animate-in zoom-in-50 duration-300" />
-                                                    <button
-                                                        onClick={() => setLastImageUrl(null)}
-                                                        className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    >
-                                                        <X className="w-3 h-3" />
-                                                    </button>
-                                                </div>
-                                                <p className="text-[8px] font-black text-slate-400 mt-1 uppercase text-center tracking-widest bg-white/80 py-0.5 rounded-full px-2">Image Linked</p>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <button
-                                        onClick={handleProcess}
-                                        disabled={!inputText || isGeocoding}
-                                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white font-black py-4 rounded-[1.5rem] shadow-xl shadow-blue-100 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group"
-                                    >
-                                        {isGeocoding ? (
-                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        ) : (
-                                            <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                        )}
-                                        {isGeocoding ? 'Sedang Memproses...' : 'Ekstrak Jadwal (Regex)'}
-                                    </button>
-
-                                    <button
-                                        onClick={handleAiProcess}
-                                        disabled={!inputText || isGeocoding || isAiLoading}
-                                        className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400 text-white font-black py-4 rounded-[1.5rem] shadow-xl shadow-purple-100 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group mt-3"
-                                    >
-                                        {isAiLoading ? (
-                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        ) : (
-                                            <Sparkles className="w-4 h-4 group-hover:scale-125 transition-transform text-yellow-300" />
-                                        )}
-                                        {isAiLoading ? 'AI Sedang Berpikir...' : 'Ekstrak dengan AI Gemini'}
-                                    </button>
-                                </div>
+                                <h3 className="font-black text-lg tracking-tight text-slate-900">Scan Poster / Flyer</h3>
                             </div>
-                        </div>
 
-                        <div className="xl:col-span-8">
-                            <div className="bg-white p-10 rounded-[3.5rem] shadow-sm border border-slate-100 flex flex-col min-h-[750px]">
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                                    <div className="flex items-center gap-4">
-                                        <div className="bg-emerald-500 p-3 rounded-2xl text-white shadow-lg shadow-emerald-100">
-                                            <CheckCircle className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-black text-2xl tracking-tighter text-slate-900">List Input Jadwal</h3>
-                                            <p className="text-xs text-slate-400 font-black uppercase tracking-widest">{entries.length} entri ditemukan</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-3">
-                                        <button
-                                            onClick={handleAddManual}
-                                            className="bg-white border-2 border-slate-100 hover:border-blue-200 text-blue-600 font-black py-4 px-6 rounded-2xl transition-all active:scale-95 flex items-center gap-2 text-sm"
-                                        >
-                                            <PlusCircle className="w-5 h-5" /> Tambah Manual
-                                        </button>
-                                        {entries.length > 0 && (
-                                            <button
-                                                onClick={handleSave}
-                                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 px-10 rounded-2xl transition-all shadow-xl shadow-emerald-100 active:scale-95 flex items-center gap-3"
-                                            >
-                                                <Save className="w-6 h-6" /> Simpan {selectedIndices.size} Jadwal Baru
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
+                            <div
+                                onClick={() => document.getElementById('poster-upload')?.click()}
+                                className={`relative border-4 border-dashed rounded-[2rem] p-8 flex flex-col items-center justify-center transition-all cursor-pointer group ${isOcrLoading ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-100 hover:border-blue-200 hover:bg-white'}`}
+                            >
+                                <input
+                                    id="poster-upload"
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                                />
 
-                                {entries.length > 0 ? (
-                                    <div className="overflow-x-auto rounded-[2.5rem] border border-slate-100">
-                                        <table className="w-full text-left border-collapse">
-                                            <thead>
-                                                <tr className="bg-slate-50 border-b border-slate-100">
-                                                    <th className="p-5 w-16">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedIndices.size === entries.length && entries.length > 0}
-                                                            onChange={toggleAll}
-                                                            className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                                        />
-                                                    </th>
-                                                    <th className="p-5 font-black text-slate-400 uppercase tracking-widest text-[11px]">Rincian Jadwal</th>
-                                                    <th className="p-5 w-16 text-right"></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-100">
-                                                {entries.map((entry, idx) => (
-                                                    <tr key={idx} className={`transition-all group/row ${selectedIndices.has(idx) ? 'bg-white' : 'opacity-40 hover:opacity-100'}`}>
-                                                        <td className="p-5 align-top">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={selectedIndices.has(idx)}
-                                                                onChange={() => toggleSelection(idx)}
-                                                                className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                                            />
-                                                        </td>
-                                                        <td className="p-5 space-y-6 flex gap-6">
-                                                            {entry.imageUrl && (
-                                                                <div className="shrink-0 group/img relative">
-                                                                    <img src={entry.imageUrl} className="w-24 h-32 object-cover rounded-2xl border border-slate-200 shadow-sm" />
-                                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
-                                                                        <button onClick={() => updateEntry(idx, 'imageUrl', '')} className="text-white hover:text-red-400 transition-colors">
-                                                                            <Trash2 className="w-5 h-5" />
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                            <div className="flex-1 space-y-6">
-                                                                <div className="grid grid-cols-2 gap-6">
-                                                                    <div className="col-span-2">
-                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 mb-2">
-                                                                            Masjid / Lokasi
-                                                                            {entry.lat && <MapPin className="w-3.5 h-3.5 text-blue-500 animate-pulse" />}
-                                                                            {entry.khususAkhwat && <span className="ml-2 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[9px] font-black border border-pink-200">🌸 KHUSUS AKHWAT</span>}
-                                                                        </label>
-                                                                        <input type="text" value={entry.masjid} onChange={(e) => updateEntry(idx, 'masjid', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-black text-slate-900 transition-all text-lg" />
-                                                                    </div>
-                                                                    <div className="col-span-1">
-                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pemateri</label>
-                                                                        <input type="text" value={entry.pemateri} onChange={(e) => updateEntry(idx, 'pemateri', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
-                                                                    </div>
-                                                                    <div className="col-span-1">
-                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Kota</label>
-                                                                        <input type="text" value={entry.city} onChange={(e) => updateEntry(idx, 'city', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-black text-blue-600 transition-all" />
-                                                                    </div>
-                                                                    <div className="col-span-2">
-                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tema</label>
-                                                                        <input type="text" value={entry.tema} onChange={(e) => updateEntry(idx, 'tema', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium italic text-slate-600 transition-all" />
-                                                                    </div>
-                                                                    <div className="col-span-1">
-                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
-                                                                        <input type="text" value={entry.date} onChange={(e) => updateEntry(idx, 'date', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
-                                                                    </div>
-                                                                    <div className="col-span-1">
-                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Waktu</label>
-                                                                        <input type="text" value={entry.waktu} onChange={(e) => updateEntry(idx, 'waktu', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
-                                                                    </div>
-                                                                    <div className="col-span-2">
-                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Alamat</label>
-                                                                        <input type="text" value={entry.address} onChange={(e) => updateEntry(idx, 'address', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium text-slate-600 transition-all" />
-                                                                    </div>
-                                                                    <div className="col-span-2">
-                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">CP / Maps</label>
-                                                                        <div className="flex gap-4">
-                                                                            <input type="text" placeholder="CP" value={entry.cp} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="flex-1 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-emerald-600" />
-                                                                            <input type="text" placeholder="Maps URL" value={entry.gmapsUrl} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium text-blue-500 text-sm" />
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="col-span-2">
-                                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Link Pendaftaran / Streaming</label>
-                                                                        <input type="text" placeholder="https://..." value={entry.linkInfo || ''} onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-purple-500 rounded-2xl px-5 py-3 outline-none font-medium text-purple-600 text-sm" />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-8 align-top text-right">
-                                                            <button onClick={() => handleDiscard(idx)} className="p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover/row:opacity-100">
-                                                                <Trash2 className="w-5 h-5" />
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                {isOcrLoading ? (
+                                    <div className="flex flex-col items-center">
+                                        <div className="relative w-12 h-12 mb-3">
+                                            <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+                                            <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-blue-600">
+                                                {ocrProgress}%
+                                            </div>
+                                        </div>
+                                        <p className="text-blue-600 font-black uppercase tracking-widest text-[10px]">Membaca...</p>
                                     </div>
                                 ) : (
-                                    <div className="flex-1 flex flex-col items-center justify-center text-slate-200 border-4 border-dashed border-slate-50 rounded-[3.5rem] bg-slate-50/20 py-20">
-                                        <div className="bg-white p-10 rounded-[2.5rem] shadow-sm mb-6">
-                                            <Database className="w-16 h-16 opacity-10" />
-                                        </div>
-                                        <p className="text-2xl font-black tracking-tighter text-slate-400">Siap Menunggu Data</p>
-                                        <p className="text-slate-400 font-bold max-w-xs text-center mt-2 leading-relaxed">Belum ada jadwal yang diekstrak. Silakan tempel teks atau scan poster.</p>
-                                    </div>
-                                )}
-
-                                {message && (
-                                    <div className={`mt-10 p-6 rounded-[2rem] text-sm font-black flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-500 ${message.includes('Gagal') ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-blue-50 text-blue-600 border border-blue-100 shadow-lg shadow-blue-50'}`}>
-                                        <div className={`p-2 rounded-xl ${message.includes('Gagal') ? 'bg-red-100' : 'bg-blue-100'}`}>
-                                            <Info className="w-5 h-5" />
-                                        </div>
-                                        {message}
-                                    </div>
+                                    <>
+                                        <ImageIcon className="w-8 h-8 text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
+                                        <p className="text-slate-900 font-extrabold text-xs text-center">Klik / Tarik Poster ke Sini</p>
+                                        <p className="text-slate-400 font-bold text-[9px] text-center mt-1 uppercase tracking-widest">Atau Ctrl+V (Paste) Gambar</p>
+                                    </>
                                 )}
                             </div>
                         </div>
+
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-blue-600 p-2 rounded-lg text-white">
+                                    <PlusCircle className="w-4 h-4" />
+                                </div>
+                                <h3 className="font-black text-lg tracking-tight text-slate-900">Input Broadcast</h3>
+                            </div>
+
+                            <div className="relative">
+                                <textarea
+                                    className="w-full h-[350px] p-6 bg-slate-50 border border-slate-200 rounded-[2rem] font-mono text-sm focus:ring-4 focus:ring-blue-50 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300"
+                                    placeholder="Paste pesan broadcast di sini..."
+                                    value={inputText}
+                                    onChange={(e) => setInputText(e.target.value)}
+                                />
+                                {lastImageUrl && (
+                                    <div className="absolute top-4 right-4 group">
+                                        <div className="relative">
+                                            <img src={lastImageUrl} className="w-24 h-24 object-cover rounded-2xl border-4 border-white shadow-2xl animate-in zoom-in-50 duration-300" />
+                                            <button
+                                                onClick={() => setLastImageUrl(null)}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                        <p className="text-[8px] font-black text-slate-400 mt-1 uppercase text-center tracking-widest bg-white/80 py-0.5 rounded-full px-2">Image Linked</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={handleProcess}
+                                disabled={!inputText || isGeocoding}
+                                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white font-black py-4 rounded-[1.5rem] shadow-xl shadow-blue-100 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group"
+                            >
+                                {isGeocoding ? (
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                )}
+                                {isGeocoding ? 'Sedang Memproses...' : 'Ekstrak Jadwal (Regex)'}
+                            </button>
+
+                            <button
+                                onClick={handleAiProcess}
+                                disabled={!inputText || isGeocoding || isAiLoading}
+                                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400 text-white font-black py-4 rounded-[1.5rem] shadow-xl shadow-purple-100 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group mt-3"
+                            >
+                                {isAiLoading ? (
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <Sparkles className="w-4 h-4 group-hover:scale-125 transition-transform text-yellow-300" />
+                                )}
+                                {isAiLoading ? 'AI Sedang Berpikir...' : 'Ekstrak dengan AI Gemini'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="xl:col-span-8">
+                    <div className="bg-white p-10 rounded-[3.5rem] shadow-sm border border-slate-100 flex flex-col min-h-[750px]">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                            <div className="flex items-center gap-4">
+                                <div className="bg-emerald-500 p-3 rounded-2xl text-white shadow-lg shadow-emerald-100">
+                                    <CheckCircle className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-2xl tracking-tighter text-slate-900">List Input Jadwal</h3>
+                                    <p className="text-xs text-slate-400 font-black uppercase tracking-widest">{entries.length} entri ditemukan</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handleAddManual}
+                                    className="bg-white border-2 border-slate-100 hover:border-blue-200 text-blue-600 font-black py-4 px-6 rounded-2xl transition-all active:scale-95 flex items-center gap-2 text-sm"
+                                >
+                                    <PlusCircle className="w-5 h-5" /> Tambah Manual
+                                </button>
+                                {entries.length > 0 && (
+                                    <button
+                                        onClick={handleSave}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 px-10 rounded-2xl transition-all shadow-xl shadow-emerald-100 active:scale-95 flex items-center gap-3"
+                                    >
+                                        <Save className="w-6 h-6" /> Simpan {selectedIndices.size} Jadwal Baru
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {entries.length > 0 ? (
+                            <div className="overflow-x-auto rounded-[2.5rem] border border-slate-100">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-slate-50 border-b border-slate-100">
+                                            <th className="p-5 w-16">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIndices.size === entries.length && entries.length > 0}
+                                                    onChange={toggleAll}
+                                                    className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                />
+                                            </th>
+                                            <th className="p-5 font-black text-slate-400 uppercase tracking-widest text-[11px]">Rincian Jadwal</th>
+                                            <th className="p-5 w-16 text-right"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {entries.map((entry, idx) => (
+                                            <tr key={idx} className={`transition-all group/row ${selectedIndices.has(idx) ? 'bg-white' : 'opacity-40 hover:opacity-100'}`}>
+                                                <td className="p-5 align-top">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedIndices.has(idx)}
+                                                        onChange={() => toggleSelection(idx)}
+                                                        className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                    />
+                                                </td>
+                                                <td className="p-5 space-y-6 flex gap-6">
+                                                    {entry.imageUrl && (
+                                                        <div className="shrink-0 group/img relative">
+                                                            <img src={entry.imageUrl} className="w-24 h-32 object-cover rounded-2xl border border-slate-200 shadow-sm" />
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
+                                                                <button onClick={() => updateEntry(idx, 'imageUrl', '')} className="text-white hover:text-red-400 transition-colors">
+                                                                    <Trash2 className="w-5 h-5" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex-1 space-y-6">
+                                                        <div className="grid grid-cols-2 gap-6">
+                                                            <div className="col-span-2">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 mb-2">
+                                                                    Masjid / Lokasi
+                                                                    {entry.lat && <MapPin className="w-3.5 h-3.5 text-blue-500 animate-pulse" />}
+                                                                    {entry.khususAkhwat && <span className="ml-2 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[9px] font-black border border-pink-200">🌸 KHUSUS AKHWAT</span>}
+                                                                </label>
+                                                                <input type="text" value={entry.masjid} onChange={(e) => updateEntry(idx, 'masjid', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-black text-slate-900 transition-all text-lg" />
+                                                            </div>
+                                                            <div className="col-span-1">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pemateri</label>
+                                                                <input type="text" value={entry.pemateri} onChange={(e) => updateEntry(idx, 'pemateri', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
+                                                            </div>
+                                                            <div className="col-span-1">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Kota</label>
+                                                                <input type="text" value={entry.city} onChange={(e) => updateEntry(idx, 'city', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-black text-blue-600 transition-all" />
+                                                            </div>
+                                                            <div className="col-span-2">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tema</label>
+                                                                <input type="text" value={entry.tema} onChange={(e) => updateEntry(idx, 'tema', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium italic text-slate-600 transition-all" />
+                                                            </div>
+                                                            <div className="col-span-1">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
+                                                                <input type="text" value={entry.date} onChange={(e) => updateEntry(idx, 'date', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
+                                                            </div>
+                                                            <div className="col-span-1">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Waktu</label>
+                                                                <input type="text" value={entry.waktu} onChange={(e) => updateEntry(idx, 'waktu', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
+                                                            </div>
+                                                            <div className="col-span-2">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Alamat</label>
+                                                                <input type="text" value={entry.address} onChange={(e) => updateEntry(idx, 'address', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium text-slate-600 transition-all" />
+                                                            </div>
+                                                            <div className="col-span-2">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">CP / Maps</label>
+                                                                <div className="flex gap-4">
+                                                                    <input type="text" placeholder="CP" value={entry.cp} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="flex-1 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-emerald-600" />
+                                                                    <input type="text" placeholder="Maps URL" value={entry.gmapsUrl} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium text-blue-500 text-sm" />
+                                                                </div>
+                                                            </div>
+                                                            <div className="col-span-2">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Link Pendaftaran / Streaming</label>
+                                                                <input type="text" placeholder="https://..." value={entry.linkInfo || ''} onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-purple-500 rounded-2xl px-5 py-3 outline-none font-medium text-purple-600 text-sm" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="p-8 align-top text-right">
+                                                    <button onClick={() => handleDiscard(idx)} className="p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover/row:opacity-100">
+                                                        <Trash2 className="w-5 h-5" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-slate-200 border-4 border-dashed border-slate-50 rounded-[3.5rem] bg-slate-50/20 py-20">
+                                <div className="bg-white p-10 rounded-[2.5rem] shadow-sm mb-6">
+                                    <Database className="w-16 h-16 opacity-10" />
+                                </div>
+                                <p className="text-2xl font-black tracking-tighter text-slate-400">Siap Menunggu Data</p>
+                                <p className="text-slate-400 font-bold max-w-xs text-center mt-2 leading-relaxed">Belum ada jadwal yang diekstrak. Silakan tempel teks atau scan poster.</p>
+                            </div>
+                        )}
+
+                        {message && (
+                            <div className={`mt-10 p-6 rounded-[2rem] text-sm font-black flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-500 ${message.includes('Gagal') ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-blue-50 text-blue-600 border border-blue-100 shadow-lg shadow-blue-50'}`}>
+                                <div className={`p-2 rounded-xl ${message.includes('Gagal') ? 'bg-red-100' : 'bg-blue-100'}`}>
+                                    <Info className="w-5 h-5" />
+                                </div>
+                                {message}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
