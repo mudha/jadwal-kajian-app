@@ -435,6 +435,12 @@ export default function KajianListPage() {
                                                         <div className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-green-100">
                                                             {kajian.city}
                                                         </div>
+                                                        {kajian.distance !== undefined && (
+                                                            <div className="px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-amber-100 flex items-center gap-1">
+                                                                <MapPin className="w-3 h-3" />
+                                                                {kajian.distance.toFixed(1)} km
+                                                            </div>
+                                                        )}
                                                         {kajian.khususAkhwat && (
                                                             <div className="px-3 py-1 bg-pink-50 text-pink-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-pink-100">
                                                                 🌸 Akhwat
