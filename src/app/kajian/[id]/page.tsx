@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, MapPin, Share2, Clock, Map as MapIcon, Calendar as
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { parseIndoDate, getHijriDate } from '@/lib/date-utils';
 
 // Reusing types locally for simplicity or import if shared
 interface KajianDetail {
@@ -155,6 +156,12 @@ export default function KajianDetailPage() {
                                         <div>
                                             <p className="text-xs text-slate-400 font-bold uppercase mb-0.5">Waktu</p>
                                             <p className="font-bold text-slate-800">{kajian.date}</p>
+                                            <p className="text-[10px] text-teal-600 font-medium">
+                                                {(() => {
+                                                    const d = parseIndoDate(kajian.date);
+                                                    return d ? getHijriDate(d) : '';
+                                                })()}
+                                            </p>
                                             <p className="text-sm text-slate-600">{kajian.waktu}</p>
                                         </div>
                                     </div>

@@ -1,13 +1,15 @@
-'use client';
 import { Clock, MapPin, Loader2 } from 'lucide-react';
 import { usePrayerTimes } from '@/hooks/usePrayerTimes';
 import { useState, useEffect } from 'react';
+import { getHijriDate, formatIndoDate } from '@/lib/date-utils';
 
 export default function PrayerTimeWidget() {
     const { nextPrayer, timeLeft, locationName, loading, error } = usePrayerTimes();
     const [currentTime, setCurrentTime] = useState('');
+    const [hijriDate, setHijriDate] = useState('');
 
     useEffect(() => {
+        setHijriDate(getHijriDate(new Date()));
         // Update current time every second for the clock
         const timer = setInterval(() => {
             const now = new Date();
@@ -34,6 +36,7 @@ export default function PrayerTimeWidget() {
                     <div>
                         <p className="text-white/80 text-xs font-medium mb-1 font-mono tracking-wider">{currentTime || '--:--'}</p>
                         <h2 className="text-2xl font-bold tracking-tight">Waktu Sholat</h2>
+                        <p className="text-white/70 text-[10px] uppercase font-bold tracking-widest mt-1">{hijriDate}</p>
                     </div>
                     <div className="text-right">
                         <div className="flex items-center justify-end gap-1 text-white/80 text-[10px] font-medium mb-1">

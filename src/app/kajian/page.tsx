@@ -13,7 +13,10 @@ import MenuGrid from '@/components/MenuGrid';
 const KajianMap = dynamic(() => import('@/components/KajianMap'), {
     ssr: false,
     loading: () => <div className="h-[400px] w-full bg-slate-100 animate-pulse rounded-3xl flex items-center justify-center text-slate-400 font-bold">Harap tunggu, peta sedang dimuat...</div>
+
 });
+
+import { parseIndoDate, getHijriDate } from '@/lib/date-utils';
 
 interface KajianWithId extends KajianEntry {
     id: number;
@@ -354,16 +357,20 @@ function KajianListContent() {
                                             .sort()
                                             .map(city => {
                                                 const isActive = searchTerm.toLowerCase() === city.toLowerCase();
+                                                const count = kajianList.filter(k => k.city === city).length;
                                                 return (
                                                     <button
                                                         key={city}
                                                         onClick={() => setSearchTerm(isActive ? '' : city)}
-                                                        className={`shrink-0 px-5 py-2.5 rounded-full text-xs font-bold transition-all border shadow-sm ${isActive
+                                                        className={`shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold transition-all border shadow-sm ${isActive
                                                             ? 'bg-teal-600 text-white border-teal-600 shadow-teal-100 ring-2 ring-teal-600 ring-offset-2'
                                                             : 'bg-white text-slate-600 border-slate-100 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600'
                                                             }`}
                                                     >
                                                         {city}
+                                                        <span className={`px-1.5 py-0.5 rounded-md text-[9px] ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                                                            {count}
+                                                        </span>
                                                     </button>
                                                 );
                                             })}
@@ -450,8 +457,17 @@ function KajianListContent() {
                                                     </div>
 
                                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-500 text-[11px] font-bold">
-                                                        <div className="flex items-center whitespace-nowrap">
-                                                            <Calendar className="w-3.5 h-3.5 mr-1.5 text-blue-500" /> {kajian.date}
+                                                        <div className="flex flex-col sm:flex-row sm:items-center">
+                                                            <div className="flex items-center whitespace-nowrap">
+                                                                <Calendar className="w-3.5 h-3.5 mr-1.5 text-blue-500" /> {kajian.date}
+                                                            </div>
+                                                            <span className="hidden sm:inline mx-2 text-slate-300">•</span>
+                                                            <span className="text-[10px] text-teal-600 font-medium">
+                                                                {(() => {
+                                                                    const d = parseIndoDate(kajian.date);
+                                                                    return d ? getHijriDate(d) : '';
+                                                                })()}
+                                                            </span>
                                                         </div>
                                                         <div className="w-px h-3 bg-slate-300 hidden sm:block"></div>
                                                         <div className="flex items-center text-slate-400 font-medium whitespace-normal leading-tight">

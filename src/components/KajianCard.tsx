@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { HandHeart, Users } from 'lucide-react';
 import Link from 'next/link';
+import { parseIndoDate, getHijriDate } from '@/lib/date-utils';
 
 interface KajianCardProps {
     id: number;
@@ -66,7 +67,15 @@ export default function KajianCard({ id, date, location, title, ustadz, imageUrl
             )}
             <div className="p-5">
                 <div className="flex items-start justify-between mb-3">
-                    <p className="text-[10px] font-black tracking-widest text-teal-600 uppercase bg-teal-50 px-2 py-1 rounded-lg">{date}</p>
+                    <div>
+                        <p className="text-[10px] font-black tracking-widest text-teal-600 uppercase bg-teal-50 px-2 py-1 rounded-lg inline-block">{date}</p>
+                        <p className="text-[9px] text-slate-400 font-bold mt-1 px-1">
+                            {(() => {
+                                const parsed = parseIndoDate(date);
+                                return parsed ? getHijriDate(parsed) : '';
+                            })()}
+                        </p>
+                    </div>
                 </div>
 
                 <h3 className="font-bold text-slate-900 mb-2 line-clamp-2 leading-tight group-hover:text-teal-600 transition-colors">{title}</h3>

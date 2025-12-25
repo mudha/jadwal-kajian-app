@@ -5,9 +5,14 @@ import { Search, MapPin, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+interface CityData {
+    city: string;
+    count: number;
+}
+
 export default function CityListPage() {
     const router = useRouter();
-    const [cities, setCities] = useState<string[]>([]);
+    const [cities, setCities] = useState<CityData[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
 
@@ -26,8 +31,8 @@ export default function CityListPage() {
             });
     }, []);
 
-    const filteredCities = cities.filter(city =>
-        city.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredCities = cities.filter(c =>
+        c.city.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -64,16 +69,21 @@ export default function CityListPage() {
                 ) : (
                     <div className="grid grid-cols-1 gap-2">
                         {filteredCities.length > 0 ? (
-                            filteredCities.map((city) => (
+                            filteredCities.map((item) => (
                                 <Link
-                                    key={city}
-                                    href={`/kajian?city=${encodeURIComponent(city)}`}
-                                    className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-100 hover:border-teal-200 hover:shadow-md transition-all active:scale-[0.98]"
+                                    key={item.city}
+                                    href={`/kajian?city=${encodeURIComponent(item.city)}`}
+                                    className="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-100 hover:border-teal-200 hover:shadow-md transition-all active:scale-[0.98]"
                                 >
-                                    <div className="w-10 h-10 bg-teal-50 rounded-full flex items-center justify-center shrink-0">
-                                        <MapPin className="w-5 h-5 text-teal-600" />
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-teal-50 rounded-full flex items-center justify-center shrink-0">
+                                            <MapPin className="w-5 h-5 text-teal-600" />
+                                        </div>
+                                        <span className="font-bold text-slate-700 capitalize">{item.city}</span>
                                     </div>
-                                    <span className="font-bold text-slate-700 capitalize">{city}</span>
+                                    <div className="bg-teal-600 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm min-w-[24px] text-center">
+                                        {item.count}
+                                    </div>
                                 </Link>
                             ))
                         ) : (

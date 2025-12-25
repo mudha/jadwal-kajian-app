@@ -100,3 +100,11 @@ export function formatYYYYMMDD(date: Date): string {
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 }
+
+export function getHijriDate(date: Date): string {
+    return new Intl.DateTimeFormat('id-ID-u-ca-islamic', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    }).format(date);
+}
