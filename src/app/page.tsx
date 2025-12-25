@@ -92,7 +92,7 @@ export default function BerandaPage() {
               {/* Desktop: Grid View */}
               <div className="hidden md:grid grid-cols-2 gap-6">
                 {featuredKajian.map((kajian) => (
-                  <div key={kajian.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex gap-4">
+                  <Link href="/kajian" key={kajian.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex gap-4 block">
                     <div className="w-24 h-24 bg-slate-200 rounded-xl shrink-0 overflow-hidden">
                       {kajian.imageUrl ? (
                         <img src={kajian.imageUrl} alt={kajian.tema} className="w-full h-full object-cover" />
@@ -111,7 +111,7 @@ export default function BerandaPage() {
                         {kajian.masjid}, {kajian.city}
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </section>

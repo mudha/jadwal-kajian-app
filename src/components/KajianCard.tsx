@@ -8,9 +8,11 @@ interface KajianCardProps {
     imageUrl?: string;
 }
 
+import Link from 'next/link';
+
 export default function KajianCard({ date, location, title, ustadz, imageUrl }: KajianCardProps) {
     return (
-        <div className="flex-shrink-0 w-80 bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100">
+        <Link href="/kajian" className="flex-shrink-0 w-80 bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 block hover:shadow-md transition-shadow">
             {imageUrl && (
                 <img
                     src={imageUrl}
@@ -24,6 +26,6 @@ export default function KajianCard({ date, location, title, ustadz, imageUrl }: 
                 <h3 className="font-bold text-slate-900 mb-2 line-clamp-2">{title}</h3>
                 <p className="text-sm text-slate-600">{ustadz}</p>
             </div>
-        </div>
+        </Link>
     );
 }
