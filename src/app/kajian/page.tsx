@@ -409,8 +409,8 @@ function KajianListContent() {
                                         return (
                                             <div key={kajian.id} className={`bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col relative overflow-hidden group ${status === 'PAST' ? 'opacity-75 grayscale-[0.3]' : ''}`}>
 
-                                                <div className="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4">
-                                                    <div className="flex flex-wrap gap-2 items-start w-full sm:w-auto">
+                                                <div className="flex flex-col gap-4 mb-6 border-b border-dashed border-slate-100 pb-4">
+                                                    <div className="flex flex-wrap gap-2 items-center">
                                                         {status === 'TODAY' && (
                                                             <div className="px-3 py-1 bg-red-600 text-white text-[10px] font-black rounded-lg uppercase tracking-wider shadow-sm animate-pulse whitespace-nowrap">
                                                                 Hari Ini
@@ -442,12 +442,13 @@ function KajianListContent() {
                                                         )}
                                                     </div>
 
-                                                    <div className="w-full sm:w-auto flex flex-row sm:flex-col justify-between sm:justify-end items-center sm:items-end text-left sm:text-right gap-3 sm:gap-1 shrink-0 border-t sm:border-t-0 border-slate-50 pt-3 sm:pt-0 border-dashed sm:border-none">
-                                                        <div className="flex items-center text-slate-500 text-[11px] font-bold whitespace-nowrap">
+                                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-500 text-[11px] font-bold">
+                                                        <div className="flex items-center whitespace-nowrap">
                                                             <Calendar className="w-3.5 h-3.5 mr-1.5 text-blue-500" /> {kajian.date}
                                                         </div>
-                                                        <div className="flex items-center text-slate-400 text-[11px] font-medium whitespace-normal max-w-[200px] sm:max-w-none text-right sm:text-right leading-tight">
-                                                            <Clock className="w-3.5 h-3.5 mr-1.5 shrink-0" /> {kajian.waktu}
+                                                        <div className="w-px h-3 bg-slate-300 hidden sm:block"></div>
+                                                        <div className="flex items-center text-slate-400 font-medium whitespace-normal leading-tight">
+                                                            <Clock className="w-3.5 h-3.5 mr-1.5 shrink-0" /> <span className="max-w-[280px] sm:max-w-none">{kajian.waktu}</span>
                                                         </div>
                                                     </div>
                                                 </div>
