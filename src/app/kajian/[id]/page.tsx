@@ -32,6 +32,7 @@ export default function KajianDetailPage() {
     const [loading, setLoading] = useState(true);
     const [hasAttended, setHasAttended] = useState(false);
     const [count, setCount] = useState(0);
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
     // ... existing useEffect ...
     useEffect(() => {
@@ -118,32 +119,40 @@ export default function KajianDetailPage() {
                 <div className="md:grid md:grid-cols-12 md:gap-8">
                     {/* Main Content */}
                     <div className="md:col-span-8">
-                        {/* Hero / Poster Area */}
-                        <div className="bg-slate-200 aspect-video relative rounded-3xl overflow-hidden shadow-sm">
-                            {kajian.imageUrl ? (
-                                <img src={kajian.imageUrl} alt={kajian.tema} className="w-full h-full object-cover" />
-                            ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center p-8 text-center text-white">
-                                    <div>
-                                        <Hash className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                                        <h2 className="text-2xl font-bold mb-2 shadow-sm">{kajian.tema}</h2>
-                                        <p className="opacity-90">{kajian.pemateri}</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
                         <div className="mt-6">
                             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 space-y-6">
-                                {/* Title Section */}
+                                {/* Title Section with Thumbnail */}
                                 <div className="border-b border-slate-100 pb-6">
-                                    <span className="inline-block px-3 py-1 bg-teal-50 text-teal-700 text-xs font-bold rounded-lg mb-3 uppercase tracking-wider">
-                                        {kajian.city}
-                                    </span>
-                                    <h1 className="text-xl font-bold text-slate-900 leading-snug mb-2">{kajian.tema}</h1>
-                                    <div className="flex items-center gap-2 text-slate-600 font-medium">
-                                        <User className="w-4 h-4 text-teal-500" />
-                                        <span>{kajian.pemateri}</span>
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <span className="inline-block px-3 py-1 bg-teal-50 text-teal-700 text-xs font-bold rounded-lg mb-3 uppercase tracking-wider">
+                                                {kajian.city}
+                                            </span>
+                                            <h1 className="text-xl font-bold text-slate-900 leading-snug mb-2">{kajian.tema}</h1>
+                                            <div className="flex items-center gap-2 text-slate-600 font-medium">
+                                                <User className="w-4 h-4 text-teal-500" />
+                                                <span>{kajian.pemateri}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Thumbnail Image */}
+                                        {kajian.imageUrl && (
+                                            <button
+                                                onClick={() => setIsImageModalOpen(true)}
+                                                className="shrink-0 w-32 h-32 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all hover:scale-105 cursor-pointer group relative"
+                                            >
+                                                <img
+                                                    src={kajian.imageUrl}
+                                                    alt={kajian.tema}
+                                                    className="w-full h-full object-cover group-hover:brightness-75 transition-all"
+                                                />
+                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-2">
+                                                        <ExternalLink className="w-4 h-4 text-slate-700" />
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 
@@ -253,6 +262,33 @@ export default function KajianDetailPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Image Modal */}
+            {isImageModalOpen && kajian?.imageUrl && (
+                <div
+                    className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+                    onClick={() => setIsImageModalOpen(false)}
+                >
+                    <button
+                        onClick={() => setIsImageModalOpen(false)}
+                        className="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all z-10"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                    <div
+                        className="relative max-w-5xl w-full max-h-[90vh] animate-in zoom-in-95 duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <img
+                            src={kajian.imageUrl}
+                            alt={kajian.tema}
+                            className="w-full h-full object-contain rounded-2xl shadow-2xl"
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
