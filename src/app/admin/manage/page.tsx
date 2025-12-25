@@ -172,7 +172,21 @@ export default function AdminManagePage() {
             const data = await res.json();
 
             if (data.success) {
-                alert(`✓ Berhasil!\n\nTotal: ${data.stats.total}\nUpdated: ${data.stats.updated}\nFailed: ${data.stats.failed}`);
+                let message = `✓ Berhasil!\n\nTotal: ${data.stats.total}\nUpdated: ${data.stats.updated}\nFailed: ${data.stats.failed}`;
+
+                if (data.sampleUrls && data.sampleUrls.length > 0) {
+                    message += '\n\nSample URLs:\n' + data.sampleUrls.slice(0, 3).map((url: string, i: number) =>
+                        `${i + 1}. ${url.substring(0, 60)}...`
+                    ).join('\n');
+                }
+
+                if (data.errors && data.errors.length > 0) {
+                    message += '\n\nFirst 3 Errors:\n' + data.errors.slice(0, 3).map((err: any, i: number) =>
+                        `${i + 1}. ${err.masjid}: ${err.error}\n   URL: ${err.url.substring(0, 50)}...`
+                    ).join('\n');
+                }
+
+                alert(message);
                 // Refresh data
                 fetchData();
             } else {

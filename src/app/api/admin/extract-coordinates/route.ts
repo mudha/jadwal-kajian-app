@@ -25,9 +25,15 @@ export async function POST() {
 
         let updated = 0;
         let failed = 0;
-        const errors: Array<{ id: number; masjid: string; error: string }> = [];
+        const errors: Array<{ id: number; masjid: string; url: string; error: string }> = [];
+        const sampleUrls: string[] = [];
 
         for (const kajian of kajianList) {
+            // Collect first 5 URLs as samples
+            if (sampleUrls.length < 5) {
+                sampleUrls.push(kajian.gmapsUrl);
+            }
+
             try {
                 // Extract coordinates from gmapsUrl
                 const coords = extractCoordinatesFromGmapsUrl(kajian.gmapsUrl);
@@ -45,15 +51,18 @@ export async function POST() {
                     errors.push({
                         id: kajian.id,
                         masjid: kajian.masjid,
-                        error: 'Could not extract valid coordinates from URL'
+                        url: kajian.gmapsUrl.substring(0, 100), // First 100 chars
+                        error: coords ? 'Invalid coordinates (out of bounds)' : 'Could not extract coordinates from URL'
                     });
                     console.log(`✗ Failed to extract coordinates for kajian #${kajian.id} (${kajian.masjid})`);
+                    console.log(`  URL: ${kajian.gmapsUrl.substring(0, 100)}`);
                 }
             } catch (error) {
                 failed++;
                 errors.push({
                     id: kajian.id,
                     masjid: kajian.masjid,
+                    url: kajian.gmapsUrl.substring(0, 100),
                     error: error instanceof Error ? error.message : 'Unknown error'
                 });
                 console.error(`✗ Error processing kajian #${kajian.id}:`, error);
@@ -68,7 +77,8 @@ export async function POST() {
                 updated,
                 failed
             },
-            errors: errors.length > 0 ? errors : undefined
+            sampleUrls, // Include sample URLs for debugging
+            errors: errors.length > 0 ? errors.slice(0, 10) : undefined // First 10 errors only
         });
 
     } catch (error) {
