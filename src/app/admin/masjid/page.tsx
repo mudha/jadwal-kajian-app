@@ -16,7 +16,7 @@ export default function MasjidManagementPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMasjid, setEditingMasjid] = useState<Masjid | null>(null);
-    const [formData, setFormData] = useState({ name: '', city: '', address: '' });
+    const [formData, setFormData] = useState({ name: '', city: '', address: '', gmapsUrl: '' });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -52,7 +52,7 @@ export default function MasjidManagementPage() {
             if (response.ok) {
                 fetchMasjid();
                 setIsModalOpen(false);
-                setFormData({ name: '', city: '', address: '' });
+                setFormData({ name: '', city: '', address: '', gmapsUrl: '' });
                 setEditingMasjid(null);
             }
         } catch (error) {
@@ -82,13 +82,14 @@ export default function MasjidManagementPage() {
             name: masjid.name,
             city: masjid.city,
             address: masjid.address || '',
+            gmapsUrl: masjid.gmapsUrl || '',
         });
         setIsModalOpen(true);
     };
 
     const openAddModal = () => {
         setEditingMasjid(null);
-        setFormData({ name: '', city: '', address: '' });
+        setFormData({ name: '', city: '', address: '', gmapsUrl: '' });
         setIsModalOpen(true);
     };
 
@@ -308,6 +309,21 @@ export default function MasjidManagementPage() {
                                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none resize-none"
                                     rows={3}
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">
+                                    Link Google Maps (Opsional)
+                                </label>
+                                <input
+                                    type="url"
+                                    value={formData.gmapsUrl}
+                                    onChange={(e) => setFormData({ ...formData, gmapsUrl: e.target.value })}
+                                    placeholder="https://maps.google.com/..."
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none"
+                                />
+                                <p className="text-xs text-slate-500 mt-2">
+                                    Paste link dari Google Maps untuk lokasi masjid
+                                </p>
                             </div>
                             <div className="flex gap-3 pt-4">
                                 <button

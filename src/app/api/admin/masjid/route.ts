@@ -9,11 +9,11 @@ export async function GET() {
                 DISTINCT masjid as name,
                 city,
                 address,
-                gmapsUrl,
+                MAX(gmapsUrl) as gmapsUrl,
                 COUNT(*) as kajianCount
             FROM kajian
             WHERE masjid IS NOT NULL AND masjid != ''
-            GROUP BY masjid, city, address, gmapsUrl
+            GROUP BY masjid, city, address
             ORDER BY masjid ASC
         `);
 

@@ -7,7 +7,7 @@ export async function PUT(
     context: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { name, city, address } = await request.json();
+        const { name, city, address, gmapsUrl } = await request.json();
         const { id } = await context.params;
         const oldName = decodeURIComponent(id);
 
@@ -17,8 +17,8 @@ export async function PUT(
 
         // Update all kajian with this masjid name
         await db.execute({
-            sql: 'UPDATE kajian SET masjid = ?, city = ?, address = ? WHERE masjid = ?',
-            args: [name, city, address || '', oldName],
+            sql: 'UPDATE kajian SET masjid = ?, city = ?, address = ?, gmapsUrl = ? WHERE masjid = ?',
+            args: [name, city, address || '', gmapsUrl || '', oldName],
         });
 
         return NextResponse.json({ message: 'Masjid updated successfully' });
