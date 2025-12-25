@@ -489,7 +489,8 @@ export default function KajianListPage() {
 
                                             </div>
                                         );
-                        </div>
+                                    })}
+                                </div>
                             )
                         }
                     </main>
