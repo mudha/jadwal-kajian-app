@@ -11,7 +11,7 @@ export function parseIndoDate(dateStr: string): Date | null {
         // Example: "Selasa, 23 Desember 2025" -> "23 Desember 2025"
         // Example: "Ahad 18 Januari 2026" -> "18 Januari 2026"
         const clean = dateStr
-            .replace(/Ahad|Senin|Selasa|Rabu|Kamis|Jumat|Sabtu|Minggu/gi, '')
+            .replace(/Ahad|Senin|Selasa|Rabu|Kamis|Jum'?at|Sabtu|Minggu/gi, '')
             .replace(/,/g, '')
             .trim();
 
