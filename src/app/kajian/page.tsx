@@ -428,7 +428,7 @@ function KajianListContent() {
                                                             </div>
                                                         )}
                                                         {status === 'PAST' && (
-                                                            <div className="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black rounded-lg uppercase tracking-wider border border-slate-200 whitespace-nowrap">
+                                                            <div className="px-3 py-1 bg-slate-600 text-white text-[10px] font-black rounded-lg uppercase tracking-wider shadow-sm whitespace-nowrap">
                                                                 Selesai
                                                             </div>
                                                         )}
