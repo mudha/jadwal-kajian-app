@@ -113,7 +113,7 @@ export default function KajianListPage() {
         }
 
         if (filterMode === 'akhwat') {
-            const isAkhwat = k.khususAkhwat === 1 ||
+            const isAkhwat = (k.khususAkhwat as unknown as number) === 1 ||
                 k.khususAkhwat === true ||
                 k.tema.toLowerCase().includes('muslimah') ||
                 k.tema.toLowerCase().includes('akhwat');
