@@ -8,14 +8,30 @@ import {
     ShieldCheck,
     ListMusic,
     Calendar,
+    Users,
     Menu,
-    X
+    X,
 } from 'lucide-react';
 import LogoutButton from '@/components/LogoutButton';
+import { useEffect } from 'react';
+
+interface SessionData {
+    isAdmin: boolean;
+    role: string | null;
+    username: string | null;
+}
 
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [session, setSession] = useState<SessionData | null>(null);
     const pathname = usePathname();
+
+    useEffect(() => {
+        fetch('/api/admin/check-session')
+            .then(res => res.json())
+            .then(data => setSession(data))
+            .catch(() => setSession({ isAdmin: false, role: null, username: null }));
+    }, []);
 
     const menuItems = [
         { href: '/admin/manage', icon: LayoutDashboard, label: 'Kelola Jadwal' },
@@ -23,6 +39,11 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
         { href: '/admin/ustadz', icon: ListMusic, label: 'Kelola Ustadz' },
         { href: '/admin/masjid', icon: Calendar, label: 'Kelola Masjid' },
     ];
+
+    // Add admin management only for Super Admin
+    if (session?.role === 'SUPER_ADMIN') {
+        menuItems.push({ href: '/admin/admins', icon: Users, label: 'Kelola Admin' });
+    }
 
     const isActive = (href: string) => pathname === href;
 

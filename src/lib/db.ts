@@ -45,6 +45,7 @@ const initDb = async () => {
       username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
       email TEXT,
+      role TEXT DEFAULT 'ADMIN',
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -57,6 +58,7 @@ const initDb = async () => {
   try { await db.execute("ALTER TABLE kajian ADD COLUMN linkInfo TEXT"); } catch (e) { }
   try { await db.execute("ALTER TABLE kajian ADD COLUMN imageUrl TEXT"); } catch (e) { }
   try { await db.execute("ALTER TABLE kajian ADD COLUMN attendanceCount INTEGER DEFAULT 0"); } catch (e) { }
+  try { await db.execute("ALTER TABLE admins ADD COLUMN role TEXT DEFAULT 'ADMIN'"); } catch (e) { }
 };
 
 // Auto-init on import (Note: top-level await needs ES modules or handling in app startup)

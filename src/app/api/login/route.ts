@@ -29,7 +29,13 @@ export async function POST(request: Request) {
 
             // Set a secure cookie
             const cookieStore = await cookies();
-            cookieStore.set('admin_session', 'true', {
+            const sessionData = JSON.stringify({
+                isLoggedIn: true,
+                username: admin ? (admin.username as string) : 'admin',
+                role: admin ? (admin.role as string) : 'SUPER_ADMIN' // 'admin' hardcoded is Super Admin
+            });
+
+            cookieStore.set('admin_session', sessionData, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'strict',

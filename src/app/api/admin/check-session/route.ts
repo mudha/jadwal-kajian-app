@@ -6,10 +6,25 @@ export async function GET() {
         const cookieStore = await cookies();
         const session = cookieStore.get('admin_session');
 
-        return NextResponse.json({
-            isAdmin: !!session,
-        });
+        if (!session) {
+            return NextResponse.json({ isAdmin: false, role: null });
+        }
+
+        try {
+            const data = JSON.parse(session.value);
+            return NextResponse.json({
+                isAdmin: true,
+                username: data.username,
+                role: data.role || 'ADMIN',
+            });
+        } catch (e) {
+            // Fallback for old 'true' cookie format
+            return NextResponse.json({
+                isAdmin: session.value === 'true',
+                role: 'ADMIN',
+            });
+        }
     } catch (error) {
-        return NextResponse.json({ isAdmin: false });
+        return NextResponse.json({ isAdmin: false, role: null });
     }
 }
