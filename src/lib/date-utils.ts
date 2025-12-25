@@ -32,7 +32,7 @@ export function parseIndoDate(dateStr: string): Date | null {
     }
 }
 
-export function getKajianStatus(dateStr: string, waktuStr?: string): 'PAST' | 'TODAY' | 'UPCOMING' {
+export function getKajianStatus(dateStr: string, waktuStr?: string): 'PAST' | 'TODAY' | 'TOMORROW' | 'UPCOMING' {
     const kajianDate = parseIndoDate(dateStr);
     if (!kajianDate) return 'UPCOMING';
 
@@ -40,14 +40,22 @@ export function getKajianStatus(dateStr: string, waktuStr?: string): 'PAST' | 'T
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
     const targetDate = new Date(kajianDate);
     targetDate.setHours(0, 0, 0, 0);
 
     const tDate = targetDate.getTime();
     const dToday = today.getTime();
+    const dTomorrow = tomorrow.getTime();
 
     if (tDate < dToday) return 'PAST';
-    if (tDate > dToday) return 'UPCOMING';
+
+    // Check for Tomorrow
+    if (tDate === dTomorrow) return 'TOMORROW';
+
+    if (tDate > dToday && tDate !== dTomorrow) return 'UPCOMING';
 
     // It's Today, let's check the time if provided
     if (waktuStr) {

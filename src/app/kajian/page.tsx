@@ -413,6 +413,11 @@ function KajianListContent() {
                                                                 Hari Ini
                                                             </div>
                                                         )}
+                                                        {status === 'TOMORROW' && (
+                                                            <div className="px-3 py-1 bg-blue-600 text-white text-[10px] font-black rounded-lg uppercase tracking-wider shadow-sm whitespace-nowrap">
+                                                                Besok
+                                                            </div>
+                                                        )}
                                                         <div className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-green-100 whitespace-nowrap">
                                                             {kajian.city}
                                                         </div>
