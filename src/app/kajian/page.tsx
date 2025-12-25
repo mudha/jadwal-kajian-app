@@ -4,7 +4,20 @@ import { KajianEntry } from '@/lib/parser';
 import { Calendar, MapPin, User, Clock, Search, Trash2, ArrowLeft, History, ListFilter, MessageCircle, Edit, X, Save, Map as MapIcon, Share2, ExternalLink, ImageIcon } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
-// ... existing imports
+import Link from 'next/link';
+import { getKajianStatus } from '@/lib/date-utils';
+import dynamic from 'next/dynamic';
+import PrayerTimeWidget from '@/components/PrayerTimeWidget';
+import MenuGrid from '@/components/MenuGrid';
+
+const KajianMap = dynamic(() => import('@/components/KajianMap'), {
+    ssr: false,
+    loading: () => <div className="h-[400px] w-full bg-slate-100 animate-pulse rounded-3xl flex items-center justify-center text-slate-400 font-bold">Harap tunggu, peta sedang dimuat...</div>
+});
+
+interface KajianWithId extends KajianEntry {
+    id: number;
+}
 
 export default function KajianListPage() {
     const searchParams = useSearchParams();
