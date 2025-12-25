@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { LayoutDashboard, FileInput, LogOut, ShieldCheck, ListMusic, Calendar } from 'lucide-react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import LogoutButton from '@/components/LogoutButton';
 
 export default async function AdminLayout({
     children,
@@ -72,39 +73,5 @@ export default async function AdminLayout({
                 </main>
             </div>
         </div>
-    );
-}
-
-// Client component for logout logic
-'use client';
-import { useRouter } from 'next/navigation';
-
-function LogoutButton({ mobile }: { mobile?: boolean }) {
-    const router = useRouter();
-
-    const handleLogout = async () => {
-        if (confirm('Keluar dari halaman admin?')) {
-            await fetch('/api/login', { method: 'DELETE' });
-            router.push('/login');
-            router.refresh();
-        }
-    };
-
-    if (mobile) {
-        return (
-            <button onClick={handleLogout} className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg">
-                <LogOut className="w-5 h-5" />
-            </button>
-        );
-    }
-
-    return (
-        <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
-        >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Keluar</span>
-        </button>
     );
 }
