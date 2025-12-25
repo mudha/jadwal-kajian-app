@@ -14,12 +14,17 @@ import Link from 'next/link';
 export default function KajianCard({ id, date, location, title, ustadz, imageUrl }: KajianCardProps) {
     return (
         <Link href={`/kajian/${id}`} className="flex-shrink-0 w-80 bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 block hover:shadow-md transition-shadow">
-            {imageUrl && (
+            {imageUrl ? (
                 <img
                     src={imageUrl}
                     alt={title}
                     className="w-full h-32 object-cover"
                 />
+            ) : (
+                <div className="w-full h-32 bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]"></div>
+                    <span className="text-white/80 font-black text-xs uppercase tracking-widest z-10">Jadwal Kajian</span>
+                </div>
             )}
             <div className="p-4">
                 <p className="text-xs text-teal-600 font-bold mb-1">{date}</p>
