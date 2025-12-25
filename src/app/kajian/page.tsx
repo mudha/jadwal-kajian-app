@@ -130,9 +130,18 @@ function KajianListContent() {
             if (!isAkhwat) return false;
         }
 
-        // Nearby filtering (optional: max radius?)
-        // For now, sorting is enough, but we might want to filter crazy far ones?
-        // Let's just keep them all for now and Sort.
+        // Nearby filtering (Strict distance)
+        if (filterMode === 'nearby') {
+            if (userLocation) {
+                // If we have location, strict filter < 80km
+                if (k.distance === undefined || k.distance > 80) return false;
+            } else {
+                // If nearby mode but NO location yet, maybe hidden or show all?
+                // For now let's just allow it, but usually it re-renders once location is found.
+                // Or better: don't filter strict if loading, but user complaint implies they want strict.
+                // Let's rely on the useEffect setting userLocation rapidly.
+            }
+        }
 
         const matchesSearch = k.masjid.toLowerCase().includes(searchTerm.toLowerCase()) ||
             k.pemateri.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -153,9 +162,6 @@ function KajianListContent() {
 
     // Sort by distance if mode is nearby
     if (filterMode === 'nearby' && userLocation) {
-        // Filter out events that are too far (e.g. > 80km) to keep it relevant to Jabodetabek/Local
-        processedKajian = processedKajian.filter(k => k.distance !== undefined && k.distance < 80);
-
         filteredKajian.sort((a, b) => {
             if (a.distance !== undefined && b.distance !== undefined) {
                 return a.distance - b.distance;
@@ -441,12 +447,14 @@ function KajianListContent() {
                                                         <div className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-green-100 whitespace-nowrap">
                                                             {kajian.city}
                                                         </div>
-                                                        {kajian.city !== 'Online' && kajian.masjid !== 'Live Streaming' && kajian.distance !== undefined && (
-                                                            <div className="px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-amber-100 flex items-center gap-1 whitespace-nowrap">
-                                                                <MapPin className="w-3 h-3" />
-                                                                {kajian.distance.toFixed(1)} km
-                                                            </div>
-                                                        )}
+                                                        {!kajian.city.toLowerCase().includes('online') &&
+                                                            !kajian.masjid.toLowerCase().includes('live streaming') &&
+                                                            kajian.distance !== undefined && (
+                                                                <div className="px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-amber-100 flex items-center gap-1 whitespace-nowrap">
+                                                                    <MapPin className="w-3 h-3" />
+                                                                    {kajian.distance.toFixed(1)} km
+                                                                </div>
+                                                            )}
                                                         {kajian.khususAkhwat && (
                                                             <div className="px-3 py-1 bg-pink-50 text-pink-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-pink-100 whitespace-nowrap">
                                                                 🌸 Akhwat
@@ -672,46 +680,60 @@ function KajianListContent() {
                     <PrayerTimeWidget />
 
                     {/* LIVE / TODAY KAJIAN WIDGET */}
-                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-bold text-slate-900">Kajian Berlangsung</h3>
-                            <span className="animate-pulse flex h-3 w-3 rounded-full bg-red-500"></span>
+                    {/* LIVE / TODAY KAJIAN WIDGET */}
+                    <div className="bg-gradient-to-br from-teal-600 to-teal-800 rounded-3xl p-6 shadow-xl text-white relative overflow-hidden">
+                        {/* Decorative Background Elements */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-teal-500/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+
+                        <div className="flex items-center justify-between mb-5 relative z-10">
+                            <div>
+                                <h3 className="font-bold text-xl text-white">Kajian Hari Ini</h3>
+                                <p className="text-teal-100 text-xs opacity-80">Jadwal kajian sunnah pilihan</p>
+                            </div>
+                            <span className="relative flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-teal-700"></span>
+                            </span>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-4 relative z-10">
                             {kajianList
                                 .filter(k => getKajianStatus(k.date, k.waktu) === 'TODAY' || getKajianStatus(k.date, k.waktu) === 'TOMORROW')
-                                .slice(0, 5) // Show top 5 nearest/today
+                                .slice(0, 5) // Show top 5
                                 .map(k => (
                                     <Link href={`/kajian/${k.id}`} key={k.id} className="block group">
-                                        <div className="flex gap-3 items-start">
-                                            <div className="w-12 h-12 bg-slate-100 rounded-xl shrink-0 overflow-hidden relative">
+                                        <div className="flex gap-3 items-start p-2 rounded-xl hover:bg-white/10 transition-colors">
+                                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl shrink-0 overflow-hidden relative border border-white/10">
                                                 {k.imageUrl ? (
                                                     <img src={k.imageUrl} className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                                    <div className="w-full h-full flex items-center justify-center text-teal-100">
                                                         <User className="w-6 h-6" />
                                                     </div>
                                                 )}
                                                 {getKajianStatus(k.date, k.waktu) === 'TODAY' && (
-                                                    <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white translate-x-1 -translate-y-1"></div>
+                                                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border border-teal-800 translate-x-0.5 -translate-y-0.5 shadow-sm"></div>
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-teal-600 mb-0.5 truncate">{k.waktu.split(' ')[0]} • {k.city}</p>
-                                                <p className="text-xs font-bold text-slate-800 leading-tight line-clamp-2 group-hover:text-blue-600 transition-colors">{k.tema}</p>
-                                                <p className="text-[10px] text-slate-500 mt-0.5 truncate">{k.pemateri}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-teal-200 mb-0.5 truncate flex items-center gap-1">
+                                                    <Clock className="w-3 h-3" />
+                                                    {k.waktu.split(' ')[0]} • {k.city === 'Online' ? 'ONLINE' : k.city}
+                                                </p>
+                                                <p className="text-xs font-bold text-white leading-tight line-clamp-2 group-hover:text-teal-200 transition-colors">{k.tema}</p>
+                                                <p className="text-[10px] text-teal-100/70 mt-0.5 truncate">{k.pemateri}</p>
                                             </div>
                                         </div>
                                     </Link>
                                 ))
                             }
                             {kajianList.filter(k => getKajianStatus(k.date, k.waktu) === 'TODAY').length === 0 && (
-                                <div className="text-center py-4 text-slate-400 text-xs">
-                                    Tidak ada kajian highlight saat ini.
+                                <div className="text-center py-6 text-teal-100/60 text-xs italic bg-white/5 rounded-xl border border-white/5">
+                                    Belum ada info kajian untuk hari ini.
                                 </div>
                             )}
-                            <Link href="/kajian?mode=today" className="block text-center text-xs font-bold text-blue-600 hover:underline pt-2">
+                            <Link href="/kajian?mode=today" className="block text-center text-xs font-bold text-white/90 hover:text-white hover:bg-white/10 py-2 rounded-lg transition-all mt-2">
                                 Lihat Semua Jadwal Hari Ini →
                             </Link>
                         </div>
