@@ -153,6 +153,9 @@ function KajianListContent() {
 
     // Sort by distance if mode is nearby
     if (filterMode === 'nearby' && userLocation) {
+        // Filter out events that are too far (e.g. > 80km) to keep it relevant to Jabodetabek/Local
+        processedKajian = processedKajian.filter(k => k.distance !== undefined && k.distance < 80);
+
         filteredKajian.sort((a, b) => {
             if (a.distance !== undefined && b.distance !== undefined) {
                 return a.distance - b.distance;
@@ -438,7 +441,7 @@ function KajianListContent() {
                                                         <div className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-green-100 whitespace-nowrap">
                                                             {kajian.city}
                                                         </div>
-                                                        {kajian.distance !== undefined && (
+                                                        {kajian.city !== 'Online' && kajian.masjid !== 'Live Streaming' && kajian.distance !== undefined && (
                                                             <div className="px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-amber-100 flex items-center gap-1 whitespace-nowrap">
                                                                 <MapPin className="w-3 h-3" />
                                                                 {kajian.distance.toFixed(1)} km
@@ -664,25 +667,55 @@ function KajianListContent() {
                 </div>
 
                 {/* Right Column (Sidebar) */}
-                <div className="md:col-span-4 space-y-6 hidden md:block">
+                <div className="md:col-span-4 space-y-6 hidden md:block sticky top-24 h-fit">
                     {/* Prayer Time Widget */}
                     <PrayerTimeWidget />
 
-                    {/* Kitab Referensi Banner */}
-                    <Link
-                        href="#"
-                        className="block bg-gradient-to-r from-teal-500 to-emerald-500 rounded-2xl p-4 text-white hover:opacity-95 transition-opacity"
-                    >
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="font-bold text-lg">Kitab Referensi</p>
-                                <p className="text-sm text-white/90">Pelajari lebih lanjut</p>
-                            </div>
-                            <button className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-bold transition-colors">
-                                Baca
-                            </button>
+                    {/* LIVE / TODAY KAJIAN WIDGET */}
+                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold text-slate-900">Kajian Berlangsung</h3>
+                            <span className="animate-pulse flex h-3 w-3 rounded-full bg-red-500"></span>
                         </div>
-                    </Link>
+
+                        <div className="space-y-4">
+                            {kajianList
+                                .filter(k => getKajianStatus(k.date, k.waktu) === 'TODAY' || getKajianStatus(k.date, k.waktu) === 'TOMORROW')
+                                .slice(0, 5) // Show top 5 nearest/today
+                                .map(k => (
+                                    <Link href={`/kajian/${k.id}`} key={k.id} className="block group">
+                                        <div className="flex gap-3 items-start">
+                                            <div className="w-12 h-12 bg-slate-100 rounded-xl shrink-0 overflow-hidden relative">
+                                                {k.imageUrl ? (
+                                                    <img src={k.imageUrl} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                                        <User className="w-6 h-6" />
+                                                    </div>
+                                                )}
+                                                {getKajianStatus(k.date, k.waktu) === 'TODAY' && (
+                                                    <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white translate-x-1 -translate-y-1"></div>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-teal-600 mb-0.5 truncate">{k.waktu.split(' ')[0]} • {k.city}</p>
+                                                <p className="text-xs font-bold text-slate-800 leading-tight line-clamp-2 group-hover:text-blue-600 transition-colors">{k.tema}</p>
+                                                <p className="text-[10px] text-slate-500 mt-0.5 truncate">{k.pemateri}</p>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))
+                            }
+                            {kajianList.filter(k => getKajianStatus(k.date, k.waktu) === 'TODAY').length === 0 && (
+                                <div className="text-center py-4 text-slate-400 text-xs">
+                                    Tidak ada kajian highlight saat ini.
+                                </div>
+                            )}
+                            <Link href="/kajian?mode=today" className="block text-center text-xs font-bold text-blue-600 hover:underline pt-2">
+                                Lihat Semua Jadwal Hari Ini →
+                            </Link>
+                        </div>
+                    </div>
 
                     {/* Menu Grid */}
                     <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">

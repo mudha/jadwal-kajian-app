@@ -21,19 +21,20 @@ export async function POST(request: Request) {
         let prompt = `
             Extract Islamic lecture (Kajian) schedules from the following content.
             Return ONLY a valid JSON array of objects with the following structure:
-            {
-                "masjid": "string (name of mosque)",
-                "city": "string (city name in Indonesia)",
-                "address": "string (full address if available)",
-                "pemateri": "string (name of the speaker/ustadz)",
-                "tema": "string (topic/theme of the lecture)",
-                "waktu": "string (time, like 'Ba'da Maghrib' or '09:00 - 11:00')",
-                "date": "string (human readable date, like 'Ahad, 25 Okt 2025')",
-                "cp": "string (contact person or phone number)",
-                "region": "INDONESIA",
-                "gmapsUrl": ""
-            }
-            If any field is unknown, use an empty string. 
+        {
+            "masjid": "string (name of mosque or 'Live Streaming' / 'Zoom' / 'Google Meet' if online)",
+                "city": "string (city name in Indonesia, OR 'Online' if it is a virtual event)",
+                    "address": "string (full address if available)",
+                        "pemateri": "string (name of the speaker/ustadz)",
+                            "tema": "string (topic/theme of the lecture)",
+                                "waktu": "string (time, like 'Ba'da Maghrib' or '09:00 - 11:00')",
+                                    "date": "string (human readable date, like 'Ahad, 25 Okt 2025')",
+                                        "cp": "string (contact person or phone number)",
+                                            "region": "INDONESIA",
+                                                "gmapsUrl": ""
+        }
+            If any field is unknown, use an empty string.
+            IMPORTANT: If the event is ONLINE(e.g., mentions 'Live Streaming', 'Zoom', 'Youtube', 'Google Meet', 'IG Live'), set "city" to "Online" and "masjid" to the platform name or "Live Streaming".
             Do NOT include markdown formatting or any text other than the JSON array.
         `;
 
