@@ -337,9 +337,12 @@ function KajianListContent() {
                         {/* Filter Kota (Pills) */}
                         {
                             kajianList.length > 0 && (
-                                <div className="mb-6">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Filter Berdasarkan Kota</p>
-                                    <div className="flex flex-wrap gap-2">
+                                <div className="mb-8">
+                                    <div className="flex items-center justify-between mb-3 px-1">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Filter Kota</p>
+                                        <div className="text-[10px] font-bold text-teal-600 cursor-pointer hover:underline" onClick={() => setSearchTerm('')}>Reset Filter</div>
+                                    </div>
+                                    <div className="flex overflow-x-auto gap-3 pb-2 -mx-4 px-4 scrollbar-hide">
                                         {Array.from(new Set(kajianList.map(k => k.city)))
                                             .sort()
                                             .map(city => {
@@ -348,7 +351,7 @@ function KajianListContent() {
                                                     <button
                                                         key={city}
                                                         onClick={() => setSearchTerm(isActive ? '' : city)}
-                                                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border shadow-sm ${isActive
+                                                        className={`shrink-0 px-5 py-2.5 rounded-full text-xs font-bold transition-all border shadow-sm ${isActive
                                                             ? 'bg-teal-600 text-white border-teal-600 shadow-teal-100 ring-2 ring-teal-600 ring-offset-2'
                                                             : 'bg-white text-slate-600 border-slate-100 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600'
                                                             }`}
