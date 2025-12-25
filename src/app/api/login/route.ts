@@ -1,12 +1,30 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import db from '@/lib/db';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
     try {
         const { username, password } = await request.json();
 
-        // Hardcoded simple credentials for admin
-        if (username === 'admin' && password === 'admin123') {
+        // 1. Try to find user in database
+        const result = await db.execute({
+            sql: 'SELECT * FROM admins WHERE username = ?',
+            args: [username],
+        });
+
+        const admin = result.rows[0];
+        let isValid = false;
+
+        if (admin) {
+            // Compare hashed password from DB
+            isValid = await bcrypt.compare(password, admin.password as string);
+        } else if (username === 'admin' && password === 'admin123') {
+            // Fallback for default admin if no DB user found
+            isValid = true;
+        }
+
+        if (isValid) {
             const response = NextResponse.json({ success: true });
 
             // Set a secure cookie
@@ -22,8 +40,9 @@ export async function POST(request: Request) {
             return response;
         }
 
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: 'Username atau Password salah' }, { status: 401 });
     } catch (error) {
+        console.error('Login error:', error);
         return NextResponse.json({ error: 'System Error' }, { status: 500 });
     }
 }
