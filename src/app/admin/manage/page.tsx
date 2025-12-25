@@ -162,6 +162,28 @@ export default function AdminManagePage() {
         }
     };
 
+    const handleExtractCoordinates = async () => {
+        if (!confirm('Ekstrak koordinat dari semua Google Maps URL?\n\nIni akan mengupdate kajian yang punya gmapsUrl tapi belum punya koordinat lat/lng.')) {
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/admin/extract-coordinates', { method: 'POST' });
+            const data = await res.json();
+
+            if (data.success) {
+                alert(`✓ Berhasil!\n\nTotal: ${data.stats.total}\nUpdated: ${data.stats.updated}\nFailed: ${data.stats.failed}`);
+                // Refresh data
+                fetchData();
+            } else {
+                alert(`✗ Gagal: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Error extracting coordinates:', error);
+            alert('Terjadi kesalahan saat mengekstrak koordinat');
+        }
+    };
+
     const filteredList = kajianList.filter(k =>
         k.masjid.toLowerCase().includes(searchTerm.toLowerCase()) ||
         k.pemateri.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -176,13 +198,23 @@ export default function AdminManagePage() {
                     <h1 className="text-2xl font-black text-slate-900">Kelola Jadwal Kajian</h1>
                     <p className="text-slate-500">Update, edit, atau hapus jadwal kajian yang terdaftar.</p>
                 </div>
-                <Link
-                    href="/admin/batch-input"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 transition-all active:scale-95"
-                >
-                    <Plus className="w-5 h-5" />
-                    Input Baru
-                </Link>
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleExtractCoordinates}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-lg shadow-teal-200 transition-all active:scale-95"
+                        title="Ekstrak koordinat dari Google Maps URL"
+                    >
+                        <MapPin className="w-5 h-5" />
+                        Extract Koordinat
+                    </button>
+                    <Link
+                        href="/admin/batch-input"
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 transition-all active:scale-95"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Input Baru
+                    </Link>
+                </div>
             </div>
 
             {/* Search Bar */}
