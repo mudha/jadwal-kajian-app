@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Calendar, MapPin, Share2, Clock, Map as MapIcon, Calendar as CalendarIcon, ExternalLink, Hash, User, Loader2 } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Share2, Clock, Map as MapIcon, Calendar as CalendarIcon, ExternalLink, Hash, User, Loader2, HandHeart } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -18,6 +18,7 @@ interface KajianDetail {
     imageUrl?: string;
     gmapsUrl?: string;
     linkInfo?: string;
+    attendanceCount?: number;
 }
 
 import Sidebar from '@/components/Sidebar';
@@ -28,6 +29,8 @@ export default function KajianDetailPage() {
     const router = useRouter();
     const [kajian, setKajian] = useState<KajianDetail | null>(null);
     const [loading, setLoading] = useState(true);
+    const [hasAttended, setHasAttended] = useState(false);
+    const [count, setCount] = useState(0);
 
     // ... existing useEffect ...
     useEffect(() => {
@@ -39,13 +42,33 @@ export default function KajianDetailPage() {
                 })
                 .then(data => {
                     setKajian(data);
+                    setCount(data.attendanceCount || 0);
                     setLoading(false);
+                    // Check local storage
+                    if (localStorage.getItem(`attended_${data.id}`)) {
+                        setHasAttended(true);
+                    }
                 })
                 .catch(() => {
                     setLoading(false);
                 });
         }
     }, [params]);
+
+    const handleAttend = async () => {
+        if (!kajian || hasAttended) return;
+
+        // Optimistic
+        setHasAttended(true);
+        setCount(prev => prev + 1);
+        localStorage.setItem(`attended_${kajian.id}`, 'true');
+
+        try {
+            await fetch(`/api/kajian/${kajian.id}/attend`, { method: 'POST' });
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     // ... existing loading check ...
     if (loading) {
@@ -135,7 +158,6 @@ export default function KajianDetailPage() {
                                             <p className="text-sm text-slate-600">{kajian.waktu}</p>
                                         </div>
                                     </div>
-
                                     <div className="flex items-start gap-4 p-3 bg-slate-50 rounded-2xl">
                                         <div className="p-2 bg-white rounded-xl shadow-sm">
                                             <MapPin className="w-5 h-5 text-teal-600" />
@@ -145,6 +167,33 @@ export default function KajianDetailPage() {
                                             <p className="font-bold text-slate-800">{kajian.masjid}</p>
                                             <p className="text-sm text-slate-600 leading-relaxed">{kajian.address}</p>
                                         </div>
+                                    </div>
+                                </div>
+
+                                {/* Insyaallah Hadir - Icon & Counter */}
+                                <div className="flex items-center justify-center gap-6 py-2">
+                                    <button
+                                        onClick={handleAttend}
+                                        disabled={hasAttended}
+                                        title="Insyaallah Hadir"
+                                        className={`group relative p-4 rounded-full transition-all duration-300 ${hasAttended
+                                            ? 'bg-teal-50 text-teal-600 ring-2 ring-teal-100'
+                                            : 'bg-slate-100 text-slate-400 hover:bg-teal-50 hover:text-teal-500 hover:scale-110'
+                                            }`}
+                                    >
+                                        <HandHeart className={`w-8 h-8 ${hasAttended ? 'fill-teal-600' : 'fill-none'}`} />
+                                        {!hasAttended && (
+                                            <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                                Insyaallah Hadir
+                                            </span>
+                                        )}
+                                    </button>
+
+                                    <div className="flex flex-col items-center group cursor-help">
+                                        <span className="text-3xl font-black text-slate-800 tracking-tight" title="Jamaah yg hadir">
+                                            {count}
+                                        </span>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jamaah</span>
                                     </div>
                                 </div>
 

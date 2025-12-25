@@ -14,6 +14,7 @@ export interface KajianEntry {
     date: string; // From the header
     khususAkhwat?: boolean; // True if kajian is exclusively for women
     linkInfo?: string; // Link pendaftaran, streaming, atau WAG
+    attendanceCount?: number; // Count of people planning to attend
 }
 
 export function parseKajianBroadcast(text: string): KajianEntry[] {

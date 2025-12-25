@@ -20,6 +20,7 @@ interface Kajian {
     linkInfo?: string;
     khususAkhwat?: boolean;
     imageUrl?: string;
+    attendanceCount?: number;
 }
 
 export default function AdminManagePage() {
@@ -177,6 +178,7 @@ export default function AdminManagePage() {
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Waktu & Tanggal</th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Masjid / Lokasi</th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Pemateri & Tema</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Peserta</th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Aksi</th>
                                 </tr>
                             </thead>
@@ -200,6 +202,11 @@ export default function AdminManagePage() {
                                         <td className="px-6 py-4">
                                             <div className="font-bold text-slate-900">{item.pemateri}</div>
                                             <p className="text-sm text-slate-500 line-clamp-1" title={item.tema}>{item.tema}</p>
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                            <span className="inline-flex items-center justify-center px-3 py-1 bg-green-100 text-green-700 rounded-full font-bold text-xs">
+                                                {item.attendanceCount || 0}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">

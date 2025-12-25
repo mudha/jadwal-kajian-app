@@ -36,10 +36,11 @@ function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 function KajianListContent() {
     const searchParams = useSearchParams();
     const filterMode = searchParams.get('mode');
+    const filterCity = searchParams.get('city');
 
     const [kajianList, setKajianList] = useState<KajianWithId[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeTab, setActiveTab] = useState<'all' | 'today' | 'upcoming' | 'past'>('all');
+    const [activeTab, setActiveTab] = useState<'all' | 'today' | 'upcoming' | 'past'>('today');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingKajian, setEditingKajian] = useState<KajianWithId | null>(null);
     const [showMap, setShowMap] = useState(false);
@@ -103,6 +104,11 @@ function KajianListContent() {
     }
 
     const filteredKajian = processedKajian.filter(k => {
+        // City Filtering (Priority)
+        if (filterCity) {
+            if (k.city.toLowerCase() !== filterCity.toLowerCase()) return false;
+        }
+
         // Mode Filtering
         if (filterMode === 'online') {
             const isOnline = k.city.toLowerCase().includes('online') ||
@@ -576,6 +582,43 @@ function KajianListContent() {
                                                             Daftar / Streaming
                                                         </a>
                                                     )}
+                                                </div>
+
+                                                {/* Insyaallah Hadir Section */}
+                                                <div className="mt-6 flex flex-col md:flex-row items-center justify-between bg-slate-50 rounded-2xl p-4 md:p-5 border border-slate-100 gap-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center shrink-0">
+                                                            <User className="w-5 h-5" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Insyaallah Hadir</p>
+                                                            <p className="font-bold text-slate-900 text-lg">{kajian.attendanceCount || 0} <span className="text-xs font-normal text-slate-500">Jamaah</span></p>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={async (e) => {
+                                                            const btn = e.currentTarget;
+                                                            if (btn.disabled) return;
+
+                                                            // Optimistic Update can be tricky here without state management for list
+                                                            // Let's just animate and call API, relying on list refresh or just button state
+                                                            btn.disabled = true;
+                                                            btn.textContent = 'Jazakumullah Khairan';
+                                                            btn.classList.add('bg-slate-200', 'text-slate-500', 'border-slate-200');
+                                                            btn.classList.remove('bg-white', 'text-teal-600', 'hover:bg-teal-50');
+
+                                                            try {
+                                                                await fetch(`/api/kajian/${kajian.id}/attend`, { method: 'POST' });
+                                                                // Ideally update state here, but for now simple confirmation is enough for List View
+                                                                // or trigger a soft refresh
+                                                            } catch (err) {
+                                                                console.error(err);
+                                                            }
+                                                        }}
+                                                        className="w-full md:w-auto px-6 py-3 bg-white border-2 border-teal-600 text-teal-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-teal-600 hover:text-white transition-all shadow-sm"
+                                                    >
+                                                        Insyaallah Saya Hadir
+                                                    </button>
                                                 </div>
 
                                                 <div className="mt-4 pt-4 border-t-2 border-dashed border-slate-100 grid grid-cols-2 gap-3">

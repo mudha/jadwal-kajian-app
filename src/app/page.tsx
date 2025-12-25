@@ -17,6 +17,7 @@ interface KajianWithId {
   tema: string;
   pemateri: string;
   imageUrl?: string;
+  attendanceCount?: number;
 }
 
 export default function BerandaPage() {
@@ -28,8 +29,6 @@ export default function BerandaPage() {
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          // Filter: Only Today, Tomorrow, Upcoming
-          // status 'PAST' is excluded.
           // Filter: Only Today, Tomorrow, Upcoming
           // status 'PAST' is excluded.
           const upcoming = data.map((k: any) => ({
@@ -102,6 +101,7 @@ export default function BerandaPage() {
                     title={kajian.tema}
                     ustadz={kajian.pemateri}
                     imageUrl={kajian.imageUrl}
+                    attendanceCount={kajian.attendanceCount}
                   />
                 ))}
               </div>

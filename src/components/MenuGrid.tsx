@@ -14,13 +14,9 @@ const menuItems: MenuItem[] = [
     { icon: Users, label: 'Kajian Muslimah', href: '/kajian?mode=akhwat' },
     { icon: MapPin, label: 'Lokasi Terdekat', href: '/kajian' },
     { icon: Clock, label: 'Jadwal Sholat', href: '/jadwal-sholat' },
-    { icon: Bell, label: 'Pengingat Ibadah', href: '/agenda' },
-    { icon: Map, label: 'Update Lokasi Saya', href: '#' },
     { icon: Book, label: 'Dzikir Pagi', href: '#' },
     { icon: Book, label: 'Dzikir Petang', href: '#' },
-    { icon: User, label: 'Profil Asatidz', href: '#' },
-    { icon: MapPin, label: 'Lokasi Kajian', href: '/kajian' },
-    { icon: MapPin, label: 'Jadwal Kota', href: '/kajian' },
+    { icon: MapPin, label: 'Jadwal Kota', href: '/kota' },
     { icon: Phone, label: 'Hubungi Kami', href: '#' },
 ];
 
