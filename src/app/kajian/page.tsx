@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { KajianEntry } from '@/lib/parser';
 import { Calendar, MapPin, User, Clock, Search, Trash2, ArrowLeft, History, ListFilter, MessageCircle, Edit, X, Save, Map as MapIcon, Share2, ExternalLink, ImageIcon } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
@@ -33,7 +33,7 @@ function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
     return d;
 }
 
-export default function KajianListPage() {
+function KajianListContent() {
     const searchParams = useSearchParams();
     const filterMode = searchParams.get('mode');
 
