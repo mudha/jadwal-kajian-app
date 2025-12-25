@@ -1,6 +1,22 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { cookies } from 'next/headers';
+// GET single by ID
+export async function GET(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await params;
+        const result = await db.execute({ sql: 'SELECT * FROM kajian WHERE id = ?', args: [id] });
+        if (result.rows.length === 0) {
+            return NextResponse.json({ error: 'Not Found' }, { status: 404 });
+        }
+        return NextResponse.json(result.rows[0]);
+    } catch (error) {
+        console.error('Fetch Error:', error);
+        return NextResponse.json({ error: 'Failed' }, { status: 500 });
+    }
+}
 
 export async function DELETE(
     request: Request,

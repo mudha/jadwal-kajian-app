@@ -1,6 +1,7 @@
 'use client';
 
 interface KajianCardProps {
+    id: number;
     date: string;
     location: string;
     title: string;
@@ -10,9 +11,9 @@ interface KajianCardProps {
 
 import Link from 'next/link';
 
-export default function KajianCard({ date, location, title, ustadz, imageUrl }: KajianCardProps) {
+export default function KajianCard({ id, date, location, title, ustadz, imageUrl }: KajianCardProps) {
     return (
-        <Link href="/kajian" className="flex-shrink-0 w-80 bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 block hover:shadow-md transition-shadow">
+        <Link href={`/kajian/${id}`} className="flex-shrink-0 w-80 bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 block hover:shadow-md transition-shadow">
             {imageUrl && (
                 <img
                     src={imageUrl}
