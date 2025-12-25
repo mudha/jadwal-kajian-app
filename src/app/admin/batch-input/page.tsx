@@ -288,8 +288,8 @@ export default function BatchInputPage() {
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-                <div className="xl:col-span-4 space-y-6">
-                    <div className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 space-y-8">
+                <div className="xl:col-span-3 space-y-6">
+                    <div className="bg-white p-6 rounded-[3rem] shadow-sm border border-slate-100 space-y-8">
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
                                 <div className="bg-blue-600 p-2 rounded-lg text-white">
@@ -390,8 +390,8 @@ export default function BatchInputPage() {
                     </div>
                 </div>
 
-                <div className="xl:col-span-8">
-                    <div className="bg-white p-10 rounded-[3.5rem] shadow-sm border border-slate-100 flex flex-col min-h-[750px]">
+                <div className="xl:col-span-9">
+                    <div className="bg-white p-6 rounded-[3.5rem] shadow-sm border border-slate-100 flex flex-col min-h-[750px]">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                             <div className="flex items-center gap-4">
                                 <div className="bg-emerald-500 p-3 rounded-2xl text-white shadow-lg shadow-emerald-100">
