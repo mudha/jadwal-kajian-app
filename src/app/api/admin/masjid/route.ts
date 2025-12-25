@@ -9,10 +9,11 @@ export async function GET() {
                 DISTINCT masjid as name,
                 city,
                 address,
+                gmapsUrl,
                 COUNT(*) as kajianCount
             FROM kajian
             WHERE masjid IS NOT NULL AND masjid != ''
-            GROUP BY masjid, city, address
+            GROUP BY masjid, city, address, gmapsUrl
             ORDER BY masjid ASC
         `);
 
@@ -21,6 +22,7 @@ export async function GET() {
             name: row.name,
             city: row.city || '',
             address: row.address || '',
+            gmapsUrl: row.gmapsUrl || '',
             kajianCount: row.kajianCount || 0,
         }));
 

@@ -1,12 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search, MapPin } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, MapPin, ExternalLink } from 'lucide-react';
 
 interface Masjid {
     id: number;
     name: string;
     city: string;
     address?: string;
+    gmapsUrl?: string;
     kajianCount?: number;
 }
 
@@ -172,6 +173,9 @@ export default function MasjidManagementPage() {
                                     Alamat
                                 </th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Google Maps
+                                </th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                                     Jumlah Kajian
                                 </th>
                                 <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -182,13 +186,13 @@ export default function MasjidManagementPage() {
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
                                         Memuat data...
                                     </td>
                                 </tr>
                             ) : filteredMasjid.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
                                         Tidak ada data masjid
                                     </td>
                                 </tr>
@@ -213,6 +217,22 @@ export default function MasjidManagementPage() {
                                         </td>
                                         <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">
                                             {masjid.address || '-'}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {masjid.gmapsUrl ? (
+                                                <a
+                                                    href={masjid.gmapsUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 text-xs font-bold rounded-lg hover:bg-green-100 transition-colors"
+                                                >
+                                                    <MapPin className="w-3 h-3" />
+                                                    Lihat Map
+                                                    <ExternalLink className="w-3 h-3" />
+                                                </a>
+                                            ) : (
+                                                <span className="text-xs text-slate-400">-</span>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-slate-600">
                                             {masjid.kajianCount || 0} kajian
