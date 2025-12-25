@@ -16,7 +16,7 @@ async function getSession() {
 // PATCH - Update admin role
 export async function PATCH(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getSession();
@@ -45,7 +45,7 @@ export async function PATCH(
 // DELETE - Remove admin
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getSession();
