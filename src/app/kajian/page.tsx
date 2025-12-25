@@ -753,17 +753,34 @@ function KajianListContent() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">URL Gambar (Cloudinary)</label>
-                                        <div className="flex gap-3">
-                                            <input
-                                                type="text"
-                                                className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-xs"
-                                                value={editingKajian.imageUrl || ''}
-                                                onChange={e => setEditingKajian({ ...editingKajian, imageUrl: e.target.value })}
-                                            />
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Poster / Gambar Kajian (URL)</label>
+                                        <div className="flex flex-col gap-3">
+                                            <div className="flex gap-2">
+                                                <div className="relative flex-1">
+                                                    <input
+                                                        type="text"
+                                                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-xs truncate"
+                                                        placeholder="https://..."
+                                                        value={editingKajian.imageUrl || ''}
+                                                        onChange={e => setEditingKajian({ ...editingKajian, imageUrl: e.target.value })}
+                                                    />
+                                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             {editingKajian.imageUrl && (
-                                                <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-200">
-                                                    <img src={editingKajian.imageUrl} className="w-full h-full object-cover" />
+                                                <div className="relative w-full h-48 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 group">
+                                                    <img
+                                                        src={editingKajian.imageUrl}
+                                                        className="w-full h-full object-cover"
+                                                        alt="Preview"
+                                                        onError={(e) => (e.currentTarget.style.display = 'none')}
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <p className="text-white text-xs font-bold">Preview Gambar</p>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
