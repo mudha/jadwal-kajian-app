@@ -425,38 +425,38 @@ function KajianListContent() {
 
                                                 {/* Status Badge */}
                                                 {status === 'TODAY' && (
-                                                    <div className="absolute top-0 right-0 bg-red-600 text-white px-6 py-1 text-[10px] font-black uppercase tracking-widest rotate-45 translate-x-12 translate-y-4 shadow-md">
+                                                    <div className="absolute top-0 right-0 bg-red-600 text-white w-32 text-center py-1 text-[10px] font-black uppercase tracking-widest rotate-45 translate-x-10 translate-y-3 shadow-md z-20">
                                                         Hari Ini
                                                     </div>
                                                 )}
 
-                                                <div className="flex justify-between items-start mb-6">
-                                                    <div className="flex gap-2">
-                                                        <div className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-green-100">
+                                                <div className="flex justify-between items-start mb-6 gap-4">
+                                                    <div className="flex flex-wrap gap-2 items-start">
+                                                        <div className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-green-100 whitespace-nowrap">
                                                             {kajian.city}
                                                         </div>
                                                         {kajian.distance !== undefined && (
-                                                            <div className="px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-amber-100 flex items-center gap-1">
+                                                            <div className="px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-amber-100 flex items-center gap-1 whitespace-nowrap">
                                                                 <MapPin className="w-3 h-3" />
                                                                 {kajian.distance.toFixed(1)} km
                                                             </div>
                                                         )}
                                                         {kajian.khususAkhwat && (
-                                                            <div className="px-3 py-1 bg-pink-50 text-pink-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-pink-100">
+                                                            <div className="px-3 py-1 bg-pink-50 text-pink-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-pink-100 whitespace-nowrap">
                                                                 🌸 Akhwat
                                                             </div>
                                                         )}
                                                         {status === 'PAST' && (
-                                                            <div className="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black rounded-lg uppercase tracking-wider border border-slate-200">
+                                                            <div className="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black rounded-lg uppercase tracking-wider border border-slate-200 whitespace-nowrap">
                                                                 Selesai
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div className="flex flex-col items-end text-right gap-0.5">
-                                                        <div className="flex items-center text-slate-500 text-[11px] font-bold">
+                                                    <div className="flex flex-col items-end text-right gap-1 shrink-0">
+                                                        <div className="flex items-center text-slate-500 text-[11px] font-bold whitespace-nowrap">
                                                             <Calendar className="w-3.5 h-3.5 mr-1.5 text-blue-500" /> {kajian.date}
                                                         </div>
-                                                        <div className="flex items-center text-slate-400 text-[11px] font-medium">
+                                                        <div className="flex items-center text-slate-400 text-[11px] font-medium whitespace-nowrap">
                                                             <Clock className="w-3.5 h-3.5 mr-1.5" /> {kajian.waktu}
                                                         </div>
                                                     </div>
