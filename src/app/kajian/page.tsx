@@ -131,15 +131,11 @@ function KajianListContent() {
         }
 
         // Nearby filtering (Strict distance)
-        if (filterMode === 'nearby') {
+        // Only strict filter if no specific city/search is applied
+        if (filterMode === 'nearby' && !searchTerm && !filterCity) {
             if (userLocation) {
                 // If we have location, strict filter < 80km
                 if (k.distance === undefined || k.distance > 80) return false;
-            } else {
-                // If nearby mode but NO location yet, maybe hidden or show all?
-                // For now let's just allow it, but usually it re-renders once location is found.
-                // Or better: don't filter strict if loading, but user complaint implies they want strict.
-                // Let's rely on the useEffect setting userLocation rapidly.
             }
         }
 
@@ -361,7 +357,7 @@ function KajianListContent() {
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Filter Kota</p>
                                         <div className="text-[10px] font-bold text-teal-600 cursor-pointer hover:underline" onClick={() => setSearchTerm('')}>Reset Filter</div>
                                     </div>
-                                    <div className="flex overflow-x-auto gap-3 pb-2 -mx-4 px-4 scrollbar-hide">
+                                    <div className="flex overflow-x-auto gap-3 pb-2 -mx-4 px-4 md:scrollbar-default">
                                         {Array.from(new Set(kajianList.map(k => k.city)))
                                             .sort()
                                             .map(city => {
