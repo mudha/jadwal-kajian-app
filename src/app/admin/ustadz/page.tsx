@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search, User } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, User, GitMerge } from 'lucide-react';
 
 interface Ustadz {
     id: number;
@@ -12,9 +12,12 @@ export default function UstadzManagementPage() {
     const [ustadzList, setUstadzList] = useState<Ustadz[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
     const [editingUstadz, setEditingUstadz] = useState<Ustadz | null>(null);
     const [formData, setFormData] = useState({ name: '' });
     const [loading, setLoading] = useState(true);
+    const [selectedForMerge, setSelectedForMerge] = useState<Set<string>>(new Set());
+    const [mergeTarget, setMergeTarget] = useState('');
 
     useEffect(() => {
         fetchUstadz();
@@ -89,6 +92,56 @@ export default function UstadzManagementPage() {
         u.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const toggleMergeSelection = (name: string) => {
+        const newSelected = new Set(selectedForMerge);
+        if (newSelected.has(name)) {
+            newSelected.delete(name);
+        } else {
+            newSelected.add(name);
+        }
+        setSelectedForMerge(newSelected);
+    };
+
+    const handleMerge = async () => {
+        if (selectedForMerge.size < 2) {
+            alert('Pilih minimal 2 ustadz untuk digabung');
+            return;
+        }
+
+        if (!mergeTarget) {
+            alert('Pilih nama target untuk penggabungan');
+            return;
+        }
+
+        const sourceNames = Array.from(selectedForMerge).filter(name => name !== mergeTarget);
+
+        if (sourceNames.length === 0) {
+            alert('Nama target tidak boleh sama dengan semua nama yang dipilih');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/admin/ustadz/merge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sourceNames, targetName: mergeTarget }),
+            });
+
+            if (response.ok) {
+                alert(`Berhasil menggabungkan ${sourceNames.length} nama ustadz`);
+                setSelectedForMerge(new Set());
+                setMergeTarget('');
+                setIsMergeModalOpen(false);
+                fetchUstadz();
+            } else {
+                alert('Gagal menggabungkan ustadz');
+            }
+        } catch (error) {
+            console.error('Error merging ustadz:', error);
+            alert('Terjadi kesalahan saat menggabungkan');
+        }
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -97,13 +150,24 @@ export default function UstadzManagementPage() {
                     <h1 className="text-3xl font-bold text-slate-900">Kelola Ustadz</h1>
                     <p className="text-slate-500 mt-1">Manajemen data ustadz/pemateri kajian</p>
                 </div>
-                <button
-                    onClick={openAddModal}
-                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
-                >
-                    <Plus className="w-5 h-5" />
-                    Tambah Ustadz
-                </button>
+                <div className="flex gap-3">
+                    {selectedForMerge.size > 0 && (
+                        <button
+                            onClick={() => setIsMergeModalOpen(true)}
+                            className="flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-all shadow-lg shadow-amber-200"
+                        >
+                            <GitMerge className="w-5 h-5" />
+                            Gabung ({selectedForMerge.size})
+                        </button>
+                    )}
+                    <button
+                        onClick={openAddModal}
+                        className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Tambah Ustadz
+                    </button>
+                </div>
             </div>
 
             {/* Search */}

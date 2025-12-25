@@ -173,9 +173,58 @@ export default function BatchInputPage() {
                     setEntries([...withCoords]); // Live update UI
                 }
             }
+
+            // Auto-normalize names
+            setMessage('Menormalisasi nama ustadz dan masjid...');
+            const normalized = [...withCoords];
+
+            for (let i = 0; i < normalized.length; i++) {
+                const entry = normalized[i];
+
+                // Normalize ustadz name
+                try {
+                    const ustadzResponse = await fetch('/api/admin/normalize', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: entry.pemateri, type: 'ustadz', threshold: 0.8 }),
+                    });
+                    const ustadzData = await ustadzResponse.json();
+
+                    if (ustadzData.hasExactMatch || (ustadzData.suggestions && ustadzData.suggestions.length > 0)) {
+                        const bestMatch = ustadzData.hasExactMatch
+                            ? ustadzData.canonicalName
+                            : ustadzData.suggestions[0].name;
+                        normalized[i] = { ...entry, pemateri: bestMatch };
+                    }
+                } catch (e) {
+                    console.error('Error normalizing ustadz:', e);
+                }
+
+                // Normalize masjid name
+                try {
+                    const masjidResponse = await fetch('/api/admin/normalize', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: entry.masjid, type: 'masjid', threshold: 0.8 }),
+                    });
+                    const masjidData = await masjidResponse.json();
+
+                    if (masjidData.hasExactMatch || (masjidData.suggestions && masjidData.suggestions.length > 0)) {
+                        const bestMatch = masjidData.hasExactMatch
+                            ? masjidData.canonicalName
+                            : masjidData.suggestions[0].name;
+                        normalized[i] = { ...normalized[i], masjid: bestMatch };
+                    }
+                } catch (e) {
+                    console.error('Error normalizing masjid:', e);
+                }
+
+                setEntries([...normalized]); // Live update UI
+            }
+
             setLastImageUrl(null); // Reset after processing
             setIsGeocoding(false);
-            setMessage(`Ekstraksi AI selesai. Lokasi masjid telah dipetakan.`);
+            setMessage(`Ekstraksi AI selesai. Nama ustadz dan masjid telah dinormalisasi.`);
         } catch (e: any) {
             setMessage(`Gagal memproses dengan AI: ${e.message || 'Kesalahan tidak diketahui'}`);
             setIsGeocoding(false);
