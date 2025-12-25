@@ -3,10 +3,10 @@ import { cookies } from 'next/headers';
 
 export async function POST(request: Request) {
     try {
-        const { password } = await request.json();
+        const { username, password } = await request.json();
 
-        // Hardcoded simple password for admin
-        if (password === 'admin123') {
+        // Hardcoded simple credentials for admin
+        if (username === 'admin' && password === 'admin123') {
             const response = NextResponse.json({ success: true });
 
             // Set a secure cookie

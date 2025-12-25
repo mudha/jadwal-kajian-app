@@ -1,9 +1,10 @@
 'use client';
 import { useState } from 'react';
-import { Lock, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, ArrowRight, ShieldCheck, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -18,11 +19,11 @@ export default function LoginPage() {
             const res = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password }),
+                body: JSON.stringify({ username, password }),
             });
 
             if (res.ok) {
-                router.push('/admin/batch-input');
+                router.push('/admin/manage');
                 router.refresh();
             } else {
                 setError('Password salah. Silakan coba lagi.');
@@ -49,6 +50,21 @@ export default function LoginPage() {
                         </div>
 
                         <form onSubmit={handleLogin} className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Username ID</label>
+                                <div className="relative">
+                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                                    <input
+                                        type="text"
+                                        required
+                                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold transition-all text-slate-900"
+                                        placeholder="Username"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Password Akses</label>
                                 <div className="relative">
