@@ -3,6 +3,8 @@ import db from '@/lib/db';
 import { KajianEntry } from '@/lib/parser';
 import { cookies } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
     try {
         const result = await db.execute('SELECT * FROM kajian ORDER BY id DESC');

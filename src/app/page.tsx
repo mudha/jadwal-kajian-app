@@ -6,11 +6,14 @@ import KajianCard from '@/components/KajianCard';
 import MenuGrid from '@/components/MenuGrid';
 import Link from 'next/link';
 
+import { getKajianStatus, parseIndoDate } from '@/lib/date-utils';
+
 interface KajianWithId {
   id: number;
   masjid: string;
   city: string;
   date: string;
+  waktu?: string;
   tema: string;
   pemateri: string;
   imageUrl?: string;
@@ -20,12 +23,25 @@ export default function BerandaPage() {
   const [featuredKajian, setFeaturedKajian] = useState<KajianWithId[]>([]);
 
   useEffect(() => {
-    // Fetch featured kajian (latest 5)
+    // Fetch featured kajian
     fetch('/api/kajian')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setFeaturedKajian(data.slice(0, 5));
+          // Filter: Only Today, Tomorrow, Upcoming
+          // status 'PAST' is excluded.
+          // Filter: Only Today, Tomorrow, Upcoming
+          // status 'PAST' is excluded.
+          const upcoming = data.map((k: any) => ({
+            ...k,
+            _parsedDate: getKajianStatus(k.date, k.waktu) === 'PAST' ? null : parseIndoDate(k.date)
+          })).filter((k: any) => k._parsedDate !== null)
+            .sort((a: any, b: any) => {
+              // Sort by Date ASC (Nearest first)
+              return (a._parsedDate?.getTime() || 0) - (b._parsedDate?.getTime() || 0);
+            });
+
+          setFeaturedKajian(upcoming.slice(0, 10)); // Show up to 10 nearest upcoming tables
         }
       })
       .catch(console.error);

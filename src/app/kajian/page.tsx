@@ -108,7 +108,8 @@ function KajianListContent() {
             const isOnline = k.city.toLowerCase().includes('online') ||
                 k.masjid.toLowerCase().includes('online') ||
                 k.address.toLowerCase().includes('online') ||
-                k.city.toLowerCase() === 'live streaming';
+                k.city.toLowerCase() === 'live streaming' ||
+                !!k.linkInfo; // Also check if streaming link exists
             if (!isOnline) return false;
         }
 
