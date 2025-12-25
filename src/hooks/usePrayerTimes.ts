@@ -87,7 +87,7 @@ export function usePrayerTimes() {
 
             // Find next prayer
             for (const name of prayerNames) {
-                const timeStr = state.timings[name];
+                const timeStr = state.timings![name];
                 if (!timeStr) continue;
 
                 const [hours, minutes] = timeStr.split(':').map(Number);
