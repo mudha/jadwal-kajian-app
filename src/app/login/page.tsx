@@ -49,7 +49,7 @@ export default function LoginPage() {
                             <p className="text-slate-500 font-medium">Halaman khusus pengelola jadwal kajian.</p>
                         </div>
 
-                        <form onSubmit={handleLogin} className="space-y-6">
+                        <form onSubmit={handleLogin} className="space-y-6" autoComplete="off">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Username ID</label>
                                 <div className="relative">
@@ -57,6 +57,7 @@ export default function LoginPage() {
                                     <input
                                         type="text"
                                         required
+                                        autoComplete="off"
                                         className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold transition-all text-slate-900"
                                         placeholder="Username"
                                         value={username}
@@ -72,6 +73,7 @@ export default function LoginPage() {
                                     <input
                                         type="password"
                                         required
+                                        autoComplete="new-password"
                                         className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold transition-all text-slate-900"
                                         placeholder="••••••••"
                                         value={password}
