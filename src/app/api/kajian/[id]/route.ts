@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { cookies } from 'next/headers';
+
 // GET single by ID
 export async function GET(
     request: Request,
