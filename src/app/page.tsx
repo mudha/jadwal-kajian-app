@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Search, User } from 'lucide-react';
+import { Search, User, Clock } from 'lucide-react';
 import PrayerTimeWidget from '@/components/PrayerTimeWidget';
 import KajianCard from '@/components/KajianCard';
 import MenuGrid from '@/components/MenuGrid';
@@ -140,21 +140,63 @@ export default function BerandaPage() {
           {/* Prayer Time Widget */}
           <PrayerTimeWidget />
 
-          {/* Kitab Referensi Banner */}
-          <Link
-            href="#"
-            className="block bg-gradient-to-r from-teal-500 to-emerald-500 rounded-2xl p-4 text-white hover:opacity-95 transition-opacity"
-          >
-            <div className="flex items-center justify-between">
+          {/* LIVE / TODAY KAJIAN WIDGET */}
+          <div className="bg-gradient-to-br from-teal-600 to-teal-800 rounded-3xl p-6 shadow-xl text-white relative overflow-hidden">
+            {/* Decorative Background Elements */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-teal-500/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+
+            <div className="flex items-center justify-between mb-5 relative z-10">
               <div>
-                <p className="font-bold text-lg">Kitab Referensi</p>
-                <p className="text-sm text-white/90">Pelajari lebih lanjut</p>
+                <h3 className="font-bold text-xl text-white">Kajian Hari Ini</h3>
+                <p className="text-teal-100 text-xs opacity-80">Jadwal kajian sunnah pilihan</p>
               </div>
-              <button className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-bold transition-colors">
-                Baca
-              </button>
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-teal-700"></span>
+              </span>
             </div>
-          </Link>
+
+            <div className="space-y-4 relative z-10">
+              {featuredKajian
+                .slice(0, 5) // Show top 5
+                .map(k => (
+                  <Link href={`/kajian/${k.id}`} key={k.id} className="block group">
+                    <div className="flex gap-3 items-start p-2 rounded-xl hover:bg-white/10 transition-colors">
+                      <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl shrink-0 overflow-hidden relative border border-white/10">
+                        {k.imageUrl ? (
+                          <img src={k.imageUrl} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-teal-100">
+                            <User className="w-6 h-6" />
+                          </div>
+                        )}
+                        {k.date.includes('Hari Ini') && (
+                          <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border border-teal-800 translate-x-0.5 -translate-y-0.5 shadow-sm"></div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-teal-200 mb-0.5 truncate flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {k.waktu ? k.waktu.split(' ')[0] : 'Jadwal'} • {k.city === 'Online' ? 'ONLINE' : k.city}
+                        </p>
+                        <p className="text-xs font-bold text-white leading-tight line-clamp-2 group-hover:text-teal-200 transition-colors">{k.tema}</p>
+                        <p className="text-[10px] text-teal-100/70 mt-0.5 truncate">{k.pemateri}</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              }
+              {featuredKajian.length === 0 && (
+                <div className="text-center py-6 text-teal-100/60 text-xs italic bg-white/5 rounded-xl border border-white/5">
+                  Belum ada info kajian untuk hari ini.
+                </div>
+              )}
+              <Link href="/kajian?mode=today" className="block text-center text-xs font-bold text-white/90 hover:text-white hover:bg-white/10 py-2 rounded-lg transition-all mt-2">
+                Lihat Semua Jadwal Hari Ini →
+              </Link>
+            </div>
+          </div>
 
           {/* Menu Grid */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
