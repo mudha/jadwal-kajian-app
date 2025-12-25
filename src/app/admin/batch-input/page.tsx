@@ -448,7 +448,7 @@ export default function BatchInputPage() {
                                                         className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
                                                     />
                                                 </td>
-                                                <td className="p-5 space-y-6 flex gap-6">
+                                                <td className="p-3 space-y-6 flex gap-6">
                                                     {entry.imageUrl && (
                                                         <div className="shrink-0 group/img relative">
                                                             <img src={entry.imageUrl} className="w-24 h-32 object-cover rounded-2xl border border-slate-200 shadow-sm" />
@@ -467,47 +467,47 @@ export default function BatchInputPage() {
                                                                     {entry.lat && <MapPin className="w-3.5 h-3.5 text-blue-500 animate-pulse" />}
                                                                     {entry.khususAkhwat && <span className="ml-2 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[9px] font-black border border-pink-200">🌸 KHUSUS AKHWAT</span>}
                                                                 </label>
-                                                                <input type="text" value={entry.masjid} onChange={(e) => updateEntry(idx, 'masjid', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-black text-slate-900 transition-all text-lg" />
+                                                                <input type="text" value={entry.masjid} onChange={(e) => updateEntry(idx, 'masjid', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all text-base" />
                                                             </div>
                                                             <div className="col-span-1">
                                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pemateri</label>
-                                                                <input type="text" value={entry.pemateri} onChange={(e) => updateEntry(idx, 'pemateri', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
+                                                                <input type="text" value={entry.pemateri} onChange={(e) => updateEntry(idx, 'pemateri', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all" />
                                                             </div>
                                                             <div className="col-span-1">
                                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Kota</label>
-                                                                <input type="text" value={entry.city} onChange={(e) => updateEntry(idx, 'city', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-black text-blue-600 transition-all" />
+                                                                <input type="text" value={entry.city} onChange={(e) => updateEntry(idx, 'city', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-blue-600 transition-all" />
                                                             </div>
                                                             <div className="col-span-2">
                                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tema</label>
-                                                                <input type="text" value={entry.tema} onChange={(e) => updateEntry(idx, 'tema', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium italic text-slate-600 transition-all" />
+                                                                <input type="text" value={entry.tema} onChange={(e) => updateEntry(idx, 'tema', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium italic text-slate-600 transition-all" />
                                                             </div>
                                                             <div className="col-span-1">
                                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
-                                                                <input type="text" value={entry.date} onChange={(e) => updateEntry(idx, 'date', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
+                                                                <input type="text" value={entry.date} onChange={(e) => updateEntry(idx, 'date', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all" />
                                                             </div>
                                                             <div className="col-span-1">
                                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Waktu</label>
-                                                                <input type="text" value={entry.waktu} onChange={(e) => updateEntry(idx, 'waktu', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-slate-700 transition-all" />
+                                                                <input type="text" value={entry.waktu} onChange={(e) => updateEntry(idx, 'waktu', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all" />
                                                             </div>
                                                             <div className="col-span-2">
                                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Alamat</label>
-                                                                <input type="text" value={entry.address} onChange={(e) => updateEntry(idx, 'address', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium text-slate-600 transition-all" />
+                                                                <input type="text" value={entry.address} onChange={(e) => updateEntry(idx, 'address', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium text-slate-600 transition-all" />
                                                             </div>
                                                             <div className="col-span-2">
                                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">CP / Maps</label>
                                                                 <div className="flex gap-4">
-                                                                    <input type="text" placeholder="CP" value={entry.cp} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="flex-1 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-bold text-emerald-600" />
-                                                                    <input type="text" placeholder="Maps URL" value={entry.gmapsUrl} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 outline-none font-medium text-blue-500 text-sm" />
+                                                                    <input type="text" placeholder="CP" value={entry.cp} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="flex-1 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-emerald-600" />
+                                                                    <input type="text" placeholder="Maps URL" value={entry.gmapsUrl} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium text-blue-500 text-sm" />
                                                                 </div>
                                                             </div>
                                                             <div className="col-span-2">
                                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Link Pendaftaran / Streaming</label>
-                                                                <input type="text" placeholder="https://..." value={entry.linkInfo || ''} onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-purple-500 rounded-2xl px-5 py-3 outline-none font-medium text-purple-600 text-sm" />
+                                                                <input type="text" placeholder="https://..." value={entry.linkInfo || ''} onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-purple-500 rounded-xl px-4 py-2 outline-none font-medium text-purple-600 text-sm" />
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="p-8 align-top text-right">
+                                                <td className="p-3 align-top text-right">
                                                     <button onClick={() => handleDiscard(idx)} className="p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover/row:opacity-100">
                                                         <Trash2 className="w-5 h-5" />
                                                     </button>
