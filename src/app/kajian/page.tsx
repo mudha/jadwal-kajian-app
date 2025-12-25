@@ -9,6 +9,7 @@ import { getKajianStatus } from '@/lib/date-utils';
 import dynamic from 'next/dynamic';
 import PrayerTimeWidget from '@/components/PrayerTimeWidget';
 import MenuGrid from '@/components/MenuGrid';
+import { shareToWhatsApp } from '@/lib/whatsapp-share';
 
 const KajianMap = dynamic(() => import('@/components/KajianMap'), {
     ssr: false,
