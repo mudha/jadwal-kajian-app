@@ -203,6 +203,20 @@ export default function UstadzManagementPage() {
                     <table className="w-full">
                         <thead className="bg-slate-50 border-b border-slate-100">
                             <tr>
+                                <th className="px-6 py-4 text-left">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedForMerge.size === filteredUstadz.length && filteredUstadz.length > 0}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setSelectedForMerge(new Set(filteredUstadz.map(u => u.name)));
+                                            } else {
+                                                setSelectedForMerge(new Set());
+                                            }
+                                        }}
+                                        className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                                     No
                                 </th>
@@ -220,19 +234,27 @@ export default function UstadzManagementPage() {
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
                                         Memuat data...
                                     </td>
                                 </tr>
                             ) : filteredUstadz.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
                                         Tidak ada data ustadz
                                     </td>
                                 </tr>
                             ) : (
                                 filteredUstadz.map((ustadz, index) => (
-                                    <tr key={ustadz.id} className="hover:bg-slate-50 transition-colors">
+                                    <tr key={ustadz.id} className={`hover:bg-slate-50 transition-colors ${selectedForMerge.has(ustadz.name) ? 'bg-amber-50' : ''}`}>
+                                        <td className="px-6 py-4">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedForMerge.has(ustadz.name)}
+                                                onChange={() => toggleMergeSelection(ustadz.name)}
+                                                className="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-2 focus:ring-amber-500"
+                                            />
+                                        </td>
                                         <td className="px-6 py-4 text-sm text-slate-500">
                                             {index + 1}
                                         </td>
@@ -310,6 +332,143 @@ export default function UstadzManagementPage() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Merge Modal */}
+            {isMergeModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-t-3xl">
+                            <div className="flex items-center gap-3">
+                                <GitMerge className="w-6 h-6" />
+                                <div>
+                                    <h2 className="text-xl font-bold">Gabung Nama Ustadz</h2>
+                                    <p className="text-sm text-amber-100">Gabungkan {selectedForMerge.size} nama menjadi satu</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            {/* Selected Names */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-3">
+                                    Nama yang Dipilih ({selectedForMerge.size})
+                                </label>
+                                <div className="bg-slate-50 rounded-xl p-4 max-h-48 overflow-y-auto space-y-2">
+                                    {Array.from(selectedForMerge).map((name) => {
+                                        const ustadz = ustadzList.find(u => u.name === name);
+                                        return (
+                                            <div key={name} className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200">
+                                                <div className="flex items-center gap-3">
+                                                    <User className="w-4 h-4 text-slate-400" />
+                                                    <span className="font-medium text-slate-900">{name}</span>
+                                                </div>
+                                                <span className="text-xs text-slate-500">{ustadz?.kajianCount || 0} kajian</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Target Name Selection */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-3">
+                                    Pilih Nama Target (Nama yang Akan Digunakan)
+                                </label>
+                                <div className="space-y-2">
+                                    {Array.from(selectedForMerge).map((name) => (
+                                        <label
+                                            key={name}
+                                            className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${mergeTarget === name
+                                                    ? 'border-amber-500 bg-amber-50'
+                                                    : 'border-slate-200 hover:border-amber-300 hover:bg-amber-50/50'
+                                                }`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="mergeTarget"
+                                                value={name}
+                                                checked={mergeTarget === name}
+                                                onChange={(e) => setMergeTarget(e.target.value)}
+                                                className="w-5 h-5 text-amber-600 focus:ring-2 focus:ring-amber-500"
+                                            />
+                                            <div className="flex-1">
+                                                <p className="font-bold text-slate-900">{name}</p>
+                                                <p className="text-xs text-slate-500">
+                                                    {ustadzList.find(u => u.name === name)?.kajianCount || 0} kajian akan tetap menggunakan nama ini
+                                                </p>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Custom Name Option */}
+                            <div>
+                                <label className="flex items-center gap-2 mb-3">
+                                    <input
+                                        type="checkbox"
+                                        checked={mergeTarget !== '' && !selectedForMerge.has(mergeTarget)}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setMergeTarget('');
+                                            } else {
+                                                setMergeTarget(Array.from(selectedForMerge)[0] || '');
+                                            }
+                                        }}
+                                        className="w-4 h-4 text-amber-600 rounded"
+                                    />
+                                    <span className="text-sm font-bold text-slate-700">Gunakan nama kustom</span>
+                                </label>
+                                {mergeTarget !== '' && !selectedForMerge.has(mergeTarget) && (
+                                    <input
+                                        type="text"
+                                        value={mergeTarget}
+                                        onChange={(e) => setMergeTarget(e.target.value)}
+                                        placeholder="Masukkan nama baru..."
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                                    />
+                                )}
+                            </div>
+
+                            {/* Preview */}
+                            {mergeTarget && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                    <p className="text-sm font-bold text-blue-900 mb-2">Preview Hasil:</p>
+                                    <p className="text-sm text-blue-700">
+                                        {Array.from(selectedForMerge).filter(n => n !== mergeTarget).length} nama akan diganti menjadi:{' '}
+                                        <span className="font-bold">"{mergeTarget}"</span>
+                                    </p>
+                                    <p className="text-xs text-blue-600 mt-2">
+                                        Total: {ustadzList.filter(u => selectedForMerge.has(u.name)).reduce((sum, u) => sum + (u.kajianCount || 0), 0)} kajian
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Actions */}
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsMergeModalOpen(false);
+                                        setMergeTarget('');
+                                    }}
+                                    className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleMerge}
+                                    disabled={!mergeTarget}
+                                    className="flex-1 px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-bold hover:from-amber-700 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-200"
+                                >
+                                    Gabung Sekarang
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
