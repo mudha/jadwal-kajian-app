@@ -130,12 +130,29 @@ function KajianListContent() {
             if (!isAkhwat) return false;
         }
 
-        // Nearby filtering (Strict distance)
+        // Nearby filtering (Improved)
         // Only strict filter if no specific city/search is applied
         if (filterMode === 'nearby' && !searchTerm && !filterCity) {
             if (userLocation) {
-                // If we have location, strict filter < 80km
-                if (k.distance === undefined || k.distance > 80) return false;
+                // If kajian has coordinates, use distance-based filtering
+                if (k.distance !== undefined) {
+                    if (k.distance > 80) return false; // 80km radius
+                } else {
+                    // If no coordinates, include nearby cities (Jakarta & Tangerang area)
+                    const nearbyCities = [
+                        'jakarta', 'tangerang', 'bekasi', 'depok', 'bogor',
+                        'jakarta barat', 'jakarta selatan', 'jakarta timur', 'jakarta utara', 'jakarta pusat',
+                        'tangerang selatan', 'tangerang kota', 'bekasi kota', 'bekasi barat', 'bekasi timur',
+                        'depok kota', 'bogor kota'
+                    ];
+
+                    const cityLower = k.city.toLowerCase();
+                    const isNearbyCity = nearbyCities.some(city =>
+                        cityLower.includes(city) || city.includes(cityLower)
+                    );
+
+                    if (!isNearbyCity) return false;
+                }
             }
         }
 
