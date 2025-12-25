@@ -1,7 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Search, Edit, Trash2, Plus, Calendar, MapPin, X, Save, AlertTriangle } from 'lucide-react';
+import { Search, Edit, Trash2, Plus, Calendar, MapPin, X, Save, AlertTriangle, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
+import { indonesianCities } from '@/data/cities';
+import { parseIndoDate, formatIndoDate, formatYYYYMMDD } from '@/lib/date-utils';
 
 interface Kajian {
     id: number;
@@ -27,7 +29,12 @@ export default function AdminManagePage() {
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingKajian, setEditingKajian] = useState<Kajian | null>(null);
+
     const [isUploading, setIsUploading] = useState(false);
+
+    // City Autocomplete State
+    const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
+    const [cityFilter, setCityFilter] = useState('');
 
     const handlePaste = async (e: React.ClipboardEvent) => {
         const items = e.clipboardData.items;
@@ -261,15 +268,48 @@ export default function AdminManagePage() {
                                             required
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Kota</label>
-                                        <input
-                                            type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                            value={editingKajian.city}
-                                            onChange={e => setEditingKajian({ ...editingKajian, city: e.target.value })}
-                                            required
-                                        />
+                                    <div className="space-y-2 relative">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Kota / Wilayah</label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                                value={editingKajian.city}
+                                                onChange={e => {
+                                                    setEditingKajian({ ...editingKajian, city: e.target.value });
+                                                    setCityFilter(e.target.value);
+                                                    setIsCityDropdownOpen(true);
+                                                }}
+                                                onFocus={() => {
+                                                    setCityFilter(editingKajian.city);
+                                                    setIsCityDropdownOpen(true);
+                                                }}
+                                                onBlur={() => setTimeout(() => setIsCityDropdownOpen(false), 200)}
+                                            />
+                                            {isCityDropdownOpen && (
+                                                <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-xl shadow-xl">
+                                                    {indonesianCities
+                                                        .filter(c => c.toLowerCase().includes(cityFilter.toLowerCase()))
+                                                        .map(city => (
+                                                            <button
+                                                                key={city}
+                                                                type="button"
+                                                                className="w-full text-left px-4 py-2 hover:bg-slate-50 font-medium text-slate-700 text-sm"
+                                                                onClick={() => {
+                                                                    setEditingKajian({ ...editingKajian, city: city });
+                                                                    setIsCityDropdownOpen(false);
+                                                                }}
+                                                            >
+                                                                {city}
+                                                            </button>
+                                                        ))
+                                                    }
+                                                    {indonesianCities.filter(c => c.toLowerCase().includes(cityFilter.toLowerCase())).length === 0 && (
+                                                        <div className="px-4 py-3 text-slate-400 text-xs text-center italic">Kota tidak ditemukan</div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -287,11 +327,18 @@ export default function AdminManagePage() {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tanggal</label>
                                         <input
-                                            type="text"
+                                            type="date"
                                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                            value={editingKajian.date}
-                                            onChange={e => setEditingKajian({ ...editingKajian, date: e.target.value })}
-                                            placeholder="Contoh: Senin, 20 Januari 2025"
+                                            value={(() => {
+                                                const d = parseIndoDate(editingKajian.date);
+                                                return d ? formatYYYYMMDD(d) : '';
+                                            })()}
+                                            onChange={e => {
+                                                const val = e.target.valueAsDate;
+                                                if (val) {
+                                                    setEditingKajian({ ...editingKajian, date: formatIndoDate(val) });
+                                                }
+                                            }}
                                         />
                                     </div>
                                     <div className="space-y-2">
