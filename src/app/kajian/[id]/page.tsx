@@ -22,7 +22,7 @@ interface KajianDetail {
     attendanceCount?: number;
 }
 
-import Sidebar from '@/components/Sidebar';
+import PrayerTimeWidget from '@/components/PrayerTimeWidget';
 
 export default function KajianDetailPage() {
     // ... existing state ...
@@ -258,7 +258,7 @@ export default function KajianDetailPage() {
 
                     {/* Sidebar (Desktop) */}
                     <div className="hidden md:block md:col-span-4 mt-6 md:mt-0">
-                        <Sidebar />
+                        <PrayerTimeWidget />
                     </div>
                 </div>
             </div>

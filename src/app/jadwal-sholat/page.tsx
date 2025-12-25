@@ -5,7 +5,7 @@ import { ArrowLeft, Calendar, MapPin, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import Sidebar from '@/components/Sidebar';
+import PrayerTimeWidget from '@/components/PrayerTimeWidget';
 
 export default function JadwalSholatPage() {
     const { timings, locationName, loading, error } = usePrayerTimes();
@@ -84,7 +84,7 @@ export default function JadwalSholatPage() {
 
                     {/* Sidebar (Desktop) */}
                     <div className="hidden md:block md:col-span-4 mt-6 md:mt-0">
-                        <Sidebar />
+                        <PrayerTimeWidget />
                     </div>
                 </div>
             </div>
