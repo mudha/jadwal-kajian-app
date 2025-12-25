@@ -17,6 +17,7 @@ interface Kajian {
     date: string;
     linkInfo?: string;
     khususAkhwat?: boolean;
+    imageUrl?: string;
 }
 
 export default function AdminManagePage() {
