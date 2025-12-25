@@ -21,6 +21,8 @@ interface Kajian {
     khususAkhwat?: boolean;
     imageUrl?: string;
     attendanceCount?: number;
+    lat?: number;
+    lng?: number;
 }
 
 export default function AdminManagePage() {
@@ -205,6 +207,34 @@ export default function AdminManagePage() {
         k.tema.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const handleExtractCoords = async (url: string) => {
+        if (!url || !editingKajian) return;
+
+        try {
+            const res = await fetch('/api/tools/extract-gmaps', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                setEditingKajian({
+                    ...editingKajian,
+                    lat: data.lat,
+                    lng: data.lng,
+                    gmapsUrl: data.expandedUrl || url
+                });
+                alert(`Koordinat ditemukan: ${data.lat}, ${data.lng}`);
+            } else {
+                alert('Gagal mengekstrak koordinat dari URL tersebut.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Terjadi kesalahan saat mengekstrak koordinat.');
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -212,20 +242,20 @@ export default function AdminManagePage() {
                     <h1 className="text-2xl font-black text-slate-900">Kelola Jadwal Kajian</h1>
                     <p className="text-slate-500">Update, edit, atau hapus jadwal kajian yang terdaftar.</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <button
                         onClick={handleExtractCoordinates}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-lg shadow-teal-200 transition-all active:scale-95"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold text-sm"
                         title="Ekstrak koordinat dari Google Maps URL"
                     >
-                        <MapPin className="w-5 h-5" />
+                        <MapPin className="w-4 h-4" />
                         Extract Koordinat
                     </button>
                     <Link
                         href="/admin/batch-input"
-                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 transition-all active:scale-95"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-sm"
                     >
-                        <Plus className="w-5 h-5" />
+                        <Plus className="w-4 h-4" />
                         Input Baru
                     </Link>
                 </div>
@@ -277,7 +307,18 @@ export default function AdminManagePage() {
                                             <p className="pl-6 text-sm text-slate-500">{item.waktu}</p>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="font-bold text-slate-900">{item.masjid}</div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="font-bold text-slate-900">{item.masjid}</div>
+                                                {item.lat && item.lng && (
+                                                    <span
+                                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-teal-50 text-teal-600 rounded-md text-[9px] font-black uppercase tracking-tighter border border-teal-100"
+                                                        title={`GPS Active: ${item.lat}, ${item.lng}`}
+                                                    >
+                                                        <MapPin className="w-2 h-2 fill-teal-600" />
+                                                        GPS
+                                                    </span>
+                                                )}
+                                            </div>
                                             <div className="flex items-center gap-1 text-sm text-slate-500 mt-1">
                                                 <MapPin className="w-3 h-3" />
                                                 {item.city}
@@ -530,13 +571,46 @@ export default function AdminManagePage() {
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Google Maps</label>
-                                        <input
-                                            type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-blue-600 truncate"
-                                            value={editingKajian.gmapsUrl || ''}
-                                            onChange={e => setEditingKajian({ ...editingKajian, gmapsUrl: e.target.value })}
-                                            placeholder="https://maps.app.goo.gl/..."
-                                        />
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-blue-600 truncate"
+                                                value={editingKajian.gmapsUrl || ''}
+                                                onChange={e => setEditingKajian({ ...editingKajian, gmapsUrl: e.target.value })}
+                                                placeholder="https://maps.app.goo.gl/..."
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleExtractCoords(editingKajian.gmapsUrl || '')}
+                                                disabled={!editingKajian.gmapsUrl}
+                                                className="px-3 bg-teal-50 text-teal-600 rounded-xl hover:bg-teal-100 transition-colors disabled:opacity-50"
+                                                title="Ekstrak Lat/Lng"
+                                            >
+                                                <MapPin className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                        <div className="flex gap-4 mt-2">
+                                            <div className="flex-1">
+                                                <input
+                                                    type="number"
+                                                    step="any"
+                                                    placeholder="Latitude"
+                                                    value={editingKajian.lat || ''}
+                                                    onChange={e => setEditingKajian({ ...editingKajian, lat: parseFloat(e.target.value) })}
+                                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-600"
+                                                />
+                                            </div>
+                                            <div className="flex-1">
+                                                <input
+                                                    type="number"
+                                                    step="any"
+                                                    placeholder="Longitude"
+                                                    value={editingKajian.lng || ''}
+                                                    onChange={e => setEditingKajian({ ...editingKajian, lng: parseFloat(e.target.value) })}
+                                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-600"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 

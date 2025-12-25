@@ -1,0 +1,148 @@
+/* Batch Input Page Custom Styles */
+
+/* Simplified, cleaner design tokens */
+:root {
+    --batch-spacing-sm: 0.75rem;
+    --batch-spacing-md: 1.5rem;
+    --batch-spacing-lg: 2rem;
+    --batch-radius-sm: 0.75rem;
+    --batch-radius-md: 1rem;
+    --batch-radius-lg: 1.5rem;
+}
+
+/* Clean header styles */
+.batch-header {
+    @apply flex items-center justify-between mb-6;
+}
+
+.batch-title {
+    @apply text-2xl font-bold text-slate-900;
+}
+
+.batch-subtitle {
+    @apply text-sm text-slate-500 mt-1;
+}
+
+/* Step indicator badges */
+.step-badge {
+    @apply w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white;
+}
+
+.step-badge-1 {
+    @apply bg-blue-600;
+}
+
+.step-badge-2 {
+    @apply bg-purple-600;
+}
+
+.step-badge-3 {
+    @apply bg-emerald-600;
+}
+
+/* Card styles - simplified */
+.batch-card {
+    @apply bg-white rounded-2xl border border-slate-200 overflow-hidden;
+}
+
+.batch-card-header {
+    @apply px-6 py-4 border-b border-slate-100 bg-gradient-to-r;
+}
+
+.batch-card-header-blue {
+    @apply from-blue-50 to-sky-50;
+}
+
+.batch-card-header-purple {
+    @apply from-purple-50 to-indigo-50;
+}
+
+.batch-card-header-green {
+    @apply from-emerald-50 to-teal-50;
+}
+
+.batch-card-body {
+    @apply p-6;
+}
+
+/* Button styles - consistent */
+.batch-btn {
+    @apply px-4 py-2.5 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-sm;
+}
+
+.batch-btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white disabled:bg-slate-200 disabled:text-slate-400;
+}
+
+.batch-btn-gradient {
+    @apply bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400;
+}
+
+.batch-btn-success {
+    @apply bg-emerald-600 hover:bg-emerald-700 text-white;
+}
+
+.batch-btn-secondary {
+    @apply bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50;
+}
+
+/* Upload area */
+.batch-upload-area {
+    @apply relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center transition-all cursor-pointer;
+}
+
+.batch-upload-area-idle {
+    @apply bg-slate-50 border-slate-300 hover:border-blue-400 hover:bg-blue-50/50;
+}
+
+.batch-upload-area-loading {
+    @apply bg-blue-50 border-blue-300;
+}
+
+/* Textarea */
+.batch-textarea {
+    @apply w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none;
+}
+
+/* Progress indicator */
+.batch-progress-ring {
+    @apply relative w-16 h-16;
+}
+
+.batch-progress-ring-bg {
+    @apply absolute inset-0 border-4 border-blue-200 rounded-full;
+}
+
+.batch-progress-ring-fill {
+    @apply absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin;
+}
+
+/* Message/Alert */
+.batch-message {
+    @apply p-3 rounded-lg text-sm border;
+}
+
+.batch-message-success {
+    @apply bg-blue-50 text-blue-700 border-blue-200;
+}
+
+.batch-message-error {
+    @apply bg-red-50 text-red-700 border-red-200;
+}
+
+/* Empty state */
+.batch-empty-state {
+    @apply flex flex-col items-center justify-center py-16 text-center;
+}
+
+.batch-empty-icon {
+    @apply w-16 h-16 p-4 rounded-2xl bg-slate-100 text-slate-400 mb-4;
+}
+
+.batch-empty-title {
+    @apply text-lg font-bold text-slate-400 mb-2;
+}
+
+.batch-empty-text {
+    @apply text-sm text-slate-500 max-w-sm;
+}

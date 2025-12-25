@@ -20,22 +20,39 @@ export async function POST(request: Request) {
             );
         }
 
+        console.log('[MERGE] Starting merge:', { sourceNames, targetName });
+
         // Update all kajian with source names to target name
+        let updatedCount = 0;
         for (const sourceName of sourceNames) {
-            await db.execute({
-                sql: 'UPDATE kajian SET masjid = ? WHERE masjid = ?',
-                args: [targetName, sourceName],
-            });
+            try {
+                const result = await db.execute({
+                    sql: 'UPDATE kajian SET masjid = ? WHERE masjid = ?',
+                    args: [targetName, sourceName],
+                });
+                console.log(`[MERGE] Updated ${sourceName} -> ${targetName}:`, result);
+                updatedCount++;
+            } catch (err) {
+                console.error(`[MERGE] Error updating ${sourceName}:`, err);
+                throw err;
+            }
         }
+
+        console.log('[MERGE] Merge completed successfully');
 
         return NextResponse.json({
             message: `Successfully merged ${sourceNames.length} masjid names into "${targetName}"`,
             mergedCount: sourceNames.length,
+            updatedCount: updatedCount,
         });
-    } catch (error) {
-        console.error('Error merging masjid:', error);
+    } catch (error: any) {
+        console.error('[MERGE] Error merging masjid:', error);
         return NextResponse.json(
-            { error: 'Failed to merge masjid' },
+            {
+                error: 'Failed to merge masjid',
+                details: error.message || 'Unknown error',
+                stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            },
             { status: 500 }
         );
     }

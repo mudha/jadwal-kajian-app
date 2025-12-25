@@ -360,31 +360,26 @@ export default function BatchInputPage() {
     };
 
     return (
-        <div className="space-y-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-4xl font-black text-slate-900 tracking-tighter">Assalamu'alaikum, Admin</h2>
-                    <p className="text-slate-500 mt-2 font-bold">Panel manajemen jadwal kajian - Siap berdakwah hari ini?</p>
+                    <h1 className="text-2xl font-bold text-slate-900">Input Massal Jadwal Kajian</h1>
+                    <p className="text-sm text-slate-500 mt-1">Ekstrak jadwal dari poster atau broadcast message</p>
                 </div>
-                <div className="flex gap-4 items-center">
-                    <Link href="/kajian" className="hidden md:flex items-center gap-2 px-6 py-4 bg-white border border-slate-100 rounded-[2rem] text-slate-500 hover:text-blue-600 font-black text-xs uppercase tracking-widest transition-all shadow-sm hover:shadow-md active:scale-95">
-                        Lihat Info Publik <ExternalLink className="w-4 h-4" />
+                <div className="flex items-center gap-3">
+                    <Link href="/kajian" className="hidden md:flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:text-blue-600 transition-colors">
+                        <ExternalLink className="w-4 h-4" />
+                        Lihat Publik
                     </Link>
-                    <div className="bg-white px-8 py-5 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4">
-                        <div className="bg-blue-50 p-3 rounded-2xl text-blue-600">
-                            <Database className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Jadwal</p>
-                            <p className="text-2xl font-black text-slate-900">{stats.total}</p>
-                        </div>
+                    <div className="px-4 py-2 bg-blue-50 rounded-lg border border-blue-100">
+                        <p className="text-xs text-blue-600 font-medium">{stats.total} Jadwal</p>
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-                <div className="xl:col-span-3 space-y-6">
-                    <div className="bg-white p-6 rounded-[3rem] shadow-sm border border-slate-100 space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div className="lg:col-span-5 space-y-4">
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
                                 <div className="bg-blue-600 p-2 rounded-lg text-white">
@@ -395,7 +390,7 @@ export default function BatchInputPage() {
 
                             <div
                                 onClick={() => document.getElementById('poster-upload')?.click()}
-                                className={`relative border-4 border-dashed rounded-[2rem] p-8 flex flex-col items-center justify-center transition-all cursor-pointer group ${isOcrLoading ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-100 hover:border-blue-200 hover:bg-white'}`}
+                                className={`relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center transition-all cursor-pointer ${isOcrLoading ? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-300 hover:border-blue-400 hover:bg-blue-50/50'}`}
                             >
                                 <input
                                     id="poster-upload"
@@ -435,7 +430,7 @@ export default function BatchInputPage() {
 
                             <div className="relative">
                                 <textarea
-                                    className="w-full h-[350px] p-6 bg-slate-50 border border-slate-200 rounded-[2rem] font-mono text-sm focus:ring-4 focus:ring-blue-50 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300"
+                                    className="w-full h-80 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none placeholder:text-slate-400"
                                     placeholder="Paste pesan broadcast di sini..."
                                     value={inputText}
                                     onChange={(e) => setInputText(e.target.value)}
@@ -459,7 +454,7 @@ export default function BatchInputPage() {
                             <button
                                 onClick={handleProcess}
                                 disabled={!inputText || isGeocoding}
-                                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white font-black py-4 rounded-[1.5rem] shadow-xl shadow-blue-100 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group"
+                                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-sm"
                             >
                                 {isGeocoding ? (
                                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -472,7 +467,7 @@ export default function BatchInputPage() {
                             <button
                                 onClick={handleAiProcess}
                                 disabled={!inputText || isGeocoding || isAiLoading}
-                                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400 text-white font-black py-4 rounded-[1.5rem] shadow-xl shadow-purple-100 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group mt-3"
+                                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400 text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-sm mt-2"
                             >
                                 {isAiLoading ? (
                                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -485,8 +480,8 @@ export default function BatchInputPage() {
                     </div>
                 </div>
 
-                <div className="xl:col-span-9">
-                    <div className="bg-white p-6 rounded-[3.5rem] shadow-sm border border-slate-100 flex flex-col min-h-[750px]">
+                <div className="lg:col-span-7">
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col min-h-[600px]">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                             <div className="flex items-center gap-4">
                                 <div className="bg-emerald-500 p-3 rounded-2xl text-white shadow-lg shadow-emerald-100">
@@ -500,14 +495,14 @@ export default function BatchInputPage() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={handleAddManual}
-                                    className="bg-white border-2 border-slate-100 hover:border-blue-200 text-blue-600 font-black py-4 px-6 rounded-2xl transition-all active:scale-95 flex items-center gap-2 text-sm"
+                                    className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded-lg transition-all flex items-center gap-2"
                                 >
                                     <PlusCircle className="w-5 h-5" /> Tambah Manual
                                 </button>
                                 {entries.length > 0 && (
                                     <button
                                         onClick={handleSave}
-                                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 px-10 rounded-2xl transition-all shadow-xl shadow-emerald-100 active:scale-95 flex items-center gap-3"
+                                        className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-all flex items-center gap-2 text-sm"
                                     >
                                         <Save className="w-6 h-6" /> Simpan {selectedIndices.size} Jadwal Baru
                                     </button>

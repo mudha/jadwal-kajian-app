@@ -6,25 +6,47 @@ export async function GET() {
     try {
         const masjidList = await db.execute(`
             SELECT 
-                DISTINCT masjid as name,
+                masjid as name,
                 city,
-                address,
+                MAX(address) as address,
                 MAX(gmapsUrl) as gmapsUrl,
+                MAX(lat) as lat,
+                MAX(lng) as lng,
                 COUNT(*) as kajianCount
             FROM kajian
             WHERE masjid IS NOT NULL AND masjid != ''
-            GROUP BY masjid, city, address
+            GROUP BY masjid, city
             ORDER BY masjid ASC
         `);
 
-        const formattedList = masjidList.rows.map((row: any, index: number) => ({
-            id: index + 1,
-            name: row.name,
-            city: row.city || '',
-            address: row.address || '',
-            gmapsUrl: row.gmapsUrl || '',
-            kajianCount: row.kajianCount || 0,
-        }));
+        // Simple hash function for generating unique IDs
+        const simpleHash = (str: string) => {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            return Math.abs(hash).toString(36);
+        };
+
+        const formattedList = masjidList.rows.map((row: any, index: number) => {
+            // Create a unique ID using name + city + a hash of the combination
+            const baseId = `${row.name}-${row.city}`.replace(/\s+/g, '-').toLowerCase();
+            const uniqueHash = simpleHash(`${row.name}|${row.city}|${row.address || ''}`);
+            const id = `${baseId}-${uniqueHash}`;
+
+            return {
+                id: id,
+                name: row.name,
+                city: row.city || '',
+                address: row.address || '',
+                gmapsUrl: row.gmapsUrl || '',
+                lat: row.lat,
+                lng: row.lng,
+                kajianCount: row.kajianCount || 0,
+            };
+        });
 
         return NextResponse.json(formattedList);
     } catch (error) {

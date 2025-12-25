@@ -1,13 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search, MapPin, ExternalLink } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, MapPin, ExternalLink, GitMerge } from 'lucide-react';
 
 interface Masjid {
-    id: number;
+    id: string;
     name: string;
     city: string;
     address?: string;
     gmapsUrl?: string;
+    lat?: number;
+    lng?: number;
     kajianCount?: number;
 }
 
@@ -16,8 +18,18 @@ export default function MasjidManagementPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMasjid, setEditingMasjid] = useState<Masjid | null>(null);
-    const [formData, setFormData] = useState({ name: '', city: '', address: '', gmapsUrl: '' });
+    const [formData, setFormData] = useState<{
+        name: string;
+        city: string;
+        address: string;
+        gmapsUrl: string;
+        lat: string | number;
+        lng: string | number;
+    }>({ name: '', city: '', address: '', gmapsUrl: '', lat: '', lng: '' });
     const [loading, setLoading] = useState(true);
+    const [selectedForMerge, setSelectedForMerge] = useState<Set<string>>(new Set());
+    const [mergeTarget, setMergeTarget] = useState('');
+    const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
 
     useEffect(() => {
         fetchMasjid();
@@ -39,7 +51,7 @@ export default function MasjidManagementPage() {
         e.preventDefault();
         try {
             const url = editingMasjid
-                ? `/api/admin/masjid/${editingMasjid.id}`
+                ? `/api/admin/masjid/${encodeURIComponent(editingMasjid.name)}`
                 : '/api/admin/masjid';
             const method = editingMasjid ? 'PUT' : 'POST';
 
@@ -52,7 +64,7 @@ export default function MasjidManagementPage() {
             if (response.ok) {
                 fetchMasjid();
                 setIsModalOpen(false);
-                setFormData({ name: '', city: '', address: '', gmapsUrl: '' });
+                setFormData({ name: '', city: '', address: '', gmapsUrl: '', lat: '', lng: '' });
                 setEditingMasjid(null);
             }
         } catch (error) {
@@ -60,11 +72,14 @@ export default function MasjidManagementPage() {
         }
     };
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (id: string) => {
         if (!confirm('Apakah Anda yakin ingin menghapus masjid ini?')) return;
 
         try {
-            const response = await fetch(`/api/admin/masjid/${id}`, {
+            const masjid = masjidList.find(m => m.id === id);
+            if (!masjid) return;
+
+            const response = await fetch(`/api/admin/masjid/${encodeURIComponent(masjid.name)}`, {
                 method: 'DELETE',
             });
 
@@ -83,14 +98,42 @@ export default function MasjidManagementPage() {
             city: masjid.city,
             address: masjid.address || '',
             gmapsUrl: masjid.gmapsUrl || '',
+            lat: masjid.lat || '',
+            lng: masjid.lng || '',
         });
         setIsModalOpen(true);
     };
 
     const openAddModal = () => {
         setEditingMasjid(null);
-        setFormData({ name: '', city: '', address: '', gmapsUrl: '' });
+        setFormData({ name: '', city: '', address: '', gmapsUrl: '', lat: '', lng: '' });
         setIsModalOpen(true);
+    };
+
+    const handleExtractCoords = async (url: string) => {
+        if (!url) return;
+        try {
+            const res = await fetch('/api/tools/extract-gmaps', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setFormData(prev => ({
+                    ...prev,
+                    lat: data.lat,
+                    lng: data.lng,
+                    gmapsUrl: data.expandedUrl || url
+                }));
+                alert(`Koordinat ditemukan: ${data.lat}, ${data.lng}`);
+            } else {
+                alert('Gagal mengekstrak koordinat dari URL tersebut.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Terjadi kesalahan saat mengekstrak koordinat.');
+        }
     };
 
     const filteredMasjid = masjidList.filter(m =>
@@ -98,21 +141,154 @@ export default function MasjidManagementPage() {
         m.city.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const toggleMergeSelection = (id: string) => {
+        const newSelected = new Set(selectedForMerge);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedForMerge(newSelected);
+    };
+
+    const handleMerge = async () => {
+        if (selectedForMerge.size < 2) {
+            alert('Pilih minimal 2 masjid untuk digabung');
+            return;
+        }
+
+        if (!mergeTarget) {
+            alert('Pilih nama target untuk penggabungan');
+            return;
+        }
+
+        // Convert IDs to masjid names
+        const selectedMasjids = masjidList.filter(m => selectedForMerge.has(m.id));
+        const targetMasjid = masjidList.find(m => m.id === mergeTarget);
+
+        if (!targetMasjid) {
+            alert('Masjid target tidak ditemukan');
+            return;
+        }
+
+        const sourceNames = selectedMasjids
+            .filter(m => m.id !== mergeTarget)
+            .map(m => m.name);
+
+        if (sourceNames.length === 0) {
+            alert('Nama target tidak boleh sama dengan semua nama yang dipilih');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/admin/masjid/merge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sourceNames, targetName: targetMasjid.name }),
+            });
+
+            if (response.ok) {
+                alert(`Berhasil menggabungkan ${sourceNames.length} masjid`);
+                setSelectedForMerge(new Set());
+                setMergeTarget('');
+                setIsMergeModalOpen(false);
+                fetchMasjid();
+            } else {
+                const errorData = await response.json();
+                alert(`Gagal menggabungkan masjid: ${errorData.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error merging masjid:', error);
+            alert('Terjadi kesalahan saat menggabungkan');
+        }
+    };
+
+    const handleBulkExtract = async () => {
+        const toExtract = masjidList.filter(m => m.gmapsUrl && (!m.lat || !m.lng));
+        if (toExtract.length === 0) {
+            alert('Tidak ada masjid yang perlu diekstrak koordinatnya (semua sudah ada atau tidak punya URL Maps).');
+            return;
+        }
+
+        if (!confirm(`Apakah Anda ingin mencoba mengekstrak koordinat untuk ${toExtract.length} masjid secara otomatis?`)) {
+            return;
+        }
+
+        setLoading(true);
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const masjid of toExtract) {
+            try {
+                const res = await fetch('/api/tools/extract-gmaps', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: masjid.gmapsUrl })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    // Save to DB
+                    await fetch(`/api/admin/masjid/${encodeURIComponent(masjid.name)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: masjid.name,
+                            city: masjid.city,
+                            address: masjid.address,
+                            gmapsUrl: data.expandedUrl || masjid.gmapsUrl,
+                            lat: data.lat,
+                            lng: data.lng
+                        })
+                    });
+                    successCount++;
+                } else {
+                    failCount++;
+                }
+            } catch (error) {
+                console.error(`Error extracting for ${masjid.name}:`, error);
+                failCount++;
+            }
+        }
+
+        alert(`Proses selesai!\nBerhasil: ${successCount}\nGagal: ${failCount}`);
+        fetchMasjid();
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900">Kelola Masjid</h1>
                     <p className="text-slate-500 mt-1">Manajemen data masjid/tempat kajian</p>
                 </div>
-                <button
-                    onClick={openAddModal}
-                    className="flex items-center gap-2 px-6 py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-all shadow-lg shadow-teal-200"
-                >
-                    <Plus className="w-5 h-5" />
-                    Tambah Masjid
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                    {selectedForMerge.size > 0 && (
+                        <button
+                            onClick={() => setIsMergeModalOpen(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-700 transition-all text-sm"
+                        >
+                            <GitMerge className="w-4 h-4" />
+                            Gabung ({selectedForMerge.size})
+                        </button>
+                    )}
+                    <button
+                        onClick={handleBulkExtract}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all text-sm"
+                        title="Scan koordinat dari link maps"
+                    >
+                        <MapPin className="w-4 h-4" />
+                        Scan Koordinat
+                    </button>
+                    <button
+                        onClick={openAddModal}
+                        className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 transition-all text-sm"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Tambah Masjid
+                    </button>
+                </div>
             </div>
 
             {/* Search */}
@@ -128,7 +304,7 @@ export default function MasjidManagementPage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
                     <div className="flex items-center gap-4">
                         <div className="bg-teal-100 p-3 rounded-xl">
@@ -161,6 +337,20 @@ export default function MasjidManagementPage() {
                     <table className="w-full">
                         <thead className="bg-slate-50 border-b border-slate-100">
                             <tr>
+                                <th className="px-6 py-4 text-left">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedForMerge.size === filteredMasjid.length && filteredMasjid.length > 0}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setSelectedForMerge(new Set(filteredMasjid.map(m => m.id)));
+                                            } else {
+                                                setSelectedForMerge(new Set());
+                                            }
+                                        }}
+                                        className="w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-2 focus:ring-teal-500"
+                                    />
+                                </th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                                     No
                                 </th>
@@ -177,6 +367,9 @@ export default function MasjidManagementPage() {
                                     Google Maps
                                 </th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Lat/Lng
+                                </th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                                     Jumlah Kajian
                                 </th>
                                 <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -187,19 +380,27 @@ export default function MasjidManagementPage() {
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan={9} className="px-6 py-12 text-center text-slate-500">
                                         Memuat data...
                                     </td>
                                 </tr>
                             ) : filteredMasjid.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan={9} className="px-6 py-12 text-center text-slate-500">
                                         Tidak ada data masjid
                                     </td>
                                 </tr>
                             ) : (
                                 filteredMasjid.map((masjid, index) => (
-                                    <tr key={masjid.id} className="hover:bg-slate-50 transition-colors">
+                                    <tr key={masjid.id} className={`hover:bg-slate-50 transition-colors ${selectedForMerge.has(masjid.id) ? 'bg-amber-50' : ''}`}>
+                                        <td className="px-6 py-4">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedForMerge.has(masjid.id)}
+                                                onChange={() => toggleMergeSelection(masjid.id)}
+                                                className="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-2 focus:ring-amber-500"
+                                            />
+                                        </td>
                                         <td className="px-6 py-4 text-sm text-slate-500">
                                             {index + 1}
                                         </td>
@@ -216,8 +417,10 @@ export default function MasjidManagementPage() {
                                                 {masjid.city}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">
-                                            {masjid.address || '-'}
+                                        <td className="px-6 py-4 text-sm text-slate-600 max-w-[200px]">
+                                            <div className="break-words whitespace-normal leading-relaxed">
+                                                {masjid.address || '-'}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             {masjid.gmapsUrl ? (
@@ -234,6 +437,14 @@ export default function MasjidManagementPage() {
                                             ) : (
                                                 <span className="text-xs text-slate-400">-</span>
                                             )}
+                                        </td>
+                                        <td className="px-6 py-4 text-xs font-mono text-slate-500">
+                                            {masjid.lat && masjid.lng ? (
+                                                <div className="flex flex-col">
+                                                    <span>{masjid.lat}</span>
+                                                    <span>{masjid.lng}</span>
+                                                </div>
+                                            ) : '-'}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-slate-600">
                                             {masjid.kajianCount || 0} kajian
@@ -314,13 +525,48 @@ export default function MasjidManagementPage() {
                                 <label className="block text-sm font-bold text-slate-700 mb-2">
                                     Link Google Maps (Opsional)
                                 </label>
-                                <input
-                                    type="url"
-                                    value={formData.gmapsUrl}
-                                    onChange={(e) => setFormData({ ...formData, gmapsUrl: e.target.value })}
-                                    placeholder="https://maps.google.com/..."
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none"
-                                />
+                                <div className="flex gap-2">
+                                    <input
+                                        type="url"
+                                        value={formData.gmapsUrl}
+                                        onChange={(e) => setFormData({ ...formData, gmapsUrl: e.target.value })}
+                                        placeholder="https://maps.google.com/..."
+                                        className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => handleExtractCoords(formData.gmapsUrl)}
+                                        disabled={!formData.gmapsUrl}
+                                        className="px-4 bg-teal-50 text-teal-600 rounded-xl hover:bg-teal-100 transition-colors disabled:opacity-50"
+                                        title="Ekstrak Lat/Lng"
+                                    >
+                                        <MapPin className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 mt-3">
+                                    <div>
+                                        <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 px-1">Latitude</label>
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            value={formData.lat}
+                                            onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
+                                            placeholder="Latitude"
+                                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] uppercase font-black text-slate-400 mb-1 px-1">Longitude</label>
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            value={formData.lng}
+                                            onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
+                                            placeholder="Longitude"
+                                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono"
+                                        />
+                                    </div>
+                                </div>
                                 <p className="text-xs text-slate-500 mt-2">
                                     Paste link dari Google Maps untuk lokasi masjid
                                 </p>
@@ -341,6 +587,99 @@ export default function MasjidManagementPage() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+            {/* Merge Modal */}
+            {isMergeModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-t-3xl">
+                            <div className="flex items-center gap-3">
+                                <GitMerge className="w-6 h-6" />
+                                <div>
+                                    <h2 className="text-xl font-bold">Gabung Masjid</h2>
+                                    <p className="text-sm text-amber-100">Gabungkan {selectedForMerge.size} masjid menjadi satu</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            {/* Selected Names */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-3">
+                                    Masjid yang Dipilih ({selectedForMerge.size})
+                                </label>
+                                <div className="bg-slate-50 rounded-xl p-4 max-h-48 overflow-y-auto space-y-2">
+                                    {Array.from(selectedForMerge).map((id) => {
+                                        const masjid = masjidList.find(m => m.id === id);
+                                        if (!masjid) return null;
+                                        return (
+                                            <div key={id} className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200">
+                                                <div className="flex items-center gap-3">
+                                                    <MapPin className="w-4 h-4 text-slate-400" />
+                                                    <span className="font-medium text-slate-900">{masjid.name}</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-xs text-slate-500 block">{masjid.city}</span>
+                                                    <span className="text-xs text-slate-400 block">{masjid.kajianCount || 0} kajian</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Target Name Selection */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-3">
+                                    Pilih Nama Target (Nama yang Akan Digunakan)
+                                </label>
+                                <div className="space-y-2">
+                                    {Array.from(selectedForMerge).map((id) => {
+                                        const masjid = masjidList.find(m => m.id === id);
+                                        if (!masjid) return null;
+                                        return (
+                                            <label
+                                                key={id}
+                                                className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${mergeTarget === id
+                                                    ? 'border-amber-500 bg-amber-50'
+                                                    : 'border-slate-200 hover:border-amber-300 hover:bg-amber-50/50'
+                                                    }`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="mergeTarget"
+                                                    value={id}
+                                                    checked={mergeTarget === id}
+                                                    onChange={(e) => setMergeTarget(e.target.value)}
+                                                    className="w-5 h-5 text-amber-600 focus:ring-2 focus:ring-amber-500"
+                                                />
+                                                <div className="flex-1">
+                                                    <span className="font-bold text-slate-900 block">{masjid.name}</span>
+                                                    <span className="text-sm text-slate-500">{masjid.city}</span>
+                                                </div>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-4 border-t border-slate-100 mt-6">
+                                <button
+                                    onClick={() => setIsMergeModalOpen(false)}
+                                    className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={handleMerge}
+                                    className="flex-1 px-4 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-colors"
+                                >
+                                    Gabungkan Masjid
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
