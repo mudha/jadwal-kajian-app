@@ -406,15 +406,13 @@ function KajianListContent() {
                                         return (
                                             <div key={kajian.id} className={`bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col relative overflow-hidden group ${status === 'PAST' ? 'opacity-75 grayscale-[0.3]' : ''}`}>
 
-                                                {/* Status Badge */}
-                                                {status === 'TODAY' && (
-                                                    <div className="absolute top-0 right-0 bg-red-600 text-white w-32 text-center py-1 text-[10px] font-black uppercase tracking-widest rotate-45 translate-x-10 translate-y-3 shadow-md z-20">
-                                                        Hari Ini
-                                                    </div>
-                                                )}
-
                                                 <div className="flex justify-between items-start mb-6 gap-4">
                                                     <div className="flex flex-wrap gap-2 items-start">
+                                                        {status === 'TODAY' && (
+                                                            <div className="px-3 py-1 bg-red-600 text-white text-[10px] font-black rounded-lg uppercase tracking-wider shadow-sm animate-pulse whitespace-nowrap">
+                                                                Hari Ini
+                                                            </div>
+                                                        )}
                                                         <div className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-green-100 whitespace-nowrap">
                                                             {kajian.city}
                                                         </div>
