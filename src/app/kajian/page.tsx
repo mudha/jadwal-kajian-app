@@ -23,11 +23,29 @@ export default function KajianListPage() {
     const searchParams = useSearchParams();
     const filterMode = searchParams.get('mode');
 
-    // ... existing state ...
     const [kajianList, setKajianList] = useState<KajianWithId[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState<'all' | 'today' | 'upcoming' | 'past'>('all');
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingKajian, setEditingKajian] = useState<KajianWithId | null>(null);
+    const [showMap, setShowMap] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-    // ... existing useEffect ...
+    const fetchData = async () => {
+        try {
+            const response = await fetch('/api/kajian');
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                setKajianList(data);
+            }
+        } catch (e) {
+            console.error('Error fetching kajian data', e);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     const filteredKajian = kajianList.filter(k => {
         // Mode Filtering
