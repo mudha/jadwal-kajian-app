@@ -37,6 +37,14 @@ export default function AdminManagePage() {
     const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
     const [cityFilter, setCityFilter] = useState('');
 
+    // Masjid Autocomplete State
+    const [isMasjidDropdownOpen, setIsMasjidDropdownOpen] = useState(false);
+    const [masjidSuggestions, setMasjidSuggestions] = useState<Array<{ value: string; count: number }>>([]);
+
+    // Pemateri Autocomplete State
+    const [isPemateriDropdownOpen, setIsPemateriDropdownOpen] = useState(false);
+    const [pemateriSuggestions, setPemateriSuggestions] = useState<Array<{ value: string; count: number }>>([]);
+
     const handlePaste = async (e: React.ClipboardEvent) => {
         const items = e.clipboardData.items;
         for (const item of items) {
@@ -65,6 +73,36 @@ export default function AdminManagePage() {
                     setIsUploading(false);
                 }
             }
+        }
+    };
+
+    const fetchMasjidSuggestions = async (query: string) => {
+        if (!query || query.length < 2) {
+            setMasjidSuggestions([]);
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/admin/suggestions?type=masjid&q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            setMasjidSuggestions(data);
+        } catch (error) {
+            console.error('Error fetching masjid suggestions:', error);
+        }
+    };
+
+    const fetchPemateriSuggestions = async (query: string) => {
+        if (!query || query.length < 2) {
+            setPemateriSuggestions([]);
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/admin/suggestions?type=pemateri&q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            setPemateriSuggestions(data);
+        } catch (error) {
+            console.error('Error fetching pemateri suggestions:', error);
         }
     };
 
@@ -255,25 +293,89 @@ export default function AdminManagePage() {
                             <form id="editForm" onSubmit={handleUpdate} className="space-y-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Masjid / Lokasi</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                        value={editingKajian.masjid}
-                                        onChange={e => setEditingKajian({ ...editingKajian, masjid: e.target.value })}
-                                        required
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                            value={editingKajian.masjid}
+                                            onChange={e => {
+                                                setEditingKajian({ ...editingKajian, masjid: e.target.value });
+                                                fetchMasjidSuggestions(e.target.value);
+                                                setIsMasjidDropdownOpen(true);
+                                            }}
+                                            onFocus={() => {
+                                                if (editingKajian.masjid.length >= 2) {
+                                                    fetchMasjidSuggestions(editingKajian.masjid);
+                                                    setIsMasjidDropdownOpen(true);
+                                                }
+                                            }}
+                                            onBlur={() => setTimeout(() => setIsMasjidDropdownOpen(false), 200)}
+                                            placeholder="Ketik nama masjid..."
+                                            required
+                                        />
+                                        {isMasjidDropdownOpen && masjidSuggestions.length > 0 && (
+                                            <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-xl shadow-xl">
+                                                {masjidSuggestions.map((suggestion, idx) => (
+                                                    <button
+                                                        key={idx}
+                                                        type="button"
+                                                        className="w-full text-left px-4 py-2 hover:bg-slate-50 font-medium text-slate-700 text-sm flex items-center justify-between"
+                                                        onClick={() => {
+                                                            setEditingKajian({ ...editingKajian, masjid: suggestion.value });
+                                                            setIsMasjidDropdownOpen(false);
+                                                        }}
+                                                    >
+                                                        <span>{suggestion.value}</span>
+                                                        <span className="text-xs text-slate-400">{suggestion.count}x</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Pemateri</label>
-                                        <input
-                                            type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                            value={editingKajian.pemateri}
-                                            onChange={e => setEditingKajian({ ...editingKajian, pemateri: e.target.value })}
-                                            required
-                                        />
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                                value={editingKajian.pemateri}
+                                                onChange={e => {
+                                                    setEditingKajian({ ...editingKajian, pemateri: e.target.value });
+                                                    fetchPemateriSuggestions(e.target.value);
+                                                    setIsPemateriDropdownOpen(true);
+                                                }}
+                                                onFocus={() => {
+                                                    if (editingKajian.pemateri.length >= 2) {
+                                                        fetchPemateriSuggestions(editingKajian.pemateri);
+                                                        setIsPemateriDropdownOpen(true);
+                                                    }
+                                                }}
+                                                onBlur={() => setTimeout(() => setIsPemateriDropdownOpen(false), 200)}
+                                                placeholder="Ketik nama ustadz..."
+                                                required
+                                            />
+                                            {isPemateriDropdownOpen && pemateriSuggestions.length > 0 && (
+                                                <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-xl shadow-xl">
+                                                    {pemateriSuggestions.map((suggestion, idx) => (
+                                                        <button
+                                                            key={idx}
+                                                            type="button"
+                                                            className="w-full text-left px-4 py-2 hover:bg-slate-50 font-medium text-slate-700 text-sm flex items-center justify-between"
+                                                            onClick={() => {
+                                                                setEditingKajian({ ...editingKajian, pemateri: suggestion.value });
+                                                                setIsPemateriDropdownOpen(false);
+                                                            }}
+                                                        >
+                                                            <span>{suggestion.value}</span>
+                                                            <span className="text-xs text-slate-400">{suggestion.count}x</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="space-y-2 relative">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Kota / Wilayah</label>
