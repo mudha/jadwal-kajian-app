@@ -97,8 +97,14 @@ export default function LoginPage() {
                         </form>
                     </div>
 
-                    <div className="bg-slate-50 p-6 text-center border-t border-slate-100">
+                    <div className="bg-slate-50 p-6 text-center border-t border-slate-100 space-y-3">
                         <p className="text-slate-400 text-xs font-medium">Lupa password? Hubungi Lead Developer.</p>
+                        <p className="text-slate-600 text-sm">
+                            Belum punya akun?{' '}
+                            <a href="/register" className="text-blue-600 font-bold hover:text-blue-700">
+                                Daftar di sini
+                            </a>
+                        </p>
                     </div>
                 </div>
 

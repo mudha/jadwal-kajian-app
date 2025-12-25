@@ -38,6 +38,17 @@ const initDb = async () => {
     )
   `);
 
+  // Create admins table
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS admins (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      email TEXT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Migrations for existing local DBs (best effort)
   try { await db.execute("ALTER TABLE kajian ADD COLUMN gmapsUrl TEXT"); } catch (e) { }
   try { await db.execute("ALTER TABLE kajian ADD COLUMN lat REAL"); } catch (e) { }

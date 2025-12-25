@@ -212,6 +212,45 @@ export default function BatchInputPage() {
         }
 
         try {
+            // Check for duplicates
+            const duplicateChecks = await Promise.all(
+                entriesToSave.map(async (entry) => {
+                    const response = await fetch('/api/admin/check-duplicate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            masjid: entry.masjid,
+                            pemateri: entry.pemateri,
+                            date: entry.date,
+                            waktu: entry.waktu,
+                        }),
+                    });
+                    const data = await response.json();
+                    return { entry, ...data };
+                })
+            );
+
+            const duplicates = duplicateChecks.filter(check => check.isDuplicate);
+
+            if (duplicates.length > 0) {
+                const duplicateInfo = duplicates.map(d =>
+                    `- ${d.entry.masjid} | ${d.entry.pemateri} | ${d.entry.date}`
+                ).join('\n');
+
+                const confirmSave = confirm(
+                    `⚠️ PERINGATAN DUPLIKAT!\n\n` +
+                    `Ditemukan ${duplicates.length} jadwal yang mungkin sudah ada:\n\n` +
+                    `${duplicateInfo}\n\n` +
+                    `Apakah Anda yakin ingin tetap menyimpan semua data?`
+                );
+
+                if (!confirmSave) {
+                    setMessage('Penyimpanan dibatalkan karena ada duplikat.');
+                    return;
+                }
+            }
+
+            // Proceed with saving
             const response = await fetch('/api/kajian', {
                 method: 'POST',
                 headers: {

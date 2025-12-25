@@ -1,7 +1,28 @@
 'use client';
-import { Calculator, Users, Clock, Navigation, Cloud, Moon, Search, Info, MessageCircle, MapPin, Bell, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Calculator, Users, Clock, Navigation, Cloud, Moon, Search, Info, MessageCircle, MapPin, Bell, ChevronRight, Shield, LogIn } from 'lucide-react';
 
 export default function AkunPage() {
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        checkAdminStatus();
+    }, []);
+
+    const checkAdminStatus = async () => {
+        try {
+            const response = await fetch('/api/admin/check-session');
+            const data = await response.json();
+            setIsAdmin(data.isAdmin || false);
+        } catch (error) {
+            setIsAdmin(false);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const menuLainnya = [
         { icon: Clock, label: 'Jadwal Sholat', href: '#' },
         { icon: Cloud, label: 'Bacaan Dzikir Pagi', href: '#' },
@@ -19,6 +40,43 @@ export default function AkunPage() {
             </header>
 
             <div className="px-4 py-6 space-y-6">
+                {/* Admin Access Card */}
+                {!loading && (
+                    <section className="bg-gradient-to-br from-teal-600 to-teal-800 rounded-3xl p-6 shadow-xl text-white">
+                        {isAdmin ? (
+                            <Link href="/admin/manage" className="block">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 bg-amber-500 rounded-2xl flex items-center justify-center shadow-lg">
+                                            <Shield className="w-7 h-7 text-white" />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-lg">Panel Admin</p>
+                                            <p className="text-sm text-teal-100">Kelola jadwal kajian</p>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="w-6 h-6 text-white/60" />
+                                </div>
+                            </Link>
+                        ) : (
+                            <Link href="/login" className="block">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
+                                            <LogIn className="w-7 h-7 text-white" />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-lg">Login Admin</p>
+                                            <p className="text-sm text-teal-100">Akses panel admin</p>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="w-6 h-6 text-white/60" />
+                                </div>
+                            </Link>
+                        )}
+                    </section>
+                )}
+
                 {/* Menu Lainnya */}
                 <section className="bg-white rounded-2xl overflow-hidden shadow-sm">
                     <h2 className="px-4 py-3 bg-slate-100 font-bold text-slate-700">Menu Lainnya</h2>
