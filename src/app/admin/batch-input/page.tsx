@@ -449,7 +449,7 @@ export default function BatchInputPage() {
                                         <table className="w-full text-left border-collapse">
                                             <thead>
                                                 <tr className="bg-slate-50 border-b border-slate-100">
-                                                    <th className="p-8 w-16">
+                                                    <th className="p-5 w-16">
                                                         <input
                                                             type="checkbox"
                                                             checked={selectedIndices.size === entries.length && entries.length > 0}
@@ -457,14 +457,14 @@ export default function BatchInputPage() {
                                                             className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
                                                         />
                                                     </th>
-                                                    <th className="p-8 font-black text-slate-400 uppercase tracking-widest text-[11px]">Rincian Jadwal</th>
-                                                    <th className="p-8 w-16 text-right"></th>
+                                                    <th className="p-5 font-black text-slate-400 uppercase tracking-widest text-[11px]">Rincian Jadwal</th>
+                                                    <th className="p-5 w-16 text-right"></th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100">
                                                 {entries.map((entry, idx) => (
                                                     <tr key={idx} className={`transition-all group/row ${selectedIndices.has(idx) ? 'bg-white' : 'opacity-40 hover:opacity-100'}`}>
-                                                        <td className="p-8 align-top">
+                                                        <td className="p-5 align-top">
                                                             <input
                                                                 type="checkbox"
                                                                 checked={selectedIndices.has(idx)}
@@ -472,7 +472,7 @@ export default function BatchInputPage() {
                                                                 className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
                                                             />
                                                         </td>
-                                                        <td className="p-8 space-y-6 flex gap-6">
+                                                        <td className="p-5 space-y-6 flex gap-6">
                                                             {entry.imageUrl && (
                                                                 <div className="shrink-0 group/img relative">
                                                                     <img src={entry.imageUrl} className="w-24 h-32 object-cover rounded-2xl border border-slate-200 shadow-sm" />

@@ -9,7 +9,8 @@ interface Kajian {
     city: string;
     masjid: string;
     address: string;
-    gmapsUrl?: string;
+    gmapsUrl?: string; // Optional
+    cp?: string; // Optional Contact Person
     pemateri: string;
     tema: string;
     waktu: string;
@@ -205,14 +206,25 @@ export default function AdminManagePage() {
 
                         <div className="p-8 overflow-y-auto">
                             <form id="editForm" onSubmit={handleUpdate} className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Masjid / Lokasi</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                        value={editingKajian.masjid}
+                                        onChange={e => setEditingKajian({ ...editingKajian, masjid: e.target.value })}
+                                        required
+                                    />
+                                </div>
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Masjid</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Pemateri</label>
                                         <input
                                             type="text"
                                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                            value={editingKajian.masjid}
-                                            onChange={e => setEditingKajian({ ...editingKajian, masjid: e.target.value })}
+                                            value={editingKajian.pemateri}
+                                            onChange={e => setEditingKajian({ ...editingKajian, pemateri: e.target.value })}
                                             required
                                         />
                                     </div>
@@ -229,24 +241,24 @@ export default function AdminManagePage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Alamat</label>
-                                    <input
-                                        type="text"
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tema</label>
+                                    <textarea
+                                        rows={2}
                                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                        value={editingKajian.address}
-                                        onChange={e => setEditingKajian({ ...editingKajian, address: e.target.value })}
+                                        value={editingKajian.tema}
+                                        onChange={e => setEditingKajian({ ...editingKajian, tema: e.target.value })}
                                     />
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Pemateri</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tanggal</label>
                                         <input
                                             type="text"
                                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                            value={editingKajian.pemateri}
-                                            onChange={e => setEditingKajian({ ...editingKajian, pemateri: e.target.value })}
-                                            required
+                                            value={editingKajian.date}
+                                            onChange={e => setEditingKajian({ ...editingKajian, date: e.target.value })}
+                                            placeholder="Contoh: Senin, 20 Januari 2025"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -261,26 +273,50 @@ export default function AdminManagePage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tema</label>
-                                    <textarea
-                                        rows={2}
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                        value={editingKajian.tema}
-                                        onChange={e => setEditingKajian({ ...editingKajian, tema: e.target.value })}
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Alamat Lengkap</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium"
+                                        value={editingKajian.address}
+                                        onChange={e => setEditingKajian({ ...editingKajian, address: e.target.value })}
                                     />
                                 </div>
 
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Contact Person (CP)</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                            value={editingKajian.cp || ''}
+                                            onChange={e => setEditingKajian({ ...editingKajian, cp: e.target.value })}
+                                            placeholder="08..."
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Google Maps</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-blue-600 truncate"
+                                            value={editingKajian.gmapsUrl || ''}
+                                            onChange={e => setEditingKajian({ ...editingKajian, gmapsUrl: e.target.value })}
+                                            placeholder="https://maps.app.goo.gl/..."
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tanggal</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Pendaftaran / Streaming</label>
                                     <input
                                         type="text"
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                        value={editingKajian.date}
-                                        onChange={e => setEditingKajian({ ...editingKajian, date: e.target.value })}
-                                        placeholder="Contoh: Senin, 20 Januari 2025"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-blue-600"
+                                        value={editingKajian.linkInfo || ''}
+                                        onChange={e => setEditingKajian({ ...editingKajian, linkInfo: e.target.value })}
+                                        placeholder="https://..."
                                     />
                                 </div>
-                                <div className="flex items-center gap-2">
+
+                                <div className="flex items-center gap-2 pt-2">
                                     <input
                                         type="checkbox"
                                         id="khususAkhwat"
@@ -288,7 +324,7 @@ export default function AdminManagePage() {
                                         checked={editingKajian.khususAkhwat || false}
                                         onChange={e => setEditingKajian({ ...editingKajian, khususAkhwat: e.target.checked })}
                                     />
-                                    <label htmlFor="khususAkhwat" className="font-bold text-slate-700">Khusus Akhwat/Muslimah</label>
+                                    <label htmlFor="khususAkhwat" className="font-bold text-slate-700">Khusus Akhwat / Muslimah</label>
                                 </div>
                             </form>
                         </div>
