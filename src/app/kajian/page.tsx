@@ -591,10 +591,7 @@ function KajianListContent() {
                                                         </a>
                                                     )}
                                                     <button
-                                                        onClick={() => {
-                                                            const text = `*INFO KAJIAN SUNNAH*\n\n🕌 *Masjid:* ${kajian.masjid}\n👤 *Pemateri:* ${kajian.pemateri}\n📚 *Tema:* ${kajian.tema}\n🗓 *Hari/Tgl:* ${kajian.date}\n⏰ *Waktu:* ${kajian.waktu}\n📍 *Lokasi:* ${kajian.gmapsUrl || kajian.address}\n\n_Disebarkan melalui Aplikasi Jadwal Kajian_`;
-                                                            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-                                                        }}
+                                                        onClick={() => shareToWhatsApp(kajian)}
                                                         className="flex items-center justify-center py-4 bg-white border-2 border-slate-100 rounded-2xl text-slate-700 font-black text-[10px] uppercase tracking-tighter hover:bg-green-600 hover:border-green-600 hover:text-white transition-all shadow-sm"
                                                     >
                                                         <Share2 className="w-3.5 h-3.5 mr-1" />
@@ -987,3 +984,4 @@ export default function KajianPage() {
         </Suspense>
     );
 }
+
