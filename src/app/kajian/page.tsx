@@ -405,23 +405,6 @@ function KajianListContent() {
                                         const status = getKajianStatus(kajian.date, kajian.waktu);
                                         return (
                                             <div key={kajian.id} className={`bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col relative overflow-hidden group ${status === 'PAST' ? 'opacity-75 grayscale-[0.3]' : ''}`}>
-                                                {/* Action Buttons Overlay */}
-                                                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                                    <button
-                                                        onClick={() => openEditModal(kajian)}
-                                                        className="p-2 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all"
-                                                        title="Edit"
-                                                    >
-                                                        <Edit className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => deleteIndividual(kajian.id)}
-                                                        className="p-2 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-lg text-slate-600 hover:text-red-600 hover:bg-red-50 transition-all"
-                                                        title="Hapus"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
 
                                                 {/* Status Badge */}
                                                 {status === 'TODAY' && (
@@ -563,8 +546,7 @@ function KajianListContent() {
                                                     </button>
                                                     <button
                                                         onClick={() => {
-                                                            const [day, month, year] = kajian.date.split(' ').slice(-3); // Simple extraction
-                                                            // This is a bit simplified, but Google Calendar link is the way to go
+                                                            const [day, month, year] = kajian.date.split(' ').slice(-3);
                                                             const title = encodeURIComponent(`Kajian: ${kajian.pemateri} @ ${kajian.masjid}`);
                                                             const details = encodeURIComponent(`Tema: ${kajian.tema}\nLokasi: ${kajian.address}`);
                                                             const gCalUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${encodeURIComponent(kajian.address)}&sf=true&output=xml`;
@@ -585,6 +567,23 @@ function KajianListContent() {
                                                             Daftar / Streaming
                                                         </a>
                                                     )}
+                                                </div>
+
+                                                <div className="mt-4 pt-4 border-t-2 border-dashed border-slate-100 grid grid-cols-2 gap-3">
+                                                    <button
+                                                        onClick={() => openEditModal(kajian)}
+                                                        className="flex items-center justify-center py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 font-bold text-xs hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all"
+                                                    >
+                                                        <Edit className="w-4 h-4 mr-2" />
+                                                        Edit Jadwal
+                                                    </button>
+                                                    <button
+                                                        onClick={() => deleteIndividual(kajian.id)}
+                                                        className="flex items-center justify-center py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 font-bold text-xs hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
+                                                    >
+                                                        <Trash2 className="w-4 h-4 mr-2" />
+                                                        Hapus
+                                                    </button>
                                                 </div>
 
                                             </div>
