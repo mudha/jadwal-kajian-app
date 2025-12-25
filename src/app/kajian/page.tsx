@@ -2,47 +2,39 @@
 import { useEffect, useState } from 'react';
 import { KajianEntry } from '@/lib/parser';
 import { Calendar, MapPin, User, Clock, Search, Trash2, ArrowLeft, History, ListFilter, MessageCircle, Edit, X, Save, Map as MapIcon, Share2, ExternalLink, ImageIcon } from 'lucide-react';
-import Link from 'next/link';
-import { getKajianStatus } from '@/lib/date-utils';
-import dynamic from 'next/dynamic';
-import PrayerTimeWidget from '@/components/PrayerTimeWidget';
-import MenuGrid from '@/components/MenuGrid';
+import { useSearchParams } from 'next/navigation';
 
-const KajianMap = dynamic(() => import('@/components/KajianMap'), {
-    ssr: false,
-    loading: () => <div className="h-[400px] w-full bg-slate-100 animate-pulse rounded-3xl flex items-center justify-center text-slate-400 font-bold">Harap tunggu, peta sedang dimuat...</div>
-});
-
-interface KajianWithId extends KajianEntry {
-    id: number;
-}
+// ... existing imports
 
 export default function KajianListPage() {
+    const searchParams = useSearchParams();
+    const filterMode = searchParams.get('mode');
+
+    // ... existing state ...
     const [kajianList, setKajianList] = useState<KajianWithId[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeTab, setActiveTab] = useState<'all' | 'today' | 'upcoming' | 'past'>('all');
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [editingKajian, setEditingKajian] = useState<KajianWithId | null>(null);
-    const [showMap, setShowMap] = useState(false);
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-    const fetchData = async () => {
-        try {
-            const response = await fetch('/api/kajian');
-            const data = await response.json();
-            if (Array.isArray(data)) {
-                setKajianList(data);
-            }
-        } catch (e) {
-            console.error('Error fetching kajian data', e);
-        }
-    };
-
-    useEffect(() => {
-        fetchData();
-    }, []);
+    // ... existing useEffect ...
 
     const filteredKajian = kajianList.filter(k => {
+        // Mode Filtering
+        if (filterMode === 'online') {
+            const isOnline = k.city.toLowerCase().includes('online') ||
+                k.masjid.toLowerCase().includes('online') ||
+                k.address.toLowerCase().includes('online') ||
+                k.city.toLowerCase() === 'live streaming';
+            if (!isOnline) return false;
+        }
+
+        if (filterMode === 'akhwat') {
+            // Check specifically for khususAkhwat flag or text keywords as fallback
+            const isAkhwat = k.khususAkhwat === 1 ||
+                k.khususAkhwat === true ||
+                k.tema.toLowerCase().includes('muslimah') ||
+                k.tema.toLowerCase().includes('akhwat');
+            if (!isAkhwat) return false;
+        }
+
         const matchesSearch = k.masjid.toLowerCase().includes(searchTerm.toLowerCase()) ||
             k.pemateri.toLowerCase().includes(searchTerm.toLowerCase()) ||
             k.tema.toLowerCase().includes(searchTerm.toLowerCase()) ||
