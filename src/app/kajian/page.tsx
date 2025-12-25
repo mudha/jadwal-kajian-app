@@ -17,6 +17,20 @@ const KajianMap = dynamic(() => import('@/components/KajianMap'), {
 
 interface KajianWithId extends KajianEntry {
     id: number;
+    distance?: number; // Distance in km
+}
+
+function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c; // Distance in km
+    return d;
 }
 
 export default function KajianListPage() {
@@ -30,6 +44,8 @@ export default function KajianListPage() {
     const [editingKajian, setEditingKajian] = useState<KajianWithId | null>(null);
     const [showMap, setShowMap] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+    const [isLocatingUser, setIsLocatingUser] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -47,7 +63,46 @@ export default function KajianListPage() {
         fetchData();
     }, []);
 
-    const filteredKajian = kajianList.filter(k => {
+    // Effect for nearby mode
+    useEffect(() => {
+        if (filterMode === 'nearby') {
+            setIsLocatingUser(true);
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        setUserLocation({
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        });
+                        setIsLocatingUser(false);
+                    },
+                    (error) => {
+                        console.error('Error getting location', error);
+                        setIsLocatingUser(false);
+                        alert('Gagal mengambil lokasi Anda. Pastikan GPS aktif.');
+                    }
+                );
+            } else {
+                alert('Geolocation tidak didukung browser ini.');
+                setIsLocatingUser(false);
+            }
+        }
+    }, [filterMode]);
+
+    let processedKajian = [...kajianList];
+
+    // Calculate distance if user location is available
+    if (userLocation) {
+        processedKajian = processedKajian.map(k => {
+            if (k.lat && k.lng) {
+                const dist = haversineDistance(userLocation.lat, userLocation.lng, k.lat, k.lng);
+                return { ...k, distance: dist };
+            }
+            return k;
+        });
+    }
+
+    const filteredKajian = processedKajian.filter(k => {
         // Mode Filtering
         if (filterMode === 'online') {
             const isOnline = k.city.toLowerCase().includes('online') ||
@@ -58,13 +113,16 @@ export default function KajianListPage() {
         }
 
         if (filterMode === 'akhwat') {
-            // Check specifically for khususAkhwat flag or text keywords as fallback
             const isAkhwat = k.khususAkhwat === 1 ||
                 k.khususAkhwat === true ||
                 k.tema.toLowerCase().includes('muslimah') ||
                 k.tema.toLowerCase().includes('akhwat');
             if (!isAkhwat) return false;
         }
+
+        // Nearby filtering (optional: max radius?)
+        // For now, sorting is enough, but we might want to filter crazy far ones?
+        // Let's just keep them all for now and Sort.
 
         const matchesSearch = k.masjid.toLowerCase().includes(searchTerm.toLowerCase()) ||
             k.pemateri.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -82,6 +140,19 @@ export default function KajianListPage() {
 
         return true;
     });
+
+    // Sort by distance if mode is nearby
+    if (filterMode === 'nearby' && userLocation) {
+        filteredKajian.sort((a, b) => {
+            if (a.distance !== undefined && b.distance !== undefined) {
+                return a.distance - b.distance;
+            }
+            // Put items with distance first
+            if (a.distance !== undefined) return -1;
+            if (b.distance !== undefined) return 1;
+            return 0;
+        });
+    }
 
     const clearData = async () => {
         if (confirm('Apakah Anda yakin ingin menghapus semua data kajian dari database?')) {

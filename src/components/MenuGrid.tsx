@@ -10,7 +10,7 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
     { icon: Video, label: 'Kajian Online', href: '/kajian?mode=online' },
-    { icon: Navigation, label: 'Kajian Terdekat', href: '/kajian?filter=nearby' },
+    { icon: Navigation, label: 'Kajian Terdekat', href: '/kajian?mode=nearby' },
     { icon: Users, label: 'Kajian Muslimah', href: '/kajian?mode=akhwat' },
     { icon: MapPin, label: 'Lokasi Terdekat', href: '/kajian' },
     { icon: Clock, label: 'Jadwal Sholat', href: '/jadwal-sholat' },
