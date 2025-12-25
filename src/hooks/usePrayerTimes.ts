@@ -111,7 +111,7 @@ export function usePrayerTimes() {
             if (!upcomingPrayer) {
                 // Logic for tomorrow Fajr would require more complex date handling, 
                 // for MVP keeping it simple or showing "Besok"
-                upcomingPrayer = { name: 'Subuh', time: state.timings['Fajr'] };
+                upcomingPrayer = { name: 'Subuh', time: state.timings!['Fajr'] };
                 // Note: accurate calculation needs tomorrow's schedule, but assume similar time for MVP
             }
 
