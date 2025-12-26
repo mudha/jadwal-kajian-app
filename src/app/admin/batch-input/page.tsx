@@ -377,110 +377,113 @@ export default function BatchInputPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                <div className="lg:col-span-5 space-y-4">
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="bg-blue-600 p-2 rounded-lg text-white">
-                                    <Upload className="w-4 h-4" />
+            <div className="flex flex-col gap-10 w-full">
+                <div className="w-full space-y-6">
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-blue-600 p-2 rounded-lg text-white">
+                                        <Upload className="w-4 h-4" />
+                                    </div>
+                                    <h3 className="font-black text-lg tracking-tight text-slate-900">Scan Poster / Flyer</h3>
                                 </div>
-                                <h3 className="font-black text-lg tracking-tight text-slate-900">Scan Poster / Flyer</h3>
+
+                                <div
+                                    onClick={() => document.getElementById('poster-upload')?.click()}
+                                    className={`relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center transition-all cursor-pointer h-64 ${isOcrLoading ? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-300 hover:border-blue-400 hover:bg-blue-50/50'}`}
+                                >
+                                    <input
+                                        id="poster-upload"
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                                    />
+
+                                    {isOcrLoading ? (
+                                        <div className="flex flex-col items-center">
+                                            <div className="relative w-12 h-12 mb-3">
+                                                <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+                                                <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-blue-600">
+                                                    {ocrProgress}%
+                                                </div>
+                                            </div>
+                                            <p className="text-blue-600 font-black uppercase tracking-widest text-[10px]">Membaca...</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <ImageIcon className="w-8 h-8 text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
+                                            <p className="text-slate-900 font-extrabold text-xs text-center">Klik / Tarik Poster ke Sini</p>
+                                            <p className="text-slate-400 font-bold text-[9px] text-center mt-1 uppercase tracking-widest">Atau Ctrl+V (Paste) Gambar</p>
+                                        </>
+                                    )}
+                                </div>
                             </div>
 
-                            <div
-                                onClick={() => document.getElementById('poster-upload')?.click()}
-                                className={`relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center transition-all cursor-pointer ${isOcrLoading ? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-300 hover:border-blue-400 hover:bg-blue-50/50'}`}
-                            >
-                                <input
-                                    id="poster-upload"
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-                                />
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-blue-600 p-2 rounded-lg text-white">
+                                        <PlusCircle className="w-4 h-4" />
+                                    </div>
+                                    <h3 className="font-black text-lg tracking-tight text-slate-900">Input Broadcast</h3>
+                                </div>
 
-                                {isOcrLoading ? (
-                                    <div className="flex flex-col items-center">
-                                        <div className="relative w-12 h-12 mb-3">
-                                            <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-                                            <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-blue-600">
-                                                {ocrProgress}%
+                                <div className="relative">
+                                    <textarea
+                                        className="w-full h-44 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none placeholder:text-slate-400"
+                                        placeholder="Paste pesan broadcast di sini..."
+                                        value={inputText}
+                                        onChange={(e) => setInputText(e.target.value)}
+                                    />
+                                    {lastImageUrl && (
+                                        <div className="absolute top-4 right-4 group">
+                                            <div className="relative">
+                                                <img src={lastImageUrl} className="w-16 h-16 object-cover rounded-xl border-4 border-white shadow-lg animate-in zoom-in-50 duration-300" />
+                                                <button
+                                                    onClick={() => setLastImageUrl(null)}
+                                                    className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
                                             </div>
                                         </div>
-                                        <p className="text-blue-600 font-black uppercase tracking-widest text-[10px]">Membaca...</p>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <ImageIcon className="w-8 h-8 text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
-                                        <p className="text-slate-900 font-extrabold text-xs text-center">Klik / Tarik Poster ke Sini</p>
-                                        <p className="text-slate-400 font-bold text-[9px] text-center mt-1 uppercase tracking-widest">Atau Ctrl+V (Paste) Gambar</p>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="bg-blue-600 p-2 rounded-lg text-white">
-                                    <PlusCircle className="w-4 h-4" />
+                                    )}
                                 </div>
-                                <h3 className="font-black text-lg tracking-tight text-slate-900">Input Broadcast</h3>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={handleProcess}
+                                        disabled={!inputText || isGeocoding}
+                                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium py-3 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+                                    >
+                                        {isGeocoding ? (
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                        )}
+                                        {isGeocoding ? 'Proses...' : 'Regex'}
+                                    </button>
+
+                                    <button
+                                        onClick={handleAiProcess}
+                                        disabled={!inputText || isGeocoding || isAiLoading}
+                                        className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400 text-white font-medium py-3 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+                                    >
+                                        {isAiLoading ? (
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            <Sparkles className="w-4 h-4 group-hover:scale-125 transition-transform text-yellow-300" />
+                                        )}
+                                        {isAiLoading ? 'AI...' : 'AI Gemini'}
+                                    </button>
+                                </div>
                             </div>
-
-                            <div className="relative">
-                                <textarea
-                                    className="w-full h-80 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none placeholder:text-slate-400"
-                                    placeholder="Paste pesan broadcast di sini..."
-                                    value={inputText}
-                                    onChange={(e) => setInputText(e.target.value)}
-                                />
-                                {lastImageUrl && (
-                                    <div className="absolute top-4 right-4 group">
-                                        <div className="relative">
-                                            <img src={lastImageUrl} className="w-24 h-24 object-cover rounded-2xl border-4 border-white shadow-2xl animate-in zoom-in-50 duration-300" />
-                                            <button
-                                                onClick={() => setLastImageUrl(null)}
-                                                className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <X className="w-3 h-3" />
-                                            </button>
-                                        </div>
-                                        <p className="text-[8px] font-black text-slate-400 mt-1 uppercase text-center tracking-widest bg-white/80 py-0.5 rounded-full px-2">Image Linked</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            <button
-                                onClick={handleProcess}
-                                disabled={!inputText || isGeocoding}
-                                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-sm"
-                            >
-                                {isGeocoding ? (
-                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                ) : (
-                                    <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                )}
-                                {isGeocoding ? 'Sedang Memproses...' : 'Ekstrak Jadwal (Regex)'}
-                            </button>
-
-                            <button
-                                onClick={handleAiProcess}
-                                disabled={!inputText || isGeocoding || isAiLoading}
-                                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400 text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-sm mt-2"
-                            >
-                                {isAiLoading ? (
-                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                ) : (
-                                    <Sparkles className="w-4 h-4 group-hover:scale-125 transition-transform text-yellow-300" />
-                                )}
-                                {isAiLoading ? 'AI Sedang Berpikir...' : 'Ekstrak dengan AI Gemini'}
-                            </button>
                         </div>
                     </div>
                 </div>
 
-                <div className="lg:col-span-7">
+                <div className="w-full">
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col min-h-[600px]">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                             <div className="flex items-center gap-4">
