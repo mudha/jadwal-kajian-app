@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Search, User, Clock } from 'lucide-react';
+import { Search, User, Clock, MapPin } from 'lucide-react';
 import PrayerTimeWidget from '@/components/PrayerTimeWidget';
 import KajianCard from '@/components/KajianCard';
 import MenuGrid from '@/components/MenuGrid';
@@ -18,10 +18,31 @@ interface KajianWithId {
   pemateri: string;
   imageUrl?: string;
   attendanceCount?: number;
+  lat?: number;
+  lng?: number;
+  distance?: number;
+}
+
+function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const d = R * c; // Distance in km
+  return d;
+}
+
+function deg2rad(deg: number) {
+  return deg * (Math.PI / 180);
 }
 
 export default function BerandaPage() {
   const [featuredKajian, setFeaturedKajian] = useState<KajianWithId[]>([]);
+  const [sortMode, setSortMode] = useState<'date' | 'distance'>('date');
 
   useEffect(() => {
     // Fetch featured kajian
@@ -34,13 +55,46 @@ export default function BerandaPage() {
           const upcoming = data.map((k: any) => ({
             ...k,
             _parsedDate: getKajianStatus(k.date, k.waktu) === 'PAST' ? null : parseIndoDate(k.date)
-          })).filter((k: any) => k._parsedDate !== null)
-            .sort((a: any, b: any) => {
-              // Sort by Date ASC (Nearest first)
-              return (a._parsedDate?.getTime() || 0) - (b._parsedDate?.getTime() || 0);
-            });
+          })).filter((k: any) => k._parsedDate !== null);
 
-          setFeaturedKajian(upcoming.slice(0, 25)); // Show up to 25 nearest upcoming tables
+          // Try to sort by location if available
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+
+                const sortedByDistance = upcoming.map((k: any) => {
+                  let distance = 9999999; // Default infinite distance
+                  if (k.lat && k.lng) {
+                    distance = getDistanceFromLatLonInKm(userLat, userLng, k.lat, k.lng);
+                  }
+                  return { ...k, distance };
+                }).sort((a: any, b: any) => {
+                  // Primary Sort: Distance
+                  if (Math.abs(a.distance - b.distance) > 0.1) {
+                    return a.distance - b.distance;
+                  }
+                  // Secondary Sort: Date
+                  return (a._parsedDate?.getTime() || 0) - (b._parsedDate?.getTime() || 0);
+                });
+
+                setFeaturedKajian(sortedByDistance.slice(0, 25));
+                setSortMode('distance');
+              },
+              (error) => {
+                console.warn('Location access denied or error:', error);
+                // Fallback: Sort by Date
+                const sortedByDate = upcoming.sort((a: any, b: any) => (a._parsedDate?.getTime() || 0) - (b._parsedDate?.getTime() || 0));
+                setFeaturedKajian(sortedByDate.slice(0, 25));
+              },
+              { timeout: 5000 }
+            );
+          } else {
+            // Fallback: Sort by Date
+            const sortedByDate = upcoming.sort((a: any, b: any) => (a._parsedDate?.getTime() || 0) - (b._parsedDate?.getTime() || 0));
+            setFeaturedKajian(sortedByDate.slice(0, 25));
+          }
         }
       })
       .catch(console.error);
@@ -86,7 +140,9 @@ export default function BerandaPage() {
           {featuredKajian.length > 0 && (
             <section>
               <div className="flex items-center justify-between mb-4 md:mb-6">
-                <h2 className="font-bold text-lg text-slate-800">Kajian Pilihan</h2>
+                <h2 className="font-bold text-lg text-slate-800">
+                  {sortMode === 'distance' ? 'Kajian Pilihan Terdekat' : 'Kajian Pilihan'}
+                </h2>
                 <Link href="/kajian" className="text-sm text-teal-600 font-medium hover:text-teal-700">Lihat Semua</Link>
               </div>
 
@@ -97,7 +153,9 @@ export default function BerandaPage() {
                     key={kajian.id}
                     id={kajian.id}
                     date={`${kajian.date} - Jam ${kajian.date.includes('Hari Ini') ? '09:30' : ''}`}
-                    location={`${kajian.masjid} - Kota ${kajian.city}`}
+                    location={kajian.distance && kajian.distance < 1000
+                      ? `${kajian.distance.toFixed(1)} km • ${kajian.city}`
+                      : `${kajian.masjid} - Kota ${kajian.city}`}
                     title={kajian.tema}
                     ustadz={kajian.pemateri}
                     imageUrl={kajian.imageUrl}
@@ -120,6 +178,11 @@ export default function BerandaPage() {
                       <p className="text-[10px] text-slate-400 flex items-center gap-1">
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300"></span>
                         {kajian.masjid}, {kajian.city}
+                        {kajian.distance && kajian.distance < 1000 && (
+                          <span className="flex items-center gap-0.5 text-teal-600 font-bold ml-1 bg-teal-50 px-1.5 py-0.5 rounded-md">
+                            <MapPin className="w-2.5 h-2.5" /> {kajian.distance.toFixed(1)} km
+                          </span>
+                        )}
                       </p>
                     </div>
                   </Link>
