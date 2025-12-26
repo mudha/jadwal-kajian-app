@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { parseKajianBroadcast, KajianEntry } from '@/lib/parser';
+import { KajianEntry } from '@/lib/parser';
 import { parseWithGemini } from '@/lib/ai-parser';
 import { Clipboard, Save, Play, CheckCircle, AlertCircle, FileText, Calendar, Clock, MapPin, LogOut, LayoutDashboard, ExternalLink, Database, PlusCircle, History, Info, Trash2, Image as ImageIcon, Loader2, Upload, X, Sparkles } from 'lucide-react';
 import { geocodeAddress } from '@/lib/geocoding';
@@ -123,15 +123,19 @@ export default function BatchInputPage() {
 
     const handleProcess = async () => {
         try {
-            const parsed = parseKajianBroadcast(inputText);
+            // Updated to use AI Parser as per request (Regex fallback deprecated)
+            setIsGeocoding(true);
+            setMessage('Sedang mengekstrak data... (Metode Cerdas)');
+
+            const parsed = await parseWithGemini(inputText);
             const enrichedEntries = parsed.map(entry => ({ ...entry, imageUrl: lastImageUrl || undefined }));
             setEntries(enrichedEntries);
             setSelectedIndices(new Set(enrichedEntries.map((_, i) => i)));
             setMessage(`Berhasil mengekstrak ${parsed.length} jadwal. Memulai pencarian koordinat lokasi...`);
 
-            setIsGeocoding(true);
             const withCoords = [...enrichedEntries];
 
+            // 1. Geocoding
             for (let i = 0; i < withCoords.length; i++) {
                 const entry = withCoords[i];
                 const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
@@ -141,13 +145,61 @@ export default function BatchInputPage() {
                 }
             }
 
-            setIsGeocoding(false);
+            // 2. Normalization (Matching AI settings)
+            setMessage('Menormalisasi nama ustadz dan masjid...');
+            const normalized = [...withCoords];
+
+            for (let i = 0; i < normalized.length; i++) {
+                const entry = normalized[i];
+
+                // Normalize ustadz name
+                try {
+                    const ustadzResponse = await fetch('/api/admin/normalize', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: entry.pemateri, type: 'ustadz', threshold: 0.8 }),
+                    });
+                    const ustadzData = await ustadzResponse.json();
+
+                    if (ustadzData.hasExactMatch || (ustadzData.suggestions && ustadzData.suggestions.length > 0)) {
+                        const bestMatch = ustadzData.hasExactMatch
+                            ? ustadzData.canonicalName
+                            : ustadzData.suggestions[0].name;
+                        normalized[i] = { ...entry, pemateri: bestMatch };
+                    }
+                } catch (e) {
+                    console.error('Error normalizing ustadz:', e);
+                }
+
+                // Normalize masjid name
+                try {
+                    const masjidResponse = await fetch('/api/admin/normalize', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: entry.masjid, type: 'masjid', threshold: 0.8 }),
+                    });
+                    const masjidData = await masjidResponse.json();
+
+                    if (masjidData.hasExactMatch || (masjidData.suggestions && masjidData.suggestions.length > 0)) {
+                        const bestMatch = masjidData.hasExactMatch
+                            ? masjidData.canonicalName
+                            : masjidData.suggestions[0].name;
+                        normalized[i] = { ...normalized[i], masjid: bestMatch };
+                    }
+                } catch (e) {
+                    console.error('Error normalizing masjid:', e);
+                }
+
+                setEntries([...normalized]); // Live update UI
+            }
+
             setLastImageUrl(null); // Reset after processing
-            setMessage(`Ekstraksi selesai. Lokasi masjid telah dipetakan.`);
-        } catch (e) {
-            setMessage('Gagal memproses teks. Pastikan format sesuai.');
-            setIsGeocoding(false);
+            setMessage(`Ekstraksi selesai. Data telah diproses dan dinormalisasi.`);
+        } catch (e: any) {
+            setMessage(`Gagal memproses: ${e.message || 'Kesalahan'}. Pastikan format sesuai.`);
             console.error(e);
+        } finally {
+            setIsGeocoding(false);
         }
     };
 
@@ -324,10 +376,12 @@ export default function BatchInputPage() {
         }
     };
 
-    const updateEntry = (index: number, field: keyof KajianEntry, value: string) => {
-        const newEntries = [...entries];
-        newEntries[index] = { ...newEntries[index], [field]: value };
-        setEntries(newEntries);
+    const updateEntry = (index: number, field: keyof KajianEntry, value: string | number) => {
+        setEntries(prev => {
+            const newEntries = [...prev];
+            newEntries[index] = { ...newEntries[index], [field]: value };
+            return newEntries;
+        });
     };
 
     const handleAddManual = () => {
@@ -641,9 +695,9 @@ export default function BatchInputPage() {
                                                             <div className="col-span-1 md:col-span-2">
                                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">CP / Maps / Koordinat</label>
                                                                 <div className="flex flex-col md:flex-row gap-4">
-                                                                    <input type="text" placeholder="CP" value={entry.cp} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="w-full md:w-auto md:flex-1 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-emerald-600" />
+                                                                    <input type="text" placeholder="CP (Contact Person)" value={entry.cp} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="w-full md:w-1/3 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-emerald-600" />
                                                                     <div className="flex-1 flex gap-2">
-                                                                        <input type="text" placeholder="Maps URL" value={entry.gmapsUrl} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium text-blue-500 text-sm" />
+                                                                        <input type="text" placeholder="Google Maps URL" value={entry.gmapsUrl} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium text-blue-500 text-sm" />
                                                                         <button
                                                                             onClick={async () => {
                                                                                 if (!entry.gmapsUrl) return alert('Masukkan URL Maps terlebih dahulu');
@@ -659,7 +713,7 @@ export default function BatchInputPage() {
                                                                                         updateEntry(idx, 'lat', data.lat);
                                                                                         updateEntry(idx, 'lng', data.lng);
                                                                                         updateEntry(idx, 'gmapsUrl', data.expandedUrl);
-                                                                                        alert('Koordinat berhasil diekstrak!');
+                                                                                        alert(`Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`);
                                                                                     } else {
                                                                                         alert('Gagal mengekstrak: ' + data.error);
                                                                                     }
@@ -679,8 +733,31 @@ export default function BatchInputPage() {
                                                                 </div>
                                                             </div>
                                                             <div className="col-span-1 md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Link Pendaftaran / Streaming</label>
-                                                                <input type="text" placeholder="https://..." value={entry.linkInfo || ''} onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-purple-500 rounded-xl px-4 py-2 outline-none font-medium text-purple-600 text-sm" />
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Link Pendaftaran & Info Lokasi (Lat/Lng)</label>
+                                                                <div className="flex gap-4">
+                                                                    <input type="text" placeholder="Link info (https://...)" value={entry.linkInfo || ''} onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)} className="flex-1 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-purple-500 rounded-xl px-4 py-2 outline-none font-medium text-purple-600 text-sm" />
+
+                                                                    <div className="flex gap-2 w-40 shrink-0">
+                                                                        <input
+                                                                            type="number"
+                                                                            step="any"
+                                                                            value={entry.lat || ''}
+                                                                            onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
+                                                                            placeholder="Lat"
+                                                                            className="w-1/2 bg-slate-50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-2 py-2 outline-none font-mono text-xs font-bold text-slate-600 text-center"
+                                                                            title="Latitude"
+                                                                        />
+                                                                        <input
+                                                                            type="number"
+                                                                            step="any"
+                                                                            value={entry.lng || ''}
+                                                                            onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
+                                                                            placeholder="Lng"
+                                                                            className="w-1/2 bg-slate-50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-2 py-2 outline-none font-mono text-xs font-bold text-slate-600 text-center"
+                                                                            title="Longitude"
+                                                                        />
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>

@@ -145,16 +145,16 @@ export default function UstadzManagementPage() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900">Kelola Ustadz</h1>
                     <p className="text-slate-500 mt-1">Manajemen data ustadz/pemateri kajian</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                     {selectedForMerge.size > 0 && (
                         <button
                             onClick={() => setIsMergeModalOpen(true)}
-                            className="flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-all shadow-lg shadow-amber-200"
+                            className="flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-all shadow-lg shadow-amber-200 text-sm"
                         >
                             <GitMerge className="w-5 h-5" />
                             Gabung ({selectedForMerge.size})
@@ -162,7 +162,7 @@ export default function UstadzManagementPage() {
                     )}
                     <button
                         onClick={openAddModal}
-                        className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
+                        className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 text-sm"
                     >
                         <Plus className="w-5 h-5" />
                         Tambah Ustadz
@@ -197,106 +197,144 @@ export default function UstadzManagementPage() {
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-slate-50 border-b border-slate-100">
-                            <tr>
-                                <th className="px-6 py-4 text-left">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedForMerge.size === filteredUstadz.length && filteredUstadz.length > 0}
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                setSelectedForMerge(new Set(filteredUstadz.map(u => u.name)));
-                                            } else {
-                                                setSelectedForMerge(new Set());
-                                            }
-                                        }}
-                                        className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                    No
-                                </th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                    Nama Ustadz
-                                </th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                    Jumlah Kajian
-                                </th>
-                                <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                    Aksi
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
-                                        Memuat data...
-                                    </td>
-                                </tr>
-                            ) : filteredUstadz.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
-                                        Tidak ada data ustadz
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredUstadz.map((ustadz, index) => (
-                                    <tr key={ustadz.id} className={`hover:bg-slate-50 transition-colors ${selectedForMerge.has(ustadz.name) ? 'bg-amber-50' : ''}`}>
-                                        <td className="px-6 py-4">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedForMerge.has(ustadz.name)}
-                                                onChange={() => toggleMergeSelection(ustadz.name)}
-                                                className="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-2 focus:ring-amber-500"
-                                            />
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-slate-500">
-                                            {index + 1}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                                    <User className="w-5 h-5 text-blue-600" />
-                                                </div>
-                                                <span className="font-bold text-slate-900">{ustadz.name}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-slate-600">
-                                            {ustadz.kajianCount || 0} kajian
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => openEditModal(ustadz)}
-                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                >
-                                                    <Edit className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(ustadz.id)}
-                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+            {/* Content Area */}
+            <div className="space-y-4">
+                {loading ? (
+                    <div className="bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200 shadow-sm">Memuat data...</div>
+                ) : filteredUstadz.length === 0 ? (
+                    <div className="bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200 shadow-sm">
+                        Tidak ada data ustadz
+                    </div>
+                ) : (
+                    <>
+                        {/* Desktop Table View */}
+                        <div className="hidden md:block bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-slate-50 border-b border-slate-100">
+                                        <tr>
+                                            <th className="px-6 py-4 text-left w-10">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedForMerge.size === filteredUstadz.length && filteredUstadz.length > 0}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedForMerge(new Set(filteredUstadz.map(u => u.name)));
+                                                        } else {
+                                                            setSelectedForMerge(new Set());
+                                                        }
+                                                    }}
+                                                    className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                No
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                Nama Ustadz
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                Jumlah Kajian
+                                            </th>
+                                            <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                Aksi
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {filteredUstadz.map((ustadz, index) => (
+                                            <tr key={ustadz.id} className={`hover:bg-slate-50 transition-colors ${selectedForMerge.has(ustadz.name) ? 'bg-amber-50' : ''}`}>
+                                                <td className="px-6 py-4">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedForMerge.has(ustadz.name)}
+                                                        onChange={() => toggleMergeSelection(ustadz.name)}
+                                                        className="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-2 focus:ring-amber-500"
+                                                    />
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-slate-500">
+                                                    {index + 1}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                            <User className="w-5 h-5 text-blue-600" />
+                                                        </div>
+                                                        <span className="font-bold text-slate-900">{ustadz.name}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-slate-600">
+                                                    {ustadz.kajianCount || 0} kajian
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button
+                                                            onClick={() => openEditModal(ustadz)}
+                                                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        >
+                                                            <Edit className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(ustadz.id)}
+                                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Mobile Card View */}
+                        <div className="grid grid-cols-1 md:hidden gap-4">
+                            {filteredUstadz.map((ustadz) => (
+                                <div
+                                    key={ustadz.id}
+                                    className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between ${selectedForMerge.has(ustadz.name) ? 'bg-amber-50 border-amber-200' : ''}`}
+                                >
+                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedForMerge.has(ustadz.name)}
+                                            onChange={() => toggleMergeSelection(ustadz.name)}
+                                            className="w-5 h-5 rounded border-slate-300 text-amber-600 focus:ring-amber-500 shrink-0"
+                                        />
+                                        <div className="min-w-0">
+                                            <h3 className="font-bold text-slate-900 truncate pr-2">{ustadz.name}</h3>
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
+                                                {ustadz.kajianCount || 0} kajian
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2 shrink-0">
+                                        <button
+                                            onClick={() => openEditModal(ustadz)}
+                                            className="p-2.5 text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 active:scale-95 transition-all"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(ustadz.id)}
+                                            className="p-2.5 text-red-600 bg-red-50 border border-red-100 rounded-xl hover:bg-red-100 active:scale-95 transition-all"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                    <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
                         <div className="px-6 py-5 border-b border-slate-100">
                             <h2 className="text-xl font-bold text-slate-900">
                                 {editingUstadz ? 'Edit Ustadz' : 'Tambah Ustadz Baru'}
@@ -338,8 +376,8 @@ export default function UstadzManagementPage() {
 
             {/* Merge Modal */}
             {isMergeModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                    <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
                         <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-t-3xl">
                             <div className="flex items-center gap-3">
                                 <GitMerge className="w-6 h-6" />
@@ -382,8 +420,8 @@ export default function UstadzManagementPage() {
                                         <label
                                             key={name}
                                             className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${mergeTarget === name
-                                                    ? 'border-amber-500 bg-amber-50'
-                                                    : 'border-slate-200 hover:border-amber-300 hover:bg-amber-50/50'
+                                                ? 'border-amber-500 bg-amber-50'
+                                                : 'border-slate-200 hover:border-amber-300 hover:bg-amber-50/50'
                                                 }`}
                                         >
                                             <input

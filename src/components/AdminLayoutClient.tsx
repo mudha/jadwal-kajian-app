@@ -151,6 +151,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                     <Link
                         href="/"
                         target="_blank"
+                        onClick={() => setIsMobileMenuOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-300 hover:bg-slate-800 hover:text-white"
                     >
                         <ExternalLink className="w-5 h-5" />

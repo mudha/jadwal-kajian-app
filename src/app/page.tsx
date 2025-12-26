@@ -176,9 +176,9 @@ export default function BerandaPage() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-teal-200 mb-0.5 truncate flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {k.waktu ? k.waktu.split(' ')[0] : 'Jadwal'} • {k.city === 'Online' ? 'ONLINE' : k.city}
+                        <p className="text-[10px] font-black uppercase tracking-widest text-teal-200 mb-0.5 flex flex-wrap items-center gap-1 leading-tight">
+                          <Clock className="w-3 h-3 shrink-0" />
+                          <span>{k.waktu ? k.waktu.split(' ')[0] : 'Jadwal'} • {k.city === 'Online' ? 'ONLINE' : k.city}</span>
                         </p>
                         <p className="text-xs font-bold text-white leading-tight line-clamp-2 group-hover:text-teal-200 transition-colors">{k.tema}</p>
                         <p className="text-[10px] text-teal-100/70 mt-0.5 truncate">{k.pemateri}</p>

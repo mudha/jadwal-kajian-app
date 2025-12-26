@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Search, Edit, Trash2, Plus, Calendar, MapPin, X, Save, AlertTriangle, ChevronDown } from 'lucide-react';
+import { Search, Edit, Trash2, Plus, Calendar, MapPin, X, Save, AlertTriangle, ChevronDown, User, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { indonesianCities } from '@/data/cities';
 import { parseIndoDate, formatIndoDate, formatYYYYMMDD } from '@/lib/date-utils';
@@ -58,19 +58,24 @@ export default function AdminManagePage() {
                 setIsUploading(true);
                 const formData = new FormData();
                 formData.append('file', file);
+                formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || '');
+                formData.append('folder', 'jadwal-kajian');
 
                 try {
-                    const res = await fetch('/api/upload', {
+                    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
                         method: 'POST',
                         body: formData
                     });
                     const data = await res.json();
-                    if (data.url) {
-                        setEditingKajian((prev: any) => prev ? ({ ...prev, imageUrl: data.url }) : null);
+                    if (data.secure_url) {
+                        setEditingKajian((prev: any) => prev ? ({ ...prev, imageUrl: data.secure_url }) : null);
+                    } else {
+                        throw new Error(data.error?.message || 'Upload failed');
                     }
                 } catch (err) {
                     console.error('Upload failed', err);
-                    alert('Gagal upload gambar paste');
+                    alert('Gagal upload gambar paste ke Cloudinary');
                 } finally {
                     setIsUploading(false);
                 }
@@ -274,91 +279,167 @@ export default function AdminManagePage() {
             </div>
 
             {/* Table / List */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="space-y-4">
                 {isLoading ? (
-                    <div className="p-12 text-center text-slate-500">Memuat data...</div>
+                    <div className="bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200 shadow-sm">Memuat data...</div>
                 ) : filteredList.length === 0 ? (
-                    <div className="p-12 text-center text-slate-500">
+                    <div className="bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200 shadow-sm">
                         <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Search className="w-8 h-8 text-slate-300" />
                         </div>
                         <p className="font-medium">Tidak ada data ditemukan</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-slate-50 border-b border-slate-200">
-                                <tr>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Waktu & Tanggal</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Masjid / Lokasi</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Pemateri & Tema</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Peserta</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {filteredList.map((item) => (
-                                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center gap-2 text-slate-900 font-bold">
-                                                <Calendar className="w-4 h-4 text-blue-500" />
-                                                {item.date}
-                                            </div>
-                                            <p className="pl-6 text-sm text-slate-500">{item.waktu}</p>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className="font-bold text-slate-900">{item.masjid}</div>
-                                                {item.lat && item.lng && (
-                                                    <span
-                                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-teal-50 text-teal-600 rounded-md text-[9px] font-black uppercase tracking-tighter border border-teal-100"
-                                                        title={`GPS Active: ${item.lat}, ${item.lng}`}
-                                                    >
-                                                        <MapPin className="w-2 h-2 fill-teal-600" />
-                                                        GPS
+                    <>
+                        {/* Desktop Table View */}
+                        <div className="hidden md:block w-full bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50 border-b border-slate-200">
+                                        <tr>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Waktu & Tanggal</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Masjid / Lokasi</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Pemateri & Tema</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Peserta</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {filteredList.map((item) => (
+                                            <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="flex items-center gap-2 text-slate-900 font-bold">
+                                                        <Calendar className="w-4 h-4 text-blue-500" />
+                                                        {item.date}
+                                                    </div>
+                                                    <p className="pl-6 text-sm text-slate-500">{item.waktu}</p>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="font-bold text-slate-900">{item.masjid}</div>
+                                                        {item.lat && item.lng && (
+                                                            <span
+                                                                className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-teal-50 text-teal-600 rounded-md text-[9px] font-black uppercase tracking-tighter border border-teal-100"
+                                                                title={`GPS Active: ${item.lat}, ${item.lng}`}
+                                                            >
+                                                                <MapPin className="w-2 h-2 fill-teal-600" />
+                                                                GPS
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-1 text-sm text-slate-500 mt-1">
+                                                        <MapPin className="w-3 h-3" />
+                                                        {item.city}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="font-bold text-slate-900">{item.pemateri}</div>
+                                                    <p className="text-sm text-slate-500 line-clamp-1" title={item.tema}>{item.tema}</p>
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span className="inline-flex items-center justify-center px-3 py-1 bg-green-100 text-green-700 rounded-full font-bold text-xs">
+                                                        {item.attendanceCount || 0}
                                                     </span>
-                                                )}
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button
+                                                            onClick={() => {
+                                                                setEditingKajian({ ...item });
+                                                                setIsEditModalOpen(true);
+                                                            }}
+                                                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                            title="Edit"
+                                                        >
+                                                            <Edit className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(item.id)}
+                                                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                            title="Hapus"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Mobile Card View */}
+                        <div className="grid grid-cols-1 gap-4 md:hidden w-full max-w-full overflow-hidden">
+                            {filteredList.map((item) => (
+                                <div key={item.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                                    {/* Header: Date & Actions */}
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-2 text-slate-900 font-bold text-sm bg-slate-50 px-3 py-1.5 rounded-lg">
+                                            <Calendar className="w-4 h-4 text-blue-500" />
+                                            {item.date}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setEditingKajian({ ...item });
+                                                    setIsEditModalOpen(true);
+                                                }}
+                                                className="p-2 text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition-colors"
+                                                title="Edit"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(item.id)}
+                                                className="p-2 text-red-600 bg-red-50 border border-red-100 rounded-xl hover:bg-red-100 transition-colors"
+                                                title="Hapus"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div>
+                                        <h3 className="font-bold text-lg text-slate-900 leading-tight mb-2 line-clamp-2">{item.tema}</h3>
+
+                                        <div className="flex items-center gap-2 text-slate-600 text-sm mb-4 font-medium">
+                                            <User className="w-4 h-4 text-purple-500" /> {item.pemateri}
+                                        </div>
+
+                                        <div className="bg-slate-50 p-4 rounded-xl space-y-3 border border-slate-100">
+                                            <div className="flex items-start gap-2 text-sm text-slate-700">
+                                                <MapPin className="w-4 h-4 mt-0.5 text-slate-400 shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-bold text-slate-900">{item.masjid}</p>
+                                                    <p className="text-xs text-slate-500 truncate">{item.city}</p>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-1 text-sm text-slate-500 mt-1">
-                                                <MapPin className="w-3 h-3" />
-                                                {item.city}
+                                            <div className="flex items-center gap-2 text-xs text-slate-500 pl-6 border-t border-slate-200 pt-3 mt-1">
+                                                <Clock className="w-3 h-3" /> {item.waktu}
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="font-bold text-slate-900">{item.pemateri}</div>
-                                            <p className="text-sm text-slate-500 line-clamp-1" title={item.tema}>{item.tema}</p>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="inline-flex items-center justify-center px-3 py-1 bg-green-100 text-green-700 rounded-full font-bold text-xs">
-                                                {item.attendanceCount || 0}
+                                        </div>
+                                    </div>
+
+                                    {/* Footer */}
+                                    <div className="flex items-center justify-between pt-2">
+                                        {item.lat && item.lng ? (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-teal-50 text-teal-700 rounded-lg text-[10px] font-bold border border-teal-100">
+                                                <MapPin className="w-3 h-3" /> GPS Aktif
                                             </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => {
-                                                        setEditingKajian({ ...item });
-                                                        setIsEditModalOpen(true);
-                                                    }}
-                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                    title="Edit"
-                                                >
-                                                    <Edit className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(item.id)}
-                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Hapus"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                        ) : (
+                                            <span className="text-[10px] text-slate-400 italic">No GPS</span>
+                                        )}
+
+                                        <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
+                                            {item.attendanceCount || 0} Peserta
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
                 )}
             </div>
 
