@@ -17,7 +17,7 @@ const menuItems: MenuItem[] = [
     { icon: Book, label: 'Dzikir Pagi', href: '/dzikir-pagi' },
     { icon: Book, label: 'Dzikir Petang', href: '/dzikir-petang' },
     { icon: MapPin, label: 'Jadwal Kota', href: '/kota' },
-    { icon: Phone, label: 'Hubungi Kami', href: '#' },
+    { icon: Phone, label: 'Hubungi Kami', href: 'https://wa.me/6281392135904' },
 ];
 
 export default function MenuGrid() {

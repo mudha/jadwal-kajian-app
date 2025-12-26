@@ -49,7 +49,7 @@ export default function AkunPage() {
         { icon: Moon, label: 'Bacaan Dzikir Petang', href: '/dzikir-petang' },
         { icon: Search, label: 'Cari Artikel Islam', href: '#' },
         { icon: Info, label: 'Tentang Aplikasi', href: '#' },
-        { icon: MessageCircle, label: 'Hubungi Kami', href: '#' },
+        { icon: MessageCircle, label: 'Hubungi Kami', href: 'https://wa.me/6281392135904' },
     ];
 
     if (!isLoaded) return null; // Prevent hydration mismatch
