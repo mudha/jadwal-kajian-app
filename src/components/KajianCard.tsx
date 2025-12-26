@@ -81,21 +81,26 @@ export default function KajianCard({ id, date, location, title, ustadz, imageUrl
                 <h3 className="font-bold text-slate-900 mb-2 line-clamp-2 leading-tight group-hover:text-teal-600 transition-colors">{title}</h3>
                 <p className="text-sm text-slate-500 mb-4 font-medium">{ustadz}</p>
 
-                <div className="flex items-center gap-3 pt-4 border-t border-slate-50">
-                    <p className="flex-1 min-w-0 text-xs text-slate-400 flex items-center gap-1.5">
-                        <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-                        <span className="truncate">{location}</span>
+                <div className="flex items-start gap-3 pt-4 border-t border-slate-50">
+                    <p className="flex-1 min-w-0 text-xs text-slate-400 flex items-start gap-1.5">
+                        <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-slate-300 mt-1"></span>
+                        <span className="leading-tight">{location}</span>
                     </p>
 
                     <div
                         role="button"
                         onClick={handleAttend}
-                        className={`shrink-0 py-1.5 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all text-center cursor-pointer select-none ${hasAttended
+                        className={`shrink-0 py-1.5 px-3 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all text-center cursor-pointer select-none flex flex-col items-center justify-center leading-none gap-0.5 ${hasAttended
                             ? 'bg-slate-100 text-slate-400 cursor-default'
                             : 'bg-teal-50 text-teal-600 hover:bg-teal-100'
                             }`}
                     >
-                        {hasAttended ? 'Tercatat' : 'Insyaallah Hadir'}
+                        {hasAttended ? 'Tercatat' : (
+                            <>
+                                <span>Insyaallah</span>
+                                <span>Hadir</span>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
