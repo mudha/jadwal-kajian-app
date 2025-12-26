@@ -10,6 +10,7 @@ import dynamic from 'next/dynamic';
 import PrayerTimeWidget from '@/components/PrayerTimeWidget';
 import MenuGrid from '@/components/MenuGrid';
 import { shareToWhatsApp } from '@/lib/whatsapp-share';
+import { useSettings } from '@/hooks/useSettings';
 
 const KajianMap = dynamic(() => import('@/components/KajianMap'), {
     ssr: false,
@@ -42,6 +43,7 @@ function KajianListContent() {
     const filterMode = searchParams.get('mode');
     const filterCity = searchParams.get('city');
 
+    const { settings } = useSettings();
     const [kajianList, setKajianList] = useState<KajianWithId[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState<'all' | 'today' | 'upcoming' | 'past'>('today');
@@ -51,6 +53,13 @@ function KajianListContent() {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [isLocatingUser, setIsLocatingUser] = useState(false);
+
+    // Sync from settings
+    useEffect(() => {
+        if (settings.userLocation) {
+            setUserLocation(settings.userLocation);
+        }
+    }, [settings.userLocation]);
 
     const fetchData = async () => {
         try {
@@ -134,10 +143,14 @@ function KajianListContent() {
         // Nearby filtering (Improved)
         // Only strict filter if no specific city/search is applied
         if (filterMode === 'nearby' && !searchTerm && !filterCity) {
+            // Filter out PAST events for "Nearby" mode
+            const status = getKajianStatus(k.date, k.waktu);
+            if (status === 'PAST') return false;
+
             if (userLocation) {
                 // If kajian has coordinates, use distance-based filtering
                 if (k.distance !== undefined) {
-                    if (k.distance > 80) return false; // 80km radius
+                    if (k.distance > settings.radius) return false; // Dynamic radius
                 } else {
                     // If no coordinates, include nearby cities (Jakarta & Tangerang area)
                     const nearbyCities = [

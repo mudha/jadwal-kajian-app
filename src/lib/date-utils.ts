@@ -59,6 +59,14 @@ export function getKajianStatus(dateStr: string, waktuStr?: string): 'PAST' | 'T
 
     // It's Today, let's check the time if provided
     if (waktuStr) {
+        // Special handling for Sholat Jumat
+        // User def: 11.45 - 12.45. If currently > 12:45, it is PAST.
+        if (waktuStr.toLowerCase().includes('jumat') || waktuStr.toLowerCase().includes("jum'at")) {
+            const jumatDone = new Date();
+            jumatDone.setHours(12, 45, 0, 0);
+            if (now.getTime() > jumatDone.getTime()) return 'PAST';
+        }
+
         // Try to find a time pattern like 08:00 or 08.00
         // We look for the LAST time in the string as it might be the end time
         // e.g. "08:00 - 11:30" -> 11:30
