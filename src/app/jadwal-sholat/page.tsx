@@ -1,14 +1,13 @@
 'use client';
 
 import { usePrayerTimes } from '@/hooks/usePrayerTimes';
-import { ArrowLeft, Calendar, MapPin, Loader2 } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Loader2, Sunrise, Sun, Sunset, Moon, CloudSun, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-
 import PrayerTimeWidget from '@/components/PrayerTimeWidget';
 
 export default function JadwalSholatPage() {
-    const { timings, locationName, loading, error } = usePrayerTimes();
+    const { timings, locationName, loading, error, nextPrayer } = usePrayerTimes();
     const [dateString, setDateString] = useState('');
 
     useEffect(() => {
@@ -16,76 +15,127 @@ export default function JadwalSholatPage() {
     }, []);
 
     const schedule = timings ? [
-        { name: 'Imsak', time: timings.Imsak },
-        { name: 'Subuh', time: timings.Fajr },
-        { name: 'Terbit', time: timings.Sunrise },
-        { name: 'Dhuha', time: timings.Dhuha || '06:30' },
-        { name: 'Dzuhur', time: timings.Dhuhr },
-        { name: 'Ashar', time: timings.Asr },
-        { name: 'Maghrib', time: timings.Maghrib },
-        { name: 'Isya', time: timings.Isha },
+        { name: 'Subuh', time: timings.Fajr, icon: Sunrise, desc: 'Fajar Shadiq' },
+        { name: 'Terbit', time: timings.Sunrise, icon: Sun, desc: 'Awal Dhuha' },
+        { name: 'Dhuha', time: timings.Dhuha || '06:30', icon: CloudSun, desc: 'Dua Tombak' },
+        { name: 'Dzuhur', time: timings.Dhuhr, icon: Sun, desc: 'Tengah Hari' },
+        { name: 'Ashar', time: timings.Asr, icon: CloudSun, desc: 'Bayangan' },
+        { name: 'Maghrib', time: timings.Maghrib, icon: Sunset, desc: 'Terbenam' },
+        { name: 'Isya', time: timings.Isha, icon: Moon, desc: 'Malam' },
     ] : [];
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-24">
+        <div className="min-h-screen bg-slate-50 pb-24 font-sans">
             {/* Header */}
-            <header className="bg-teal-600 text-white px-4 py-4 sticky top-0 z-40">
-                <div className="flex items-center gap-3 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <header className="bg-gradient-to-r from-teal-600 to-teal-800 text-white shadow-lg sticky top-0 z-40">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-4">
                     <Link href="/" className="p-2 hover:bg-white/10 rounded-full transition-colors">
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
-                    <h1 className="text-lg font-bold">Jadwal Sholat</h1>
+                    <h1 className="text-lg font-bold tracking-tight">Jadwal Sholat</h1>
                 </div>
             </header>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="md:grid md:grid-cols-12 md:gap-8">
                     {/* Main Content */}
-                    <main className="md:col-span-8">
-                        {/* Location Card */}
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6 text-center">
-                            <div className="w-12 h-12 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                                {loading ? <Loader2 className="w-6 h-6 text-teal-600 animate-spin" /> : <MapPin className="w-6 h-6 text-teal-600" />}
-                            </div>
-                            <h2 className="font-bold text-slate-800 text-lg mb-1">{locationName}</h2>
-                            <div className="flex items-center justify-center gap-2 text-slate-500 text-sm">
-                                <Calendar className="w-4 h-4" />
-                                <span>{dateString}</span>
-                            </div>
-                            {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
-                        </div>
+                    <main className="md:col-span-8 space-y-6">
+                        {/* Location & Info Card */}
+                        <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-blue-500" />
 
-                        {/* Schedule List */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                            {loading ? (
-                                <div className="p-8 text-center text-slate-400">
-                                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
-                                    <p>Memuat jadwal...</p>
-                                </div>
-                            ) : (
-                                <div className="divide-y divide-slate-50">
-                                    {schedule.map((item, idx) => (
-                                        <div
-                                            key={item.name}
-                                            className={`flex items-center justify-between p-4 hover:bg-slate-50 transition-colors ${item.name === 'Maghrib' || item.name === 'Subuh' ? 'bg-teal-50/50' : ''}`}
-                                        >
-                                            <span className="font-medium text-slate-700">{item.name}</span>
-                                            <span className="font-bold text-teal-600 font-mono text-lg">{item.time}</span>
-                                        </div>
-                                    ))}
+                            <div className="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-teal-100">
+                                {loading ? <Loader2 className="w-8 h-8 text-teal-600 animate-spin" /> : <MapPin className="w-8 h-8 text-teal-600" />}
+                            </div>
+
+                            <h2 className="font-black text-slate-800 text-2xl mb-2 tracking-tight">{locationName}</h2>
+
+                            <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
+                                <Calendar className="w-4 h-4 text-slate-500" />
+                                <span className="text-sm font-medium text-slate-600">{dateString}</span>
+                            </div>
+
+                            {error && (
+                                <div className="mt-4 p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 flex items-center gap-2">
+                                    <span>⚠️ {error}</span>
                                 </div>
                             )}
                         </div>
 
-                        <p className="text-center text-xs text-slate-400 mt-6">
-                            * Waktu sholat berdasarkan lokasi perangkat Anda (Kemenag RI).
+                        {/* List Jadwal */}
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                            <div className="px-6 py-5 border-b border-slate-50 flex items-center justify-between">
+                                <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                                    <Clock className="w-5 h-5 text-teal-600" />
+                                    Waktu Sholat
+                                </h3>
+                                <span className="text-xs bg-teal-50 text-teal-700 px-2.5 py-1 rounded-lg font-semibold border border-teal-100">
+                                    Hari Ini
+                                </span>
+                            </div>
+
+                            {loading ? (
+                                <div className="p-12 text-center text-slate-400">
+                                    <Loader2 className="w-10 h-10 animate-spin mx-auto mb-3 text-teal-500" />
+                                    <p className="font-medium">Sedang memuat data...</p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-slate-50">
+                                    {schedule.map((item) => {
+                                        const isNext = nextPrayer?.name === item.name;
+                                        const Icon = item.icon;
+
+                                        return (
+                                            <div
+                                                key={item.name}
+                                                className={`group flex items-center justify-between px-6 py-5 transition-all duration-200
+                                                    ${isNext ? 'bg-teal-50/80 border-l-4 border-teal-500' : 'hover:bg-slate-50 border-l-4 border-transparent'}
+                                                `}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors
+                                                        ${isNext ? 'bg-teal-200 text-teal-800 shadow-md' : 'bg-slate-100 text-slate-500 group-hover:bg-teal-100 group-hover:text-teal-600'}
+                                                    `}>
+                                                        <Icon className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className={`font-bold text-base ${isNext ? 'text-teal-900' : 'text-slate-700'}`}>{item.name}</p>
+                                                        <p className="text-xs text-slate-400 font-medium">{item.desc}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className={`font-mono text-xl font-bold tracking-wide ${isNext ? 'text-teal-700' : 'text-slate-600 group-hover:text-teal-600'}`}>
+                                                        {item.time}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        <p className="text-center text-[10px] text-slate-400 uppercase tracking-widest mt-8">
+                            Sumber: Kemenag RI (via Aladhan API) • Metode Wujudul Hilal
                         </p>
                     </main>
 
                     {/* Sidebar (Desktop) */}
-                    <div className="hidden md:block md:col-span-4 mt-6 md:mt-0">
+                    <aside className="hidden md:block md:col-span-4 space-y-6">
                         <PrayerTimeWidget />
-                    </div>
+
+                        {/* Quote Card (Addition) */}
+                        <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
+                                <Moon className="w-32 h-32" />
+                            </div>
+                            <h3 className="font-bold text-lg mb-2">Keutamaan Sholat</h3>
+                            <p className="text-indigo-100 text-sm leading-relaxed mb-4">
+                                "Sesungguhnya shalat itu adalah fardhu yang ditentukan waktunya atas orang-orang yang beriman."
+                            </p>
+                            <span className="text-xs font-medium bg-white/20 px-3 py-1 rounded-lg">QS. An-Nisa: 103</span>
+                        </div>
+                    </aside>
                 </div>
             </div>
         </div>
