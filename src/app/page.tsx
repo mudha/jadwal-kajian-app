@@ -111,13 +111,7 @@ export default function BerandaPage() {
                 {featuredKajian.map((kajian) => (
                   <Link href={`/kajian/${kajian.id}`} key={kajian.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex gap-4 block">
                     <div className="w-24 h-24 bg-slate-200 rounded-xl shrink-0 overflow-hidden">
-                      {kajian.imageUrl ? (
-                        <img src={kajian.imageUrl} alt={kajian.tema} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center">
-                          <span className="text-white font-bold text-xs text-center p-1">No Image</span>
-                        </div>
-                      )}
+                      <img src={kajian.imageUrl || '/images/default-kajian.png'} alt={kajian.tema} className="w-full h-full object-cover" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-teal-600 mb-1">{kajian.date}</p>

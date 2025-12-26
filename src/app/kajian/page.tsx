@@ -511,21 +511,14 @@ function KajianListContent() {
                                                             <p className="text-xs leading-relaxed font-medium">{kajian.address}</p>
                                                         </div>
                                                     </div>
-                                                    {kajian.imageUrl ? (
-                                                        <div className="shrink-0 group/img relative cursor-pointer" onClick={() => setSelectedImage(kajian.imageUrl || null)}>
-                                                            <img
-                                                                src={kajian.imageUrl}
-                                                                alt={kajian.tema}
-                                                                className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-2xl border border-slate-100 shadow-sm group-hover/img:scale-105 transition-transform duration-500"
-                                                            />
-                                                            <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 rounded-2xl transition-colors" />
-                                                        </div>
-                                                    ) : (
-                                                        <div className="shrink-0 w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-100 flex flex-col items-center justify-center text-slate-300 shadow-sm">
-                                                            <ImageIcon className="w-8 h-8 mb-1 opacity-50" />
-                                                            <span className="text-[8px] font-black uppercase tracking-widest opacity-50">No Flyer</span>
-                                                        </div>
-                                                    )}
+                                                    <div className="shrink-0 group/img relative cursor-pointer" onClick={() => setSelectedImage(kajian.imageUrl || '/images/default-kajian.png')}>
+                                                        <img
+                                                            src={kajian.imageUrl || '/images/default-kajian.png'}
+                                                            alt={kajian.tema}
+                                                            className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-2xl border border-slate-100 shadow-sm group-hover/img:scale-105 transition-transform duration-500"
+                                                        />
+                                                        <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 rounded-2xl transition-colors" />
+                                                    </div>
                                                 </div>
 
                                                 <div className="mt-auto pt-6 border-t border-slate-50 space-y-5">
@@ -716,13 +709,7 @@ function KajianListContent() {
                                     <Link href={`/kajian/${k.id}`} key={k.id} className="block group">
                                         <div className="flex gap-3 items-start p-2 rounded-xl hover:bg-white/10 transition-colors">
                                             <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl shrink-0 overflow-hidden relative border border-white/10">
-                                                {k.imageUrl ? (
-                                                    <img src={k.imageUrl} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-teal-100">
-                                                        <User className="w-6 h-6" />
-                                                    </div>
-                                                )}
+                                                <img src={k.imageUrl || '/images/default-kajian.png'} className="w-full h-full object-cover" />
                                                 {getKajianStatus(k.date, k.waktu) === 'TODAY' && (
                                                     <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border border-teal-800 translate-x-0.5 -translate-y-0.5 shadow-sm"></div>
                                                 )}
