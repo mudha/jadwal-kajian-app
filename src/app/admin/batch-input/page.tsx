@@ -128,7 +128,11 @@ export default function BatchInputPage() {
             setMessage('Sedang mengekstrak data... (Metode Cerdas)');
 
             const parsed = await parseWithGemini(inputText);
-            const enrichedEntries = parsed.map(entry => ({ ...entry, imageUrl: lastImageUrl || undefined }));
+            const enrichedEntries = parsed.map(entry => {
+                const isFriday = entry.waktu?.toLowerCase().includes('jumat') || entry.waktu?.toLowerCase().includes("jum'at") || entry.tema?.toLowerCase().includes('jumat') || entry.tema === '';
+                const defaultImg = isFriday ? '/images/khutbah-jumat-cover.png' : undefined;
+                return { ...entry, imageUrl: lastImageUrl || defaultImg };
+            });
             setEntries(enrichedEntries);
             setSelectedIndices(new Set(enrichedEntries.map((_, i) => i)));
             setMessage(`Berhasil mengekstrak ${parsed.length} jadwal. Memulai pencarian koordinat lokasi...`);
@@ -209,7 +213,11 @@ export default function BatchInputPage() {
             setMessage('Sedang meminta bantuan AI Gemini untuk mengekstrak data... (Mohon tunggu sebentar)');
 
             const parsed = await parseWithGemini(inputText);
-            const enrichedEntries = parsed.map(entry => ({ ...entry, imageUrl: lastImageUrl || undefined }));
+            const enrichedEntries = parsed.map(entry => {
+                const isFriday = entry.waktu?.toLowerCase().includes('jumat') || entry.waktu?.toLowerCase().includes("jum'at") || entry.tema?.toLowerCase().includes('jumat') || entry.tema === '';
+                const defaultImg = isFriday ? '/images/khutbah-jumat-cover.png' : undefined;
+                return { ...entry, imageUrl: lastImageUrl || defaultImg };
+            });
             setEntries(enrichedEntries);
             setSelectedIndices(new Set(enrichedEntries.map((_, i) => i)));
             setMessage(`Alhamdulillah! AI berhasil mengekstrak ${parsed.length} jadwal. Memulai pencarian koordinat lokasi...`);
@@ -428,6 +436,21 @@ export default function BatchInputPage() {
                     <div className="px-4 py-2 bg-blue-50 rounded-lg border border-blue-100">
                         <p className="text-xs text-blue-600 font-medium">{stats.total} Jadwal</p>
                     </div>
+                    <button
+                        onClick={async () => {
+                            if (!confirm('Perbaiki data lama: Pasang gambar default untuk semua Sholat Jumat yg tidak ada gambarnya?')) return;
+                            try {
+                                const res = await fetch('/api/admin/tools/fix-friday-images', { method: 'POST' });
+                                const data = await res.json();
+                                alert(data.message || 'Selesai');
+                                fetchStats();
+                            } catch (e) { alert('Gagal memproses'); }
+                        }}
+                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Fix Gambar Sholat Jumat Lama"
+                    >
+                        <Sparkles className="w-5 h-5" />
+                    </button>
                 </div>
             </div>
 
