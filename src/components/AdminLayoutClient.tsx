@@ -12,6 +12,8 @@ import {
     Menu,
     X,
     ExternalLink,
+    Home,
+    List,
 } from 'lucide-react';
 import LogoutButton from '@/components/LogoutButton';
 import { useEffect } from 'react';
@@ -35,7 +37,8 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     }, []);
 
     const menuItems = [
-        { href: '/admin/manage', icon: LayoutDashboard, label: 'Kelola Jadwal' },
+        { href: '/admin', icon: Home, label: 'Dashboard' },
+        { href: '/admin/manage', icon: List, label: 'Kelola Jadwal' },
         { href: '/admin/batch-input', icon: FileInput, label: 'Input Massal' },
         { href: '/admin/ustadz', icon: ListMusic, label: 'Kelola Ustadz' },
         { href: '/admin/masjid', icon: Calendar, label: 'Kelola Masjid' },
