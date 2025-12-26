@@ -14,8 +14,8 @@ export default function BottomNav() {
         { href: '/akun', icon: User, label: 'Akun' },
     ];
 
-    // Hide bottom nav on admin pages
-    if (pathname?.startsWith('/admin') || pathname?.startsWith('/login')) {
+    // Hide bottom nav on admin, login, and dzikir pages
+    if (pathname?.startsWith('/admin') || pathname?.startsWith('/login') || pathname?.includes('/dzikir-')) {
         return null;
     }
 

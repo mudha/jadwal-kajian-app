@@ -199,7 +199,7 @@ export default function DzikirViewer({ data, title, description, colorTheme }: D
             </main>
 
             {/* Bottom Controls */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 z-50 flex items-center justify-between gap-4 md:px-8 max-w-2xl mx-auto shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 z-50 flex items-center justify-between gap-4 md:px-8 max-w-2xl mx-auto shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] safe-area-bottom">
                 <button
                     onClick={prevDzikir}
                     disabled={currentIndex === 0}
