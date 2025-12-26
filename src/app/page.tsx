@@ -40,7 +40,7 @@ export default function BerandaPage() {
               return (a._parsedDate?.getTime() || 0) - (b._parsedDate?.getTime() || 0);
             });
 
-          setFeaturedKajian(upcoming.slice(0, 10)); // Show up to 10 nearest upcoming tables
+          setFeaturedKajian(upcoming.slice(0, 25)); // Show up to 25 nearest upcoming tables
         }
       })
       .catch(console.error);

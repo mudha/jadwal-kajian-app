@@ -11,6 +11,7 @@ import {
     Users,
     Menu,
     X,
+    ExternalLink,
 } from 'lucide-react';
 import LogoutButton from '@/components/LogoutButton';
 import { useEffect } from 'react';
@@ -79,6 +80,17 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                     ))}
                 </nav>
 
+                <div className="px-4 pb-2">
+                    <Link
+                        href="/"
+                        target="_blank"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-300 hover:bg-slate-800 hover:text-white"
+                    >
+                        <ExternalLink className="w-5 h-5" />
+                        <span className="font-medium">Lihat Aplikasi</span>
+                    </Link>
+                </div>
+
                 <div className="p-4 border-t border-slate-800">
                     <LogoutButton />
                 </div>
@@ -131,6 +143,17 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                         </Link>
                     ))}
                 </nav>
+
+                <div className="px-4 pb-2">
+                    <Link
+                        href="/"
+                        target="_blank"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-300 hover:bg-slate-800 hover:text-white"
+                    >
+                        <ExternalLink className="w-5 h-5" />
+                        <span className="font-medium">Lihat Aplikasi</span>
+                    </Link>
+                </div>
 
                 <div className="p-4 border-t border-slate-800">
                     <LogoutButton />
