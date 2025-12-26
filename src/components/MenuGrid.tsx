@@ -14,8 +14,8 @@ const menuItems: MenuItem[] = [
     { icon: Users, label: 'Kajian Muslimah', href: '/kajian?mode=akhwat' },
     { icon: MapPin, label: 'Lokasi Terdekat', href: '/kajian' },
     { icon: Clock, label: 'Jadwal Sholat', href: '/jadwal-sholat' },
-    { icon: Book, label: 'Dzikir Pagi', href: '#' },
-    { icon: Book, label: 'Dzikir Petang', href: '#' },
+    { icon: Book, label: 'Dzikir Pagi', href: '/dzikir-pagi' },
+    { icon: Book, label: 'Dzikir Petang', href: '/dzikir-petang' },
     { icon: MapPin, label: 'Jadwal Kota', href: '/kota' },
     { icon: Phone, label: 'Hubungi Kami', href: '#' },
 ];
