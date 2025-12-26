@@ -23,7 +23,7 @@ export default function LoginPage() {
             });
 
             if (res.ok) {
-                router.push('/admin/manage');
+                router.push('/admin');
                 router.refresh();
             } else {
                 setError('Password salah. Silakan coba lagi.');

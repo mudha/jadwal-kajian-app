@@ -44,7 +44,7 @@ export default function AkunPage() {
                 {!loading && (
                     <section className="bg-gradient-to-br from-teal-600 to-teal-800 rounded-3xl p-6 shadow-xl text-white">
                         {isAdmin ? (
-                            <Link href="/admin/manage" className="block">
+                            <Link href="/admin" className="block">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-4">
                                         <div className="w-14 h-14 bg-amber-500 rounded-2xl flex items-center justify-center shadow-lg">
