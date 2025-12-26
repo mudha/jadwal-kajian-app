@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import geoip from 'geoip-lite';
-import { UAParser } from 'ua-parser-js';
+import { UAParser } from 'ua-parser-js'; // Fixed import
 import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
