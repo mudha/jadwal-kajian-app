@@ -109,10 +109,16 @@ export function usePrayerTimes() {
 
             // If no upcoming prayer today (after Isya), next is Fajr tomorrow
             if (!upcomingPrayer) {
-                // Logic for tomorrow Fajr would require more complex date handling, 
-                // for MVP keeping it simple or showing "Besok"
-                upcomingPrayer = { name: 'Subuh', time: state.timings!['Fajr'] };
-                // Note: accurate calculation needs tomorrow's schedule, but assume similar time for MVP
+                const fajrTime = state.timings!['Fajr'];
+                const [fHours, fMinutes] = fajrTime.split(':').map(Number);
+
+                const tomorrowFajr = new Date();
+                tomorrowFajr.setDate(tomorrowFajr.getDate() + 1);
+                tomorrowFajr.setHours(fHours, fMinutes, 0, 0);
+
+                minDiff = tomorrowFajr.getTime() - now.getTime();
+
+                upcomingPrayer = { name: 'Subuh', time: fajrTime };
             }
 
             // Calculate countdown string
