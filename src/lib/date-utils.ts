@@ -59,9 +59,25 @@ export function getKajianStatus(dateStr: string, waktuStr?: string): 'PAST' | 'T
 
     // It's Today, let's check the time if provided
     if (waktuStr) {
+        const lowerWaktu = waktuStr.toLowerCase();
+
+        // Special handling for Ba'da Maghrib -> Max 20:00
+        if (lowerWaktu.includes('maghrib') && (lowerWaktu.includes('selesai') || lowerWaktu.includes('isya'))) {
+            const maghribDone = new Date();
+            maghribDone.setHours(20, 0, 0, 0); // 20:00 limit
+            if (now.getTime() > maghribDone.getTime()) return 'PAST';
+        }
+
+        // Special handling for Ba'da Shubuh -> Max 06:15
+        if ((lowerWaktu.includes('shubuh') || lowerWaktu.includes('subuh')) && lowerWaktu.includes('selesai')) {
+            const shubuhDone = new Date();
+            shubuhDone.setHours(6, 15, 0, 0); // 06:15 limit
+            if (now.getTime() > shubuhDone.getTime()) return 'PAST';
+        }
+
         // Special handling for Sholat Jumat
         // User def: 11.45 - 12.45. If currently > 12:45, it is PAST.
-        if (waktuStr.toLowerCase().includes('jumat') || waktuStr.toLowerCase().includes("jum'at")) {
+        if (lowerWaktu.includes('jumat') || lowerWaktu.includes("jum'at")) {
             const jumatDone = new Date();
             jumatDone.setHours(12, 45, 0, 0);
             if (now.getTime() > jumatDone.getTime()) return 'PAST';
@@ -81,10 +97,14 @@ export function getKajianStatus(dateStr: string, waktuStr?: string): 'PAST' | 'T
 
             // If current time is after the last mentioned time, mark as PAST
             if (now.getTime() > eventTime.getTime()) return 'PAST';
-        } else if (waktuStr.toLowerCase().includes('shubuh') || waktuStr.toLowerCase().includes('subuh')) {
-            // Special handling for Ba'da Shubuh, usually done by 08:30
+        } else if (lowerWaktu.includes('shubuh') || lowerWaktu.includes('subuh')) {
+            // Fallback for Shubuh if no specific time is found but user said "Ba'da Shubuh"
+            // Previous default was 08:30, but maybe we should align closer to 06:15 or stick to 07:00?
+            // Let's stick to 06:30 as a safe fallback for general Shubuh studies without "selesai" label?
+            // Or keep 08:30? The user request specifically mentioned "Ba'da Shubuh - Selesai" is 05:00-06:15.
+            // If it just says "Ba'da Shubuh", usually it's short. Let's set fallback to 06:30.
             const shubuhDone = new Date();
-            shubuhDone.setHours(8, 30, 0, 0);
+            shubuhDone.setHours(6, 30, 0, 0);
             if (now.getTime() > shubuhDone.getTime()) return 'PAST';
         }
     }
