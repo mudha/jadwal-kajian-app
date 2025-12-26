@@ -111,6 +111,17 @@ export default async function AdminDashboardPage() {
                                 Ke Tabel Data <ArrowRight className="w-4 h-4" />
                             </span>
                         </Link>
+
+                        <Link href="/admin/analytics" className="group bg-white border border-slate-200 rounded-2xl p-6 text-slate-800 shadow-sm hover:border-purple-400 hover:shadow-md transition-all">
+                            <div className="bg-purple-50 w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:bg-purple-100 transition-colors">
+                                <Users className="w-6 h-6 text-purple-600" />
+                            </div>
+                            <h3 className="font-bold text-xl mb-1">Statistik</h3>
+                            <p className="text-slate-500 text-sm mb-4">Lihat trafik pengunjung, lokasi, device, dan tren.</p>
+                            <span className="inline-flex items-center gap-1 text-sm font-bold text-purple-600 group-hover:gap-2 transition-all">
+                                Buka Dashboard <ArrowRight className="w-4 h-4" />
+                            </span>
+                        </Link>
                     </div>
 
                     {/* Recent Kajian List */}

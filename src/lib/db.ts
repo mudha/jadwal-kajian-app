@@ -59,6 +59,21 @@ const initDb = async () => {
   try { await db.execute("ALTER TABLE kajian ADD COLUMN imageUrl TEXT"); } catch (e) { }
   try { await db.execute("ALTER TABLE kajian ADD COLUMN attendanceCount INTEGER DEFAULT 0"); } catch (e) { }
   try { await db.execute("ALTER TABLE admins ADD COLUMN role TEXT DEFAULT 'ADMIN'"); } catch (e) { }
+
+  // Analytics table
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS analytics (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      path TEXT,
+      ip_hash TEXT,
+      ua_browser TEXT,
+      ua_os TEXT,
+      ua_device TEXT,
+      city TEXT,
+      country TEXT,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 };
 
 // Auto-init on import (Note: top-level await needs ES modules or handling in app startup)
