@@ -9,6 +9,7 @@ import Link from 'next/link';
 import Tesseract from 'tesseract.js';
 import { indonesianCities } from '@/data/cities';
 import { parseIndoDate, formatIndoDate, formatYYYYMMDD } from '@/lib/date-utils';
+import AutosuggestInput from '@/components/admin/AutosuggestInput';
 
 export default function BatchInputPage() {
     const router = useRouter();
@@ -637,11 +638,21 @@ export default function BatchInputPage() {
                                                                     {entry.lat && <span className="flex items-center gap-1 ml-2 bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[9px] font-bold border border-blue-200"><MapPin className="w-3 h-3" /> {entry.lat.toFixed(4)}, {entry.lng?.toFixed(4)}</span>}
                                                                     {entry.khususAkhwat && <span className="ml-2 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[9px] font-black border border-pink-200">🌸 KHUSUS AKHWAT</span>}
                                                                 </label>
-                                                                <input type="text" value={entry.masjid} onChange={(e) => updateEntry(idx, 'masjid', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all text-base" />
+                                                                <AutosuggestInput
+                                                                    type="masjid"
+                                                                    value={entry.masjid}
+                                                                    onChange={(val) => updateEntry(idx, 'masjid', val)}
+                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all text-base"
+                                                                />
                                                             </div>
                                                             <div className="col-span-1">
                                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pemateri</label>
-                                                                <input type="text" value={entry.pemateri} onChange={(e) => updateEntry(idx, 'pemateri', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all" />
+                                                                <AutosuggestInput
+                                                                    type="pemateri"
+                                                                    value={entry.pemateri}
+                                                                    onChange={(val) => updateEntry(idx, 'pemateri', val)}
+                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all"
+                                                                />
                                                             </div>
                                                             <div className="col-span-1 relative">
                                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Kota</label>
