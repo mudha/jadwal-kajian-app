@@ -154,8 +154,8 @@ export default function BerandaPage() {
                     id={kajian.id}
                     date={`${kajian.date} - Jam ${kajian.date.includes('Hari Ini') ? '09:30' : ''}`}
                     location={kajian.distance && kajian.distance < 1000
-                      ? `${kajian.distance.toFixed(1)} km • ${kajian.city}`
-                      : `${kajian.masjid} - Kota ${kajian.city}`}
+                      ? `${kajian.masjid} • ${kajian.distance.toFixed(1)} km`
+                      : `${kajian.masjid} • ${kajian.city}`}
                     title={kajian.tema}
                     ustadz={kajian.pemateri}
                     imageUrl={kajian.imageUrl}
