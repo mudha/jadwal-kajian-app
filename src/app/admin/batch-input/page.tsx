@@ -610,20 +610,23 @@ export default function BatchInputPage() {
                                                             </div>
                                                             <div className="col-span-1">
                                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
-                                                                <input
-                                                                    type="date"
-                                                                    value={(() => {
-                                                                        const d = parseIndoDate(entry.date);
-                                                                        return d ? formatYYYYMMDD(d) : '';
-                                                                    })()}
-                                                                    onChange={(e) => {
-                                                                        const val = e.target.valueAsDate;
-                                                                        if (val) {
-                                                                            updateEntry(idx, 'date', formatIndoDate(val));
-                                                                        }
-                                                                    }}
-                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all"
-                                                                />
+                                                                <div className="relative group">
+                                                                    <input
+                                                                        type="date"
+                                                                        value={(() => {
+                                                                            const d = parseIndoDate(entry.date);
+                                                                            return d ? formatYYYYMMDD(d) : '';
+                                                                        })()}
+                                                                        onChange={(e) => {
+                                                                            const val = e.target.valueAsDate;
+                                                                            if (val) {
+                                                                                updateEntry(idx, 'date', formatIndoDate(val));
+                                                                            }
+                                                                        }}
+                                                                        className="w-full pl-10 pr-4 py-2 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl outline-none font-bold text-slate-700 transition-all"
+                                                                    />
+                                                                    <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none group-focus-within:text-blue-500" />
+                                                                </div>
                                                             </div>
                                                             <div className="col-span-1">
                                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Waktu</label>
@@ -800,18 +803,21 @@ export default function BatchInputPage() {
                                                 </div>
                                                 <div>
                                                     <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Tanggal</label>
-                                                    <input
-                                                        type="date"
-                                                        value={(() => {
-                                                            const d = parseIndoDate(entry.date);
-                                                            return d ? formatYYYYMMDD(d) : '';
-                                                        })()}
-                                                        onChange={(e) => {
-                                                            const val = e.target.valueAsDate;
-                                                            if (val) updateEntry(idx, 'date', formatIndoDate(val));
-                                                        }}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold"
-                                                    />
+                                                    <div className="relative group">
+                                                        <input
+                                                            type="date"
+                                                            value={(() => {
+                                                                const d = parseIndoDate(entry.date);
+                                                                return d ? formatYYYYMMDD(d) : '';
+                                                            })()}
+                                                            onChange={(e) => {
+                                                                const val = e.target.valueAsDate;
+                                                                if (val) updateEntry(idx, 'date', formatIndoDate(val));
+                                                            }}
+                                                            className="w-full pl-9 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold"
+                                                        />
+                                                        <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none group-focus-within:text-blue-500" />
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -869,6 +875,7 @@ export default function BatchInputPage() {
                                         </div>
                                     </div>
                                 ))}
+                                <div className="h-40" aria-hidden="true" /> {/* Spacer for keyboard */}
                             </div>
                         </div>
                     ) : (

@@ -447,7 +447,7 @@ export default function AdminManagePage() {
                             </button>
                         </div>
 
-                        <div className="p-8 overflow-y-auto">
+                        <div className="p-4 md:p-8 overflow-y-auto pb-32">
                             <form id="editForm" onSubmit={handleUpdate} className="space-y-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Masjid / Lokasi</label>
@@ -547,20 +547,23 @@ export default function AdminManagePage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tanggal</label>
-                                        <input
-                                            type="date"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                            value={(() => {
-                                                const d = parseIndoDate(editingKajian.date);
-                                                return d ? formatYYYYMMDD(d) : '';
-                                            })()}
-                                            onChange={e => {
-                                                const val = e.target.valueAsDate;
-                                                if (val) {
-                                                    setEditingKajian({ ...editingKajian, date: formatIndoDate(val) });
-                                                }
-                                            }}
-                                        />
+                                        <div className="relative group">
+                                            <input
+                                                type="date"
+                                                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                                value={(() => {
+                                                    const d = parseIndoDate(editingKajian.date);
+                                                    return d ? formatYYYYMMDD(d) : '';
+                                                })()}
+                                                onChange={e => {
+                                                    const val = e.target.valueAsDate;
+                                                    if (val) {
+                                                        setEditingKajian({ ...editingKajian, date: formatIndoDate(val) });
+                                                    }
+                                                }}
+                                            />
+                                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none group-focus-within:text-blue-500 transition-colors" />
+                                        </div>
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Waktu</label>
