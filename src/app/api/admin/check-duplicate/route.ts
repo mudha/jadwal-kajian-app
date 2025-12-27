@@ -25,13 +25,15 @@ export async function POST(request: Request) {
 
         for (const candidate of candidates) {
             // 2. Check Masjid Similarity
-            const masjidSim = similarity(normalize(masjid), normalize(candidate.masjid));
+            const candidateMasjid = String(candidate.masjid || '');
+            const masjidSim = similarity(normalize(masjid), normalize(candidateMasjid));
 
             // 3. Check Pemateri Similarity (if both exist)
             let pemateriSim = 1.0; // Default match if pemateri is not key comparison
 
             if (pemateri && candidate.pemateri) {
-                pemateriSim = similarity(normalize(pemateri), normalize(candidate.pemateri));
+                const candidatePemateri = String(candidate.pemateri || '');
+                pemateriSim = similarity(normalize(pemateri), normalize(candidatePemateri));
             } else if ((pemateri && !candidate.pemateri) || (!pemateri && candidate.pemateri)) {
                 // One has pemateri, the other doesn't -> likely not duplicate unless masjid match is perfect
                 pemateriSim = 0.5;

@@ -27,12 +27,14 @@ export async function POST(request: Request) {
             if (excludeId && candidate.id === excludeId) continue;
 
             // 2. Check Masjid Similarity
-            const masjidSim = similarity(normalize(masjid), normalize(candidate.masjid));
+            const candidateMasjid = String(candidate.masjid || '');
+            const masjidSim = similarity(normalize(masjid), normalize(candidateMasjid));
 
             // 3. Check Pemateri Similarity (if both exist)
             let pemateriSim = 0;
             if (pemateri && candidate.pemateri) {
-                pemateriSim = similarity(normalize(pemateri), normalize(candidate.pemateri));
+                const candidatePemateri = String(candidate.pemateri || '');
+                pemateriSim = similarity(normalize(pemateri), normalize(candidatePemateri));
             } else {
                 // If one doesn't have pemateri, assume match if masjid match is very strong
                 pemateriSim = 1;
