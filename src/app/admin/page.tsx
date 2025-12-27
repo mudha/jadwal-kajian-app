@@ -27,20 +27,20 @@ export default async function AdminDashboardPage() {
             {/* Hero Header Bento */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Welcome Card - Wider */}
-                <div className="lg:col-span-2 relative overflow-hidden bg-slate-900 rounded-[2.5rem] p-8 md:p-10 text-white shadow-2xl flex flex-col justify-between min-h-[300px] border border-slate-800">
+                <div className="lg:col-span-2 relative overflow-hidden bg-slate-900 rounded-[2.5rem] p-6 md:p-8 text-white shadow-2xl flex flex-col justify-between min-h-[250px] border border-slate-800">
                     {/* Abstract Background */}
                     <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[600px] h-[600px] bg-gradient-to-br from-blue-600/30 to-purple-600/30 rounded-full blur-[100px] pointer-events-none animate-pulse"></div>
                     <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none"></div>
 
-                    <div className="relative z-10 flex flex-col gap-6">
+                    <div className="relative z-10 flex flex-col gap-4">
                         <div>
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-xs font-semibold text-blue-200 mb-4 backdrop-blur-md">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-xs font-semibold text-blue-200 mb-3 backdrop-blur-md">
                                 <ShieldCheck className="w-3.5 h-3.5" />
                                 Admin Panel v2.0
                             </div>
-                            <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-2">
-                                Selamat Datang, <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Master Admin.</span>
+                            <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-tight mb-2">
+                                Assalamu'alaikum, <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Admin.</span>
                             </h1>
                             <p className="text-slate-400 text-lg max-w-lg leading-relaxed">
                                 Pantau dan kelola jadwal kajian dengan kekuatan AI. Semua data dalam satu kendali.
@@ -230,8 +230,8 @@ function StatCard({ title, value, icon: Icon, theme, trend }: any) {
 
     return (
         <div className={`relative overflow-hidden rounded-[2.5rem] p-6 flex flex-col justify-center h-full border transition-all hover:scale-[1.02] ${isEmerald
-                ? 'bg-emerald-50 border-emerald-100 hover:shadow-lg hover:shadow-emerald-500/10'
-                : 'bg-white border-slate-200 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/5'
+            ? 'bg-emerald-50 border-emerald-100 hover:shadow-lg hover:shadow-emerald-500/10'
+            : 'bg-white border-slate-200 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/5'
             }`}>
             <div className="flex items-center justify-between mb-2">
                 <div className={`p-2.5 rounded-xl ${isEmerald ? 'bg-emerald-500 text-white' : 'bg-blue-100 text-blue-600'}`}>
