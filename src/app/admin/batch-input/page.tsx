@@ -709,6 +709,7 @@ export default function BatchInputPage() {
                                                 </td>
                                             </tr>
                                         ))}
+                                    </tbody>
                                 </table>
                             </div>
 

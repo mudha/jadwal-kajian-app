@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, Loader2, Image as ImageIcon, PlusCircle, Play, Sparkles, X } from 'lucide-react';
+import { Upload, Loader2, Image as ImageIcon, PlusCircle, Play, Sparkles, X, FileText } from 'lucide-react';
 
 interface AIInputSectionProps {
     onProcess: () => void;
