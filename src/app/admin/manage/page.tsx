@@ -136,11 +136,17 @@ export default function AdminManagePage() {
         }
     };
 
+    const [isExtracting, setIsExtracting] = useState(false);
+    const [filterNoCoords, setFilterNoCoords] = useState(false);
+
+    // ... (rest of code)
+
     const handleExtractCoordinates = async () => {
         if (!confirm('Ekstrak koordinat dari semua Google Maps URL?\n\nIni akan mengupdate kajian yang punya gmapsUrl tapi belum punya koordinat lat/lng.')) {
             return;
         }
 
+        setIsExtracting(true);
         try {
             const res = await fetch('/api/admin/extract-coordinates', { method: 'POST' });
             const data = await res.json();
@@ -169,15 +175,27 @@ export default function AdminManagePage() {
         } catch (error) {
             console.error('Error extracting coordinates:', error);
             alert('Terjadi kesalahan saat mengekstrak koordinat');
+        } finally {
+            setIsExtracting(false);
         }
     };
 
-    const filteredList = kajianList.filter(k =>
-        k.masjid.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        k.pemateri.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        k.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        k.tema.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredList = kajianList
+        .filter(k => {
+            if (filterNoCoords) {
+                // Filter only those that DON'T have both lat and lng (meaning at least one is missing)
+                return !k.lat || !k.lng;
+            }
+            return true;
+        })
+        .filter(k =>
+            k.masjid.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            k.pemateri.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            k.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            k.tema.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+    // ...
 
     const handleExtractCoords = async (url: string) => {
         if (!url || !editingKajian) return;
@@ -217,11 +235,21 @@ export default function AdminManagePage() {
                 <div className="flex flex-wrap gap-2">
                     <button
                         onClick={handleExtractCoordinates}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold text-sm"
+                        disabled={isExtracting}
+                        className={`inline-flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg font-bold text-sm transition-all ${isExtracting ? 'bg-teal-800 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700'}`}
                         title="Ekstrak koordinat dari Google Maps URL"
                     >
-                        <MapPin className="w-4 h-4" />
-                        Extract Koordinat
+                        {isExtracting ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                Memproses...
+                            </>
+                        ) : (
+                            <>
+                                <MapPin className="w-4 h-4" />
+                                Extract Koordinat
+                            </>
+                        )}
                     </button>
                     <Link
                         href="/admin/batch-input"
@@ -233,16 +261,29 @@ export default function AdminManagePage() {
                 </div>
             </div>
 
-            {/* Search Bar */}
-            <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Cari berdasarkan Masjid, Ustadz, atau Kota..."
-                    className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none font-medium"
-                />
+            {/* Search Bar & Filter */}
+            <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Cari berdasarkan Masjid, Ustadz, atau Kota..."
+                        className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none font-medium"
+                    />
+                </div>
+                <div className="flex items-center">
+                    <label className={`flex items-center gap-3 px-6 py-4 rounded-2xl border cursor-pointer transition-all select-none ${filterNoCoords ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                        <input
+                            type="checkbox"
+                            checked={filterNoCoords}
+                            onChange={(e) => setFilterNoCoords(e.target.checked)}
+                            className="w-5 h-5 rounded border-slate-300 text-orange-600 focus:ring-orange-500"
+                        />
+                        <span className="font-bold whitespace-nowrap">Belum ada GPS ({kajianList.filter(k => !k.lat || !k.lng).length})</span>
+                    </label>
+                </div>
             </div>
 
             {/* Table / List */}
