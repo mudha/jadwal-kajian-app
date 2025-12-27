@@ -83,6 +83,15 @@ function extractCoordinates(url: string): { lat: number; lng: number } | null {
             }
         }
 
+        // Pattern 7: Protobuf/Data URL parameters (!3d and !4d)
+        // Example: ...!3d-6.2868913!4d107.0307183...
+        const latMatch = decodedUrl.match(/!3d(-?\d+\.?\d*)/);
+        const lngMatch = decodedUrl.match(/!4d(-?\d+\.?\d*)/);
+        if (latMatch && lngMatch) {
+            console.log('✓ Pattern 7 (!3d!4d)');
+            return { lat: parseFloat(latMatch[1]), lng: parseFloat(lngMatch[1]) };
+        }
+
         console.log('✗ No pattern matched');
         return null;
     } catch (error) {
