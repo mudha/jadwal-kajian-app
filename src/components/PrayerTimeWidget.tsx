@@ -52,15 +52,15 @@ export default function PrayerTimeWidget() {
                         {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Clock className="w-6 h-6" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-white/80 text-[10px] font-medium uppercase tracking-widest mb-0.5 truncate">Selanjutnya</p>
-                        <div className="flex flex-col sm:flex-row sm:items-baseline gap-0 sm:gap-1 overflow-hidden">
-                            <p className="text-sm sm:text-lg font-bold leading-none truncate">{displayName}</p>
-                            <p className="text-xs sm:text-lg font-light opacity-80 leading-tight sm:leading-none">{displayTime}</p>
+                        <p className="text-white/80 text-[10px] font-medium uppercase tracking-widest mb-1">Selanjutnya</p>
+                        <div className="flex flex-col gap-0">
+                            <p className="text-base font-black leading-none">{displayName}</p>
+                            <p className="text-xs font-bold opacity-70 mt-1">{displayTime}</p>
                         </div>
                     </div>
-                    <div className="text-right shrink-0 border-l border-white/10 pl-2 sm:pl-4">
-                        <p className="text-white/60 text-[8px] font-medium mb-0.5 uppercase tracking-tighter">Adzan</p>
-                        <p className="text-base sm:text-xl font-black font-mono tracking-tight whitespace-nowrap">{timeLeft}</p>
+                    <div className="text-right shrink-0 border-l border-white/10 pl-3">
+                        <p className="text-white/60 text-[8px] font-black mb-1 uppercase tracking-tighter">Adzan</p>
+                        <p className="text-base sm:text-lg font-black font-mono tracking-tight whitespace-nowrap">{timeLeft}</p>
                     </div>
                 </div>
 
