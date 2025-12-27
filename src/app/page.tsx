@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Search, User, Clock, MapPin } from 'lucide-react';
+import { Search, User, Clock, MapPin, HandHeart } from 'lucide-react';
 import PrayerTimeWidget from '@/components/PrayerTimeWidget';
 import KajianCard from '@/components/KajianCard';
 import MenuGrid from '@/components/MenuGrid';
