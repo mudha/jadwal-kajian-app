@@ -37,9 +37,9 @@ export default function AIInputSection({
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
                                 <div className="bg-blue-600 p-2 rounded-lg text-white">
-                                    <Upload className="w-4 h-4" />
+                                    <ImageIcon className="w-4 h-4" />
                                 </div>
-                                <h3 className="font-black text-lg tracking-tight text-slate-900">Scan Poster / Flyer</h3>
+                                <h3 className="font-bold text-lg tracking-tight text-slate-900">Scan Poster</h3>
                             </div>
 
                             <div
@@ -58,17 +58,17 @@ export default function AIInputSection({
                                     <div className="flex flex-col items-center">
                                         <div className="relative w-12 h-12 mb-3">
                                             <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-                                            <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-blue-600">
+                                            <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-blue-600">
                                                 {ocrProgress}%
                                             </div>
                                         </div>
-                                        <p className="text-blue-600 font-black uppercase tracking-widest text-[10px]">Membaca...</p>
+                                        <p className="text-blue-600 font-bold uppercase tracking-widest text-[10px]">Membaca...</p>
                                     </div>
                                 ) : (
                                     <>
-                                        <ImageIcon className="w-8 h-8 text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
-                                        <p className="text-slate-900 font-extrabold text-xs text-center">Klik / Tarik Poster ke Sini</p>
-                                        <p className="text-slate-400 font-bold text-[9px] text-center mt-1 uppercase tracking-widest">Atau Ctrl+V (Paste) Gambar</p>
+                                        <Upload className="w-8 h-8 text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
+                                        <p className="text-slate-900 font-bold text-xs text-center">Tap untuk Upload Poster</p>
+                                        <p className="text-slate-400 font-medium text-[9px] text-center mt-1 uppercase tracking-widest">Format: JPG, PNG, WEBP</p>
                                     </>
                                 )}
                             </div>
@@ -78,9 +78,9 @@ export default function AIInputSection({
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
                                 <div className="bg-blue-600 p-2 rounded-lg text-white">
-                                    <PlusCircle className="w-4 h-4" />
+                                    <FileText className="w-4 h-4" />
                                 </div>
-                                <h3 className="font-black text-lg tracking-tight text-slate-900">Input Broadcast</h3>
+                                <h3 className="font-bold text-lg tracking-tight text-slate-900">Input Broadcast</h3>
                             </div>
 
                             <div className="relative">

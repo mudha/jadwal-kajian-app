@@ -433,35 +433,20 @@ export default function BatchInputPage() {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
+        <div className="space-y-6 max-w-7xl mx-auto">
+            <div className="batch-header flex-col md:flex-row items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Input Massal Jadwal Kajian</h1>
-                    <p className="text-sm text-slate-500 mt-1">Ekstrak jadwal dari poster atau broadcast message</p>
+                    <h1 className="batch-title">Input Massal Jadwal Kajian</h1>
+                    <p className="batch-subtitle">Ekstrak jadwal dari poster atau broadcast message</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full md:w-auto">
                     <Link href="/kajian" className="hidden md:flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:text-blue-600 transition-colors">
                         <ExternalLink className="w-4 h-4" />
                         Lihat Publik
                     </Link>
-                    <div className="px-4 py-2 bg-blue-50 rounded-lg border border-blue-100">
+                    <div className="px-4 py-2 bg-blue-50 rounded-lg border border-blue-100 flex-1 md:flex-none text-center">
                         <p className="text-xs text-blue-600 font-medium">{stats.total} Jadwal</p>
                     </div>
-                    <button
-                        onClick={async () => {
-                            if (!confirm('Perbaiki data lama: Pasang gambar default untuk semua Sholat Jumat yg tidak ada gambarnya?')) return;
-                            try {
-                                const res = await fetch('/api/admin/tools/fix-friday-images', { method: 'POST' });
-                                const data = await res.json();
-                                alert(data.message || 'Selesai');
-                                fetchStats();
-                            } catch (e) { alert('Gagal memproses'); }
-                        }}
-                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Fix Gambar Sholat Jumat Lama"
-                    >
-                        <Sparkles className="w-5 h-5" />
-                    </button>
                 </div>
             </div>
 
@@ -482,257 +467,371 @@ export default function BatchInputPage() {
             )}
 
             <div className="w-full">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col min-h-[600px]">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                <div className="batch-card min-h-[600px]">
+                    <div className="batch-card-header batch-card-header-green flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="flex items-center gap-4">
-                            <div className="bg-emerald-500 p-3 rounded-2xl text-white shadow-lg shadow-emerald-100">
+                            <div className="bg-emerald-600 p-3 rounded-2xl text-white shadow-lg shadow-emerald-100">
                                 <CheckCircle className="w-6 h-6" />
                             </div>
                             <div>
-                                <h3 className="font-black text-2xl tracking-tighter text-slate-900">List Input Jadwal</h3>
-                                <p className="text-xs text-slate-400 font-black uppercase tracking-widest">{entries.length} entri ditemukan</p>
+                                <h3 className="font-bold text-xl text-slate-900">Hasil Ekstraksi</h3>
+                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{entries.length} entri ditemukan</p>
                             </div>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex gap-2 w-full md:w-auto">
                             <button
                                 onClick={handleAddManual}
-                                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded-lg transition-all flex items-center gap-2"
+                                className="batch-btn batch-btn-secondary flex-1 md:flex-none"
                             >
-                                <PlusCircle className="w-5 h-5" /> Tambah Manual
+                                <PlusCircle className="w-4 h-4" /> Manual
                             </button>
                             {entries.length > 0 && (
                                 <button
                                     onClick={handleSave}
-                                    className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-all flex items-center gap-2 text-sm"
+                                    className="batch-btn batch-btn-success flex-1 md:flex-none"
                                 >
-                                    <Save className="w-6 h-6" /> Simpan {selectedIndices.size} Jadwal Baru
+                                    <Save className="w-4 h-4" /> Simpan {selectedIndices.size}
                                 </button>
                             )}
                         </div>
                     </div>
 
                     {entries.length > 0 ? (
-                        <div className="overflow-x-auto rounded-[2.5rem] border border-slate-100">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-slate-50 border-b border-slate-100">
-                                        <th className="p-5 w-16">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedIndices.size === entries.length && entries.length > 0}
-                                                onChange={toggleAll}
-                                                className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                            />
-                                        </th>
-                                        <th className="p-5 font-black text-slate-400 uppercase tracking-widest text-[11px]">Rincian Jadwal</th>
-                                        <th className="p-5 w-16 text-right"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {entries.map((entry, idx) => (
-                                        <tr key={idx} className={`transition-all group/row ${selectedIndices.has(idx) ? 'bg-white' : 'opacity-40 hover:opacity-100'}`}>
-                                            <td className="p-5 align-top">
+                        <div className="overflow-hidden">
+                            <div className="hidden md:block">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-slate-50 border-b border-slate-100">
+                                            <th className="p-5 w-16">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIndices.size === entries.length && entries.length > 0}
+                                                    onChange={toggleAll}
+                                                    className="w-5 h-5 rounded-lg border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                />
+                                            </th>
+                                            <th className="p-5 font-black text-slate-400 uppercase tracking-widest text-[11px]">Rincian Jadwal</th>
+                                            <th className="p-5 w-16 text-right"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {entries.map((entry, idx) => (
+                                            <tr key={idx} className={`transition-all group/row ${selectedIndices.has(idx) ? 'bg-white' : 'opacity-40 hover:opacity-100'}`}>
+                                                <td className="p-5 align-top">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedIndices.has(idx)}
+                                                        onChange={() => toggleSelection(idx)}
+                                                        className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                    />
+                                                </td>
+                                                <td className="p-3 space-y-6 flex gap-6">
+                                                    {entry.imageUrl && (
+                                                        <div className="shrink-0 group/img relative">
+                                                            <img src={entry.imageUrl} className="w-24 h-32 object-cover rounded-2xl border border-slate-200 shadow-sm" />
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
+                                                                <button onClick={() => updateEntry(idx, 'imageUrl', '')} className="text-white hover:text-red-400 transition-colors">
+                                                                    <Trash2 className="w-5 h-5" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex-1 space-y-6">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                            <div className="col-span-1 md:col-span-2">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 mb-2">
+                                                                    Masjid / Lokasi
+                                                                    {entry.lat && <span className="flex items-center gap-1 ml-2 bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[9px] font-bold border border-blue-200"><MapPin className="w-3 h-3" /> {entry.lat.toFixed(4)}, {entry.lng?.toFixed(4)}</span>}
+                                                                    {entry.khususAkhwat && <span className="ml-2 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[9px] font-black border border-pink-200">🌸 KHUSUS AKHWAT</span>}
+                                                                </label>
+                                                                <AutosuggestInput
+                                                                    type="masjid"
+                                                                    value={entry.masjid}
+                                                                    onChange={(val) => updateEntry(idx, 'masjid', val)}
+                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all text-base"
+                                                                />
+                                                            </div>
+                                                            <div className="col-span-1">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pemateri</label>
+                                                                <AutosuggestInput
+                                                                    type="pemateri"
+                                                                    value={entry.pemateri}
+                                                                    onChange={(val) => updateEntry(idx, 'pemateri', val)}
+                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all"
+                                                                />
+                                                            </div>
+                                                            <div className="col-span-1 relative">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Kota</label>
+                                                                <div className="relative">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={entry.city}
+                                                                        onChange={(e) => {
+                                                                            updateEntry(idx, 'city', e.target.value);
+                                                                            setCityFilter(e.target.value);
+                                                                            setActiveCityDropdownIndex(idx);
+                                                                        }}
+                                                                        onFocus={() => {
+                                                                            setCityFilter(entry.city);
+                                                                            setActiveCityDropdownIndex(idx);
+                                                                        }}
+                                                                        onBlur={() => setTimeout(() => setActiveCityDropdownIndex(null), 200)}
+                                                                        className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-blue-600 transition-all"
+                                                                    />
+                                                                    {activeCityDropdownIndex === idx && (
+                                                                        <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-xl shadow-xl">
+                                                                            {indonesianCities
+                                                                                .filter(c => c.toLowerCase().includes(cityFilter.toLowerCase()))
+                                                                                .map(city => (
+                                                                                    <button
+                                                                                        key={city}
+                                                                                        type="button"
+                                                                                        className="w-full text-left px-4 py-2 hover:bg-slate-50 font-medium text-slate-700 text-sm"
+                                                                                        onClick={() => {
+                                                                                            updateEntry(idx, 'city', city);
+                                                                                            setActiveCityDropdownIndex(null);
+                                                                                        }}
+                                                                                    >
+                                                                                        {city}
+                                                                                    </button>
+                                                                                ))
+                                                                            }
+                                                                            {indonesianCities.filter(c => c.toLowerCase().includes(cityFilter.toLowerCase())).length === 0 && (
+                                                                                <div className="px-4 py-3 text-slate-400 text-xs text-center italic">Kota tidak ditemukan</div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <div className="col-span-1 md:col-span-2">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tema</label>
+                                                                <input type="text" value={entry.tema} onChange={(e) => updateEntry(idx, 'tema', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium italic text-slate-600 transition-all" />
+                                                            </div>
+                                                            <div className="col-span-1">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
+                                                                <input
+                                                                    type="date"
+                                                                    value={(() => {
+                                                                        const d = parseIndoDate(entry.date);
+                                                                        return d ? formatYYYYMMDD(d) : '';
+                                                                    })()}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.valueAsDate;
+                                                                        if (val) {
+                                                                            updateEntry(idx, 'date', formatIndoDate(val));
+                                                                        }
+                                                                    }}
+                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all"
+                                                                />
+                                                            </div>
+                                                            <div className="col-span-1">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Waktu</label>
+                                                                <input type="text" value={entry.waktu} onChange={(e) => updateEntry(idx, 'waktu', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all" />
+                                                            </div>
+                                                            <div className="col-span-1 md:col-span-2">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Alamat</label>
+                                                                <input type="text" value={entry.address} onChange={(e) => updateEntry(idx, 'address', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium text-slate-600 transition-all" />
+                                                            </div>
+                                                            <div className="col-span-1 md:col-span-2">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">CP / Maps / Koordinat</label>
+                                                                <div className="flex flex-col md:flex-row gap-4">
+                                                                    <input type="text" placeholder="CP (Contact Person)" value={entry.cp} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="w-full md:w-1/3 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-emerald-600" />
+                                                                    <div className="flex-1 flex gap-2">
+                                                                        <input type="text" placeholder="Google Maps URL" value={entry.gmapsUrl} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium text-blue-500 text-sm" />
+                                                                        <button
+                                                                            onClick={async () => {
+                                                                                if (!entry.gmapsUrl) return alert('Masukkan URL Maps terlebih dahulu');
+                                                                                setIsGeocoding(true);
+                                                                                try {
+                                                                                    const res = await fetch('/api/tools/extract-gmaps', {
+                                                                                        method: 'POST',
+                                                                                        body: JSON.stringify({ url: entry.gmapsUrl }),
+                                                                                        headers: { 'Content-Type': 'application/json' }
+                                                                                    });
+                                                                                    const data = await res.json();
+                                                                                    if (data.success) {
+                                                                                        updateEntry(idx, 'lat', data.lat);
+                                                                                        updateEntry(idx, 'lng', data.lng);
+                                                                                        updateEntry(idx, 'gmapsUrl', data.expandedUrl);
+                                                                                        alert(`Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`);
+                                                                                    } else {
+                                                                                        alert('Gagal mengekstrak: ' + data.error);
+                                                                                    }
+                                                                                } catch (e) {
+                                                                                    alert('Terjadi kesalahan sistem');
+                                                                                } finally {
+                                                                                    setIsGeocoding(false);
+                                                                                }
+                                                                            }}
+                                                                            className="px-3 py-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-colors flex items-center gap-1 font-bold text-xs"
+                                                                            title="Ekstrak Koordinat dari Link"
+                                                                        >
+                                                                            <MapPin className="w-4 h-4" />
+                                                                            <span className="hidden md:inline">Ekstrak</span>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="col-span-1 md:col-span-2">
+                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Link Pendaftaran & Info Lokasi (Lat/Lng)</label>
+                                                                <div className="flex gap-4">
+                                                                    <input type="text" placeholder="Link info (https://...)" value={entry.linkInfo || ''} onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)} className="flex-1 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-purple-500 rounded-xl px-4 py-2 outline-none font-medium text-purple-600 text-sm" />
+
+                                                                    <div className="flex gap-2 w-40 shrink-0">
+                                                                        <input
+                                                                            type="number"
+                                                                            step="any"
+                                                                            value={entry.lat || ''}
+                                                                            onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
+                                                                            placeholder="Lat"
+                                                                            className="w-1/2 bg-slate-50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-2 py-2 outline-none font-mono text-xs font-bold text-slate-600 text-center"
+                                                                            title="Latitude"
+                                                                        />
+                                                                        <input
+                                                                            type="number"
+                                                                            step="any"
+                                                                            value={entry.lng || ''}
+                                                                            onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
+                                                                            placeholder="Lng"
+                                                                            className="w-1/2 bg-slate-50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-2 py-2 outline-none font-mono text-xs font-bold text-slate-600 text-center"
+                                                                            title="Longitude"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="p-3 align-top text-right">
+                                                    <button onClick={() => handleDiscard(idx)} className="p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover/row:opacity-100">
+                                                        <Trash2 className="w-5 h-5" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                </table>
+                            </div>
+
+                            {/* Mobile View: Stacked Cards */}
+                            <div className="md:hidden divide-y divide-slate-100">
+                                {entries.map((entry, idx) => (
+                                    <div key={idx} className={`p-4 space-y-4 ${selectedIndices.has(idx) ? 'bg-white' : 'bg-slate-50 opacity-60'}`}>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedIndices.has(idx)}
                                                     onChange={() => toggleSelection(idx)}
-                                                    className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                    className="w-5 h-5 rounded-lg border-slate-200 text-blue-600"
                                                 />
-                                            </td>
-                                            <td className="p-3 space-y-6 flex gap-6">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Baris #{idx + 1}</span>
+                                            </div>
+                                            <button onClick={() => handleDiscard(idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <div className="flex gap-4">
                                                 {entry.imageUrl && (
-                                                    <div className="shrink-0 group/img relative">
-                                                        <img src={entry.imageUrl} className="w-24 h-32 object-cover rounded-2xl border border-slate-200 shadow-sm" />
-                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
-                                                            <button onClick={() => updateEntry(idx, 'imageUrl', '')} className="text-white hover:text-red-400 transition-colors">
-                                                                <Trash2 className="w-5 h-5" />
-                                                            </button>
-                                                        </div>
+                                                    <div className="shrink-0 relative">
+                                                        <img src={entry.imageUrl} className="w-16 h-20 object-cover rounded-xl border border-slate-200" />
+                                                        <button onClick={() => updateEntry(idx, 'imageUrl', '')} className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full">
+                                                            <X className="w-3 h-3" />
+                                                        </button>
                                                     </div>
                                                 )}
-                                                <div className="flex-1 space-y-6">
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                        <div className="col-span-1 md:col-span-2">
-                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 mb-2">
-                                                                Masjid / Lokasi
-                                                                {entry.lat && <span className="flex items-center gap-1 ml-2 bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[9px] font-bold border border-blue-200"><MapPin className="w-3 h-3" /> {entry.lat.toFixed(4)}, {entry.lng?.toFixed(4)}</span>}
-                                                                {entry.khususAkhwat && <span className="ml-2 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[9px] font-black border border-pink-200">🌸 KHUSUS AKHWAT</span>}
-                                                            </label>
-                                                            <AutosuggestInput
-                                                                type="masjid"
-                                                                value={entry.masjid}
-                                                                onChange={(val) => updateEntry(idx, 'masjid', val)}
-                                                                className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all text-base"
-                                                            />
-                                                        </div>
-                                                        <div className="col-span-1">
-                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pemateri</label>
-                                                            <AutosuggestInput
-                                                                type="pemateri"
-                                                                value={entry.pemateri}
-                                                                onChange={(val) => updateEntry(idx, 'pemateri', val)}
-                                                                className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all"
-                                                            />
-                                                        </div>
-                                                        <div className="col-span-1 relative">
-                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Kota</label>
-                                                            <div className="relative">
-                                                                <input
-                                                                    type="text"
-                                                                    value={entry.city}
-                                                                    onChange={(e) => {
-                                                                        updateEntry(idx, 'city', e.target.value);
-                                                                        setCityFilter(e.target.value);
-                                                                        setActiveCityDropdownIndex(idx);
-                                                                    }}
-                                                                    onFocus={() => {
-                                                                        setCityFilter(entry.city);
-                                                                        setActiveCityDropdownIndex(idx);
-                                                                    }}
-                                                                    onBlur={() => setTimeout(() => setActiveCityDropdownIndex(null), 200)}
-                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-blue-600 transition-all"
-                                                                />
-                                                                {activeCityDropdownIndex === idx && (
-                                                                    <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-xl shadow-xl">
-                                                                        {indonesianCities
-                                                                            .filter(c => c.toLowerCase().includes(cityFilter.toLowerCase()))
-                                                                            .map(city => (
-                                                                                <button
-                                                                                    key={city}
-                                                                                    type="button"
-                                                                                    className="w-full text-left px-4 py-2 hover:bg-slate-50 font-medium text-slate-700 text-sm"
-                                                                                    onClick={() => {
-                                                                                        updateEntry(idx, 'city', city);
-                                                                                        setActiveCityDropdownIndex(null);
-                                                                                    }}
-                                                                                >
-                                                                                    {city}
-                                                                                </button>
-                                                                            ))
-                                                                        }
-                                                                        {indonesianCities.filter(c => c.toLowerCase().includes(cityFilter.toLowerCase())).length === 0 && (
-                                                                            <div className="px-4 py-3 text-slate-400 text-xs text-center italic">Kota tidak ditemukan</div>
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                        <div className="col-span-1 md:col-span-2">
-                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tema</label>
-                                                            <input type="text" value={entry.tema} onChange={(e) => updateEntry(idx, 'tema', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium italic text-slate-600 transition-all" />
-                                                        </div>
-                                                        <div className="col-span-1">
-                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
-                                                            <input
-                                                                type="date"
-                                                                value={(() => {
-                                                                    const d = parseIndoDate(entry.date);
-                                                                    return d ? formatYYYYMMDD(d) : '';
-                                                                })()}
-                                                                onChange={(e) => {
-                                                                    const val = e.target.valueAsDate;
-                                                                    if (val) {
-                                                                        updateEntry(idx, 'date', formatIndoDate(val));
-                                                                    }
-                                                                }}
-                                                                className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all"
-                                                            />
-                                                        </div>
-                                                        <div className="col-span-1">
-                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Waktu</label>
-                                                            <input type="text" value={entry.waktu} onChange={(e) => updateEntry(idx, 'waktu', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all" />
-                                                        </div>
-                                                        <div className="col-span-1 md:col-span-2">
-                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Alamat</label>
-                                                            <input type="text" value={entry.address} onChange={(e) => updateEntry(idx, 'address', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium text-slate-600 transition-all" />
-                                                        </div>
-                                                        <div className="col-span-1 md:col-span-2">
-                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">CP / Maps / Koordinat</label>
-                                                            <div className="flex flex-col md:flex-row gap-4">
-                                                                <input type="text" placeholder="CP (Contact Person)" value={entry.cp} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="w-full md:w-1/3 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-emerald-600" />
-                                                                <div className="flex-1 flex gap-2">
-                                                                    <input type="text" placeholder="Google Maps URL" value={entry.gmapsUrl} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium text-blue-500 text-sm" />
-                                                                    <button
-                                                                        onClick={async () => {
-                                                                            if (!entry.gmapsUrl) return alert('Masukkan URL Maps terlebih dahulu');
-                                                                            setIsGeocoding(true);
-                                                                            try {
-                                                                                const res = await fetch('/api/tools/extract-gmaps', {
-                                                                                    method: 'POST',
-                                                                                    body: JSON.stringify({ url: entry.gmapsUrl }),
-                                                                                    headers: { 'Content-Type': 'application/json' }
-                                                                                });
-                                                                                const data = await res.json();
-                                                                                if (data.success) {
-                                                                                    updateEntry(idx, 'lat', data.lat);
-                                                                                    updateEntry(idx, 'lng', data.lng);
-                                                                                    updateEntry(idx, 'gmapsUrl', data.expandedUrl);
-                                                                                    alert(`Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`);
-                                                                                } else {
-                                                                                    alert('Gagal mengekstrak: ' + data.error);
-                                                                                }
-                                                                            } catch (e) {
-                                                                                alert('Terjadi kesalahan sistem');
-                                                                            } finally {
-                                                                                setIsGeocoding(false);
-                                                                            }
-                                                                        }}
-                                                                        className="px-3 py-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-colors flex items-center gap-1 font-bold text-xs"
-                                                                        title="Ekstrak Koordinat dari Link"
-                                                                    >
-                                                                        <MapPin className="w-4 h-4" />
-                                                                        <span className="hidden md:inline">Ekstrak</span>
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div className="col-span-1 md:col-span-2">
-                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Link Pendaftaran & Info Lokasi (Lat/Lng)</label>
-                                                            <div className="flex gap-4">
-                                                                <input type="text" placeholder="Link info (https://...)" value={entry.linkInfo || ''} onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)} className="flex-1 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-purple-500 rounded-xl px-4 py-2 outline-none font-medium text-purple-600 text-sm" />
-
-                                                                <div className="flex gap-2 w-40 shrink-0">
-                                                                    <input
-                                                                        type="number"
-                                                                        step="any"
-                                                                        value={entry.lat || ''}
-                                                                        onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
-                                                                        placeholder="Lat"
-                                                                        className="w-1/2 bg-slate-50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-2 py-2 outline-none font-mono text-xs font-bold text-slate-600 text-center"
-                                                                        title="Latitude"
-                                                                    />
-                                                                    <input
-                                                                        type="number"
-                                                                        step="any"
-                                                                        value={entry.lng || ''}
-                                                                        onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
-                                                                        placeholder="Lng"
-                                                                        className="w-1/2 bg-slate-50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-2 py-2 outline-none font-mono text-xs font-bold text-slate-600 text-center"
-                                                                        title="Longitude"
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                <div className="flex-1 space-y-3">
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Masjid</label>
+                                                        <AutosuggestInput
+                                                            type="masjid"
+                                                            value={entry.masjid}
+                                                            onChange={(val) => updateEntry(idx, 'masjid', val)}
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Pemateri</label>
+                                                        <AutosuggestInput
+                                                            type="pemateri"
+                                                            value={entry.pemateri}
+                                                            onChange={(val) => updateEntry(idx, 'pemateri', val)}
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold"
+                                                        />
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td className="p-3 align-top text-right">
-                                                <button onClick={() => handleDiscard(idx)} className="p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover/row:opacity-100">
-                                                    <Trash2 className="w-5 h-5" />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Kota</label>
+                                                    <input
+                                                        type="text"
+                                                        value={entry.city}
+                                                        onChange={(e) => updateEntry(idx, 'city', e.target.value)}
+                                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-600"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Tanggal</label>
+                                                    <input
+                                                        type="date"
+                                                        value={(() => {
+                                                            const d = parseIndoDate(entry.date);
+                                                            return d ? formatYYYYMMDD(d) : '';
+                                                        })()}
+                                                        onChange={(e) => {
+                                                            const val = e.target.valueAsDate;
+                                                            if (val) updateEntry(idx, 'date', formatIndoDate(val));
+                                                        }}
+                                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Tema</label>
+                                                <input
+                                                    type="text"
+                                                    value={entry.tema}
+                                                    onChange={(e) => updateEntry(idx, 'tema', e.target.value)}
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm italic"
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Waktu</label>
+                                                    <input
+                                                        type="text"
+                                                        value={entry.waktu}
+                                                        onChange={(e) => updateEntry(idx, 'waktu', e.target.value)}
+                                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">CP</label>
+                                                    <input
+                                                        type="text"
+                                                        value={entry.cp}
+                                                        onChange={(e) => updateEntry(idx, 'cp', e.target.value)}
+                                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-emerald-600"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center text-slate-200 border-4 border-dashed border-slate-50 rounded-[3.5rem] bg-slate-50/20 py-20">
-                            <div className="bg-white p-10 rounded-[2.5rem] shadow-sm mb-6">
-                                <Database className="w-16 h-16 opacity-10" />
+                        <div className="batch-empty-state">
+                            <div className="batch-empty-icon">
+                                <Database className="w-8 h-8 opacity-20" />
                             </div>
-                            <p className="text-2xl font-black tracking-tighter text-slate-400">Siap Menunggu Data</p>
-                            <p className="text-slate-400 font-bold max-w-xs text-center mt-2 leading-relaxed">Belum ada jadwal yang diekstrak. Silakan tempel teks atau scan poster.</p>
+                            <p className="batch-empty-title">Siap Menunggu Data</p>
+                            <p className="batch-empty-text">Belum ada jadwal yang diekstrak. Silakan tempel teks atau scan poster.</p>
                         </div>
                     )}
 
