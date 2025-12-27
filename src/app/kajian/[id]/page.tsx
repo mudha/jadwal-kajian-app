@@ -348,6 +348,11 @@ export default function KajianDetailPage() {
                                                                 {rk.date.split(',')[0]}
                                                             </span>
                                                             <span className="text-[10px] text-slate-400 font-bold uppercase truncate">{rk.waktu}</span>
+                                                            {getKajianStatus(rk.date, rk.waktu) === 'PAST' && (
+                                                                <span className="text-[10px] font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-lg uppercase tracking-wider">
+                                                                    ✓ Selesai
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         <h4 className="font-bold text-slate-800 text-sm mb-1 group-hover:text-teal-700 transition-colors truncate">
                                                             {rk.tema}
