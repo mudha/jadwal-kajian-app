@@ -9,6 +9,7 @@ import { getKajianStatus } from '@/lib/date-utils';
 import dynamic from 'next/dynamic';
 import PrayerTimeWidget from '@/components/PrayerTimeWidget';
 import MenuGrid from '@/components/MenuGrid';
+import OngoingKajianWidget from '@/components/OngoingKajianWidget';
 import { shareToWhatsApp } from '@/lib/whatsapp-share';
 import { useSettings } from '@/hooks/useSettings';
 
@@ -693,6 +694,9 @@ function KajianListContent() {
 
                 {/* Right Column (Sidebar) */}
                 <div className="md:col-span-4 space-y-6 hidden md:block sticky top-24 h-fit">
+                    {/* Ongoing Kajian Widget */}
+                    <OngoingKajianWidget />
+
                     {/* Prayer Time Widget */}
                     <PrayerTimeWidget />
 
@@ -705,8 +709,8 @@ function KajianListContent() {
 
                         <div className="flex items-center justify-between mb-5 relative z-10">
                             <div>
-                                <h3 className="font-bold text-xl text-white">Kajian Hari Ini</h3>
-                                <p className="text-teal-100 text-xs opacity-80">Jadwal kajian sunnah pilihan</p>
+                                <h3 className="font-bold text-xl text-white">Info Kajian Terbaru</h3>
+                                <p className="text-teal-100 text-xs opacity-80">Baru saja diupdate admin</p>
                             </div>
                             <span className="relative flex h-3 w-3">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -716,7 +720,15 @@ function KajianListContent() {
 
                         <div className="space-y-4 relative z-10">
                             {kajianList
-                                .filter(k => getKajianStatus(k.date, k.waktu) === 'TODAY' || getKajianStatus(k.date, k.waktu) === 'TOMORROW')
+                                .filter(k => {
+                                    const status = getKajianStatus(k.date, k.waktu);
+                                    return status === 'TODAY' || status === 'TOMORROW' || status === 'UPCOMING';
+                                })
+                                .sort((a, b) => {
+                                    const dateA = parseIndoDate(a.date);
+                                    const dateB = parseIndoDate(b.date);
+                                    return (dateA?.getTime() || 0) - (dateB?.getTime() || 0);
+                                })
                                 .slice(0, 5) // Show top 5
                                 .map(k => (
                                     <Link href={`/kajian/${k.id}`} key={k.id} className="block group">
@@ -739,13 +751,16 @@ function KajianListContent() {
                                     </Link>
                                 ))
                             }
-                            {kajianList.filter(k => getKajianStatus(k.date, k.waktu) === 'TODAY').length === 0 && (
-                                <div className="text-center py-6 text-teal-100/60 text-xs italic bg-white/5 rounded-xl border border-white/5">
-                                    Belum ada info kajian untuk hari ini.
-                                </div>
-                            )}
-                            <Link href="/kajian?mode=today" className="block text-center text-xs font-bold text-white/90 hover:text-white hover:bg-white/10 py-2 rounded-lg transition-all mt-2">
-                                Lihat Semua Jadwal Hari Ini →
+                            {kajianList.filter(k => {
+                                const status = getKajianStatus(k.date, k.waktu);
+                                return status === 'TODAY' || status === 'TOMORROW' || status === 'UPCOMING';
+                            }).length === 0 && (
+                                    <div className="text-center py-6 text-teal-100/60 text-xs italic bg-white/5 rounded-xl border border-white/5">
+                                        Belum ada info kajian mendatang.
+                                    </div>
+                                )}
+                            <Link href="/kajian?mode=upcoming" className="block text-center text-xs font-bold text-white/90 hover:text-white hover:bg-white/10 py-2 rounded-lg transition-all mt-2">
+                                Lihat Semua Jadwal Terbaru →
                             </Link>
                         </div>
                     </div>

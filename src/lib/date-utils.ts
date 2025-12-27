@@ -136,3 +136,61 @@ export function getHijriDate(date: Date): string {
         year: 'numeric'
     }).format(date);
 }
+
+export function isKajianOngoing(dateStr: string, waktuStr: string): boolean {
+    // 1. Check if date is TODAY
+    const status = getKajianStatus(dateStr, waktuStr);
+    if (status === 'PAST' || status === 'TOMORROW' || status === 'UPCOMING') return false;
+
+    // It's TODAY. Now check precise time.
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTime = currentHour * 60 + currentMinute;
+
+    const lowerWaktu = waktuStr.toLowerCase();
+
+    // Standard mappings based on user request
+    const ranges = [
+        { key: /syuruq/i, start: 5 * 60 + 30, end: 6 * 60 + 45 }, // 05:30 - 06:45
+        { key: /(shubuh|subuh)/i, start: 5 * 60, end: 6 * 60 + 30 }, // 05:00 - 06:30
+        { key: /(dhuhur|luhur|zuhur)/i, start: 12 * 60 + 30, end: 14 * 60 + 30 }, // 12:30 - 14:30
+        { key: /(ashar|asar)/i, start: 15 * 60 + 30, end: 17 * 60 }, // 15:30 - 17:00
+        { key: /maghrib/i, start: 18 * 60, end: 19 * 60 + 30 }, // 18:00 - 19:30
+        { key: /(isya|isa)/i, start: 19 * 60 + 45, end: 21 * 60 }, // 19:45 - 21:00
+        { key: /(jumat|jum'at)/i, start: 11 * 60 + 45, end: 13 * 60 }, // 11:45 - 13:00 (Approx for Jumat)
+    ];
+
+    // Priority 1: Check keyword mappings
+    for (const range of ranges) {
+        if (range.key.test(lowerWaktu)) {
+            if (currentTime >= range.start && currentTime <= range.end) {
+                return true;
+            }
+        }
+    }
+
+    // Priority 2: Check explicit time ranges (e.g. "09:00 - 11:00")
+    // Regex to find HH:MM
+    const timeMatches = lowerWaktu.match(/(\d{1,2})[:.](\d{2})/g);
+    if (timeMatches && timeMatches.length >= 2) {
+        // Assume first match is start, last match is end
+        const startMatch = timeMatches[0];
+        const endMatch = timeMatches[timeMatches.length - 1];
+
+        const parseTimeCoords = (str: string) => {
+            const [h, m] = str.split(/[:.]/).map(Number);
+            return h * 60 + m;
+        };
+
+        const startTime = parseTimeCoords(startMatch);
+        const endTime = parseTimeCoords(endMatch);
+
+        // If "Selesai" is keyword, maybe extend end time? But let's trust explicit time.
+        if (currentTime >= startTime && currentTime <= endTime) {
+            return true;
+        }
+    }
+
+    return false;
+}

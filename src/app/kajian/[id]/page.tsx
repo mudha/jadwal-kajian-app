@@ -23,6 +23,7 @@ interface KajianDetail {
 }
 
 import PrayerTimeWidget from '@/components/PrayerTimeWidget';
+import OngoingKajianWidget from '@/components/OngoingKajianWidget';
 
 export default function KajianDetailPage() {
     // ... existing state ...
@@ -258,7 +259,8 @@ export default function KajianDetailPage() {
                     </div>
 
                     {/* Sidebar (Desktop) */}
-                    <div className="hidden md:block md:col-span-4 mt-6 md:mt-0">
+                    <div className="hidden md:block md:col-span-4 mt-6 md:mt-0 space-y-6">
+                        <OngoingKajianWidget />
                         <PrayerTimeWidget />
                     </div>
                 </div>
