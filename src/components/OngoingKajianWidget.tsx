@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Radio } from 'lucide-react';
-import { isKajianOngoing } from '@/lib/date-utils';
+import { isKajianOngoing, formatMasjidName } from '@/lib/date-utils';
 
 interface Kajian {
     id: number;
@@ -76,7 +76,7 @@ export default function OngoingKajianWidget() {
                             <p className="text-[10px] text-white/80 line-clamp-1">{k.pemateri}</p>
                             <div className="mt-2 text-[10px] flex items-center gap-1 text-red-200">
                                 <Radio className="w-3 h-3" />
-                                {k.masjid}
+                                {formatMasjidName(k.masjid)}
                             </div>
                         </div>
                     </Link>

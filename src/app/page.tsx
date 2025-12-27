@@ -7,7 +7,7 @@ import MenuGrid from '@/components/MenuGrid';
 import OngoingKajianWidget from '@/components/OngoingKajianWidget';
 import Link from 'next/link';
 
-import { getKajianStatus, parseIndoDate } from '@/lib/date-utils';
+import { getKajianStatus, parseIndoDate, formatMasjidName } from '@/lib/date-utils';
 
 interface KajianWithId {
   id: number;
@@ -199,8 +199,8 @@ export default function BerandaPage() {
                     id={kajian.id}
                     date={`${kajian.date} - Jam ${kajian.date.includes('Hari Ini') ? '09:30' : ''}`}
                     location={kajian.distance && kajian.distance < 1000
-                      ? `${kajian.masjid} • ${kajian.distance.toFixed(1)} km`
-                      : `${kajian.masjid} • ${kajian.city}`}
+                      ? `${formatMasjidName(kajian.masjid)} • ${kajian.distance.toFixed(1)} km`
+                      : `${formatMasjidName(kajian.masjid)} • ${kajian.city}`}
                     title={kajian.tema}
                     ustadz={kajian.pemateri}
                     imageUrl={kajian.imageUrl}
@@ -222,7 +222,7 @@ export default function BerandaPage() {
                       <p className="text-xs text-slate-500 mb-2">{kajian.pemateri}</p>
                       <p className="text-[10px] text-slate-400 flex items-center gap-1">
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-                        {kajian.masjid}, {kajian.city}
+                        {formatMasjidName(kajian.masjid)}, {kajian.city}
                         {kajian.distance && kajian.distance < 1000 && (
                           <span className="flex items-center gap-0.5 text-teal-600 font-bold ml-1 bg-teal-50 px-1.5 py-0.5 rounded-md">
                             <MapPin className="w-2.5 h-2.5" /> {kajian.distance.toFixed(1)} km

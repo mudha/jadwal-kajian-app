@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { KajianEntry } from '@/lib/parser';
 import { cookies } from 'next/headers';
+import { formatMasjidName } from '@/lib/date-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,8 +39,8 @@ export async function POST(request: Request) {
             args: [
                 item.region,
                 item.city,
-                item.masjid,
-                item.address,
+                formatMasjidName(item.masjid),
+                item.address === item.masjid ? formatMasjidName(item.masjid) : item.address,
                 item.gmapsUrl,
                 item.lat || null,
                 item.lng || null,

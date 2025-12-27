@@ -19,7 +19,7 @@ const KajianMap = dynamic(() => import('@/components/KajianMap'), {
 
 });
 
-import { parseIndoDate, getHijriDate } from '@/lib/date-utils';
+import { parseIndoDate, getHijriDate, formatMasjidName } from '@/lib/date-utils';
 
 interface KajianWithId extends KajianEntry {
     id: number;
@@ -518,7 +518,7 @@ function KajianListContent() {
                                                 <div className="flex gap-6 mb-6">
                                                     <div className="flex-1 min-w-0">
                                                         <h3 className="text-2xl font-black text-slate-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors">
-                                                            {kajian.masjid}
+                                                            {formatMasjidName(kajian.masjid)}
                                                         </h3>
                                                         <div className="flex items-start text-slate-500 group/loc">
                                                             <MapPin className="w-4 h-4 mr-2 mt-1 flex-shrink-0 group-hover/loc:text-blue-500 transition-colors" />
@@ -607,7 +607,7 @@ function KajianListContent() {
                                                     <button
                                                         onClick={() => {
                                                             const [day, month, year] = kajian.date.split(' ').slice(-3);
-                                                            const title = encodeURIComponent(`Kajian: ${kajian.pemateri} @ ${kajian.masjid}`);
+                                                            const title = encodeURIComponent(`Kajian: ${kajian.pemateri} @ ${formatMasjidName(kajian.masjid)}`);
                                                             const details = encodeURIComponent(`Tema: ${kajian.tema}\nLokasi: ${kajian.address}`);
                                                             const gCalUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${encodeURIComponent(kajian.address)}&sf=true&output=xml`;
                                                             window.open(gCalUrl, '_blank');

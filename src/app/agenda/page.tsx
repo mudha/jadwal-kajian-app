@@ -4,7 +4,7 @@ import { Calendar, ArrowLeft, Clock } from 'lucide-react';
 import Link from 'next/link';
 import KajianCard from '@/components/KajianCard';
 import BottomNav from '@/components/BottomNav';
-import { getKajianStatus, parseIndoDate } from '@/lib/date-utils';
+import { getKajianStatus, parseIndoDate, formatMasjidName } from '@/lib/date-utils';
 
 interface Kajian {
     id: number;
@@ -122,7 +122,7 @@ export default function AgendaPage() {
                                             key={item.id}
                                             id={item.id}
                                             date={item.date}
-                                            location={`${item.masjid} • ${item.city}`}
+                                            location={`${formatMasjidName(item.masjid)} • ${item.city}`}
                                             title={item.tema}
                                             ustadz={item.pemateri}
                                             imageUrl={item.imageUrl}
@@ -147,7 +147,7 @@ export default function AgendaPage() {
                                             key={item.id}
                                             id={item.id}
                                             date={item.date}
-                                            location={`${item.masjid} • ${item.city}`}
+                                            location={`${formatMasjidName(item.masjid)} • ${item.city}`}
                                             title={item.tema}
                                             ustadz={item.pemateri}
                                             imageUrl={item.imageUrl}

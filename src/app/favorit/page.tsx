@@ -4,7 +4,7 @@ import { Heart, ArrowLeft, Ban } from 'lucide-react';
 import Link from 'next/link';
 import KajianCard from '@/components/KajianCard';
 import BottomNav from '@/components/BottomNav';
-import { parseIndoDate } from '@/lib/date-utils';
+import { parseIndoDate, formatMasjidName } from '@/lib/date-utils';
 
 interface Kajian {
     id: number;
@@ -103,7 +103,7 @@ export default function FavoritPage() {
                                 key={item.id}
                                 id={item.id}
                                 date={item.date}
-                                location={`${item.masjid} • ${item.city}`}
+                                location={`${formatMasjidName(item.masjid)} • ${item.city}`}
                                 title={item.tema}
                                 ustadz={item.pemateri}
                                 imageUrl={item.imageUrl}

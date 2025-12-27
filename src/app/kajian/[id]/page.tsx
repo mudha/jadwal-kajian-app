@@ -4,7 +4,7 @@ import { ArrowLeft, Calendar, MapPin, Share2, Clock, Map as MapIcon, Calendar as
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { parseIndoDate, getHijriDate } from '@/lib/date-utils';
+import { parseIndoDate, getHijriDate, formatMasjidName } from '@/lib/date-utils';
 
 // Reusing types locally for simplicity or import if shared
 interface KajianDetail {
@@ -93,12 +93,12 @@ export default function KajianDetailPage() {
 
     // ... existing helper functions ...
     const shareToWA = () => {
-        const text = `*INFO KAJIAN SUNNAH*\n\n🕌 *Masjid:* ${kajian.masjid}\n👤 *Pemateri:* ${kajian.pemateri}\n📚 *Tema:* ${kajian.tema}\n🗓 *Hari/Tgl:* ${kajian.date}\n⏰ *Waktu:* ${kajian.waktu}\n📍 *Lokasi:* ${kajian.gmapsUrl || kajian.address}\n\n_Link Aplikasi: jadwal-kajian.app_`;
+        const text = `*INFO KAJIAN SUNNAH*\n\n🕌 *Masjid:* ${formatMasjidName(kajian.masjid)}\n👤 *Pemateri:* ${kajian.pemateri}\n📚 *Tema:* ${kajian.tema}\n🗓 *Hari/Tgl:* ${kajian.date}\n⏰ *Waktu:* ${kajian.waktu}\n📍 *Lokasi:* ${kajian.gmapsUrl || kajian.address}\n\n_Link Aplikasi: jadwal-kajian.app_`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     };
 
     const addToCalendar = () => {
-        const title = encodeURIComponent(`Kajian: ${kajian.pemateri} @ ${kajian.masjid}`);
+        const title = encodeURIComponent(`Kajian: ${kajian.pemateri} @ ${formatMasjidName(kajian.masjid)}`);
         const details = encodeURIComponent(`Tema: ${kajian.tema}\nLokasi: ${kajian.address}`);
         const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${encodeURIComponent(kajian.address)}&sf=true&output=xml`;
         window.open(url, '_blank');
@@ -181,7 +181,7 @@ export default function KajianDetailPage() {
                                         </div>
                                         <div>
                                             <p className="text-xs text-slate-400 font-bold uppercase mb-0.5">Lokasi</p>
-                                            <p className="font-bold text-slate-800">{kajian.masjid}</p>
+                                            <p className="font-bold text-slate-800">{formatMasjidName(kajian.masjid)}</p>
                                             <p className="text-sm text-slate-600 leading-relaxed">{kajian.address}</p>
                                         </div>
                                     </div>

@@ -194,3 +194,29 @@ export function isKajianOngoing(dateStr: string, waktuStr: string): boolean {
 
     return false;
 }
+
+export function formatMasjidName(name: string): string {
+    if (!name) return '';
+    const n = name.trim();
+    const lower = n.toLowerCase();
+
+    // List of common prefixes that should NOT have "Masjid" prepended
+    const prefixes = [
+        'masjid', 'mushalla', 'mushola', 'islamic center', 'ic ', 'ic-',
+        'studio', 'aula', 'markaz', 'pesantren', 'ponpes', 'mahad', 'ma\'had',
+        'balai', 'kantor', 'rumah', 'lapangan'
+    ];
+
+    const hasPrefix = prefixes.some(p => lower.startsWith(p));
+
+    // Ignore cases where it's TBD or Online
+    if (lower === 'tbd' || lower === 'online' || lower.includes('zoom')) {
+        return n;
+    }
+
+    if (!hasPrefix) {
+        return `Masjid ${n}`;
+    }
+
+    return n;
+}
