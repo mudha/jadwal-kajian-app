@@ -76,15 +76,14 @@ export default function KajianCard({ id, date, location, title, ustadz, imageUrl
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
-                
+
                 {/* Like Button */}
-                <button 
+                <button
                     onClick={handleLike}
                     className={`absolute top-2 right-2 p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${isLiked ? 'bg-red-500/20 text-red-500' : 'bg-black/20 text-white/70 hover:bg-black/40'}`}
                 >
                     <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
                 </button>
-            </div>
             </div>
             <div className="p-5">
                 <div className="flex items-start justify-between mb-3">
