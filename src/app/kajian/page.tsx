@@ -12,6 +12,7 @@ import MenuGrid from '@/components/MenuGrid';
 import OngoingKajianWidget from '@/components/OngoingKajianWidget';
 import { shareToWhatsApp } from '@/lib/whatsapp-share';
 import { useSettings } from '@/hooks/useSettings';
+import { useAdmin } from '@/hooks/useAdmin';
 
 const KajianMap = dynamic(() => import('@/components/KajianMap'), {
     ssr: false,
@@ -19,7 +20,7 @@ const KajianMap = dynamic(() => import('@/components/KajianMap'), {
 
 });
 
-import { parseIndoDate, getHijriDate, formatMasjidName } from '@/lib/date-utils';
+import { isKajianOngoing, parseIndoDate, getHijriDate, formatMasjidName } from '@/lib/date-utils';
 
 interface KajianWithId extends KajianEntry {
     id: number;
@@ -45,6 +46,7 @@ function KajianListContent() {
     const filterCity = searchParams.get('city');
 
     const { settings } = useSettings();
+    const { isAdmin } = useAdmin();
     const [kajianList, setKajianList] = useState<KajianWithId[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState<'all' | 'today' | 'upcoming' | 'past'>('today');
@@ -463,8 +465,19 @@ function KajianListContent() {
                                                 <div className="flex flex-col gap-4 mb-6 border-b border-dashed border-slate-100 pb-4">
                                                     <div className="flex flex-wrap gap-2 items-center">
                                                         {status === 'TODAY' && (
-                                                            <div className="px-3 py-1 bg-red-600 text-white text-[10px] font-black rounded-lg uppercase tracking-wider shadow-sm animate-pulse whitespace-nowrap">
-                                                                Hari Ini
+                                                            <div className="flex flex-wrap gap-2">
+                                                                <div className="px-3 py-1 bg-red-600 text-white text-[10px] font-black rounded-lg uppercase tracking-wider shadow-sm animate-pulse whitespace-nowrap">
+                                                                    Hari Ini
+                                                                </div>
+                                                                {isKajianOngoing(kajian.date, kajian.waktu) && (
+                                                                    <div className="px-3 py-1 bg-red-700 text-white text-[10px] font-black rounded-lg uppercase tracking-wider shadow-sm animate-pulse whitespace-nowrap flex items-center gap-1.5">
+                                                                        <span className="relative flex h-2 w-2">
+                                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                                                        </span>
+                                                                        Sedang Berlangsung
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         )}
                                                         {status === 'TOMORROW' && (
@@ -666,22 +679,24 @@ function KajianListContent() {
                                                     </button>
                                                 </div>
 
-                                                <div className="mt-4 pt-4 border-t-2 border-dashed border-slate-100 grid grid-cols-2 gap-3">
-                                                    <button
-                                                        onClick={() => openEditModal(kajian)}
-                                                        className="flex items-center justify-center py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 font-bold text-xs hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all"
-                                                    >
-                                                        <Edit className="w-4 h-4 mr-2" />
-                                                        Edit Jadwal
-                                                    </button>
-                                                    <button
-                                                        onClick={() => deleteIndividual(kajian.id)}
-                                                        className="flex items-center justify-center py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 font-bold text-xs hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
-                                                    >
-                                                        <Trash2 className="w-4 h-4 mr-2" />
-                                                        Hapus
-                                                    </button>
-                                                </div>
+                                                {isAdmin && (
+                                                    <div className="mt-4 pt-4 border-t-2 border-dashed border-slate-100 grid grid-cols-2 gap-3">
+                                                        <button
+                                                            onClick={() => openEditModal(kajian)}
+                                                            className="flex items-center justify-center py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 font-bold text-xs hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all"
+                                                        >
+                                                            <Edit className="w-4 h-4 mr-2" />
+                                                            Edit Jadwal
+                                                        </button>
+                                                        <button
+                                                            onClick={() => deleteIndividual(kajian.id)}
+                                                            className="flex items-center justify-center py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 font-bold text-xs hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
+                                                        >
+                                                            <Trash2 className="w-4 h-4 mr-2" />
+                                                            Hapus
+                                                        </button>
+                                                    </div>
+                                                )}
 
                                             </div>
                                         );

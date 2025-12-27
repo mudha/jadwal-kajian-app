@@ -34,6 +34,8 @@ export default function KajianDetailPage() {
     const [hasAttended, setHasAttended] = useState(false);
     const [count, setCount] = useState(0);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const [relatedKajian, setRelatedKajian] = useState<KajianDetail[]>([]);
+    const [loadingRelated, setLoadingRelated] = useState(false);
 
     // ... existing useEffect ...
     useEffect(() => {
@@ -51,12 +53,52 @@ export default function KajianDetailPage() {
                     if (localStorage.getItem(`attended_${data.id}`)) {
                         setHasAttended(true);
                     }
+
+                    // Fetch related kajian (same masjid, next 7 days)
+                    fetchRelated(data.masjid, data.id);
                 })
                 .catch(() => {
                     setLoading(false);
                 });
         }
     }, [params]);
+
+    const fetchRelated = async (masjidName: string, currentId: number) => {
+        setLoadingRelated(true);
+        try {
+            const res = await fetch('/api/kajian');
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+                const sevenDaysLater = new Date(now);
+                sevenDaysLater.setDate(now.getDate() + 7);
+
+                const related = data.filter(k => {
+                    if (k.id === currentId) return false;
+                    if (k.masjid !== masjidName) return false;
+
+                    const kDate = parseIndoDate(k.date);
+                    if (!kDate) return false;
+
+                    return kDate >= now && kDate <= sevenDaysLater;
+                });
+
+                // Sort by date
+                related.sort((a, b) => {
+                    const da = parseIndoDate(a.date)?.getTime() || 0;
+                    const db = parseIndoDate(b.date)?.getTime() || 0;
+                    return da - db;
+                });
+
+                setRelatedKajian(related);
+            }
+        } catch (e) {
+            console.error('Error fetching related kajian:', e);
+        } finally {
+            setLoadingRelated(false);
+        }
+    };
 
     const handleAttend = async () => {
         if (!kajian || hasAttended) return;
@@ -239,7 +281,7 @@ export default function KajianDetailPage() {
                                             className="col-span-2 flex items-center justify-center gap-2 py-4 bg-teal-600 text-white rounded-xl font-bold shadow-lg shadow-teal-100 hover:bg-teal-700 transition-all active:scale-95"
                                         >
                                             <MapIcon className="w-4 h-4" />
-                                            Buka Peta Lokasi
+                                            Rute ke Lokasi
                                         </a>
                                     )}
                                     {kajian.linkInfo && (
@@ -255,6 +297,55 @@ export default function KajianDetailPage() {
                                     )}
                                 </div>
                             </div>
+
+                            {/* Weekly Schedule Section */}
+                            {(loadingRelated || relatedKajian.length > 0) && (
+                                <div className="mt-8 bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="p-2 bg-teal-50 rounded-xl">
+                                            <CalendarIcon className="w-5 h-5 text-teal-600" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-slate-900">Jadwal Kajian di Masjid Ini</h3>
+                                            <p className="text-xs text-slate-500 font-medium tracking-wide">(7 Hari Kedepan)</p>
+                                        </div>
+                                    </div>
+
+                                    {loadingRelated ? (
+                                        <div className="flex items-center justify-center py-8">
+                                            <Loader2 className="w-6 h-6 text-teal-600 animate-spin" />
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {relatedKajian.map((rk) => (
+                                                <Link
+                                                    href={`/kajian/${rk.id}`}
+                                                    key={rk.id}
+                                                    className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl hover:bg-teal-50 transition-all border border-transparent hover:border-teal-100 group"
+                                                >
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-lg uppercase tracking-wider">
+                                                                {rk.date.split(',')[0]}
+                                                            </span>
+                                                            <span className="text-[10px] text-slate-400 font-bold uppercase truncate">{rk.waktu}</span>
+                                                        </div>
+                                                        <h4 className="font-bold text-slate-800 text-sm mb-1 group-hover:text-teal-700 transition-colors truncate">
+                                                            {rk.tema}
+                                                        </h4>
+                                                        <p className="text-[10px] text-slate-500 font-medium truncate">{rk.pemateri}</p>
+                                                    </div>
+                                                    <div className="shrink-0">
+                                                        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-all">
+                                                            <ArrowLeft className="w-4 h-4 rotate-180" />
+                                                        </div>
+                                                    </div>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
 
