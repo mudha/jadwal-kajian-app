@@ -134,7 +134,7 @@ export default function BerandaPage() {
               Favorit Saya
             </Link>
             <div className="h-px bg-slate-100 my-2"></div>
-            <Link href="/admin/login" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 rounded-xl font-medium text-sm">
+            <Link href="/login" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 rounded-xl font-medium text-sm">
               Login Admin
             </Link>
           </div>

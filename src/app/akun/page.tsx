@@ -84,7 +84,7 @@ export default function AkunPage() {
                 <MenuItem
                     icon={<Settings className="w-5 h-5 text-orange-500" />}
                     label="Login Admin Area"
-                    link="/admin/login"
+                    link="/login"
                 />
             </div>
 
