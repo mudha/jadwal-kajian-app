@@ -71,15 +71,13 @@ export default async function AdminDashboardPage() {
                     trend="Database aktif"
                 />
                 {/* Search Quick Access */}
-                <Link href="/admin/manage" className="bg-white hover:bg-slate-50 border border-slate-200 rounded-[2.5rem] p-6 transition-all group flex flex-col justify-center gap-2 cursor-text h-full min-h-[140px]">
-                    <div className="flex items-center gap-3 text-slate-400">
-                        <Search className="w-6 h-6" />
-                        <span className="text-lg font-medium">Cari jadwal, ustadz...</span>
-                    </div>
-                    <div className="h-1 w-full bg-slate-100 rounded-full mt-2 overflow-hidden">
-                        <div className="h-full w-0 bg-blue-500 group-hover:w-full transition-all duration-500"></div>
-                    </div>
-                </Link>
+                <StatCard
+                    title="Pengunjung (24j)"
+                    value={stats.visitors24h}
+                    icon={TrendingUp}
+                    theme="purple"
+                    trend="Real-time traffic"
+                />
             </div>
 
             {/* Core Metrics & Actions Grid */}
@@ -185,16 +183,16 @@ export default async function AdminDashboardPage() {
 
                         <div className="space-y-6">
                             <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                                <div className="text-sm text-slate-400 mb-1">Database Latency</div>
+                                <div className="text-sm text-slate-400 mb-1">Total Visitors</div>
                                 <div className="text-2xl font-mono font-bold text-emerald-400 flex items-center gap-2">
-                                    24ms <span className="text-xs font-sans font-medium text-slate-500 bg-white/10 px-2 py-0.5 rounded-full">Excellent</span>
+                                    {stats.totalVisitors.toLocaleString()} <span className="text-xs font-sans font-medium text-slate-500 bg-white/10 px-2 py-0.5 rounded-full">All Time</span>
                                 </div>
                             </div>
 
                             <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                                <div className="text-sm text-slate-400 mb-1">Total Requests</div>
+                                <div className="text-sm text-slate-400 mb-1">Recent Activity</div>
                                 <div className="text-2xl font-mono font-bold text-blue-400">
-                                    1.2k <span className="text-xs text-slate-500 font-sans font-medium">/ 24h</span>
+                                    {stats.visitors24h.toLocaleString()} <span className="text-xs text-slate-500 font-sans font-medium">/ 24h</span>
                                 </div>
                             </div>
 
@@ -220,22 +218,25 @@ export default async function AdminDashboardPage() {
 
 function StatCard({ title, value, icon: Icon, theme, trend }: any) {
     const isEmerald = theme === 'emerald';
+    const isPurple = theme === 'purple';
 
     return (
         <div className={`relative overflow-hidden rounded-[2.5rem] p-6 flex flex-col justify-center h-full border transition-all hover:scale-[1.02] ${isEmerald
             ? 'bg-emerald-50 border-emerald-100 hover:shadow-lg hover:shadow-emerald-500/10'
-            : 'bg-white border-slate-200 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/5'
+            : isPurple
+                ? 'bg-purple-50 border-purple-100 hover:shadow-lg hover:shadow-purple-500/10'
+                : 'bg-white border-slate-200 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/5'
             }`}>
             <div className="flex items-center justify-between mb-2">
-                <div className={`p-2.5 rounded-xl ${isEmerald ? 'bg-emerald-500 text-white' : 'bg-blue-100 text-blue-600'}`}>
+                <div className={`p-2.5 rounded-xl ${isEmerald ? 'bg-emerald-500 text-white' : isPurple ? 'bg-purple-500 text-white' : 'bg-blue-100 text-blue-600'}`}>
                     <Icon className="w-5 h-5" />
                 </div>
-                {isEmerald && <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></div>}
+                {(isEmerald || isPurple) && <div className={`w-2 h-2 rounded-full ${isEmerald ? 'bg-emerald-500' : 'bg-purple-500'} animate-ping`}></div>}
             </div>
             <div>
                 <h3 className="text-3xl font-black text-slate-900 mb-1">{value}</h3>
                 <p className="font-bold text-sm text-slate-500 mb-0.5">{title}</p>
-                <p className={`text-xs font-semibold ${isEmerald ? 'text-emerald-600' : 'text-slate-400'}`}>{trend}</p>
+                <p className={`text-xs font-semibold ${isEmerald ? 'text-emerald-600' : isPurple ? 'text-purple-600' : 'text-slate-400'}`}>{trend}</p>
             </div>
         </div>
     );

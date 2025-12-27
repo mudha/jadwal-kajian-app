@@ -7,6 +7,8 @@ export interface AdminStats {
     totalMasjid: number;
     totalUstadz: number;
     recentKajian: any[];
+    totalVisitors: number;
+    visitors24h: number;
 }
 
 export async function getAdminStats(): Promise<AdminStats> {
@@ -19,13 +21,17 @@ export async function getAdminStats(): Promise<AdminStats> {
             todayRes,
             masjidRes,
             ustadzRes,
-            recentRes
+            recentRes,
+            totalVisRes,
+            vis24Res
         ] = await Promise.all([
             db.execute('SELECT COUNT(*) as count FROM kajian'),
             db.execute({ sql: 'SELECT COUNT(*) as count FROM kajian WHERE date = ?', args: [todayStr] }),
             db.execute('SELECT COUNT(DISTINCT masjid) as count FROM kajian'),
             db.execute('SELECT COUNT(DISTINCT pemateri) as count FROM kajian'),
-            db.execute('SELECT * FROM kajian ORDER BY id DESC LIMIT 5')
+            db.execute('SELECT * FROM kajian ORDER BY id DESC LIMIT 5'),
+            db.execute('SELECT COUNT(*) as count FROM analytics'),
+            db.execute('SELECT COUNT(*) as count FROM analytics WHERE timestamp > datetime("now", "-1 day")')
         ]);
 
         return {
@@ -33,7 +39,9 @@ export async function getAdminStats(): Promise<AdminStats> {
             jadwalHariIni: Number(todayRes.rows[0].count),
             totalMasjid: Number(masjidRes.rows[0].count),
             totalUstadz: Number(ustadzRes.rows[0].count),
-            recentKajian: recentRes.rows
+            recentKajian: recentRes.rows,
+            totalVisitors: Number(totalVisRes.rows[0].count),
+            visitors24h: Number(vis24Res.rows[0].count)
         };
     } catch (error) {
         console.error('Failed to fetch admin stats:', error);
@@ -42,7 +50,9 @@ export async function getAdminStats(): Promise<AdminStats> {
             jadwalHariIni: 0,
             totalMasjid: 0,
             totalUstadz: 0,
-            recentKajian: []
+            recentKajian: [],
+            totalVisitors: 0,
+            visitors24h: 0
         };
     }
 }
