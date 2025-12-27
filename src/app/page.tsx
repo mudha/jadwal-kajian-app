@@ -205,6 +205,7 @@ export default function BerandaPage() {
                     ustadz={kajian.pemateri}
                     imageUrl={kajian.imageUrl}
                     attendanceCount={kajian.attendanceCount}
+                    waktu={kajian.waktu}
                   />
                 ))}
               </div>

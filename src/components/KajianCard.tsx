@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { HandHeart, Users, Heart } from 'lucide-react';
 import Link from 'next/link';
-import { parseIndoDate, getHijriDate } from '@/lib/date-utils';
+import { parseIndoDate, getHijriDate, getKajianStatus } from '@/lib/date-utils';
 
 interface KajianCardProps {
     id: number;
@@ -15,10 +15,11 @@ interface KajianCardProps {
     attendanceCount?: number;
     khususAkhwat?: boolean;
     isOnline?: boolean;
+    waktu?: string;
     className?: string;
 }
 
-export default function KajianCard({ id, date, location, title, ustadz, imageUrl, attendanceCount = 0, khususAkhwat, isOnline, className = 'w-60' }: KajianCardProps) {
+export default function KajianCard({ id, date, location, title, ustadz, imageUrl, attendanceCount = 0, khususAkhwat, isOnline, waktu, className = 'w-60' }: KajianCardProps) {
     const [count, setCount] = useState(attendanceCount);
     const [hasAttended, setHasAttended] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
@@ -89,6 +90,11 @@ export default function KajianCard({ id, date, location, title, ustadz, imageUrl
 
                 {/* Badges Overlay */}
                 <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
+                    {getKajianStatus(date, waktu) === 'PAST' && (
+                        <div className="px-2 py-1 bg-slate-500 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-slate-200/50">
+                            ✓ Selesai
+                        </div>
+                    )}
                     {(khususAkhwat || ustadz.toLowerCase().includes('ustadzah')) && (
                         <div className="px-2 py-1 bg-pink-500 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-pink-200/50 animate-pulse">
                             🌸 Akhwat
