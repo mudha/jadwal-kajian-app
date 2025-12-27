@@ -312,12 +312,6 @@ function KajianListContent() {
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <h1 className="text-lg font-bold flex-1">PortalKajian.online</h1>
-                    <button
-                        onClick={() => setShowMap(!showMap)}
-                        className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                    >
-                        <MapIcon className="w-5 h-5" />
-                    </button>
                 </div>
 
                 {/* Search Bar */}
@@ -350,12 +344,6 @@ function KajianListContent() {
                             className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                         />
                     </div>
-                    <button
-                        onClick={() => setShowMap(!showMap)}
-                        className={`p-2.5 rounded-xl border border-slate-200 transition-all ${showMap ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-slate-600 hover:border-teal-300'}`}
-                    >
-                        <MapIcon className="w-5 h-5" />
-                    </button>
                 </div>
             </div>
 
@@ -363,25 +351,6 @@ function KajianListContent() {
                 {/* Left Column (Kajian List) */}
                 <div className="md:col-span-8">
                     <main className="px-4 py-4 pb-24 md:px-0 md:py-0">
-                        {/* Map Section */}
-                        <div className="mb-12">
-                            <button
-                                onClick={() => setShowMap(!showMap)}
-                                className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 transition-all font-black text-xs uppercase tracking-[0.2em] mb-4 ${showMap
-                                    ? 'bg-slate-900 border-slate-900 text-white shadow-xl shadow-slate-200'
-                                    : 'bg-white border-slate-100 text-slate-500 hover:border-blue-200 hover:text-blue-600 hover:bg-blue-50/50'
-                                    }`}
-                            >
-                                <MapIcon className={`w-4 h-4 ${showMap ? 'animate-bounce' : ''}`} />
-                                {showMap ? 'Sembunyikan Peta Lokasi' : 'Lihat Sebaran Kajian di Peta'}
-                            </button>
-
-                            {showMap && (
-                                <div className="animate-in slide-in-from-top-4 duration-500">
-                                    <KajianMap items={filteredKajian} />
-                                </div>
-                            )}
-                        </div>
 
                         {/* Filter Kota (Pills) */}
                         {
@@ -419,7 +388,7 @@ function KajianListContent() {
                         }
 
                         {/* Tabs Filter */}
-                        <div className="flex flex-wrap gap-2 mb-8 bg-white/50 p-1.5 rounded-2xl border border-slate-200 w-fit">
+                        <div className="flex flex-wrap gap-1.5 mb-8 bg-white/50 p-1 rounded-2xl border border-slate-200 w-fit">
                             {[
                                 { id: 'all', label: 'Semua', icon: ListFilter },
                                 { id: 'today', label: 'Hari Ini', icon: Clock },
@@ -429,13 +398,14 @@ function KajianListContent() {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id as any)}
-                                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === tab.id
+                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-xs transition-all whitespace-nowrap ${activeTab === tab.id
                                         ? 'bg-teal-600 text-white shadow-lg shadow-teal-200 ring-2 ring-teal-600 ring-offset-2'
                                         : 'text-slate-500 hover:bg-white hover:text-slate-900'
                                         }`}
                                 >
-                                    <tab.icon className="w-4 h-4" />
-                                    {tab.label}
+                                    <tab.icon className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline">{tab.label}</span>
+                                    <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
                                 </button>
                             ))}
                         </div>

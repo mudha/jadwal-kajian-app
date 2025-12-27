@@ -12,7 +12,8 @@ import {
     Zap,
     TrendingUp,
     ShieldCheck,
-    Search
+    Search,
+    Map as MapIconImport
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -94,6 +95,26 @@ export default async function AdminDashboardPage() {
                         </div>
                         <div className="mt-8 flex items-center gap-2 font-bold text-lg">
                             Mulai Sekarang <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                    </div>
+                </Link>
+
+                <Link href="/admin/map" className="relative overflow-hidden bg-gradient-to-br from-teal-600 to-emerald-600 rounded-[2.5rem] p-8 text-white shadow-xl hover:shadow-2xl hover:shadow-teal-500/20 transition-all group">
+                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
+                        <MapIconImport className="w-48 h-48 -mr-16 -mt-16 rotate-12" />
+                    </div>
+                    <div className="relative z-10 h-full flex flex-col justify-between">
+                        <div>
+                            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-6">
+                                <MapIconImport className="w-7 h-7 text-white" />
+                            </div>
+                            <h2 className="text-2xl font-bold mb-2">Peta Sebaran</h2>
+                            <p className="text-teal-100/80 max-w-sm leading-relaxed">
+                                Lihat visualisasi lokasi semua kajian dalam bentuk peta interaktif.
+                            </p>
+                        </div>
+                        <div className="mt-8 flex items-center gap-2 font-bold text-lg">
+                            Buka Peta <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </div>
                     </div>
                 </Link>
