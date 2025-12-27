@@ -8,7 +8,6 @@ import {
     Radio,
     Upload,
     ArrowRight,
-    Clock,
     ExternalLink,
     Zap,
     TrendingUp,
@@ -20,13 +19,11 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboardPage() {
     const stats = await getAdminStats();
-    const todayDate = formatIndoDate(new Date());
 
     return (
         <div className="space-y-8">
-            {/* Hero Banner - Compact Standalone */}
+            {/* Hero Banner */}
             <div className="relative overflow-hidden bg-slate-900 rounded-[2rem] p-6 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-800">
-                {/* Background Effects */}
                 <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[400px] h-[400px] bg-blue-600/20 rounded-full blur-[80px] pointer-events-none"></div>
 
                 <div className="relative z-10 flex items-center gap-6">
@@ -54,7 +51,7 @@ export default async function AdminDashboardPage() {
                 </div>
             </div>
 
-            {/* Quick Stats Grid - Horizontal Row */}
+            {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard
                     title="Kajian Hari Ini"
@@ -70,7 +67,6 @@ export default async function AdminDashboardPage() {
                     theme="blue"
                     trend="Database aktif"
                 />
-                {/* Search Quick Access */}
                 <StatCard
                     title="Pengunjung (24j)"
                     value={stats.visitors24h}
@@ -82,7 +78,6 @@ export default async function AdminDashboardPage() {
 
             {/* Core Metrics & Actions Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* AI Import Action - Large Square */}
                 <Link href="/admin/batch-input" className="md:col-span-2 relative overflow-hidden bg-gradient-to-br from-indigo-600 to-violet-600 rounded-[2.5rem] p-8 text-white shadow-xl hover:shadow-2xl hover:shadow-indigo-500/20 transition-all group">
                     <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
                         <Zap className="w-48 h-48 -mr-16 -mt-16 rotate-12" />
@@ -103,7 +98,6 @@ export default async function AdminDashboardPage() {
                     </div>
                 </Link>
 
-                {/* Secondary Stats */}
                 <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 flex flex-col justify-between hover:border-purple-200 transition-colors">
                     <div className="flex items-start justify-between">
                         <div className="p-3 bg-purple-100 rounded-2xl text-purple-600">
@@ -146,7 +140,7 @@ export default async function AdminDashboardPage() {
                     </div>
                     <div className="divide-y divide-slate-50">
                         {stats.recentKajian.length > 0 ? (
-                            stats.recentKajian.map((k: any, i: number) => (
+                            stats.recentKajian.map((k: any) => (
                                 <div key={k.id} className="p-6 hover:bg-slate-50/80 transition-colors group flex items-center gap-5">
                                     <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 font-bold flex items-center justify-center shrink-0 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors text-sm">
                                         #{k.id}
@@ -211,74 +205,76 @@ export default async function AdminDashboardPage() {
                         </p>
                     </div>
                 </div>
-                {/* Visitor Breakdown Section */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-slate-100">
-                    <BreakdownCard title="Top Devices" data={stats.topDevices} icon={Radio} />
-                    <BreakdownCard title="Top Browsers" data={stats.topBrowsers} icon={Zap} />
-                    <BreakdownCard title="Top Cities" data={stats.topCities} icon={MapPin} />
-                </div>
             </div>
-            );
+
+            {/* Visitor Breakdown Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-slate-100">
+                <BreakdownCard title="Top Devices" data={stats.topDevices} icon={Radio} />
+                <BreakdownCard title="Top Browsers" data={stats.topBrowsers} icon={Zap} />
+                <BreakdownCard title="Top Cities" data={stats.topCities} icon={MapPin} />
+            </div>
+        </div>
+    );
 }
 
-            function BreakdownCard({title, data, icon: Icon }: {title: string, data: any[], icon: any }) {
+function BreakdownCard({ title, data, icon: Icon }: { title: string, data: any[], icon: any }) {
     const total = data.reduce((acc, curr) => acc + Number(curr.count), 0);
 
-            return (
-            <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
-                        <Icon className="w-5 h-5" />
-                    </div>
-                    <h3 className="font-bold text-slate-900">{title}</h3>
+    return (
+        <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8">
+            <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
+                    <Icon className="w-5 h-5" />
                 </div>
-                <div className="space-y-4">
-                    {data.length > 0 ? data.map((item, i) => {
-                        const percentage = total > 0 ? (Number(item.count) / total) * 100 : 0;
-                        return (
-                            <div key={i} className="space-y-1.5">
-                                <div className="flex justify-between text-xs font-bold text-slate-600">
-                                    <span className="truncate max-w-[150px]">{item.name || 'Unknown'}</span>
-                                    <span>{item.count}</span>
-                                </div>
-                                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-blue-500 rounded-full transition-all duration-1000"
-                                        style={{ width: `${percentage}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        );
-                    }) : (
-                        <div className="text-center py-4 text-slate-400 text-xs italic">Belum ada data.</div>
-                    )}
-                </div>
+                <h3 className="font-bold text-slate-900">{title}</h3>
             </div>
-            );
+            <div className="space-y-4">
+                {data.length > 0 ? data.map((item, i) => {
+                    const percentage = total > 0 ? (Number(item.count) / total) * 100 : 0;
+                    return (
+                        <div key={i} className="space-y-1.5">
+                            <div className="flex justify-between text-xs font-bold text-slate-600">
+                                <span className="truncate max-w-[150px]">{item.name || 'Unknown'}</span>
+                                <span>{item.count}</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-blue-500 rounded-full transition-all duration-1000"
+                                    style={{ width: `${percentage}%` }}
+                                ></div>
+                            </div>
+                        </div>
+                    );
+                }) : (
+                    <div className="text-center py-4 text-slate-400 text-xs italic">Belum ada data.</div>
+                )}
+            </div>
+        </div>
+    );
 }
 
-            function StatCard({title, value, icon: Icon, theme, trend }: any) {
+function StatCard({ title, value, icon: Icon, theme, trend }: any) {
     const isEmerald = theme === 'emerald';
-            const isPurple = theme === 'purple';
+    const isPurple = theme === 'purple';
 
-            return (
-            <div className={`relative overflow-hidden rounded-[2.5rem] p-6 flex flex-col justify-center h-full border transition-all hover:scale-[1.02] ${isEmerald
-                ? 'bg-emerald-50 border-emerald-100 hover:shadow-lg hover:shadow-emerald-500/10'
-                : isPurple
-                    ? 'bg-purple-50 border-purple-100 hover:shadow-lg hover:shadow-purple-500/10'
-                    : 'bg-white border-slate-200 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/5'
-                }`}>
-                <div className="flex items-center justify-between mb-2">
-                    <div className={`p-2.5 rounded-xl ${isEmerald ? 'bg-emerald-500 text-white' : isPurple ? 'bg-purple-500 text-white' : 'bg-blue-100 text-blue-600'}`}>
-                        <Icon className="w-5 h-5" />
-                    </div>
-                    {(isEmerald || isPurple) && <div className={`w-2 h-2 rounded-full ${isEmerald ? 'bg-emerald-500' : 'bg-purple-500'} animate-ping`}></div>}
+    return (
+        <div className={`relative overflow-hidden rounded-[2.5rem] p-6 flex flex-col justify-center h-full border transition-all hover:scale-[1.02] ${isEmerald
+            ? 'bg-emerald-50 border-emerald-100 hover:shadow-lg hover:shadow-emerald-500/10'
+            : isPurple
+                ? 'bg-purple-50 border-purple-100 hover:shadow-lg hover:shadow-purple-500/10'
+                : 'bg-white border-slate-200 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/5'
+            }`}>
+            <div className="flex items-center justify-between mb-2">
+                <div className={`p-2.5 rounded-xl ${isEmerald ? 'bg-emerald-500 text-white' : isPurple ? 'bg-purple-500 text-white' : 'bg-blue-100 text-blue-600'}`}>
+                    <Icon className="w-5 h-5" />
                 </div>
-                <div>
-                    <h3 className="text-3xl font-black text-slate-900 mb-1">{value}</h3>
-                    <p className="font-bold text-sm text-slate-500 mb-0.5">{title}</p>
-                    <p className={`text-xs font-semibold ${isEmerald ? 'text-emerald-600' : isPurple ? 'text-purple-600' : 'text-slate-400'}`}>{trend}</p>
-                </div>
+                {(isEmerald || isPurple) && <div className={`w-2 h-2 rounded-full ${isEmerald ? 'bg-emerald-500' : 'bg-purple-500'} animate-ping`}></div>}
             </div>
-            );
+            <div>
+                <h3 className="text-3xl font-black text-slate-900 mb-1">{value}</h3>
+                <p className="font-bold text-sm text-slate-500 mb-0.5">{title}</p>
+                <p className={`text-xs font-semibold ${isEmerald ? 'text-emerald-600' : isPurple ? 'text-purple-600' : 'text-slate-400'}`}>{trend}</p>
+            </div>
+        </div>
+    );
 }
