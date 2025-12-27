@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Lock, ArrowRight, ShieldCheck, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -9,6 +9,17 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        // Auto-redirect if already logged in
+        fetch('/api/admin/check-session')
+            .then(res => {
+                if (res.ok) {
+                    router.replace('/admin');
+                }
+            })
+            .catch(() => { });
+    }, [router]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
