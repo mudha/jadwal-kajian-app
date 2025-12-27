@@ -122,7 +122,7 @@ export default function LoginPage() {
                 </div>
 
                 <p className="text-center mt-8 text-slate-400 text-sm font-medium italic">
-                    &copy; 2025 Jadwal Kajian Indonesia Portal
+                    &copy; 2025 PortalKajian.online
                 </p>
             </div>
         </div>

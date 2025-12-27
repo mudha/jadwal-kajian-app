@@ -17,7 +17,7 @@ export default function NotifikasiPage() {
         {
             id: 2,
             title: 'Update Aplikasi',
-            message: 'Tampilan baru Jadwal Kajian App telah hadir! Nikmati kemudahan mencari kajian dengan fitur filter dan peta yang lebih baik.',
+            message: 'Tampilan baru PortalKajian.online telah hadir! Nikmati kemudahan mencari kajian dengan fitur filter dan peta yang lebih baik.',
             time: 'Hari ini, 09:00',
             type: 'info',
             isRead: true

@@ -63,7 +63,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                         </div>
                         <div>
                             <h1 className="font-bold text-lg leading-tight">Admin Panel</h1>
-                            <p className="text-slate-400 text-xs">Jadwal Kajian App</p>
+                            <p className="text-slate-400 text-xs">PortalKajian.online</p>
                         </div>
                     </div>
                 </div>
@@ -120,7 +120,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                         </div>
                         <div>
                             <h1 className="font-bold text-lg leading-tight">Admin Panel</h1>
-                            <p className="text-slate-400 text-xs">Jadwal Kajian App</p>
+                            <p className="text-slate-400 text-xs">PortalKajian.online</p>
                         </div>
                     </div>
                     <button

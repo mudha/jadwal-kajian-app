@@ -22,7 +22,7 @@ export function generateWhatsAppShareText(kajian: {
         text += `\n\n📸 *Lihat Poster:*\n${kajian.imageUrl}`;
     }
 
-    text += `\n\n_Disebarkan melalui Aplikasi Jadwal Kajian_`;
+    text += `\n\n_Disebarkan melalui PortalKajian.online_`;
 
     return text;
 }

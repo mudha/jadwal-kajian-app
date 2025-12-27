@@ -113,7 +113,7 @@ export default function BerandaPage() {
         <div className={`absolute left-0 top-0 bottom-0 w-64 bg-white shadow-2xl transition-transform transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`} onClick={e => e.stopPropagation()}>
           <div className="p-6 bg-teal-600 text-white">
             <h2 className="font-bold text-xl mb-1">Menu</h2>
-            <p className="text-teal-100 text-xs">Jadwal Kajian Sunnah</p>
+            <p className="text-teal-100 text-xs">PortalKajian.online</p>
           </div>
           <div className="p-4 space-y-2">
             <Link href="/" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-50 rounded-xl font-medium">
@@ -151,7 +151,7 @@ export default function BerandaPage() {
             </svg>
           </button>
           <div>
-            <h1 className="font-bold text-lg leading-tight">Jadwal Kajian</h1>
+            <h1 className="font-bold text-lg leading-tight">PortalKajian.online</h1>
             <p className="text-[10px] text-teal-100 uppercase tracking-widest font-medium">Sunnah Indonesia</p>
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function BerandaPage() {
           {/* Hero Section on Desktop */}
           <div className="hidden md:block bg-teal-600 rounded-3xl p-8 text-white relative overflow-hidden">
             <div className="relative z-10">
-              <h1 className="text-3xl font-bold mb-4">Selamat Datang di Jadwal Kajian Sunnah App</h1>
+              <h1 className="text-3xl font-bold mb-4">Selamat Datang di PortalKajian.online</h1>
               <p className="text-teal-100 max-w-lg mb-6">Temukan jadwal kajian sunnah terdekat, artikel islami, dan fitur ibadah lainnya dalam satu aplikasi.</p>
               <Link href="/kajian" className="inline-block bg-white text-teal-600 font-bold px-6 py-3 rounded-xl hover:bg-teal-50 transition-colors">
                 Cari Kajian Sekarang

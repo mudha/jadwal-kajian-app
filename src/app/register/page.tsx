@@ -76,7 +76,7 @@ export default function RegisterPage() {
                             <UserPlus className="w-10 h-10" />
                         </div>
                         <h1 className="text-2xl font-bold mb-2">Daftar Admin Baru</h1>
-                        <p className="text-teal-100 text-sm">Jadwal Kajian Sunnah App</p>
+                        <p className="text-teal-100 text-sm">PortalKajian.online</p>
                     </div>
 
                     {/* Form */}
