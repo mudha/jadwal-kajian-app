@@ -13,7 +13,13 @@ interface AutosuggestInputProps {
 }
 
 export default function AutosuggestInput({ value, onChange, onSelect, placeholder, type, className }: AutosuggestInputProps) {
-    const [suggestions, setSuggestions] = useState<{ value: string; count: number }[]>([]);
+    const [suggestions, setSuggestions] = useState<({ value: string; count: number } & {
+        city?: string;
+        address?: string;
+        gmapsUrl?: string;
+        lat?: number;
+        lng?: number;
+    })[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
