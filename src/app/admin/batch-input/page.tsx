@@ -396,7 +396,7 @@ export default function BatchInputPage() {
         }
     };
 
-    const updateEntry = (index: number, field: keyof KajianEntry, value: string | number) => {
+    const updateEntry = (index: number, field: keyof KajianEntry, value: string | number | boolean) => {
         setEntries(prev => {
             const newEntries = [...prev];
             newEntries[index] = { ...newEntries[index], [field]: value };
@@ -637,8 +637,31 @@ export default function BatchInputPage() {
                                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">CP / Maps / Koordinat</label>
                                                                 <div className="flex flex-col md:flex-row gap-4">
                                                                     <input type="text" placeholder="CP (Contact Person)" value={entry.cp} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="w-full md:w-1/3 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-emerald-600" />
-                                                                    <div className="flex-1 flex gap-2">
+                                                                    <div className="flex-1 flex flex-col md:flex-row gap-2">
                                                                         <input type="text" placeholder="Google Maps URL" value={entry.gmapsUrl} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium text-blue-500 text-sm" />
+
+                                                                        {/* New Checkboxes */}
+                                                                        <div className="flex items-center gap-4 px-2">
+                                                                            <label className="flex items-center gap-2 cursor-pointer group">
+                                                                                <input
+                                                                                    type="checkbox"
+                                                                                    checked={entry.khususAkhwat}
+                                                                                    onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
+                                                                                    className="w-4 h-4 rounded text-pink-500 border-slate-300 focus:ring-pink-500"
+                                                                                />
+                                                                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter group-hover:text-pink-600 transition-colors">Akhwat</span>
+                                                                            </label>
+                                                                            <label className="flex items-center gap-2 cursor-pointer group">
+                                                                                <input
+                                                                                    type="checkbox"
+                                                                                    checked={entry.isOnline}
+                                                                                    onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
+                                                                                    className="w-4 h-4 rounded text-blue-500 border-slate-300 focus:ring-blue-500"
+                                                                                />
+                                                                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter group-hover:text-blue-600 transition-colors">Online</span>
+                                                                            </label>
+                                                                        </div>
+
                                                                         <button
                                                                             onClick={async () => {
                                                                                 if (!entry.gmapsUrl) return alert('Masukkan URL Maps terlebih dahulu');
@@ -821,6 +844,27 @@ export default function BatchInputPage() {
                                                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-emerald-600"
                                                     />
                                                 </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <label className="flex items-center gap-2 bg-pink-50/50 p-2 rounded-lg cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={entry.khususAkhwat}
+                                                        onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
+                                                        className="w-4 h-4 rounded text-pink-500 border-slate-300"
+                                                    />
+                                                    <span className="text-[10px] font-black text-pink-700 uppercase">Akhwat</span>
+                                                </label>
+                                                <label className="flex items-center gap-2 bg-blue-50/50 p-2 rounded-lg cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={entry.isOnline}
+                                                        onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
+                                                        className="w-4 h-4 rounded text-blue-500 border-slate-300"
+                                                    />
+                                                    <span className="text-[10px] font-black text-blue-700 uppercase">Online</span>
+                                                </label>
                                             </div>
                                         </div>
                                     </div>

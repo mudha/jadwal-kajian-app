@@ -13,7 +13,12 @@ export async function GET(
         if (result.rows.length === 0) {
             return NextResponse.json({ error: 'Not Found' }, { status: 404 });
         }
-        return NextResponse.json(result.rows[0]);
+        const row = result.rows[0];
+        return NextResponse.json({
+            ...row,
+            khususAkhwat: !!row.khususAkhwat,
+            isOnline: !!row.isOnline
+        });
     } catch (error) {
         console.error('Fetch Error:', error);
         return NextResponse.json({ error: 'Failed' }, { status: 500 });
@@ -49,7 +54,7 @@ export async function PATCH(
         await db.execute({
             sql: `
             UPDATE kajian 
-            SET masjid = ?, address = ?, pemateri = ?, tema = ?, waktu = ?, date = ?, city = ?, cp = ?, gmapsUrl = ?, lat = ?, lng = ?, khususAkhwat = ?, linkInfo = ?, imageUrl = ?
+            SET masjid = ?, address = ?, pemateri = ?, tema = ?, waktu = ?, date = ?, city = ?, cp = ?, gmapsUrl = ?, lat = ?, lng = ?, khususAkhwat = ?, linkInfo = ?, imageUrl = ?, isOnline = ?
             WHERE id = ?
         `,
             args: [
@@ -67,6 +72,7 @@ export async function PATCH(
                 body.khususAkhwat ? 1 : 0,
                 body.linkInfo || null,
                 body.imageUrl || null,
+                body.isOnline ? 1 : 0,
                 id
             ]
         });

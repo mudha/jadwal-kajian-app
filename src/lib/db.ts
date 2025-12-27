@@ -58,6 +58,7 @@ const initDb = async () => {
   try { await db.execute("ALTER TABLE kajian ADD COLUMN linkInfo TEXT"); } catch (e) { }
   try { await db.execute("ALTER TABLE kajian ADD COLUMN imageUrl TEXT"); } catch (e) { }
   try { await db.execute("ALTER TABLE kajian ADD COLUMN attendanceCount INTEGER DEFAULT 0"); } catch (e) { }
+  try { await db.execute("ALTER TABLE kajian ADD COLUMN isOnline BOOLEAN DEFAULT 0"); } catch (e) { }
   try { await db.execute("ALTER TABLE admins ADD COLUMN role TEXT DEFAULT 'ADMIN'"); } catch (e) { }
 
   // Analytics table

@@ -14,10 +14,11 @@ interface KajianCardProps {
     imageUrl?: string;
     attendanceCount?: number;
     khususAkhwat?: boolean;
+    isOnline?: boolean;
     className?: string;
 }
 
-export default function KajianCard({ id, date, location, title, ustadz, imageUrl, attendanceCount = 0, khususAkhwat, className = 'w-60' }: KajianCardProps) {
+export default function KajianCard({ id, date, location, title, ustadz, imageUrl, attendanceCount = 0, khususAkhwat, isOnline, className = 'w-60' }: KajianCardProps) {
     const [count, setCount] = useState(attendanceCount);
     const [hasAttended, setHasAttended] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
@@ -86,12 +87,19 @@ export default function KajianCard({ id, date, location, title, ustadz, imageUrl
                     <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
                 </button>
 
-                {/* Khusus Akhwat Badge */}
-                {(khususAkhwat || ustadz.toLowerCase().includes('ustadzah')) && (
-                    <div className="absolute top-2 left-2 px-2 py-1 bg-pink-500 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-pink-200/50 animate-pulse">
-                        🌸 Akhwat
-                    </div>
-                )}
+                {/* Badges Overlay */}
+                <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
+                    {(khususAkhwat || ustadz.toLowerCase().includes('ustadzah')) && (
+                        <div className="px-2 py-1 bg-pink-500 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-pink-200/50 animate-pulse">
+                            🌸 Akhwat
+                        </div>
+                    )}
+                    {isOnline && (
+                        <div className="px-2 py-1 bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-blue-200/50">
+                            🎥 Online
+                        </div>
+                    )}
+                </div>
             </div>
             <div className="p-5">
                 <div className="flex items-start justify-between mb-3">

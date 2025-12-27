@@ -13,7 +13,8 @@ export async function GET() {
         // Convert integer booleans from SQLite back to actual booleans for JSON
         const rows = result.rows.map(row => ({
             ...row,
-            khususAkhwat: !!row.khususAkhwat
+            khususAkhwat: !!row.khususAkhwat,
+            isOnline: !!row.isOnline
         }));
 
         return NextResponse.json(rows);
@@ -33,8 +34,8 @@ export async function POST(request: Request) {
         // Batch insert using transactions
         const statements = entries.map(item => ({
             sql: `
-        INSERT INTO kajian (region, city, masjid, address, gmapsUrl, lat, lng, pemateri, tema, waktu, cp, date, khususAkhwat, linkInfo, imageUrl)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO kajian (region, city, masjid, address, gmapsUrl, lat, lng, pemateri, tema, waktu, cp, date, khususAkhwat, linkInfo, imageUrl, isOnline)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
             args: [
                 item.region,
@@ -51,7 +52,8 @@ export async function POST(request: Request) {
                 item.date,
                 item.khususAkhwat ? 1 : 0, // SQLite boolean as integer
                 item.linkInfo || null,
-                item.imageUrl || null
+                item.imageUrl || null,
+                item.isOnline ? 1 : 0
             ]
         }));
 

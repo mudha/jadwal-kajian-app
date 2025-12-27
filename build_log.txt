@@ -1,0 +1,24 @@
+
+> jadwal-kajian-app@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.1 (Turbopack)
+- Environments: .env.local
+
+ΓÜá The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 3.5s
+  Running TypeScript ...
+Failed to compile.
+
+./src/components/KajianCard.tsx:96:22
+Type error: Cannot find name 'isOnline'.
+
+  94 |                         </div>
+  95 |                     )}
+> 96 |                     {isOnline && (
+     |                      ^
+  97 |                         <div className="px-2 py-1 bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-blue-200/50">
+  98 |                             ≡ƒÄÑ Online
+  99 |                         </div>
+Next.js build worker exited with code: 1 and signal: null

@@ -30,6 +30,7 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
         cp: string; // Contact Person (hanya nomor HP/nama, jangan link WA channel)
         khususAkhwat: boolean; // True jika ada kata "khusus akhwat", "akhwat only", "khusus wanita", ATAU jika pematerinya adalah seorang "Ustadzah" (karena ustadzah biasanya mengisi kajian khusus wanita). False jika untuk umum atau ikhwan-akhwat.
         linkInfo: string; // Link pendaftaran, streaming, atau WAG (Ambil link yang paling penting untuk user)
+        isOnline: boolean; // True jika acara diselenggarakan via Zoom, YouTube, GMeet, atau platform online lainnya.
     }
 
     ATURAN KHUSUS:
@@ -47,14 +48,18 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
        - Field 'waktu' diisi "Sholat Jumat" (atau "11.30 - 13.00 WIB" jika mau spesifik).
        - Field 'pemateri' diambil dari baris "Khatib / Imam".
        - Field 'tema' jika isinya "-" atau strip, kosongkan saja.
-    5. **MULTI-SPEAKER**: Jika satu acara punya BEBERAPA pemateri, gabungkan jadi satu entry dengan " & ".
-    6. **KHUSUS AKHWAT**: Set true jika ada indikator khusus wanita.
-    7. **LINK INFO**: Ambil link pendaftaran > streaming > WAG.
-    8. **GMAPS**: Ambil link gmaps jika ada.
-    9. Output HANYA JSON text murni tanpa markdown formatting (tanpa \`\`\`json).
-    
-    TEKS BROADCAST:
-    ${originalText}
+    5. **KAJIAN ONLINE**: Jika acara diselenggarakan secara Online (Zoom, YouTube, dll):
+       - Field 'isOnline' set ke true.
+       - Field 'city', 'masjid', dan 'address' otomatis diisi "Online".
+       - Simpan link Zoom, Meeting ID, atau detail lainnya di 'linkInfo' atau 'address' agar user tahu cara aksesnya.
+    6. **MULTI-SPEAKER**: Jika satu acara punya BEBERAPA pemateri, gabungkan jadi satu entry dengan " & ".
+    7. **KHUSUS AKHWAT**: Set true jika ada indikator khusus wanita ATAU pematerinya Ustadzah.
+    8. **LINK INFO**: Ambil link pendaftaran > link Zoom > streaming > WAG.
+    9. **GMAPS**: Ambil link gmaps jika ada. Kosongkan (null) jika Online.
+    10. Output HANYA JSON text murni tanpa markdown formatting (tanpa \`\`\`json).
+
+        TEKS BROADCAST:
+            ${originalText}
     `;
 
     try {

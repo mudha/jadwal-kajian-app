@@ -14,6 +14,7 @@ export interface KajianEntry {
     date: string; // From the header
     khususAkhwat?: boolean; // True if kajian is exclusively for women
     linkInfo?: string; // Link pendaftaran, streaming, atau WAG
+    isOnline?: boolean; // True if kajian is online (Zoom, YouTube, etc.)
     attendanceCount?: number; // Count of people planning to attend
 }
 

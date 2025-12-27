@@ -21,6 +21,7 @@ interface KajianDetail {
     linkInfo?: string;
     attendanceCount?: number;
     khususAkhwat?: boolean;
+    isOnline?: boolean;
 }
 
 import PrayerTimeWidget from '@/components/PrayerTimeWidget';
@@ -173,6 +174,11 @@ export default function KajianDetailPage() {
                                                 <span className="inline-block px-3 py-1 bg-teal-50 text-teal-700 text-[10px] font-black rounded-lg uppercase tracking-widest border border-teal-100">
                                                     {kajian.city}
                                                 </span>
+                                                {kajian.isOnline && (
+                                                    <span className="inline-block px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-blue-100">
+                                                        🎥 Kajian Online
+                                                    </span>
+                                                )}
                                                 {(kajian.khususAkhwat || kajian.pemateri.toLowerCase().includes('ustadzah')) && (
                                                     <span className="inline-block px-3 py-1 bg-pink-50 text-pink-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-pink-100 animate-pulse">
                                                         🌸 Khusus Akhwat
