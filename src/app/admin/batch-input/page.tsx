@@ -11,6 +11,7 @@ import { indonesianCities } from '@/data/cities';
 import { parseIndoDate, formatIndoDate, formatYYYYMMDD } from '@/lib/date-utils';
 import AutosuggestInput from '@/components/admin/AutosuggestInput';
 import AIInputSection from '@/components/admin/AIInputSection';
+import './batch-input.css';
 
 export default function BatchInputPage() {
     const router = useRouter();
@@ -837,11 +838,11 @@ export default function BatchInputPage() {
                     )}
 
                     {message && (
-                        <div className={`mt-10 p-6 rounded-[2rem] text-sm font-black flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-500 ${message.includes('Gagal') ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-blue-50 text-blue-600 border border-blue-100 shadow-lg shadow-blue-50'}`}>
+                        <div className={`mt-10 batch-message ${message.includes('Gagal') ? 'batch-message-error' : 'batch-message-success'} flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-500`}>
                             <div className={`p-2 rounded-xl ${message.includes('Gagal') ? 'bg-red-100' : 'bg-blue-100'}`}>
                                 <Info className="w-5 h-5" />
                             </div>
-                            {message}
+                            <span className="font-bold">{message}</span>
                         </div>
                     )}
                 </div>
