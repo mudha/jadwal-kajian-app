@@ -136,7 +136,7 @@ export default function AdminManagePage() {
     };
 
     const [isExtracting, setIsExtracting] = useState(false);
-    const [filterNoCoords, setFilterNoCoords] = useState(false);
+
 
     // ... (rest of code)
 
@@ -180,13 +180,7 @@ export default function AdminManagePage() {
     };
 
     const filteredList = kajianList
-        .filter(k => {
-            if (filterNoCoords) {
-                // Filter only those that DON'T have both lat and lng (meaning at least one is missing)
-                return !k.lat || !k.lng;
-            }
-            return true;
-        })
+
         .filter(k =>
             k.masjid.toLowerCase().includes(searchTerm.toLowerCase()) ||
             k.pemateri.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -271,17 +265,6 @@ export default function AdminManagePage() {
                         placeholder="Cari berdasarkan Masjid, Ustadz, atau Kota..."
                         className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none font-medium"
                     />
-                </div>
-                <div className="flex items-center">
-                    <label className={`flex items-center gap-3 px-6 py-4 rounded-2xl border cursor-pointer transition-all select-none ${filterNoCoords ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
-                        <input
-                            type="checkbox"
-                            checked={filterNoCoords}
-                            onChange={(e) => setFilterNoCoords(e.target.checked)}
-                            className="w-5 h-5 rounded border-slate-300 text-orange-600 focus:ring-orange-500"
-                        />
-                        <span className="font-bold whitespace-nowrap">Belum ada GPS ({kajianList.filter(k => !k.lat || !k.lng).length})</span>
-                    </label>
                 </div>
             </div>
 

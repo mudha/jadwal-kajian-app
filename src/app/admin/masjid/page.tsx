@@ -32,6 +32,7 @@ export default function MasjidManagementPage() {
     const [mergeTarget, setMergeTarget] = useState('');
     const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
     const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+    const [filterNoCoords, setFilterNoCoords] = useState(false);
 
     useEffect(() => {
         fetchMasjid();
@@ -138,10 +139,12 @@ export default function MasjidManagementPage() {
         }
     };
 
-    const filteredMasjid = masjidList.filter(m =>
-        m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.city.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredMasjid = masjidList.filter(m => {
+        const matchesSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            m.city.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesNoCoords = filterNoCoords ? (!m.lat || !m.lng) : true;
+        return matchesSearch && matchesNoCoords;
+    });
 
     const toggleMergeSelection = (id: string) => {
         const newSelected = new Set(selectedForMerge);
@@ -301,15 +304,29 @@ export default function MasjidManagementPage() {
             </div>
 
             {/* Search */}
-            <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Cari nama masjid atau kota..."
-                    className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none"
-                />
+            {/* Search & Filter */}
+            <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Cari nama masjid atau kota..."
+                        className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none"
+                    />
+                </div>
+                <div className="flex items-center">
+                    <label className={`flex items-center gap-3 px-6 py-3 rounded-xl border cursor-pointer transition-all select-none ${filterNoCoords ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                        <input
+                            type="checkbox"
+                            checked={filterNoCoords}
+                            onChange={(e) => setFilterNoCoords(e.target.checked)}
+                            className="w-5 h-5 rounded border-slate-300 text-orange-600 focus:ring-orange-500"
+                        />
+                        <span className="font-bold whitespace-nowrap">Belum ada GPS ({masjidList.filter(m => !m.lat || !m.lng).length})</span>
+                    </label>
+                </div>
             </div>
 
             {/* Stats */}
