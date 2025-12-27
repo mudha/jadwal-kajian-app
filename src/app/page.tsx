@@ -152,7 +152,7 @@ export default function BerandaPage() {
           </button>
           <div>
             <h1 className="font-bold text-lg leading-tight">PortalKajian.online</h1>
-            <p className="text-[10px] text-teal-100 uppercase tracking-widest font-medium">Sunnah Indonesia</p>
+            <p className="text-[10px] text-teal-100 uppercase tracking-widest font-medium">Jadwal Kajian Sunnah</p>
           </div>
         </div>
         <Link href="/notifikasi" className="p-2 relative hover:bg-white/10 rounded-full transition-colors">
@@ -298,11 +298,7 @@ export default function BerandaPage() {
             </div>
           </div>
 
-          {/* Menu Grid */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-            <h3 className="font-bold text-slate-900 mb-4">Menu Utama</h3>
-            <MenuGrid />
-          </div>
+
         </div>
 
       </div>
