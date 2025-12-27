@@ -9,6 +9,9 @@ export interface AdminStats {
     recentKajian: any[];
     totalVisitors: number;
     visitors24h: number;
+    topDevices: any[];
+    topBrowsers: any[];
+    topCities: any[];
 }
 
 export async function getAdminStats(): Promise<AdminStats> {
@@ -23,7 +26,10 @@ export async function getAdminStats(): Promise<AdminStats> {
             ustadzRes,
             recentRes,
             totalVisRes,
-            vis24Res
+            vis24Res,
+            devicesRes,
+            browsersRes,
+            citiesRes
         ] = await Promise.all([
             db.execute('SELECT COUNT(*) as count FROM kajian'),
             db.execute({ sql: 'SELECT COUNT(*) as count FROM kajian WHERE date = ?', args: [todayStr] }),
@@ -31,7 +37,10 @@ export async function getAdminStats(): Promise<AdminStats> {
             db.execute('SELECT COUNT(DISTINCT pemateri) as count FROM kajian'),
             db.execute('SELECT * FROM kajian ORDER BY id DESC LIMIT 5'),
             db.execute('SELECT COUNT(*) as count FROM analytics'),
-            db.execute('SELECT COUNT(*) as count FROM analytics WHERE timestamp > datetime("now", "-1 day")')
+            db.execute('SELECT COUNT(*) as count FROM analytics WHERE timestamp > datetime("now", "-1 day")'),
+            db.execute('SELECT ua_device as name, COUNT(*) as count FROM analytics GROUP BY ua_device ORDER BY count DESC LIMIT 5'),
+            db.execute('SELECT ua_browser as name, COUNT(*) as count FROM analytics GROUP BY ua_browser ORDER BY count DESC LIMIT 5'),
+            db.execute('SELECT city as name, COUNT(*) as count FROM analytics GROUP BY city ORDER BY count DESC LIMIT 5')
         ]);
 
         return {
@@ -41,7 +50,10 @@ export async function getAdminStats(): Promise<AdminStats> {
             totalUstadz: Number(ustadzRes.rows[0].count),
             recentKajian: recentRes.rows,
             totalVisitors: Number(totalVisRes.rows[0].count),
-            visitors24h: Number(vis24Res.rows[0].count)
+            visitors24h: Number(vis24Res.rows[0].count),
+            topDevices: devicesRes.rows,
+            topBrowsers: browsersRes.rows,
+            topCities: citiesRes.rows
         };
     } catch (error) {
         console.error('Failed to fetch admin stats:', error);
@@ -52,7 +64,10 @@ export async function getAdminStats(): Promise<AdminStats> {
             totalUstadz: 0,
             recentKajian: [],
             totalVisitors: 0,
-            visitors24h: 0
+            visitors24h: 0,
+            topDevices: [],
+            topBrowsers: [],
+            topCities: []
         };
     }
 }

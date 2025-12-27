@@ -211,33 +211,74 @@ export default async function AdminDashboardPage() {
                         </p>
                     </div>
                 </div>
+                {/* Visitor Breakdown Section */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-slate-100">
+                    <BreakdownCard title="Top Devices" data={stats.topDevices} icon={Radio} />
+                    <BreakdownCard title="Top Browsers" data={stats.topBrowsers} icon={Zap} />
+                    <BreakdownCard title="Top Cities" data={stats.topCities} icon={MapPin} />
+                </div>
             </div>
-        </div>
-    );
+            );
 }
 
-function StatCard({ title, value, icon: Icon, theme, trend }: any) {
-    const isEmerald = theme === 'emerald';
-    const isPurple = theme === 'purple';
+            function BreakdownCard({title, data, icon: Icon }: {title: string, data: any[], icon: any }) {
+    const total = data.reduce((acc, curr) => acc + Number(curr.count), 0);
 
-    return (
-        <div className={`relative overflow-hidden rounded-[2.5rem] p-6 flex flex-col justify-center h-full border transition-all hover:scale-[1.02] ${isEmerald
-            ? 'bg-emerald-50 border-emerald-100 hover:shadow-lg hover:shadow-emerald-500/10'
-            : isPurple
-                ? 'bg-purple-50 border-purple-100 hover:shadow-lg hover:shadow-purple-500/10'
-                : 'bg-white border-slate-200 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/5'
-            }`}>
-            <div className="flex items-center justify-between mb-2">
-                <div className={`p-2.5 rounded-xl ${isEmerald ? 'bg-emerald-500 text-white' : isPurple ? 'bg-purple-500 text-white' : 'bg-blue-100 text-blue-600'}`}>
-                    <Icon className="w-5 h-5" />
+            return (
+            <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
+                        <Icon className="w-5 h-5" />
+                    </div>
+                    <h3 className="font-bold text-slate-900">{title}</h3>
                 </div>
-                {(isEmerald || isPurple) && <div className={`w-2 h-2 rounded-full ${isEmerald ? 'bg-emerald-500' : 'bg-purple-500'} animate-ping`}></div>}
+                <div className="space-y-4">
+                    {data.length > 0 ? data.map((item, i) => {
+                        const percentage = total > 0 ? (Number(item.count) / total) * 100 : 0;
+                        return (
+                            <div key={i} className="space-y-1.5">
+                                <div className="flex justify-between text-xs font-bold text-slate-600">
+                                    <span className="truncate max-w-[150px]">{item.name || 'Unknown'}</span>
+                                    <span>{item.count}</span>
+                                </div>
+                                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-blue-500 rounded-full transition-all duration-1000"
+                                        style={{ width: `${percentage}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        );
+                    }) : (
+                        <div className="text-center py-4 text-slate-400 text-xs italic">Belum ada data.</div>
+                    )}
+                </div>
             </div>
-            <div>
-                <h3 className="text-3xl font-black text-slate-900 mb-1">{value}</h3>
-                <p className="font-bold text-sm text-slate-500 mb-0.5">{title}</p>
-                <p className={`text-xs font-semibold ${isEmerald ? 'text-emerald-600' : isPurple ? 'text-purple-600' : 'text-slate-400'}`}>{trend}</p>
+            );
+}
+
+            function StatCard({title, value, icon: Icon, theme, trend }: any) {
+    const isEmerald = theme === 'emerald';
+            const isPurple = theme === 'purple';
+
+            return (
+            <div className={`relative overflow-hidden rounded-[2.5rem] p-6 flex flex-col justify-center h-full border transition-all hover:scale-[1.02] ${isEmerald
+                ? 'bg-emerald-50 border-emerald-100 hover:shadow-lg hover:shadow-emerald-500/10'
+                : isPurple
+                    ? 'bg-purple-50 border-purple-100 hover:shadow-lg hover:shadow-purple-500/10'
+                    : 'bg-white border-slate-200 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/5'
+                }`}>
+                <div className="flex items-center justify-between mb-2">
+                    <div className={`p-2.5 rounded-xl ${isEmerald ? 'bg-emerald-500 text-white' : isPurple ? 'bg-purple-500 text-white' : 'bg-blue-100 text-blue-600'}`}>
+                        <Icon className="w-5 h-5" />
+                    </div>
+                    {(isEmerald || isPurple) && <div className={`w-2 h-2 rounded-full ${isEmerald ? 'bg-emerald-500' : 'bg-purple-500'} animate-ping`}></div>}
+                </div>
+                <div>
+                    <h3 className="text-3xl font-black text-slate-900 mb-1">{value}</h3>
+                    <p className="font-bold text-sm text-slate-500 mb-0.5">{title}</p>
+                    <p className={`text-xs font-semibold ${isEmerald ? 'text-emerald-600' : isPurple ? 'text-purple-600' : 'text-slate-400'}`}>{trend}</p>
+                </div>
             </div>
-        </div>
-    );
+            );
 }
