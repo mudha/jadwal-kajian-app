@@ -4,12 +4,13 @@ import { KajianEntry } from '@/lib/parser';
 import { parseWithGemini } from '@/lib/ai-parser';
 import { Clipboard, Save, Play, CheckCircle, AlertCircle, FileText, Calendar, Clock, MapPin, LogOut, LayoutDashboard, ExternalLink, Database, PlusCircle, History, Info, Trash2, Image as ImageIcon, Loader2, Upload, X, Sparkles } from 'lucide-react';
 import { geocodeAddress } from '@/lib/geocoding';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Tesseract from 'tesseract.js';
 import { indonesianCities } from '@/data/cities';
 import { parseIndoDate, formatIndoDate, formatYYYYMMDD } from '@/lib/date-utils';
 import AutosuggestInput from '@/components/admin/AutosuggestInput';
+import AIInputSection from '@/components/admin/AIInputSection';
 
 export default function BatchInputPage() {
     const router = useRouter();
@@ -35,6 +36,15 @@ export default function BatchInputPage() {
     useEffect(() => {
         fetchStats();
     }, []);
+
+    const searchParams = useSearchParams();
+    const isManualMode = searchParams.get('mode') === 'manual';
+
+    useEffect(() => {
+        if (isManualMode && entries.length === 0) {
+            handleAddManual();
+        }
+    }, [isManualMode]);
 
     const fetchStats = async () => {
         try {
@@ -455,376 +465,285 @@ export default function BatchInputPage() {
                 </div>
             </div>
 
-            <div className="flex flex-col gap-10 w-full">
-                <div className="w-full space-y-6">
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-blue-600 p-2 rounded-lg text-white">
-                                        <Upload className="w-4 h-4" />
-                                    </div>
-                                    <h3 className="font-black text-lg tracking-tight text-slate-900">Scan Poster / Flyer</h3>
-                                </div>
+            {!isManualMode && (
+                <AIInputSection
+                    onProcess={handleProcess}
+                    onAiProcess={handleAiProcess}
+                    onImageUpload={handleImageUpload}
+                    inputText={inputText}
+                    setInputText={setInputText}
+                    lastImageUrl={lastImageUrl}
+                    setLastImageUrl={setLastImageUrl}
+                    isOcrLoading={isOcrLoading}
+                    ocrProgress={ocrProgress}
+                    isGeocoding={isGeocoding}
+                    isAiLoading={isAiLoading}
+                />
+            )}
 
-                                <div
-                                    onClick={() => document.getElementById('poster-upload')?.click()}
-                                    className={`relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center transition-all cursor-pointer h-64 ${isOcrLoading ? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-300 hover:border-blue-400 hover:bg-blue-50/50'}`}
+            <div className="w-full">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col min-h-[600px]">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-emerald-500 p-3 rounded-2xl text-white shadow-lg shadow-emerald-100">
+                                <CheckCircle className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-2xl tracking-tighter text-slate-900">List Input Jadwal</h3>
+                                <p className="text-xs text-slate-400 font-black uppercase tracking-widest">{entries.length} entri ditemukan</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleAddManual}
+                                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded-lg transition-all flex items-center gap-2"
+                            >
+                                <PlusCircle className="w-5 h-5" /> Tambah Manual
+                            </button>
+                            {entries.length > 0 && (
+                                <button
+                                    onClick={handleSave}
+                                    className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-all flex items-center gap-2 text-sm"
                                 >
-                                    <input
-                                        id="poster-upload"
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-                                    />
-
-                                    {isOcrLoading ? (
-                                        <div className="flex flex-col items-center">
-                                            <div className="relative w-12 h-12 mb-3">
-                                                <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-                                                <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-blue-600">
-                                                    {ocrProgress}%
-                                                </div>
-                                            </div>
-                                            <p className="text-blue-600 font-black uppercase tracking-widest text-[10px]">Membaca...</p>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <ImageIcon className="w-8 h-8 text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
-                                            <p className="text-slate-900 font-extrabold text-xs text-center">Klik / Tarik Poster ke Sini</p>
-                                            <p className="text-slate-400 font-bold text-[9px] text-center mt-1 uppercase tracking-widest">Atau Ctrl+V (Paste) Gambar</p>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-blue-600 p-2 rounded-lg text-white">
-                                        <PlusCircle className="w-4 h-4" />
-                                    </div>
-                                    <h3 className="font-black text-lg tracking-tight text-slate-900">Input Broadcast</h3>
-                                </div>
-
-                                <div className="relative">
-                                    <textarea
-                                        className="w-full h-44 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none placeholder:text-slate-400"
-                                        placeholder="Paste pesan broadcast di sini..."
-                                        value={inputText}
-                                        onChange={(e) => setInputText(e.target.value)}
-                                    />
-                                    {lastImageUrl && (
-                                        <div className="absolute top-4 right-4 group">
-                                            <div className="relative">
-                                                <img src={lastImageUrl} className="w-16 h-16 object-cover rounded-xl border-4 border-white shadow-lg animate-in zoom-in-50 duration-300" />
-                                                <button
-                                                    onClick={() => setLastImageUrl(null)}
-                                                    className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                                                >
-                                                    <X className="w-3 h-3" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button
-                                        onClick={handleProcess}
-                                        disabled={!inputText || isGeocoding}
-                                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium py-3 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
-                                    >
-                                        {isGeocoding ? (
-                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        ) : (
-                                            <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                        )}
-                                        {isGeocoding ? 'Proses...' : 'Regex'}
-                                    </button>
-
-                                    <button
-                                        onClick={handleAiProcess}
-                                        disabled={!inputText || isGeocoding || isAiLoading}
-                                        className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400 text-white font-medium py-3 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
-                                    >
-                                        {isAiLoading ? (
-                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        ) : (
-                                            <Sparkles className="w-4 h-4 group-hover:scale-125 transition-transform text-yellow-300" />
-                                        )}
-                                        {isAiLoading ? 'AI...' : 'AI Gemini'}
-                                    </button>
-                                </div>
-                            </div>
+                                    <Save className="w-6 h-6" /> Simpan {selectedIndices.size} Jadwal Baru
+                                </button>
+                            )}
                         </div>
                     </div>
-                </div>
 
-                <div className="w-full">
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col min-h-[600px]">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                            <div className="flex items-center gap-4">
-                                <div className="bg-emerald-500 p-3 rounded-2xl text-white shadow-lg shadow-emerald-100">
-                                    <CheckCircle className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h3 className="font-black text-2xl tracking-tighter text-slate-900">List Input Jadwal</h3>
-                                    <p className="text-xs text-slate-400 font-black uppercase tracking-widest">{entries.length} entri ditemukan</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={handleAddManual}
-                                    className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded-lg transition-all flex items-center gap-2"
-                                >
-                                    <PlusCircle className="w-5 h-5" /> Tambah Manual
-                                </button>
-                                {entries.length > 0 && (
-                                    <button
-                                        onClick={handleSave}
-                                        className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-all flex items-center gap-2 text-sm"
-                                    >
-                                        <Save className="w-6 h-6" /> Simpan {selectedIndices.size} Jadwal Baru
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        {entries.length > 0 ? (
-                            <div className="overflow-x-auto rounded-[2.5rem] border border-slate-100">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="bg-slate-50 border-b border-slate-100">
-                                            <th className="p-5 w-16">
+                    {entries.length > 0 ? (
+                        <div className="overflow-x-auto rounded-[2.5rem] border border-slate-100">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 border-b border-slate-100">
+                                        <th className="p-5 w-16">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIndices.size === entries.length && entries.length > 0}
+                                                onChange={toggleAll}
+                                                className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                            />
+                                        </th>
+                                        <th className="p-5 font-black text-slate-400 uppercase tracking-widest text-[11px]">Rincian Jadwal</th>
+                                        <th className="p-5 w-16 text-right"></th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {entries.map((entry, idx) => (
+                                        <tr key={idx} className={`transition-all group/row ${selectedIndices.has(idx) ? 'bg-white' : 'opacity-40 hover:opacity-100'}`}>
+                                            <td className="p-5 align-top">
                                                 <input
                                                     type="checkbox"
-                                                    checked={selectedIndices.size === entries.length && entries.length > 0}
-                                                    onChange={toggleAll}
+                                                    checked={selectedIndices.has(idx)}
+                                                    onChange={() => toggleSelection(idx)}
                                                     className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
                                                 />
-                                            </th>
-                                            <th className="p-5 font-black text-slate-400 uppercase tracking-widest text-[11px]">Rincian Jadwal</th>
-                                            <th className="p-5 w-16 text-right"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {entries.map((entry, idx) => (
-                                            <tr key={idx} className={`transition-all group/row ${selectedIndices.has(idx) ? 'bg-white' : 'opacity-40 hover:opacity-100'}`}>
-                                                <td className="p-5 align-top">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedIndices.has(idx)}
-                                                        onChange={() => toggleSelection(idx)}
-                                                        className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                                    />
-                                                </td>
-                                                <td className="p-3 space-y-6 flex gap-6">
-                                                    {entry.imageUrl && (
-                                                        <div className="shrink-0 group/img relative">
-                                                            <img src={entry.imageUrl} className="w-24 h-32 object-cover rounded-2xl border border-slate-200 shadow-sm" />
-                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
-                                                                <button onClick={() => updateEntry(idx, 'imageUrl', '')} className="text-white hover:text-red-400 transition-colors">
-                                                                    <Trash2 className="w-5 h-5" />
-                                                                </button>
+                                            </td>
+                                            <td className="p-3 space-y-6 flex gap-6">
+                                                {entry.imageUrl && (
+                                                    <div className="shrink-0 group/img relative">
+                                                        <img src={entry.imageUrl} className="w-24 h-32 object-cover rounded-2xl border border-slate-200 shadow-sm" />
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
+                                                            <button onClick={() => updateEntry(idx, 'imageUrl', '')} className="text-white hover:text-red-400 transition-colors">
+                                                                <Trash2 className="w-5 h-5" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                <div className="flex-1 space-y-6">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                        <div className="col-span-1 md:col-span-2">
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 mb-2">
+                                                                Masjid / Lokasi
+                                                                {entry.lat && <span className="flex items-center gap-1 ml-2 bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[9px] font-bold border border-blue-200"><MapPin className="w-3 h-3" /> {entry.lat.toFixed(4)}, {entry.lng?.toFixed(4)}</span>}
+                                                                {entry.khususAkhwat && <span className="ml-2 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[9px] font-black border border-pink-200">🌸 KHUSUS AKHWAT</span>}
+                                                            </label>
+                                                            <AutosuggestInput
+                                                                type="masjid"
+                                                                value={entry.masjid}
+                                                                onChange={(val) => updateEntry(idx, 'masjid', val)}
+                                                                className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all text-base"
+                                                            />
+                                                        </div>
+                                                        <div className="col-span-1">
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pemateri</label>
+                                                            <AutosuggestInput
+                                                                type="pemateri"
+                                                                value={entry.pemateri}
+                                                                onChange={(val) => updateEntry(idx, 'pemateri', val)}
+                                                                className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all"
+                                                            />
+                                                        </div>
+                                                        <div className="col-span-1 relative">
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Kota</label>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="text"
+                                                                    value={entry.city}
+                                                                    onChange={(e) => {
+                                                                        updateEntry(idx, 'city', e.target.value);
+                                                                        setCityFilter(e.target.value);
+                                                                        setActiveCityDropdownIndex(idx);
+                                                                    }}
+                                                                    onFocus={() => {
+                                                                        setCityFilter(entry.city);
+                                                                        setActiveCityDropdownIndex(idx);
+                                                                    }}
+                                                                    onBlur={() => setTimeout(() => setActiveCityDropdownIndex(null), 200)}
+                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-blue-600 transition-all"
+                                                                />
+                                                                {activeCityDropdownIndex === idx && (
+                                                                    <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-xl shadow-xl">
+                                                                        {indonesianCities
+                                                                            .filter(c => c.toLowerCase().includes(cityFilter.toLowerCase()))
+                                                                            .map(city => (
+                                                                                <button
+                                                                                    key={city}
+                                                                                    type="button"
+                                                                                    className="w-full text-left px-4 py-2 hover:bg-slate-50 font-medium text-slate-700 text-sm"
+                                                                                    onClick={() => {
+                                                                                        updateEntry(idx, 'city', city);
+                                                                                        setActiveCityDropdownIndex(null);
+                                                                                    }}
+                                                                                >
+                                                                                    {city}
+                                                                                </button>
+                                                                            ))
+                                                                        }
+                                                                        {indonesianCities.filter(c => c.toLowerCase().includes(cityFilter.toLowerCase())).length === 0 && (
+                                                                            <div className="px-4 py-3 text-slate-400 text-xs text-center italic">Kota tidak ditemukan</div>
+                                                                        )}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         </div>
-                                                    )}
-                                                    <div className="flex-1 space-y-6">
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                            <div className="col-span-1 md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1 mb-2">
-                                                                    Masjid / Lokasi
-                                                                    {entry.lat && <span className="flex items-center gap-1 ml-2 bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[9px] font-bold border border-blue-200"><MapPin className="w-3 h-3" /> {entry.lat.toFixed(4)}, {entry.lng?.toFixed(4)}</span>}
-                                                                    {entry.khususAkhwat && <span className="ml-2 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[9px] font-black border border-pink-200">🌸 KHUSUS AKHWAT</span>}
-                                                                </label>
-                                                                <AutosuggestInput
-                                                                    type="masjid"
-                                                                    value={entry.masjid}
-                                                                    onChange={(val) => updateEntry(idx, 'masjid', val)}
-                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all text-base"
-                                                                />
-                                                            </div>
-                                                            <div className="col-span-1">
-                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Pemateri</label>
-                                                                <AutosuggestInput
-                                                                    type="pemateri"
-                                                                    value={entry.pemateri}
-                                                                    onChange={(val) => updateEntry(idx, 'pemateri', val)}
-                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all"
-                                                                />
-                                                            </div>
-                                                            <div className="col-span-1 relative">
-                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Kota</label>
-                                                                <div className="relative">
-                                                                    <input
-                                                                        type="text"
-                                                                        value={entry.city}
-                                                                        onChange={(e) => {
-                                                                            updateEntry(idx, 'city', e.target.value);
-                                                                            setCityFilter(e.target.value);
-                                                                            setActiveCityDropdownIndex(idx);
-                                                                        }}
-                                                                        onFocus={() => {
-                                                                            setCityFilter(entry.city);
-                                                                            setActiveCityDropdownIndex(idx);
-                                                                        }}
-                                                                        onBlur={() => setTimeout(() => setActiveCityDropdownIndex(null), 200)}
-                                                                        className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-blue-600 transition-all"
-                                                                    />
-                                                                    {activeCityDropdownIndex === idx && (
-                                                                        <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-xl shadow-xl">
-                                                                            {indonesianCities
-                                                                                .filter(c => c.toLowerCase().includes(cityFilter.toLowerCase()))
-                                                                                .map(city => (
-                                                                                    <button
-                                                                                        key={city}
-                                                                                        type="button"
-                                                                                        className="w-full text-left px-4 py-2 hover:bg-slate-50 font-medium text-slate-700 text-sm"
-                                                                                        onClick={() => {
-                                                                                            updateEntry(idx, 'city', city);
-                                                                                            setActiveCityDropdownIndex(null);
-                                                                                        }}
-                                                                                    >
-                                                                                        {city}
-                                                                                    </button>
-                                                                                ))
-                                                                            }
-                                                                            {indonesianCities.filter(c => c.toLowerCase().includes(cityFilter.toLowerCase())).length === 0 && (
-                                                                                <div className="px-4 py-3 text-slate-400 text-xs text-center italic">Kota tidak ditemukan</div>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            <div className="col-span-1 md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tema</label>
-                                                                <input type="text" value={entry.tema} onChange={(e) => updateEntry(idx, 'tema', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium italic text-slate-600 transition-all" />
-                                                            </div>
-                                                            <div className="col-span-1">
-                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
-                                                                <input
-                                                                    type="date"
-                                                                    value={(() => {
-                                                                        const d = parseIndoDate(entry.date);
-                                                                        return d ? formatYYYYMMDD(d) : '';
-                                                                    })()}
-                                                                    onChange={(e) => {
-                                                                        const val = e.target.valueAsDate;
-                                                                        if (val) {
-                                                                            updateEntry(idx, 'date', formatIndoDate(val));
-                                                                        }
-                                                                    }}
-                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all"
-                                                                />
-                                                            </div>
-                                                            <div className="col-span-1">
-                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Waktu</label>
-                                                                <input type="text" value={entry.waktu} onChange={(e) => updateEntry(idx, 'waktu', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all" />
-                                                            </div>
-                                                            <div className="col-span-1 md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Alamat</label>
-                                                                <input type="text" value={entry.address} onChange={(e) => updateEntry(idx, 'address', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium text-slate-600 transition-all" />
-                                                            </div>
-                                                            <div className="col-span-1 md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">CP / Maps / Koordinat</label>
-                                                                <div className="flex flex-col md:flex-row gap-4">
-                                                                    <input type="text" placeholder="CP (Contact Person)" value={entry.cp} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="w-full md:w-1/3 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-emerald-600" />
-                                                                    <div className="flex-1 flex gap-2">
-                                                                        <input type="text" placeholder="Google Maps URL" value={entry.gmapsUrl} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium text-blue-500 text-sm" />
-                                                                        <button
-                                                                            onClick={async () => {
-                                                                                if (!entry.gmapsUrl) return alert('Masukkan URL Maps terlebih dahulu');
-                                                                                setIsGeocoding(true);
-                                                                                try {
-                                                                                    const res = await fetch('/api/tools/extract-gmaps', {
-                                                                                        method: 'POST',
-                                                                                        body: JSON.stringify({ url: entry.gmapsUrl }),
-                                                                                        headers: { 'Content-Type': 'application/json' }
-                                                                                    });
-                                                                                    const data = await res.json();
-                                                                                    if (data.success) {
-                                                                                        updateEntry(idx, 'lat', data.lat);
-                                                                                        updateEntry(idx, 'lng', data.lng);
-                                                                                        updateEntry(idx, 'gmapsUrl', data.expandedUrl);
-                                                                                        alert(`Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`);
-                                                                                    } else {
-                                                                                        alert('Gagal mengekstrak: ' + data.error);
-                                                                                    }
-                                                                                } catch (e) {
-                                                                                    alert('Terjadi kesalahan sistem');
-                                                                                } finally {
-                                                                                    setIsGeocoding(false);
+                                                        <div className="col-span-1 md:col-span-2">
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tema</label>
+                                                            <input type="text" value={entry.tema} onChange={(e) => updateEntry(idx, 'tema', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium italic text-slate-600 transition-all" />
+                                                        </div>
+                                                        <div className="col-span-1">
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
+                                                            <input
+                                                                type="date"
+                                                                value={(() => {
+                                                                    const d = parseIndoDate(entry.date);
+                                                                    return d ? formatYYYYMMDD(d) : '';
+                                                                })()}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.valueAsDate;
+                                                                    if (val) {
+                                                                        updateEntry(idx, 'date', formatIndoDate(val));
+                                                                    }
+                                                                }}
+                                                                className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all"
+                                                            />
+                                                        </div>
+                                                        <div className="col-span-1">
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Waktu</label>
+                                                            <input type="text" value={entry.waktu} onChange={(e) => updateEntry(idx, 'waktu', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-700 transition-all" />
+                                                        </div>
+                                                        <div className="col-span-1 md:col-span-2">
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Alamat</label>
+                                                            <input type="text" value={entry.address} onChange={(e) => updateEntry(idx, 'address', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium text-slate-600 transition-all" />
+                                                        </div>
+                                                        <div className="col-span-1 md:col-span-2">
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">CP / Maps / Koordinat</label>
+                                                            <div className="flex flex-col md:flex-row gap-4">
+                                                                <input type="text" placeholder="CP (Contact Person)" value={entry.cp} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="w-full md:w-1/3 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-emerald-600" />
+                                                                <div className="flex-1 flex gap-2">
+                                                                    <input type="text" placeholder="Google Maps URL" value={entry.gmapsUrl} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-medium text-blue-500 text-sm" />
+                                                                    <button
+                                                                        onClick={async () => {
+                                                                            if (!entry.gmapsUrl) return alert('Masukkan URL Maps terlebih dahulu');
+                                                                            setIsGeocoding(true);
+                                                                            try {
+                                                                                const res = await fetch('/api/tools/extract-gmaps', {
+                                                                                    method: 'POST',
+                                                                                    body: JSON.stringify({ url: entry.gmapsUrl }),
+                                                                                    headers: { 'Content-Type': 'application/json' }
+                                                                                });
+                                                                                const data = await res.json();
+                                                                                if (data.success) {
+                                                                                    updateEntry(idx, 'lat', data.lat);
+                                                                                    updateEntry(idx, 'lng', data.lng);
+                                                                                    updateEntry(idx, 'gmapsUrl', data.expandedUrl);
+                                                                                    alert(`Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`);
+                                                                                } else {
+                                                                                    alert('Gagal mengekstrak: ' + data.error);
                                                                                 }
-                                                                            }}
-                                                                            className="px-3 py-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-colors flex items-center gap-1 font-bold text-xs"
-                                                                            title="Ekstrak Koordinat dari Link"
-                                                                        >
-                                                                            <MapPin className="w-4 h-4" />
-                                                                            <span className="hidden md:inline">Ekstrak</span>
-                                                                        </button>
-                                                                    </div>
+                                                                            } catch (e) {
+                                                                                alert('Terjadi kesalahan sistem');
+                                                                            } finally {
+                                                                                setIsGeocoding(false);
+                                                                            }
+                                                                        }}
+                                                                        className="px-3 py-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-colors flex items-center gap-1 font-bold text-xs"
+                                                                        title="Ekstrak Koordinat dari Link"
+                                                                    >
+                                                                        <MapPin className="w-4 h-4" />
+                                                                        <span className="hidden md:inline">Ekstrak</span>
+                                                                    </button>
                                                                 </div>
                                                             </div>
-                                                            <div className="col-span-1 md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Link Pendaftaran & Info Lokasi (Lat/Lng)</label>
-                                                                <div className="flex gap-4">
-                                                                    <input type="text" placeholder="Link info (https://...)" value={entry.linkInfo || ''} onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)} className="flex-1 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-purple-500 rounded-xl px-4 py-2 outline-none font-medium text-purple-600 text-sm" />
+                                                        </div>
+                                                        <div className="col-span-1 md:col-span-2">
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Link Pendaftaran & Info Lokasi (Lat/Lng)</label>
+                                                            <div className="flex gap-4">
+                                                                <input type="text" placeholder="Link info (https://...)" value={entry.linkInfo || ''} onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)} className="flex-1 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-purple-500 rounded-xl px-4 py-2 outline-none font-medium text-purple-600 text-sm" />
 
-                                                                    <div className="flex gap-2 w-40 shrink-0">
-                                                                        <input
-                                                                            type="number"
-                                                                            step="any"
-                                                                            value={entry.lat || ''}
-                                                                            onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
-                                                                            placeholder="Lat"
-                                                                            className="w-1/2 bg-slate-50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-2 py-2 outline-none font-mono text-xs font-bold text-slate-600 text-center"
-                                                                            title="Latitude"
-                                                                        />
-                                                                        <input
-                                                                            type="number"
-                                                                            step="any"
-                                                                            value={entry.lng || ''}
-                                                                            onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
-                                                                            placeholder="Lng"
-                                                                            className="w-1/2 bg-slate-50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-2 py-2 outline-none font-mono text-xs font-bold text-slate-600 text-center"
-                                                                            title="Longitude"
-                                                                        />
-                                                                    </div>
+                                                                <div className="flex gap-2 w-40 shrink-0">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="any"
+                                                                        value={entry.lat || ''}
+                                                                        onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
+                                                                        placeholder="Lat"
+                                                                        className="w-1/2 bg-slate-50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-2 py-2 outline-none font-mono text-xs font-bold text-slate-600 text-center"
+                                                                        title="Latitude"
+                                                                    />
+                                                                    <input
+                                                                        type="number"
+                                                                        step="any"
+                                                                        value={entry.lng || ''}
+                                                                        onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
+                                                                        placeholder="Lng"
+                                                                        className="w-1/2 bg-slate-50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-2 py-2 outline-none font-mono text-xs font-bold text-slate-600 text-center"
+                                                                        title="Longitude"
+                                                                    />
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </td>
-                                                <td className="p-3 align-top text-right">
-                                                    <button onClick={() => handleDiscard(idx)} className="p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover/row:opacity-100">
-                                                        <Trash2 className="w-5 h-5" />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                                </div>
+                                            </td>
+                                            <td className="p-3 align-top text-right">
+                                                <button onClick={() => handleDiscard(idx)} className="p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover/row:opacity-100">
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center text-slate-200 border-4 border-dashed border-slate-50 rounded-[3.5rem] bg-slate-50/20 py-20">
+                            <div className="bg-white p-10 rounded-[2.5rem] shadow-sm mb-6">
+                                <Database className="w-16 h-16 opacity-10" />
                             </div>
-                        ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center text-slate-200 border-4 border-dashed border-slate-50 rounded-[3.5rem] bg-slate-50/20 py-20">
-                                <div className="bg-white p-10 rounded-[2.5rem] shadow-sm mb-6">
-                                    <Database className="w-16 h-16 opacity-10" />
-                                </div>
-                                <p className="text-2xl font-black tracking-tighter text-slate-400">Siap Menunggu Data</p>
-                                <p className="text-slate-400 font-bold max-w-xs text-center mt-2 leading-relaxed">Belum ada jadwal yang diekstrak. Silakan tempel teks atau scan poster.</p>
-                            </div>
-                        )}
+                            <p className="text-2xl font-black tracking-tighter text-slate-400">Siap Menunggu Data</p>
+                            <p className="text-slate-400 font-bold max-w-xs text-center mt-2 leading-relaxed">Belum ada jadwal yang diekstrak. Silakan tempel teks atau scan poster.</p>
+                        </div>
+                    )}
 
-                        {message && (
-                            <div className={`mt-10 p-6 rounded-[2rem] text-sm font-black flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-500 ${message.includes('Gagal') ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-blue-50 text-blue-600 border border-blue-100 shadow-lg shadow-blue-50'}`}>
-                                <div className={`p-2 rounded-xl ${message.includes('Gagal') ? 'bg-red-100' : 'bg-blue-100'}`}>
-                                    <Info className="w-5 h-5" />
-                                </div>
-                                {message}
+                    {message && (
+                        <div className={`mt-10 p-6 rounded-[2rem] text-sm font-black flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-500 ${message.includes('Gagal') ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-blue-50 text-blue-600 border border-blue-100 shadow-lg shadow-blue-50'}`}>
+                            <div className={`p-2 rounded-xl ${message.includes('Gagal') ? 'bg-red-100' : 'bg-blue-100'}`}>
+                                <Info className="w-5 h-5" />
                             </div>
-                        )}
-                    </div>
+                            {message}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

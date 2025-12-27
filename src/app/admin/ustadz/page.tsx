@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search, User, GitMerge } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, User, GitMerge, Sparkles, X } from 'lucide-react';
+import DuplicateGroupList from '@/components/admin/DuplicateGroupList';
 
 interface Ustadz {
     id: number;
@@ -13,6 +14,7 @@ export default function UstadzManagementPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
+    const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
     const [editingUstadz, setEditingUstadz] = useState<Ustadz | null>(null);
     const [formData, setFormData] = useState({ name: '' });
     const [loading, setLoading] = useState(true);
@@ -160,6 +162,13 @@ export default function UstadzManagementPage() {
                             Gabung ({selectedForMerge.size})
                         </button>
                     )}
+                    <button
+                        onClick={() => setIsDuplicateModalOpen(true)}
+                        className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-200 text-sm"
+                    >
+                        <Sparkles className="w-5 h-5" />
+                        Cek Duplikat
+                    </button>
                     <button
                         onClick={openAddModal}
                         className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 text-sm"
@@ -506,6 +515,40 @@ export default function UstadzManagementPage() {
                                     Gabung Sekarang
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Duplicate Modal */}
+            {isDuplicateModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 flex flex-col">
+                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white sticky top-0 z-10">
+                            <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-purple-600" />
+                                Deteksi Duplikat Ustadz
+                            </h2>
+                            <button
+                                onClick={() => setIsDuplicateModalOpen(false)}
+                                className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <DuplicateGroupList
+                                type="ustadz"
+                                onSelectGroup={(items) => {
+                                    setIsDuplicateModalOpen(false);
+                                    // Set selected items
+                                    const newSelected = new Set<string>();
+                                    items.forEach(i => newSelected.add(i));
+                                    setSelectedForMerge(newSelected);
+                                    // Set target to canonical (first item)
+                                    setMergeTarget(items[0]);
+                                    setIsMergeModalOpen(true);
+                                }}
+                            />
                         </div>
                     </div>
                 </div>

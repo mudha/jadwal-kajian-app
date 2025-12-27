@@ -40,10 +40,9 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     const menuItems = [
         { href: '/admin', icon: Home, label: 'Dashboard' },
         { href: '/admin/manage', icon: List, label: 'Kelola Jadwal' },
-        { href: '/admin/batch-input', icon: FileInput, label: 'Input Massal' },
+        { href: '/admin/input', icon: FileInput, label: 'Input Kajian' },
         { href: '/admin/ustadz', icon: ListMusic, label: 'Kelola Ustadz' },
         { href: '/admin/masjid', icon: Calendar, label: 'Kelola Masjid' },
-        { href: '/admin/deduplicate', icon: Merge, label: 'Deteksi Duplikat' },
     ];
 
     // Add admin management only for Super Admin

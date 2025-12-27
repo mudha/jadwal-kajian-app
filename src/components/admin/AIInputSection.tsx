@@ -1,0 +1,141 @@
+import { useState } from 'react';
+import { Upload, Loader2, Image as ImageIcon, PlusCircle, Play, Sparkles, X } from 'lucide-react';
+
+interface AIInputSectionProps {
+    onProcess: () => void;
+    onAiProcess: () => void;
+    onImageUpload: (file: File) => void;
+    inputText: string;
+    setInputText: (text: string) => void;
+    lastImageUrl: string | null;
+    setLastImageUrl: (url: string | null) => void;
+    isOcrLoading: boolean;
+    ocrProgress: number;
+    isGeocoding: boolean;
+    isAiLoading: boolean;
+}
+
+export default function AIInputSection({
+    onProcess,
+    onAiProcess,
+    onImageUpload,
+    inputText,
+    setInputText,
+    lastImageUrl,
+    setLastImageUrl,
+    isOcrLoading,
+    ocrProgress,
+    isGeocoding,
+    isAiLoading
+}: AIInputSectionProps) {
+    return (
+        <div className="flex flex-col gap-10 w-full">
+            <div className="w-full space-y-6">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Left Column: Image Upload */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-blue-600 p-2 rounded-lg text-white">
+                                    <Upload className="w-4 h-4" />
+                                </div>
+                                <h3 className="font-black text-lg tracking-tight text-slate-900">Scan Poster / Flyer</h3>
+                            </div>
+
+                            <div
+                                onClick={() => document.getElementById('poster-upload')?.click()}
+                                className={`relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center transition-all cursor-pointer h-64 ${isOcrLoading ? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-300 hover:border-blue-400 hover:bg-blue-50/50'}`}
+                            >
+                                <input
+                                    id="poster-upload"
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => e.target.files?.[0] && onImageUpload(e.target.files[0])}
+                                />
+
+                                {isOcrLoading ? (
+                                    <div className="flex flex-col items-center">
+                                        <div className="relative w-12 h-12 mb-3">
+                                            <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+                                            <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-blue-600">
+                                                {ocrProgress}%
+                                            </div>
+                                        </div>
+                                        <p className="text-blue-600 font-black uppercase tracking-widest text-[10px]">Membaca...</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <ImageIcon className="w-8 h-8 text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
+                                        <p className="text-slate-900 font-extrabold text-xs text-center">Klik / Tarik Poster ke Sini</p>
+                                        <p className="text-slate-400 font-bold text-[9px] text-center mt-1 uppercase tracking-widest">Atau Ctrl+V (Paste) Gambar</p>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Right Column: Text Input */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-blue-600 p-2 rounded-lg text-white">
+                                    <PlusCircle className="w-4 h-4" />
+                                </div>
+                                <h3 className="font-black text-lg tracking-tight text-slate-900">Input Broadcast</h3>
+                            </div>
+
+                            <div className="relative">
+                                <textarea
+                                    className="w-full h-44 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none placeholder:text-slate-400"
+                                    placeholder="Paste pesan broadcast di sini..."
+                                    value={inputText}
+                                    onChange={(e) => setInputText(e.target.value)}
+                                />
+                                {lastImageUrl && (
+                                    <div className="absolute top-4 right-4 group">
+                                        <div className="relative">
+                                            <img src={lastImageUrl} className="w-16 h-16 object-cover rounded-xl border-4 border-white shadow-lg animate-in zoom-in-50 duration-300" />
+                                            <button
+                                                onClick={() => setLastImageUrl(null)}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    onClick={onProcess}
+                                    disabled={!inputText || isGeocoding}
+                                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium py-3 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+                                >
+                                    {isGeocoding ? (
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    ) : (
+                                        <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                    )}
+                                    {isGeocoding ? 'Proses...' : 'Regex'}
+                                </button>
+
+                                <button
+                                    onClick={onAiProcess}
+                                    disabled={!inputText || isGeocoding || isAiLoading}
+                                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400 text-white font-medium py-3 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+                                >
+                                    {isAiLoading ? (
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    ) : (
+                                        <Sparkles className="w-4 h-4 group-hover:scale-125 transition-transform text-yellow-300" />
+                                    )}
+                                    {isAiLoading ? 'AI...' : 'AI Gemini'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}

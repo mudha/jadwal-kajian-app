@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search, MapPin, ExternalLink, GitMerge } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, MapPin, ExternalLink, GitMerge, Sparkles, X } from 'lucide-react';
+import DuplicateGroupList from '@/components/admin/DuplicateGroupList';
 
 interface Masjid {
     id: string;
@@ -30,6 +31,7 @@ export default function MasjidManagementPage() {
     const [selectedForMerge, setSelectedForMerge] = useState<Set<string>>(new Set());
     const [mergeTarget, setMergeTarget] = useState('');
     const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
+    const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
 
     useEffect(() => {
         fetchMasjid();
@@ -273,6 +275,13 @@ export default function MasjidManagementPage() {
                             Gabung ({selectedForMerge.size})
                         </button>
                     )}
+                    <button
+                        onClick={() => setIsDuplicateModalOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition-all text-sm shadow-md shadow-purple-200"
+                    >
+                        <Sparkles className="w-4 h-4" />
+                        Cek Duplikat
+                    </button>
                     <button
                         onClick={handleBulkExtract}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all text-sm shadow-md shadow-blue-200"
@@ -754,6 +763,47 @@ export default function MasjidManagementPage() {
                                     Gabungkan Masjid
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Duplicate Modal */}
+            {isDuplicateModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 flex flex-col">
+                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white sticky top-0 z-10">
+                            <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-purple-600" />
+                                Deteksi Duplikat Masjid
+                            </h2>
+                            <button
+                                onClick={() => setIsDuplicateModalOpen(false)}
+                                className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <DuplicateGroupList
+                                type="masjid"
+                                onSelectGroup={(items) => {
+                                    setIsDuplicateModalOpen(false);
+                                    const newSelected = new Set<string>();
+                                    // Map names to IDs
+                                    items.forEach(name => {
+                                        const masjid = masjidList.find(m => m.name === name);
+                                        if (masjid) newSelected.add(masjid.id);
+                                    });
+                                    setSelectedForMerge(newSelected);
+
+                                    // Set target to canonical (first item) if found
+                                    const target = masjidList.find(m => m.name === items[0]);
+                                    if (target) setMergeTarget(target.id);
+
+                                    setIsMergeModalOpen(true);
+                                }}
+                            />
                         </div>
                     </div>
                 </div>
