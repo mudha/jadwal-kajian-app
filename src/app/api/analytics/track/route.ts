@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
-import geoip from 'geoip-lite';
-import { UAParser } from 'ua-parser-js'; // Fixed import
+import { UAParser } from 'ua-parser-js';
 import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
@@ -14,11 +13,6 @@ export async function POST(req: NextRequest) {
         const ip = forwardedFor ? forwardedFor.split(',')[0] : '127.0.0.1';
 
         // Anonymize IP (SHA-256 hash)
-        const ipHash = crypto.createHash('sha256').update(ip + (new Date().getDate())).digest('hex').substring(0, 12);
-        // Adding salt (date) means it resets daily -> Daily Unique Visitors. 
-        // If we want total unique visitors ever, remove the salt. 
-        // Let's stick to simple hash for now to track 'unique users' fairly well.
-        // Actually, let's just hash the IP directly to track returning users across days.
         const consistentIpHash = crypto.createHash('sha256').update(ip).digest('hex').substring(0, 12);
 
         // Get User Agent
@@ -28,13 +22,11 @@ export async function POST(req: NextRequest) {
 
         const browser = `${result.browser.name || 'Unknown'} ${result.browser.version || ''}`.trim();
         const os = `${result.os.name || 'Unknown'} ${result.os.version || ''}`.trim();
-        const deviceType = result.device.type || (result.device.model ? 'Mobile' : 'Desktop'); // Default to desktop if type undefined but no model
-        // simple heuristic: if type is undefined, usually desktop. 'mobile', 'tablet', 'smarttv' are types.
+        const deviceType = result.device.type || (result.device.model ? 'Mobile' : 'Desktop');
 
-        // Get Geo
-        const geo = geoip.lookup(ip);
-        const city = geo?.city || 'Unknown';
-        const country = geo?.country || 'Unknown';
+        // Get Geo (Vercel Headers)
+        const city = req.headers.get('x-vercel-ip-city') || 'Unknown';
+        const country = req.headers.get('x-vercel-ip-country') || 'Unknown';
 
         await db.execute({
             sql: `INSERT INTO analytics (path, ip_hash, ua_browser, ua_os, ua_device, city, country) VALUES (?, ?, ?, ?, ?, ?, ?)`,
