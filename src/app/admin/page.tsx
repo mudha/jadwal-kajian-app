@@ -24,61 +24,62 @@ export default async function AdminDashboardPage() {
 
     return (
         <div className="space-y-8">
-            {/* Hero Header Bento */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Welcome Card - Wider */}
-                <div className="lg:col-span-2 relative overflow-hidden bg-slate-900 rounded-[2rem] p-8 text-white shadow-xl flex items-center justify-between border border-slate-800">
-                    {/* Background Effects */}
-                    <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[400px] h-[400px] bg-blue-600/20 rounded-full blur-[80px] pointer-events-none"></div>
+            {/* Hero Banner - Compact Standalone */}
+            <div className="relative overflow-hidden bg-slate-900 rounded-[2rem] p-6 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 border border-slate-800">
+                {/* Background Effects */}
+                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[400px] h-[400px] bg-blue-600/20 rounded-full blur-[80px] pointer-events-none"></div>
 
-                    <div className="relative z-10">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-[10px] font-bold text-blue-200 mb-2 backdrop-blur-md">
-                            <ShieldCheck className="w-3 h-3" />
+                <div className="relative z-10 flex items-center gap-6">
+                    <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center border border-blue-500/20 md:block hidden">
+                        <ShieldCheck className="w-8 h-8 text-blue-400" />
+                    </div>
+                    <div>
+                        <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-[10px] font-bold text-blue-200 mb-2 backdrop-blur-md">
                             Admin Panel v2.0
                         </div>
-                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+                        <h1 className="text-2xl font-bold tracking-tight">
                             Assalamu'alaikum, <span className="text-blue-400">Admin.</span>
                         </h1>
-                        <p className="text-slate-400 text-sm mt-1">
-                            Selamat bertugas mengelola jadwal kajian. Semoga berkah.
+                        <p className="text-slate-400 text-sm mt-0.5 max-w-lg">
+                            Selamat bertugas. Semoga hari ini penuh keberkahan.
                         </p>
                     </div>
-
-                    <div className="relative z-10 hidden md:flex items-center gap-4">
-                        <Link href="/" target="_blank" className="group flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-slate-900 text-sm font-bold hover:bg-blue-50 transition-all">
-                            Lihat Aplikasi
-                            <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                        </Link>
-                    </div>
                 </div>
 
-                {/* Quick Stats Column */}
-                <div className="grid grid-rows-3 gap-6 h-full">
-                    <StatCard
-                        title="Kajian Hari Ini"
-                        value={stats.jadwalHariIni}
-                        icon={Radio}
-                        theme="emerald"
-                        trend="+12% dari kemarin"
-                    />
-                    <StatCard
-                        title="Total Jadwal"
-                        value={stats.totalJadwal}
-                        icon={Calendar}
-                        theme="blue"
-                        trend="Database aktif"
-                    />
-                    {/* Search Quick Access */}
-                    <Link href="/admin/manage" className="row-span-1 bg-white hover:bg-slate-50 border border-slate-200 rounded-[2.5rem] p-6 transition-all group flex flex-col justify-center gap-2 cursor-text">
-                        <div className="flex items-center gap-3 text-slate-400">
-                            <Search className="w-6 h-6" />
-                            <span className="text-lg font-medium">Cari jadwal, ustadz...</span>
-                        </div>
-                        <div className="h-1 w-full bg-slate-100 rounded-full mt-2 overflow-hidden">
-                            <div className="h-full w-0 bg-blue-500 group-hover:w-full transition-all duration-500"></div>
-                        </div>
+                <div className="relative z-10 flex items-center gap-4 w-full md:w-auto">
+                    <Link href="/" target="_blank" className="group flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white text-slate-900 text-sm font-bold hover:bg-blue-50 transition-all w-full md:w-auto shadow-lg shadow-white/5">
+                        Lihat Aplikasi
+                        <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                     </Link>
                 </div>
+            </div>
+
+            {/* Quick Stats Grid - Horizontal Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard
+                    title="Kajian Hari Ini"
+                    value={stats.jadwalHariIni}
+                    icon={Radio}
+                    theme="emerald"
+                    trend="+12% dari kemarin"
+                />
+                <StatCard
+                    title="Total Jadwal"
+                    value={stats.totalJadwal}
+                    icon={Calendar}
+                    theme="blue"
+                    trend="Database aktif"
+                />
+                {/* Search Quick Access */}
+                <Link href="/admin/manage" className="bg-white hover:bg-slate-50 border border-slate-200 rounded-[2.5rem] p-6 transition-all group flex flex-col justify-center gap-2 cursor-text h-full min-h-[140px]">
+                    <div className="flex items-center gap-3 text-slate-400">
+                        <Search className="w-6 h-6" />
+                        <span className="text-lg font-medium">Cari jadwal, ustadz...</span>
+                    </div>
+                    <div className="h-1 w-full bg-slate-100 rounded-full mt-2 overflow-hidden">
+                        <div className="h-full w-0 bg-blue-500 group-hover:w-full transition-all duration-500"></div>
+                    </div>
+                </Link>
             </div>
 
             {/* Core Metrics & Actions Grid */}
