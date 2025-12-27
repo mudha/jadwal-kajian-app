@@ -49,14 +49,14 @@ export default function KajianCard({ id, date, location, title, ustadz, imageUrl
     };
 
     return (
-        <Link href={`/kajian/${id}`} className="group flex-shrink-0 w-80 bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 block hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <div className="relative h-40 overflow-hidden">
+        <Link href={`/kajian/${id}`} className="group flex-shrink-0 w-60 bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 block hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <div className="relative aspect-[3/4] overflow-hidden bg-slate-100">
                 <img
                     src={imageUrl || '/images/default-kajian.png'}
                     alt={title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
             </div>
             <div className="p-5">
                 <div className="flex items-start justify-between mb-3">
