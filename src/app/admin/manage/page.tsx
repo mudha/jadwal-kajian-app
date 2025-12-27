@@ -126,7 +126,6 @@ export default function AdminManagePage() {
                 setKajianList(prev => prev.map(k => k.id === editingKajian.id ? editingKajian : k));
                 setIsEditModalOpen(false);
                 setEditingKajian(null);
-                alert('Data berhasil diperbarui!');
             } else {
                 alert('Gagal memperbarui data');
             }
@@ -474,6 +473,20 @@ export default function AdminManagePage() {
                                             type="masjid"
                                             value={editingKajian.masjid}
                                             onChange={(val) => setEditingKajian({ ...editingKajian, masjid: val })}
+                                            onSelect={(item) => {
+                                                setEditingKajian(prev => {
+                                                    if (!prev) return null;
+                                                    return {
+                                                        ...prev,
+                                                        masjid: item.value,
+                                                        ...(item.address ? { address: item.address } : {}),
+                                                        ...(item.gmapsUrl ? { gmapsUrl: item.gmapsUrl } : {}),
+                                                        ...(item.city ? { city: item.city } : {}),
+                                                        ...(item.lat ? { lat: item.lat } : {}),
+                                                        ...(item.lng ? { lng: item.lng } : {})
+                                                    };
+                                                });
+                                            }}
                                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
                                             placeholder="Ketik nama masjid..."
                                         />

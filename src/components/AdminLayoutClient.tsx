@@ -14,6 +14,7 @@ import {
     ExternalLink,
     Home,
     List,
+    Merge,
 } from 'lucide-react';
 import LogoutButton from '@/components/LogoutButton';
 import { useEffect } from 'react';
@@ -42,6 +43,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
         { href: '/admin/batch-input', icon: FileInput, label: 'Input Massal' },
         { href: '/admin/ustadz', icon: ListMusic, label: 'Kelola Ustadz' },
         { href: '/admin/masjid', icon: Calendar, label: 'Kelola Masjid' },
+        { href: '/admin/deduplicate', icon: Merge, label: 'Deteksi Duplikat' },
     ];
 
     // Add admin management only for Super Admin

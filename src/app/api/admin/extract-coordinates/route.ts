@@ -4,38 +4,41 @@ import { isValidCoordinates } from '@/lib/gmaps-utils';
 
 /**
  * Expand shortened Google Maps URL by following redirects
+ * Returns the final URL and optionally the HTML body if needed
  */
-async function expandShortenedUrl(shortUrl: string): Promise<string> {
+async function expandUrl(shortUrl: string): Promise<{ url: string, html?: string }> {
     try {
-        if (!shortUrl.includes('goo.gl') && !shortUrl.includes('maps.app.goo.gl')) {
-            return shortUrl;
-        }
-
         console.log('Expanding:', shortUrl.substring(0, 50));
-
         const response = await fetch(shortUrl, {
             method: 'GET',
             redirect: 'follow',
             headers: {
-                'User-Agent': 'Mozilla/5.0'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
         });
 
-        console.log('Expanded to:', response.url.substring(0, 100));
-        return response.url;
+        const finalUrl = response.url;
+        // Check if URL content is needed (if it's a cid URL or generic google maps URL without coords)
+        const html = await response.text();
+
+        console.log('Expanded to:', finalUrl.substring(0, 100));
+        return { url: finalUrl, html };
+
     } catch (error) {
         console.error('Expansion error:', error);
-        return shortUrl;
+        return { url: shortUrl };
     }
 }
 
 /**
- * Extract coordinates from expanded URL
+ * Extract coordinates from URL or HTML content
  */
-function extractCoordinates(url: string): { lat: number; lng: number } | null {
+function extractCoordinates(url: string, html?: string): { lat: number; lng: number } | null {
     try {
         const decodedUrl = decodeURIComponent(url);
         console.log('Extracting from:', decodedUrl.substring(0, 100));
+
+        // --- URL PATTERNS ---
 
         // Pattern 1: ?q=lat,lng
         let match = decodedUrl.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
@@ -72,24 +75,36 @@ function extractCoordinates(url: string): { lat: number; lng: number } | null {
             return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
         }
 
-        // Pattern 6: Fallback - any coords
-        match = decodedUrl.match(/(-?\d+\.\d{4,}),\s*(-?\d+\.\d{4,})/);
-        if (match) {
-            const lat = parseFloat(match[1]);
-            const lng = parseFloat(match[2]);
-            if (lat >= -11 && lat <= 6 && lng >= 95 && lng <= 141) {
-                console.log('✓ Pattern 6 (fallback)');
-                return { lat, lng };
-            }
-        }
-
-        // Pattern 7: Protobuf/Data URL parameters (!3d and !4d)
-        // Example: ...!3d-6.2868913!4d107.0307183...
+        // Pattern 7: Protobuf (!3d, !4d)
         const latMatch = decodedUrl.match(/!3d(-?\d+\.?\d*)/);
         const lngMatch = decodedUrl.match(/!4d(-?\d+\.?\d*)/);
         if (latMatch && lngMatch) {
             console.log('✓ Pattern 7 (!3d!4d)');
             return { lat: parseFloat(latMatch[1]), lng: parseFloat(lngMatch[1]) };
+        }
+
+        // --- HTML FALLBACK ---
+        if (html) {
+            // Pattern: window.APP_INITIALIZATION_STATE=[[[zoom, long, lat]
+            // Note: Google puts Longitude FIRST in this array, Latitude SECOND.
+            const initMatch = html.match(/window\.APP_INITIALIZATION_STATE=\[\[\[[^,]+,(-?\d+\.?\d*),(-?\d+\.?\d*)\]/);
+            if (initMatch) {
+                console.log('✓ Pattern HTML (APP_INITIALIZATION_STATE)');
+                const lng = parseFloat(initMatch[1]);
+                const lat = parseFloat(initMatch[2]);
+                return { lat, lng };
+            }
+        }
+
+        // Pattern 6: Fallback - any coords in URL (Last resort)
+        match = decodedUrl.match(/(-?\d+\.\d{4,}),\s*(-?\d+\.\d{4,})/);
+        if (match) {
+            const lat = parseFloat(match[1]);
+            const lng = parseFloat(match[2]);
+            if (lat >= -11 && lat <= 6 && lng >= 95 && lng <= 141) {
+                console.log('✓ Pattern 6 (Generic fallback)');
+                return { lat, lng };
+            }
         }
 
         console.log('✗ No pattern matched');
@@ -134,10 +149,10 @@ export async function POST() {
 
             try {
                 // Step 1: Expand shortened URL
-                const expandedUrl = await expandShortenedUrl(kajian.gmapsUrl);
+                const { url: expandedUrl, html } = await expandUrl(kajian.gmapsUrl);
 
                 // Step 2: Extract coordinates
-                const coords = extractCoordinates(expandedUrl);
+                const coords = extractCoordinates(expandedUrl, html);
 
                 if (coords && isValidCoordinates(coords.lat, coords.lng)) {
                     // Update the kajian with coordinates

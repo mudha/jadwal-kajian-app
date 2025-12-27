@@ -3,33 +3,45 @@ import { NextResponse } from 'next/server';
 /**
  * Expand shortened Google Maps URL by following redirects
  */
-async function expandShortenedUrl(shortUrl: string): Promise<string> {
+/**
+ * Expand shortened Google Maps URL by following redirects
+ * Returns the final URL and optionally the HTML body if needed
+ */
+async function expandUrl(shortUrl: string): Promise<{ url: string, html?: string }> {
     try {
-        if (!shortUrl.includes('goo.gl') && !shortUrl.includes('maps.app.goo.gl')) {
-            return shortUrl;
-        }
-
         const response = await fetch(shortUrl, {
             method: 'GET',
             redirect: 'follow',
             headers: {
-                'User-Agent': 'Mozilla/5.0'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
         });
 
-        return response.url;
+        // If we need to parse HTML, we must read it here
+        // We only read body if the URL itself doesn't look like it has coordinates, 
+        // to save resources, but since we need to cover all cases, reading text might be safer 
+        // if we suspect the URL is insufficient.
+        // For efficiency: Check URL first? No, we need validation. 
+        // Let's just return the response object clone or text.
+
+        const finalUrl = response.url;
+        const html = await response.text();
+        return { url: finalUrl, html };
+
     } catch (error) {
         console.error('Expansion error:', error);
-        return shortUrl;
+        return { url: shortUrl };
     }
 }
 
 /**
- * Extract coordinates from expanded URL
+ * Extract coordinates from URL or HTML content
  */
-function extractCoordinates(url: string): { lat: number; lng: number } | null {
+function extractCoordinates(url: string, html?: string): { lat: number; lng: number } | null {
     try {
         const decodedUrl = decodeURIComponent(url);
+
+        // --- URL PATTERNS ---
 
         // Pattern 1: ?q=lat,lng
         let match = decodedUrl.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
@@ -51,7 +63,26 @@ function extractCoordinates(url: string): { lat: number; lng: number } | null {
         match = decodedUrl.match(/\/maps\/dir\/\/(-?\d+\.?\d*),(-?\d+\.?\d*)/);
         if (match) return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
 
-        // Pattern 6: Fallback - any coords
+        // Pattern 7: Protobuf (!3d, !4d)
+        const latMatch = decodedUrl.match(/!3d(-?\d+\.?\d*)/);
+        const lngMatch = decodedUrl.match(/!4d(-?\d+\.?\d*)/);
+        if (latMatch && lngMatch) {
+            return { lat: parseFloat(latMatch[1]), lng: parseFloat(lngMatch[1]) };
+        }
+
+        // --- HTML FALLBACK ---
+        if (html) {
+            // Pattern: window.APP_INITIALIZATION_STATE=[[[zoom, long, lat]
+            // Note: Google puts Longitude FIRST in this array, Latitude SECOND.
+            const initMatch = html.match(/window\.APP_INITIALIZATION_STATE=\[\[\[[^,]+,(-?\d+\.?\d*),(-?\d+\.?\d*)\]/);
+            if (initMatch) {
+                const lng = parseFloat(initMatch[1]);
+                const lat = parseFloat(initMatch[2]);
+                return { lat, lng };
+            }
+        }
+
+        // Pattern 6: Fallback - any coords in URL (Last resort)
         match = decodedUrl.match(/(-?\d+\.\d{4,}),\s*(-?\d+\.\d{4,})/);
         if (match) {
             const lat = parseFloat(match[1]);
@@ -59,14 +90,6 @@ function extractCoordinates(url: string): { lat: number; lng: number } | null {
             if (lat >= -11 && lat <= 6 && lng >= 95 && lng <= 141) {
                 return { lat, lng };
             }
-        }
-
-        // Pattern 7: Protobuf/Data URL parameters (!3d and !4d)
-        // Example: ...!3d-6.2868913!4d107.0307183...
-        const latMatch = decodedUrl.match(/!3d(-?\d+\.?\d*)/);
-        const lngMatch = decodedUrl.match(/!4d(-?\d+\.?\d*)/);
-        if (latMatch && lngMatch) {
-            return { lat: parseFloat(latMatch[1]), lng: parseFloat(lngMatch[1]) };
         }
 
         return null;
@@ -84,8 +107,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'URL is required' }, { status: 400 });
         }
 
-        const expandedUrl = await expandShortenedUrl(url);
-        const coords = extractCoordinates(expandedUrl);
+        const { url: expandedUrl, html } = await expandUrl(url);
+        const coords = extractCoordinates(expandedUrl, html);
 
         if (coords) {
             return NextResponse.json({

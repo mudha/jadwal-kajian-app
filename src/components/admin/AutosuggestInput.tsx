@@ -6,12 +6,13 @@ import { Loader2 } from 'lucide-react';
 interface AutosuggestInputProps {
     value: string;
     onChange: (value: string) => void;
+    onSelect?: (item: any) => void;
     placeholder?: string;
     type: 'masjid' | 'pemateri';
     className?: string;
 }
 
-export default function AutosuggestInput({ value, onChange, placeholder, type, className }: AutosuggestInputProps) {
+export default function AutosuggestInput({ value, onChange, onSelect, placeholder, type, className }: AutosuggestInputProps) {
     const [suggestions, setSuggestions] = useState<{ value: string; count: number }[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -94,8 +95,10 @@ export default function AutosuggestInput({ value, onChange, placeholder, type, c
                             key={idx}
                             type="button"
                             className="w-full text-left px-4 py-2 hover:bg-blue-50 transition-colors flex justify-between items-center group"
-                            onClick={() => {
+                            onMouseDown={(e) => {
+                                e.preventDefault(); // Prevent input blur
                                 onChange(item.value);
+                                if (onSelect) onSelect(item);
                                 setShowSuggestions(false);
                             }}
                         >
