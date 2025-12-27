@@ -5,7 +5,7 @@ import { usePrayerTimes } from '@/hooks/usePrayerTimes';
 import { useState, useEffect } from 'react';
 
 export default function MiniPrayerTimeWidget() {
-    const { nextPrayer, timeLeft, locationName, loading, error } = usePrayerTimes();
+    const { nextPrayer, timeLeft, locationName, loading, error, timings } = usePrayerTimes();
     const [currentTime, setCurrentTime] = useState('');
 
     useEffect(() => {
