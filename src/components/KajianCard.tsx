@@ -1,7 +1,7 @@
 
 // Client component imports are top-level
 import { useState, useEffect } from 'react';
-import { HandHeart, Users } from 'lucide-react';
+import { HandHeart, Users, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { parseIndoDate, getHijriDate } from '@/lib/date-utils';
 
@@ -13,17 +13,22 @@ interface KajianCardProps {
     ustadz: string;
     imageUrl?: string;
     attendanceCount?: number;
+    className?: string;
 }
 
-export default function KajianCard({ id, date, location, title, ustadz, imageUrl, attendanceCount = 0 }: KajianCardProps) {
+export default function KajianCard({ id, date, location, title, ustadz, imageUrl, attendanceCount = 0, className = 'w-60' }: KajianCardProps) {
     const [count, setCount] = useState(attendanceCount);
     const [hasAttended, setHasAttended] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
 
     useEffect(() => {
         // Check local storage on mount
-        const stored = localStorage.getItem(`attended_${id}`);
-        if (stored) setHasAttended(true);
+        const storedAttend = localStorage.getItem(`attended_${id}`);
+        if (storedAttend) setHasAttended(true);
+
+        const storedLike = localStorage.getItem(`liked_${id}`);
+        if (storedLike) setIsLiked(true);
     }, [id]);
 
     const handleAttend = async (e: React.MouseEvent) => {
@@ -48,8 +53,22 @@ export default function KajianCard({ id, date, location, title, ustadz, imageUrl
         setTimeout(() => setIsAnimating(false), 1000);
     };
 
+    const handleLike = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const newState = !isLiked;
+        setIsLiked(newState);
+
+        if (newState) {
+            localStorage.setItem(`liked_${id}`, 'true');
+        } else {
+            localStorage.removeItem(`liked_${id}`);
+        }
+    };
+
     return (
-        <Link href={`/kajian/${id}`} className="group flex-shrink-0 w-60 bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 block hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <Link href={`/kajian/${id}`} className={`group flex-shrink-0 ${className} bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 block hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative`}>
             <div className="relative aspect-[3/4] overflow-hidden bg-slate-100">
                 <img
                     src={imageUrl || '/images/default-kajian.png'}
@@ -57,6 +76,15 @@ export default function KajianCard({ id, date, location, title, ustadz, imageUrl
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+                
+                {/* Like Button */}
+                <button 
+                    onClick={handleLike}
+                    className={`absolute top-2 right-2 p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${isLiked ? 'bg-red-500/20 text-red-500' : 'bg-black/20 text-white/70 hover:bg-black/40'}`}
+                >
+                    <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
+                </button>
+            </div>
             </div>
             <div className="p-5">
                 <div className="flex items-start justify-between mb-3">
@@ -97,6 +125,6 @@ export default function KajianCard({ id, date, location, title, ustadz, imageUrl
                     </div>
                 </div>
             </div>
-        </Link>
+        </Link >
     );
 }
