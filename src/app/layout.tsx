@@ -19,6 +19,16 @@ export const metadata: Metadata = {
   title: "PortalKajian.online - Info Kajian Sunnah Indonesia",
   description: "Portal lengkap jadwal kajian islami se-Indonesia. Cari kajian di sekitarmu dengan mudah melalui PortalKajian.online, lengkap dengan peta lokasi dan kontak admin.",
   keywords: ["kajian sunnah", "jadwal kajian", "kajian indonesia", "islam", "ustadz", "masjid"],
+  manifest: "/manifest.json",
+  themeColor: "#0d9488",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "PortalKajian",
+  },
+  icons: {
+    apple: "/icon-512.png",
+  },
 };
 
 export default function RootLayout({
