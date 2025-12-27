@@ -156,7 +156,9 @@ export default function BatchInputPage() {
                 const entry = withCoords[i];
                 const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
                 if (coords) {
-                    withCoords[i] = { ...entry, lat: coords.lat, lng: coords.lng };
+                    // Generate Google Maps URL from coordinates
+                    const gmapsUrl = `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
+                    withCoords[i] = { ...entry, lat: coords.lat, lng: coords.lng, gmapsUrl };
                     setEntries([...withCoords]); // Live update UI
                 }
             }
@@ -241,7 +243,9 @@ export default function BatchInputPage() {
                 const entry = withCoords[i];
                 const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
                 if (coords) {
-                    withCoords[i] = { ...entry, lat: coords.lat, lng: coords.lng };
+                    // Generate Google Maps URL from coordinates
+                    const gmapsUrl = `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
+                    withCoords[i] = { ...entry, lat: coords.lat, lng: coords.lng, gmapsUrl };
                     setEntries([...withCoords]); // Live update UI
                 }
             }
