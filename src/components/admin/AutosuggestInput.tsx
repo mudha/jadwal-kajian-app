@@ -122,12 +122,12 @@ export default function AutosuggestInput({ value, onChange, onSelect, placeholde
                                 }}
                             >
                                 <div className="flex flex-col">
-                                    <span className="font-bold text-slate-700 text-sm group-hover:text-blue-700">{item.value}</span>
+                                    <span className="font-bold text-slate-900 text-sm group-hover:text-blue-700">{item.value}</span>
                                     {type === 'masjid' && item.city && (
-                                        <span className="text-[10px] text-slate-400 font-medium group-hover:text-blue-500">{item.city}</span>
+                                        <span className="text-[10px] text-slate-600 font-medium group-hover:text-blue-500">{item.city}</span>
                                     )}
                                 </div>
-                                <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg group-hover:bg-blue-100 group-hover:text-blue-600 font-black">
+                                <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-1 rounded-lg group-hover:bg-blue-100 group-hover:text-blue-600 font-black">
                                     {item.count}
                                 </span>
                             </button>

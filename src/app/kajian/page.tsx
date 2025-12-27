@@ -7,7 +7,8 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getKajianStatus } from '@/lib/date-utils';
 import dynamic from 'next/dynamic';
-import PrayerTimeWidget from '@/components/PrayerTimeWidget';
+import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
+import LeftSidebar from '@/components/LeftSidebar';
 import MenuGrid from '@/components/MenuGrid';
 import OngoingKajianWidget from '@/components/OngoingKajianWidget';
 import { shareToWhatsApp } from '@/lib/whatsapp-share';
@@ -47,6 +48,7 @@ function KajianListContent() {
 
     const { settings } = useSettings();
     const { isAdmin } = useAdmin();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [kajianList, setKajianList] = useState<KajianWithId[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState<'all' | 'today' | 'upcoming' | 'past'>('today');
@@ -304,14 +306,33 @@ function KajianListContent() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-20">
+        <div className="min-h-screen bg-slate-50 pb-20 relative overflow-x-hidden">
+            {/* Mobile Sidebar / Drawer */}
+            <div className={`fixed inset-0 z-[100] bg-black/50 transition-opacity md:hidden ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsSidebarOpen(false)}>
+                <div className={`absolute left-0 top-0 bottom-0 w-64 bg-white shadow-2xl transition-transform transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`} onClick={e => e.stopPropagation()}>
+                    <div className="p-6 bg-teal-600 text-white shrink-0">
+                        <h2 className="font-bold text-xl mb-1">Menu</h2>
+                        <p className="text-teal-100 text-xs text-blue-100">PortalKajian.online</p>
+                    </div>
+                    <div className="p-4 overflow-y-auto flex-1">
+                        <LeftSidebar />
+                    </div>
+                </div>
+            </div>
+
             {/* Mobile Header */}
-            <header className="bg-teal-600 text-white px-4 py-3 sticky top-0 z-40 md:hidden">
+            <header className="bg-teal-600 text-white px-4 py-3 sticky top-0 z-40 md:hidden shadow-md">
                 <div className="flex items-center gap-3 mb-3">
-                    <Link href="/" className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                        <ArrowLeft className="w-5 h-5" />
+                    <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                    </button>
+                    <h1 className="text-lg font-bold flex-1">Cari Kajian</h1>
+                    <Link href="/notifikasi" className="p-2 relative hover:bg-white/10 rounded-full transition-colors">
+                        <div className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-teal-600"></div>
+                        <Bell className="w-5 h-5" />
                     </Link>
-                    <h1 className="text-lg font-bold flex-1">PortalKajian.online</h1>
                 </div>
 
                 {/* Search Bar */}
@@ -321,8 +342,8 @@ function KajianListContent() {
                         type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Cari masjid, ustadz,atau kota..."
-                        className="w-full pl-11 pr-4 py-2.5 bg-white text-slate-900 rounded-full placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        placeholder="Cari masjid, ustadz, atau kota..."
+                        className="w-full pl-11 pr-4 py-2.5 bg-white text-slate-900 rounded-full placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-sm"
                     />
                 </div>
             </header>
@@ -348,9 +369,34 @@ function KajianListContent() {
             </div>
 
             <div className="md:grid md:grid-cols-12 md:gap-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-                {/* Left Column (Kajian List) */}
-                <div className="md:col-span-8">
+                {/* Left Column (Desktop - Sidebar) */}
+                <div className="md:col-span-4 space-y-6 hidden md:block order-1">
+                    <LeftSidebar />
+                    <OngoingKajianWidget />
+
+                    {/* LIVE / TODAY KAJIAN WIDGET */}
+                    <div className="bg-gradient-to-br from-teal-600 to-teal-800 rounded-3xl p-6 shadow-xl text-white relative overflow-hidden">
+                        {/* Decorative Background Elements */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-teal-500/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+
+                        <div className="flex items-center justify-between mb-5 relative z-10">
+                            <div>
+                                <h3 className="font-bold text-xl text-white">Info Kajian Terbaru</h3>
+                                <p className="text-teal-100 text-xs opacity-80">Baru saja diupdate admin</p>
+                            </div>
+                            <span className="relative flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-teal-700"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column (Desktop - Content) */}
+                <div className="md:col-span-8 order-2">
                     <main className="px-4 py-4 pb-24 md:px-0 md:py-0">
+
 
                         {/* Tabs Filter */}
                         <div className="flex flex-wrap gap-1.5 mb-8 bg-white/50 p-1 rounded-2xl border border-slate-200 w-fit">
@@ -641,89 +687,7 @@ function KajianListContent() {
                         }
                     </main>
                 </div>
-
-                {/* Right Column (Sidebar) */}
-                <div className="md:col-span-4 space-y-6 hidden md:block sticky top-24 h-fit">
-                    {/* Ongoing Kajian Widget */}
-                    <OngoingKajianWidget />
-
-                    {/* Prayer Time Widget */}
-                    <PrayerTimeWidget />
-
-                    {/* LIVE / TODAY KAJIAN WIDGET */}
-                    {/* LIVE / TODAY KAJIAN WIDGET */}
-                    <div className="bg-gradient-to-br from-teal-600 to-teal-800 rounded-3xl p-6 shadow-xl text-white relative overflow-hidden">
-                        {/* Decorative Background Elements */}
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-teal-500/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
-
-                        <div className="flex items-center justify-between mb-5 relative z-10">
-                            <div>
-                                <h3 className="font-bold text-xl text-white">Info Kajian Terbaru</h3>
-                                <p className="text-teal-100 text-xs opacity-80">Baru saja diupdate admin</p>
-                            </div>
-                            <span className="relative flex h-3 w-3">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-teal-700"></span>
-                            </span>
-                        </div>
-
-                        <div className="space-y-4 relative z-10">
-                            {kajianList
-                                .filter(k => {
-                                    const status = getKajianStatus(k.date, k.waktu);
-                                    return status === 'TODAY' || status === 'TOMORROW' || status === 'UPCOMING';
-                                })
-                                .sort((a, b) => {
-                                    const dateA = parseIndoDate(a.date);
-                                    const dateB = parseIndoDate(b.date);
-                                    return (dateA?.getTime() || 0) - (dateB?.getTime() || 0);
-                                })
-                                .slice(0, 5) // Show top 5
-                                .map(k => (
-                                    <Link href={`/kajian/${k.id}`} key={k.id} className="block group">
-                                        <div className="flex gap-3 items-start p-2 rounded-xl hover:bg-white/10 transition-colors">
-                                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl shrink-0 overflow-hidden relative border border-white/10">
-                                                <img src={k.imageUrl || '/images/default-kajian.png'} className="w-full h-full object-cover" />
-                                                {getKajianStatus(k.date, k.waktu) === 'TODAY' && (
-                                                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border border-teal-800 translate-x-0.5 -translate-y-0.5 shadow-sm"></div>
-                                                )}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-teal-200 mb-0.5 truncate flex items-center gap-1">
-                                                    <Clock className="w-3 h-3" />
-                                                    {k.waktu ? (k.waktu.trim().match(/^\d/) ? k.waktu.split(' ')[0] : k.waktu) : 'Jadwal'} • {k.city === 'Online' ? 'ONLINE' : k.city}
-                                                </p>
-                                                <p className="text-xs font-bold text-white leading-tight line-clamp-2 group-hover:text-teal-200 transition-colors">{k.tema}</p>
-                                                <p className="text-[10px] text-teal-100/70 mt-0.5 truncate">{k.pemateri}</p>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                ))
-                            }
-                            {kajianList.filter(k => {
-                                const status = getKajianStatus(k.date, k.waktu);
-                                return status === 'TODAY' || status === 'TOMORROW' || status === 'UPCOMING';
-                            }).length === 0 && (
-                                    <div className="text-center py-6 text-teal-100/60 text-xs italic bg-white/5 rounded-xl border border-white/5">
-                                        Belum ada info kajian mendatang.
-                                    </div>
-                                )}
-                            <Link href="/kajian?mode=upcoming" className="block text-center text-xs font-bold text-white/90 hover:text-white hover:bg-white/10 py-2 rounded-lg transition-all mt-2">
-                                Lihat Semua Jadwal Terbaru →
-                            </Link>
-                        </div>
-                    </div>
-
-                    {/* Menu Grid */}
-                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-                        <h3 className="font-bold text-slate-900 mb-4">Menu Utama</h3>
-                        <MenuGrid />
-                    </div>
-                </div>
             </div>
-
-            {/* Edit Modal */}
             {
                 isEditModalOpen && editingKajian && (
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
@@ -931,7 +895,7 @@ function KajianListContent() {
                     </div>
                 )
             }
-        </div >
+        </div>
     );
 }
 

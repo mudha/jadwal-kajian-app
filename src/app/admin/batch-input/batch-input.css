@@ -22,7 +22,7 @@
 }
 
 .batch-subtitle {
-    @apply text-sm text-slate-500 mt-1;
+    @apply text-sm text-slate-600 mt-1;
 }
 
 /* Step indicator badges */
@@ -103,7 +103,7 @@
 
 /* Textarea */
 .batch-textarea {
-    @apply w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none;
+    @apply w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none text-slate-900;
 }
 
 /* Progress indicator */
@@ -142,7 +142,7 @@
 }
 
 .batch-empty-title {
-    @apply text-lg font-bold text-slate-400 mb-2;
+    @apply text-lg font-bold text-slate-600 mb-2;
 }
 
 .batch-empty-text {

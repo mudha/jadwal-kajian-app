@@ -4,7 +4,8 @@ import { usePrayerTimes } from '@/hooks/usePrayerTimes';
 import { ArrowLeft, Calendar, MapPin, Loader2, Sunrise, Sun, Sunset, Moon, CloudSun, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import PrayerTimeWidget from '@/components/PrayerTimeWidget';
+import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
+import LeftSidebar from '@/components/LeftSidebar';
 
 export default function JadwalSholatPage() {
     const { timings, locationName, loading, error, nextPrayer } = usePrayerTimes();
@@ -38,8 +39,14 @@ export default function JadwalSholatPage() {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="md:grid md:grid-cols-12 md:gap-8">
-                    {/* Main Content */}
-                    <main className="md:col-span-8 space-y-6">
+                    {/* Left Column (Desktop Sidebar) */}
+                    <aside className="md:col-span-4 space-y-6 hidden md:block order-1">
+                        <LeftSidebar />
+                    </aside>
+
+                    {/* Main Content (Right on Desktop) */}
+                    <main className="md:col-span-8 space-y-6 order-2">
+
                         {/* Location & Info Card */}
                         <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-blue-500" />
@@ -120,22 +127,6 @@ export default function JadwalSholatPage() {
                         </p>
                     </main>
 
-                    {/* Sidebar (Desktop) */}
-                    <aside className="hidden md:block md:col-span-4 space-y-6">
-                        <PrayerTimeWidget />
-
-                        {/* Quote Card (Addition) */}
-                        <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
-                                <Moon className="w-32 h-32" />
-                            </div>
-                            <h3 className="font-bold text-lg mb-2">Keutamaan Sholat</h3>
-                            <p className="text-indigo-100 text-sm leading-relaxed mb-4">
-                                "Sesungguhnya shalat itu adalah fardhu yang ditentukan waktunya atas orang-orang yang beriman."
-                            </p>
-                            <span className="text-xs font-medium bg-white/20 px-3 py-1 rounded-lg">QS. An-Nisa: 103</span>
-                        </div>
-                    </aside>
                 </div>
             </div>
         </div>

@@ -223,7 +223,7 @@ export default function AdminManagePage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-slate-900">Kelola Jadwal Kajian</h1>
-                    <p className="text-slate-500">Update, edit, atau hapus jadwal kajian yang terdaftar.</p>
+                    <p className="text-slate-600">Update, edit, atau hapus jadwal kajian yang terdaftar.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                     <button
@@ -287,11 +287,11 @@ export default function AdminManagePage() {
                                 <table className="w-full text-left">
                                     <thead className="bg-slate-50 border-b border-slate-200">
                                         <tr>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Waktu & Tanggal</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Masjid / Lokasi</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Pemateri & Tema</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Peserta</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Aksi</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Waktu & Tanggal</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Masjid / Lokasi</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Pemateri & Tema</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 text-center">Peserta</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 text-right">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
@@ -302,7 +302,7 @@ export default function AdminManagePage() {
                                                         <Calendar className="w-4 h-4 text-blue-500" />
                                                         {item.date}
                                                     </div>
-                                                    <p className="pl-6 text-sm text-slate-500">{item.waktu}</p>
+                                                    <p className="pl-6 text-sm text-slate-600 font-medium">{item.waktu}</p>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-2">
@@ -317,14 +317,14 @@ export default function AdminManagePage() {
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <div className="flex items-center gap-1 text-sm text-slate-500 mt-1">
+                                                    <div className="flex items-center gap-1 text-sm text-slate-600 mt-1 font-medium">
                                                         <MapPin className="w-3 h-3" />
                                                         {item.city}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="font-bold text-slate-900">{item.pemateri}</div>
-                                                    <p className="text-sm text-slate-500 line-clamp-1" title={item.tema}>{item.tema}</p>
+                                                    <p className="text-sm text-slate-600 font-medium line-clamp-1" title={item.tema}>{item.tema}</p>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
                                                     <span className="inline-flex items-center justify-center px-3 py-1 bg-green-100 text-green-700 rounded-full font-bold text-xs">
@@ -403,10 +403,10 @@ export default function AdminManagePage() {
                                                 <MapPin className="w-4 h-4 mt-0.5 text-slate-400 shrink-0" />
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-bold text-slate-900">{item.masjid}</p>
-                                                    <p className="text-xs text-slate-500 truncate">{item.city}</p>
+                                                    <p className="text-xs text-slate-600 font-bold truncate">{item.city}</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2 text-xs text-slate-500 pl-6 border-t border-slate-200 pt-3 mt-1">
+                                            <div className="flex items-center gap-2 text-xs text-slate-600 font-bold pl-6 border-t border-slate-200 pt-3 mt-1">
                                                 <Clock className="w-3 h-3" /> {item.waktu}
                                             </div>
                                         </div>
@@ -422,7 +422,7 @@ export default function AdminManagePage() {
                                             <span className="text-[10px] text-slate-400 italic">No GPS</span>
                                         )}
 
-                                        <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
+                                        <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
                                             {item.attendanceCount || 0} Peserta
                                         </span>
                                     </div>
@@ -450,7 +450,7 @@ export default function AdminManagePage() {
                         <div className="p-4 md:p-8 overflow-y-auto pb-32">
                             <form id="editForm" onSubmit={handleUpdate} className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Masjid / Lokasi</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Masjid / Lokasi</label>
                                     <div className="relative">
                                         <AutosuggestInput
                                             type="masjid"
@@ -478,7 +478,7 @@ export default function AdminManagePage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Pemateri</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Pemateri</label>
                                         <div className="relative">
                                             <AutosuggestInput
                                                 type="pemateri"
@@ -490,11 +490,11 @@ export default function AdminManagePage() {
                                         </div>
                                     </div>
                                     <div className="space-y-2 relative">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Kota / Wilayah</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Kota / Wilayah</label>
                                         <div className="relative">
                                             <input
                                                 type="text"
-                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-slate-900 placeholder:text-slate-400"
                                                 value={editingKajian.city}
                                                 onChange={e => {
                                                     setEditingKajian({ ...editingKajian, city: e.target.value });
@@ -535,10 +535,10 @@ export default function AdminManagePage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tema</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Tema</label>
                                     <textarea
                                         rows={2}
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-slate-900 placeholder:text-slate-400"
                                         value={editingKajian.tema}
                                         onChange={e => setEditingKajian({ ...editingKajian, tema: e.target.value })}
                                     />
@@ -546,11 +546,11 @@ export default function AdminManagePage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tanggal</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Tanggal</label>
                                         <div className="relative group">
                                             <input
                                                 type="date"
-                                                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-slate-900"
                                                 value={(() => {
                                                     const d = parseIndoDate(editingKajian.date);
                                                     return d ? formatYYYYMMDD(d) : '';
@@ -566,10 +566,10 @@ export default function AdminManagePage() {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Waktu</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Waktu</label>
                                         <input
                                             type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-slate-900 placeholder:text-slate-400"
                                             value={editingKajian.waktu}
                                             onChange={e => setEditingKajian({ ...editingKajian, waktu: e.target.value })}
                                         />
@@ -577,10 +577,10 @@ export default function AdminManagePage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Alamat Lengkap</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Alamat Lengkap</label>
                                     <input
                                         type="text"
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-slate-900 placeholder:text-slate-400"
                                         value={editingKajian.address}
                                         onChange={e => setEditingKajian({ ...editingKajian, address: e.target.value })}
                                     />
@@ -588,21 +588,21 @@ export default function AdminManagePage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Contact Person (CP)</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Contact Person (CP)</label>
                                         <input
                                             type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-emerald-700 placeholder:text-slate-400"
                                             value={editingKajian.cp || ''}
                                             onChange={e => setEditingKajian({ ...editingKajian, cp: e.target.value })}
                                             placeholder="08..."
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Google Maps</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Link Google Maps</label>
                                         <div className="flex gap-2">
                                             <input
                                                 type="text"
-                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-blue-600 truncate"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-blue-700 truncate placeholder:text-slate-400"
                                                 value={editingKajian.gmapsUrl || ''}
                                                 onChange={e => setEditingKajian({ ...editingKajian, gmapsUrl: e.target.value })}
                                                 placeholder="https://maps.app.goo.gl/..."
@@ -625,7 +625,7 @@ export default function AdminManagePage() {
                                                     placeholder="Latitude"
                                                     value={editingKajian.lat || ''}
                                                     onChange={e => setEditingKajian({ ...editingKajian, lat: parseFloat(e.target.value) })}
-                                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-600"
+                                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-900 placeholder:text-slate-400"
                                                 />
                                             </div>
                                             <div className="flex-1">
@@ -635,7 +635,7 @@ export default function AdminManagePage() {
                                                     placeholder="Longitude"
                                                     value={editingKajian.lng || ''}
                                                     onChange={e => setEditingKajian({ ...editingKajian, lng: parseFloat(e.target.value) })}
-                                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-600"
+                                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-900 placeholder:text-slate-400"
                                                 />
                                             </div>
                                         </div>
@@ -643,10 +643,10 @@ export default function AdminManagePage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Pendaftaran / Streaming</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Link Pendaftaran / Streaming</label>
                                     <input
                                         type="text"
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-blue-600"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-blue-700 placeholder:text-slate-400"
                                         value={editingKajian.linkInfo || ''}
                                         onChange={e => setEditingKajian({ ...editingKajian, linkInfo: e.target.value })}
                                         placeholder="https://..."
@@ -654,13 +654,13 @@ export default function AdminManagePage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Poster / Gambar Kajian (URL)</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Poster / Gambar Kajian (URL)</label>
                                     <div className="flex flex-col gap-3">
                                         <div className="flex gap-2">
                                             <div className="relative flex-1">
                                                 <input
                                                     type="text"
-                                                    className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-xs truncate transition-all group-hover:bg-white"
+                                                    className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-sm text-slate-900 truncate transition-all group-hover:bg-white"
                                                     placeholder="Paste URL atau Gambar (Ctrl+V) di sini..."
                                                     value={editingKajian.imageUrl || ''}
                                                     onChange={e => setEditingKajian({ ...editingKajian, imageUrl: e.target.value })}
@@ -717,7 +717,7 @@ export default function AdminManagePage() {
                                         checked={editingKajian.khususAkhwat || false}
                                         onChange={e => setEditingKajian({ ...editingKajian, khususAkhwat: e.target.checked })}
                                     />
-                                    <span className="font-bold text-slate-700">Khusus Akhwat / Muslimah</span>
+                                    <span className="font-bold text-slate-900">Khusus Akhwat / Muslimah</span>
                                 </label>
                             </form>
                         </div>
@@ -726,7 +726,7 @@ export default function AdminManagePage() {
                             <button
                                 type="button"
                                 onClick={() => setIsEditModalOpen(false)}
-                                className="px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition-all"
+                                className="px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-900 font-bold rounded-xl transition-all"
                             >
                                 Batal
                             </button>

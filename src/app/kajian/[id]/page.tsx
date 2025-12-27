@@ -24,13 +24,15 @@ interface KajianDetail {
     isOnline?: boolean;
 }
 
-import PrayerTimeWidget from '@/components/PrayerTimeWidget';
+import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
+import LeftSidebar from '@/components/LeftSidebar';
 import OngoingKajianWidget from '@/components/OngoingKajianWidget';
 
 export default function KajianDetailPage() {
     // ... existing state ...
     const params = useParams();
     const router = useRouter();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [kajian, setKajian] = useState<KajianDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [hasAttended, setHasAttended] = useState(false);
@@ -149,10 +151,28 @@ export default function KajianDetailPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-20">
+        <div className="min-h-screen bg-slate-50 pb-20 relative overflow-x-hidden">
+            {/* Mobile Sidebar / Drawer */}
+            <div className={`fixed inset-0 z-[100] bg-black/50 transition-opacity md:hidden ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsSidebarOpen(false)}>
+                <div className={`absolute left-0 top-0 bottom-0 w-64 bg-white shadow-2xl transition-transform transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`} onClick={e => e.stopPropagation()}>
+                    <div className="p-6 bg-teal-600 text-white shrink-0">
+                        <h2 className="font-bold text-xl mb-1">Menu</h2>
+                        <p className="text-teal-100 text-xs">PortalKajian.online</p>
+                    </div>
+                    <div className="p-4 overflow-y-auto flex-1">
+                        <LeftSidebar />
+                    </div>
+                </div>
+            </div>
+
             {/* Header */}
-            <header className="bg-teal-600 text-white px-4 py-4 sticky top-0 z-40 bg-opacity-95 backdrop-blur-sm">
-                <div className="flex items-center gap-3 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <header className="bg-teal-600 text-white px-4 py-4 sticky top-0 z-40 bg-opacity-95 backdrop-blur-sm shadow-md">
+                <div className="flex items-center gap-3 max-w-7xl mx-auto px-4">
+                    <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors md:hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                    </button>
                     <button onClick={() => router.back()} className="p-2 hover:bg-white/10 rounded-full transition-colors">
                         <ArrowLeft className="w-5 h-5" />
                     </button>
@@ -162,8 +182,15 @@ export default function KajianDetailPage() {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div className="md:grid md:grid-cols-12 md:gap-8">
-                    {/* Main Content */}
-                    <div className="md:col-span-8">
+                    {/* Left Column (Desktop Sidebar) */}
+                    <aside className="md:col-span-4 space-y-6 hidden md:block order-1">
+                        <LeftSidebar />
+                        <OngoingKajianWidget />
+                    </aside>
+
+                    {/* Right Column (Main Content) */}
+                    <div className="md:col-span-8 order-2">
+
                         <div className="mt-6">
                             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 space-y-6">
                                 {/* Title Section with Thumbnail */}
@@ -371,12 +398,6 @@ export default function KajianDetailPage() {
                                 </div>
                             )}
                         </div>
-                    </div>
-
-                    {/* Sidebar (Desktop) */}
-                    <div className="hidden md:block md:col-span-4 mt-6 md:mt-0 space-y-6">
-                        <OngoingKajianWidget />
-                        <PrayerTimeWidget />
                     </div>
                 </div>
             </div>
