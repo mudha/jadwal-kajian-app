@@ -99,6 +99,39 @@ function extractCoordinates(url: string, html?: string): { lat: number; lng: num
     }
 }
 
+/**
+ * Extract place name from URL or HTML content meta tags
+ */
+function extractPlaceName(url: string, html?: string): string | null {
+    try {
+        const decodedUrl = decodeURIComponent(url);
+
+        // Try extract from URL path: /place/Name+Of+Place/
+        const placeMatch = decodedUrl.match(/\/place\/([^/@]+)/);
+        if (placeMatch) {
+            return placeMatch[1].replace(/\+/g, ' ').replace(/%2C/g, ',').trim();
+        }
+
+        // Try from HTML title or meta tags (OG tags)
+        if (html) {
+            const ogTitleMatch = html.match(/<meta property="og:title" content="([^"]+)">/);
+            if (ogTitleMatch) {
+                // Google Maps often puts "Place Name · Address" in og:title
+                return ogTitleMatch[1].split(' · ')[0].trim();
+            }
+
+            const titleMatch = html.match(/<title>([^<]+)<\/title>/);
+            if (titleMatch) {
+                // Title format is usually "Place Name - Google Maps"
+                return titleMatch[1].split(' - ')[0].trim();
+            }
+        }
+        return null;
+    } catch (e) {
+        return null;
+    }
+}
+
 export async function POST(request: Request) {
     try {
         const { url } = await request.json();
@@ -109,17 +142,20 @@ export async function POST(request: Request) {
 
         const { url: expandedUrl, html } = await expandUrl(url);
         const coords = extractCoordinates(expandedUrl, html);
+        const placeName = extractPlaceName(expandedUrl, html);
 
         if (coords) {
             return NextResponse.json({
                 success: true,
                 ...coords,
+                placeName,
                 expandedUrl
             });
         } else {
             return NextResponse.json({
                 success: false,
                 error: 'Could not extract coordinates',
+                placeName,
                 expandedUrl
             }, { status: 422 });
         }

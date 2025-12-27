@@ -129,7 +129,14 @@ export default function MasjidManagementPage() {
                     lng: data.lng,
                     gmapsUrl: data.expandedUrl || url
                 }));
-                alert(`Koordinat ditemukan: ${data.lat}, ${data.lng}`);
+
+                if (data.placeName && data.placeName !== formData.name) {
+                    if (confirm(`Titik koordinat ditemukan.\n\nNama di Google Maps: "${data.placeName}"\nNama saat ini: "${formData.name}"\n\nApakah Anda ingin memperbarui nama masjid sesuai Google Maps?`)) {
+                        setFormData(prev => ({ ...prev, name: data.placeName }));
+                    }
+                } else {
+                    alert(`Koordinat ditemukan: ${data.lat}, ${data.lng}`);
+                }
             } else {
                 alert('Gagal mengekstrak koordinat dari URL tersebut.');
             }
