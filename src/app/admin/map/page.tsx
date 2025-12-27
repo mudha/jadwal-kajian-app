@@ -9,18 +9,10 @@ const KajianMap = dynamic(() => import('@/components/KajianMap'), {
     loading: () => <div className="h-[calc(100vh-200px)] w-full bg-slate-100 animate-pulse rounded-3xl flex items-center justify-center text-slate-400 font-bold">Harap tunggu, peta sedang dimuat...</div>
 });
 
-interface KajianWithId {
+import { KajianEntry } from '@/lib/parser';
+
+interface KajianWithId extends KajianEntry {
     id: number;
-    masjid: string;
-    city: string;
-    date: string;
-    waktu?: string;
-    tema: string;
-    pemateri: string;
-    imageUrl?: string;
-    lat?: number;
-    lng?: number;
-    gmapsUrl?: string;
 }
 
 export default function AdminMapPage() {
