@@ -352,41 +352,6 @@ function KajianListContent() {
                 <div className="md:col-span-8">
                     <main className="px-4 py-4 pb-24 md:px-0 md:py-0">
 
-                        {/* Filter Kota (Pills) */}
-                        {
-                            kajianList.length > 0 && (
-                                <div className="mb-8">
-                                    <div className="flex items-center justify-between mb-3 px-1">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Filter Kota</p>
-                                        <div className="text-[10px] font-bold text-teal-600 cursor-pointer hover:underline" onClick={() => setSearchTerm('')}>Reset Filter</div>
-                                    </div>
-                                    <div className="flex overflow-x-auto gap-3 pb-2 -mx-4 px-4 md:scrollbar-default">
-                                        {Array.from(new Set(kajianList.map(k => k.city)))
-                                            .sort()
-                                            .map(city => {
-                                                const isActive = searchTerm.toLowerCase() === city.toLowerCase();
-                                                const count = kajianList.filter(k => k.city === city).length;
-                                                return (
-                                                    <button
-                                                        key={city}
-                                                        onClick={() => setSearchTerm(isActive ? '' : city)}
-                                                        className={`shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold transition-all border shadow-sm ${isActive
-                                                            ? 'bg-teal-600 text-white border-teal-600 shadow-teal-100 ring-2 ring-teal-600 ring-offset-2'
-                                                            : 'bg-white text-slate-600 border-slate-100 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600'
-                                                            }`}
-                                                    >
-                                                        {city}
-                                                        <span className={`px-1.5 py-0.5 rounded-md text-[9px] ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                                                            {count}
-                                                        </span>
-                                                    </button>
-                                                );
-                                            })}
-                                    </div>
-                                </div>
-                            )
-                        }
-
                         {/* Tabs Filter */}
                         <div className="flex flex-wrap gap-1.5 mb-8 bg-white/50 p-1 rounded-2xl border border-slate-200 w-fit">
                             {[
