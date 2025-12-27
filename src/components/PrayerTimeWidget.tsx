@@ -51,16 +51,16 @@ export default function PrayerTimeWidget() {
                     <div className="bg-white/30 p-3 rounded-xl shrink-0">
                         {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Clock className="w-6 h-6" />}
                     </div>
-                    <div className="flex-1">
-                        <p className="text-white/80 text-[10px] font-medium uppercase tracking-widest mb-0.5">Selanjutnya</p>
-                        <div className="flex items-baseline gap-1">
-                            <p className="text-lg font-bold leading-none">{displayName}</p>
-                            <p className="text-lg font-light opacity-80 leading-none">{displayTime}</p>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-white/80 text-[10px] font-medium uppercase tracking-widest mb-0.5 truncate">Selanjutnya</p>
+                        <div className="flex items-baseline gap-1 overflow-hidden">
+                            <p className="text-base sm:text-lg font-bold leading-none truncate">{displayName}</p>
+                            <p className="text-sm sm:text-lg font-light opacity-80 leading-none">{displayTime}</p>
                         </div>
                     </div>
-                    <div className="text-right shrink-0">
-                        <p className="text-white/60 text-[10px] font-medium mb-0.5">Menuju Adzan</p>
-                        <p className="text-xl font-black font-mono tracking-tight">{timeLeft}</p>
+                    <div className="text-right shrink-0 border-l border-white/10 pl-3 sm:pl-4">
+                        <p className="text-white/60 text-[9px] font-medium mb-0.5 uppercase tracking-tighter">Adzan</p>
+                        <p className="text-lg sm:text-xl font-black font-mono tracking-tight">{timeLeft}</p>
                     </div>
                 </div>
 

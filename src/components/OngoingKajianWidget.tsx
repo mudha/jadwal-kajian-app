@@ -69,7 +69,12 @@ export default function OngoingKajianWidget() {
                     <Link href={`/kajian/${k.id}`} key={k.id} className="block group">
                         <div className="bg-black/20 backdrop-blur-md rounded-xl p-3 border border-white/10 hover:bg-black/30 transition-all">
                             <div className="flex justify-between items-start mb-1">
-                                <span className="text-[10px] font-black bg-red-500 text-white px-1.5 py-0.5 rounded uppercase tracking-wider">LIVE</span>
+                                <div className="flex items-center gap-1">
+                                    <span className="text-[10px] font-black bg-red-500 text-white px-1.5 py-0.5 rounded uppercase tracking-wider">LIVE</span>
+                                    {k.pemateri.toLowerCase().includes('ustadzah') && (
+                                        <span className="text-[10px] bg-pink-500 text-white px-1.5 py-0.5 rounded uppercase tracking-widest font-black transition-all">AKHWAT</span>
+                                    )}
+                                </div>
                                 <span className="text-[10px] text-red-100 font-mono">{k.city}</span>
                             </div>
                             <h4 className="font-bold text-sm leading-tight mb-1 group-hover:text-red-100 transition-colors">{k.tema}</h4>

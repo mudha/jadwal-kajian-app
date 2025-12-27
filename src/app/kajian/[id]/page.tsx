@@ -20,6 +20,7 @@ interface KajianDetail {
     gmapsUrl?: string;
     linkInfo?: string;
     attendanceCount?: number;
+    khususAkhwat?: boolean;
 }
 
 import PrayerTimeWidget from '@/components/PrayerTimeWidget';
@@ -168,13 +169,20 @@ export default function KajianDetailPage() {
                                 <div className="border-b border-slate-100 pb-6">
                                     <div className="flex gap-4">
                                         <div className="flex-1">
-                                            <span className="inline-block px-3 py-1 bg-teal-50 text-teal-700 text-xs font-bold rounded-lg mb-3 uppercase tracking-wider">
-                                                {kajian.city}
-                                            </span>
-                                            <h1 className="text-xl font-bold text-slate-900 leading-snug mb-2">{kajian.tema}</h1>
-                                            <div className="flex items-center gap-2 text-slate-600 font-medium">
+                                            <div className="flex flex-wrap items-center gap-2 mb-3">
+                                                <span className="inline-block px-3 py-1 bg-teal-50 text-teal-700 text-[10px] font-black rounded-lg uppercase tracking-widest border border-teal-100">
+                                                    {kajian.city}
+                                                </span>
+                                                {(kajian.khususAkhwat || kajian.pemateri.toLowerCase().includes('ustadzah')) && (
+                                                    <span className="inline-block px-3 py-1 bg-pink-50 text-pink-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-pink-100 animate-pulse">
+                                                        🌸 Khusus Akhwat
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <h1 className="text-xl font-bold text-slate-900 leading-snug mb-3">{kajian.tema}</h1>
+                                            <div className="flex items-center gap-2 text-slate-600 font-bold bg-slate-50 w-fit px-3 py-1.5 rounded-xl border border-slate-100">
                                                 <User className="w-4 h-4 text-teal-500" />
-                                                <span>{kajian.pemateri}</span>
+                                                <span className="text-sm">{kajian.pemateri}</span>
                                             </div>
                                         </div>
 

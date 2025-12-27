@@ -13,10 +13,11 @@ interface KajianCardProps {
     ustadz: string;
     imageUrl?: string;
     attendanceCount?: number;
+    khususAkhwat?: boolean;
     className?: string;
 }
 
-export default function KajianCard({ id, date, location, title, ustadz, imageUrl, attendanceCount = 0, className = 'w-60' }: KajianCardProps) {
+export default function KajianCard({ id, date, location, title, ustadz, imageUrl, attendanceCount = 0, khususAkhwat, className = 'w-60' }: KajianCardProps) {
     const [count, setCount] = useState(attendanceCount);
     const [hasAttended, setHasAttended] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
@@ -84,6 +85,13 @@ export default function KajianCard({ id, date, location, title, ustadz, imageUrl
                 >
                     <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
                 </button>
+
+                {/* Khusus Akhwat Badge */}
+                {(khususAkhwat || ustadz.toLowerCase().includes('ustadzah')) && (
+                    <div className="absolute top-2 left-2 px-2 py-1 bg-pink-500 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-pink-200/50 animate-pulse">
+                        🌸 Akhwat
+                    </div>
+                )}
             </div>
             <div className="p-5">
                 <div className="flex items-start justify-between mb-3">
