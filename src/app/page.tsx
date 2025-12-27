@@ -42,7 +42,9 @@ function deg2rad(deg: number) {
 
 export default function BerandaPage() {
   const [featuredKajian, setFeaturedKajian] = useState<KajianWithId[]>([]);
+  const [latestKajian, setLatestKajian] = useState<KajianWithId[]>([]);
   const [sortMode, setSortMode] = useState<'date' | 'distance'>('date');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     // Fetch featured kajian
@@ -50,8 +52,11 @@ export default function BerandaPage() {
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          // Filter: Only Today, Tomorrow, Upcoming
-          // status 'PAST' is excluded.
+          // 1. Set Latest Input Kajian (API returns ORDER BY id DESC by default)
+          setLatestKajian(data.slice(0, 5));
+
+          // 2. Filter & Sort for "Featured" (Upcoming events)
+          // Filter: Only Future events
           const upcoming = data.map((k: any) => ({
             ...k,
             _parsedDate: getKajianStatus(k.date, k.waktu) === 'PAST' ? null : parseIndoDate(k.date)
@@ -101,20 +106,59 @@ export default function BerandaPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24 md:pb-0">
-      {/* Header (Mobile Only) */}
-      <header className="bg-teal-600 text-white px-6 py-4 flex items-center justify-between md:hidden">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-            <User className="w-6 h-6" />
+    <div className="min-h-screen bg-slate-50 pb-24 md:pb-0 relative overflow-x-hidden">
+      {/* Mobile Sidebar / Drawer */}
+      <div className={`fixed inset-0 z-50 bg-black/50 transition-opacity md:hidden ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsSidebarOpen(false)}>
+        <div className={`absolute left-0 top-0 bottom-0 w-64 bg-white shadow-2xl transition-transform transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`} onClick={e => e.stopPropagation()}>
+          <div className="p-6 bg-teal-600 text-white">
+            <h2 className="font-bold text-xl mb-1">Menu</h2>
+            <p className="text-teal-100 text-xs">Jadwal Kajian Sunnah</p>
           </div>
-          <div>
-            <p className="text-xs text-white/80">Assalamu'alaikum</p>
-            <p className="font-bold">Hamba Allah</p>
+          <div className="p-4 space-y-2">
+            <Link href="/" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-50 rounded-xl font-medium">
+              <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center text-teal-600">
+                <MapPin className="w-4 h-4" />
+              </div>
+              Beranda
+            </Link>
+            <Link href="/kajian" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-50 rounded-xl font-medium">
+              <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                <Search className="w-4 h-4" />
+              </div>
+              Cari Kajian
+            </Link>
+            <Link href="/favorit" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-50 rounded-xl font-medium">
+              <div className="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center text-pink-600">
+                <HandHeart className="w-4 h-4" />
+              </div>
+              Favorit Saya
+            </Link>
+            <div className="h-px bg-slate-100 my-2"></div>
+            <Link href="/admin/login" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 rounded-xl font-medium text-sm">
+              Login Admin
+            </Link>
           </div>
         </div>
-        <Link href="/kajian" className="p-2 hover:bg-white/10 rounded-full transition-colors">
-          <Search className="w-6 h-6" />
+      </div>
+
+      {/* Header (Mobile Only) */}
+      <header className="bg-teal-600 text-white px-6 py-4 flex items-center justify-between md:hidden sticky top-0 z-40 shadow-md">
+        <div className="flex items-center gap-4">
+          <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          </button>
+          <div>
+            <h1 className="font-bold text-lg leading-tight">Jadwal Kajian</h1>
+            <p className="text-[10px] text-teal-100 uppercase tracking-widest font-medium">Sunnah Indonesia</p>
+          </div>
+        </div>
+        <Link href="/notifikasi" className="p-2 relative hover:bg-white/10 rounded-full transition-colors">
+          <div className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-teal-600"></div>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+          </svg>
         </Link>
       </header>
 
@@ -147,7 +191,7 @@ export default function BerandaPage() {
               </div>
 
               {/* Mobile: Horizontal Scroll */}
-              <div className="flex md:hidden overflow-x-auto gap-4 pb-4 scrollbar-hide">
+              <div className="flex md:hidden overflow-x-auto gap-4 pb-4 scrollbar-hide -mx-4 px-4">
                 {featuredKajian.map((kajian) => (
                   <KajianCard
                     key={kajian.id}
@@ -197,61 +241,55 @@ export default function BerandaPage() {
           {/* Prayer Time Widget */}
           <PrayerTimeWidget />
 
-          {/* LIVE / TODAY KAJIAN WIDGET */}
-          <div className="bg-gradient-to-br from-teal-600 to-teal-800 rounded-3xl p-6 shadow-xl text-white relative overflow-hidden">
+          {/* NEW: LATEST / RECENTLY ADDED KAJIAN WIDGET */}
+          <div className="bg-gradient-to-br from-indigo-600 to-violet-800 rounded-3xl p-6 shadow-xl text-white relative overflow-hidden">
             {/* Decorative Background Elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-teal-500/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-indigo-500/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
 
             <div className="flex items-center justify-between mb-5 relative z-10">
               <div>
-                <h3 className="font-bold text-xl text-white">Kajian Hari Ini</h3>
-                <p className="text-teal-100 text-xs opacity-80">Jadwal kajian sunnah pilihan</p>
+                <h3 className="font-bold text-xl text-white">Info Kajian Terbaru</h3>
+                <p className="text-indigo-100 text-xs opacity-80">Baru saja diupdate admin</p>
               </div>
               <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-teal-700"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-400 border-2 border-indigo-700"></span>
               </span>
             </div>
 
             <div className="space-y-4 relative z-10">
-              {featuredKajian
-                .slice(0, 5) // Show top 5
-                .map(k => (
-                  <Link href={`/kajian/${k.id}`} key={k.id} className="block group">
-                    <div className="flex gap-3 items-start p-2 rounded-xl hover:bg-white/10 transition-colors">
-                      <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl shrink-0 overflow-hidden relative border border-white/10">
-                        {k.imageUrl ? (
-                          <img src={k.imageUrl} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-teal-100">
-                            <User className="w-6 h-6" />
-                          </div>
-                        )}
-                        {k.date.includes('Hari Ini') && (
-                          <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border border-teal-800 translate-x-0.5 -translate-y-0.5 shadow-sm"></div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-teal-200 mb-0.5 flex flex-wrap items-center gap-1 leading-tight">
-                          <Clock className="w-3 h-3 shrink-0" />
-                          <span>{k.waktu ? (k.waktu.trim().match(/^\d/) ? k.waktu.split(' ')[0] : k.waktu) : 'Jadwal'} • {k.city === 'Online' ? 'ONLINE' : k.city}</span>
-                        </p>
-                        <p className="text-xs font-bold text-white leading-tight line-clamp-2 group-hover:text-teal-200 transition-colors">{k.tema}</p>
-                        <p className="text-[10px] text-teal-100/70 mt-0.5 truncate">{k.pemateri}</p>
-                      </div>
+              {latestKajian.map((k) => (
+                <Link href={`/kajian/${k.id}`} key={k.id} className="block group">
+                  <div className="flex gap-3 items-start p-2 rounded-xl hover:bg-white/10 transition-colors">
+                    <div className="w-12 h-16 bg-white/20 backdrop-blur-sm rounded-lg shrink-0 overflow-hidden relative border border-white/10">
+                      {k.imageUrl ? (
+                        <img src={k.imageUrl} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-indigo-100">
+                          <User className="w-6 h-6" />
+                        </div>
+                      )}
+                      <div className="absolute top-0 left-0 bg-red-500 text-white text-[8px] font-bold px-1 py-0.5 rounded-br-lg">NEW</div>
                     </div>
-                  </Link>
-                ))
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200 mb-0.5 flex flex-wrap items-center gap-1 leading-tight">
+                        {k.city === 'Online' ? 'ONLINE' : k.city}
+                      </p>
+                      <p className="text-xs font-bold text-white leading-tight line-clamp-2 group-hover:text-indigo-200 transition-colors mb-0.5">{k.tema}</p>
+                      <p className="text-[9px] text-indigo-100/70 truncate mb-1">Oleh: {k.pemateri}</p>
+                      <p className="text-[9px] text-white/50 flex items-center gap-1">
+                        <Clock className="w-2.5 h-2.5" /> {k.date}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))
               }
-              {featuredKajian.length === 0 && (
-                <div className="text-center py-6 text-teal-100/60 text-xs italic bg-white/5 rounded-xl border border-white/5">
-                  Belum ada info kajian untuk hari ini.
+              {latestKajian.length === 0 && (
+                <div className="text-center py-6 text-indigo-100/60 text-xs italic bg-white/5 rounded-xl border border-white/5">
+                  Belum ada data terbaru.
                 </div>
               )}
-              <Link href="/kajian?mode=today" className="block text-center text-xs font-bold text-white/90 hover:text-white hover:bg-white/10 py-2 rounded-lg transition-all mt-2">
-                Lihat Semua Jadwal Hari Ini →
-              </Link>
             </div>
           </div>
 
