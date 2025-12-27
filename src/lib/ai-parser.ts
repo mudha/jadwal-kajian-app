@@ -14,7 +14,7 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
     const model = genAI.getGenerativeModel({ model: "models/gemini-2.5-flash" });
 
     const prompt = `
-    Saya memiliki teks broadcast WhatsApp berisi jadwal kajian sunnah ATAU rekapan Sholat Jumat.
+    Saya memiliki teks broadcast WhatsApp berisi informasi kajian sunnah ATAU rekapan Sholat Jumat.
     Tolong ekstrak data di dalamnya menjadi array JSON dengan format typescript berikut:
     
     interface KajianEntry {

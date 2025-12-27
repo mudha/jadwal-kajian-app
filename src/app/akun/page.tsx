@@ -89,7 +89,7 @@ export default function AkunPage() {
             </div>
 
             <div className="text-center pb-8 opacity-50">
-                <p className="text-[10px] text-slate-400">Jadwal Kajian Sunnah App v1.0.0</p>
+                <p className="text-[10px] text-slate-400">PortalKajian.online v1.0.0</p>
             </div>
 
             <BottomNav />

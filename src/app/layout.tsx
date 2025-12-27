@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PortalKajian.online - Jadwal Kajian Sunnah Indonesia",
+  title: "PortalKajian.online - Info Kajian Sunnah Indonesia",
   description: "Portal lengkap jadwal kajian islami se-Indonesia. Cari kajian di sekitarmu dengan mudah melalui PortalKajian.online, lengkap dengan peta lokasi dan kontak admin.",
   keywords: ["kajian sunnah", "jadwal kajian", "kajian indonesia", "islam", "ustadz", "masjid"],
 };

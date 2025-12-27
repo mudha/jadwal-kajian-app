@@ -311,7 +311,7 @@ function KajianListContent() {
                     <Link href="/" className="p-2 hover:bg-white/10 rounded-full transition-colors">
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
-                    <h1 className="text-lg font-bold flex-1">Daftar Jadwal Kajian</h1>
+                    <h1 className="text-lg font-bold flex-1">PortalKajian.online</h1>
                     <button
                         onClick={() => setShowMap(!showMap)}
                         className="p-2 hover:bg-white/10 rounded-full transition-colors"
@@ -336,7 +336,7 @@ function KajianListContent() {
             {/* Desktop Header */}
             <div className="hidden md:flex items-center justify-between py-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 mb-2">Jadwal Kajian Sunnah</h1>
+                    <h1 className="text-3xl font-bold text-slate-900 mb-2">PortalKajian.online</h1>
                     <p className="text-slate-500">Temukan jadwal kajian ilmiah di berbagai kota di Indonesia</p>
                 </div>
                 <div className="flex gap-4">

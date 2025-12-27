@@ -171,7 +171,7 @@ export default function BerandaPage() {
           <div className="hidden md:block bg-teal-600 rounded-3xl p-8 text-white relative overflow-hidden">
             <div className="relative z-10">
               <h1 className="text-3xl font-bold mb-4">Selamat Datang di PortalKajian.online</h1>
-              <p className="text-teal-100 max-w-lg mb-6">Temukan jadwal kajian sunnah terdekat, artikel islami, dan fitur ibadah lainnya dalam satu aplikasi.</p>
+              <p className="text-teal-100 max-w-lg mb-6">Temukan informasi kajian sunnah terdekat, artikel islami, dan fitur ibadah lainnya di PortalKajian.online.</p>
               <Link href="/kajian" className="inline-block bg-white text-teal-600 font-bold px-6 py-3 rounded-xl hover:bg-teal-50 transition-colors">
                 Cari Kajian Sekarang
               </Link>
