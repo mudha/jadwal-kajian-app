@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { KajianEntry } from '@/lib/parser';
-import { Calendar, MapPin, User, Clock, Search, Trash2, ArrowLeft, History, ListFilter, MessageCircle, Edit, X, Save, Map as MapIcon, Share2, ExternalLink, ImageIcon } from 'lucide-react';
+import { Calendar, MapPin, User, Clock, Search, Trash2, ArrowLeft, History, ListFilter, MessageCircle, Edit, X, Save, Map as MapIcon, Share2, ExternalLink, ImageIcon, Bell } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 import Link from 'next/link';
