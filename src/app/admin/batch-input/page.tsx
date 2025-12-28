@@ -764,140 +764,190 @@ export default function BatchInputPage() {
                             {/* Mobile View: Stacked Cards */}
                             <div className="md:hidden divide-y divide-slate-100">
                                 {entries.map((entry, idx) => (
-                                    <div key={idx} className={`p-4 space-y-4 ${selectedIndices.has(idx) ? 'bg-white' : 'bg-slate-50 opacity-60'}`}>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedIndices.has(idx)}
-                                                    onChange={() => toggleSelection(idx)}
-                                                    className="w-5 h-5 rounded-lg border-slate-200 text-blue-600"
-                                                />
-                                                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Baris #{idx + 1}</span>
+                                    <div key={idx} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden relative group transition-all hover:shadow-md mb-4 last:mb-0">
+                                        {/* Header Bar */}
+                                        <div className="bg-slate-50/50 p-3 border-b border-slate-100 flex items-start justify-between gap-3">
+                                            <div className="flex gap-3 items-center flex-1">
+                                                <button
+                                                    onClick={() => toggleSelection(idx)}
+                                                    className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${selectedIndices.has(idx) ? 'bg-blue-500 border-blue-500 text-white' : 'border-slate-300 text-transparent hover:border-blue-400'}`}
+                                                >
+                                                    <CheckCircle className="w-3.5 h-3.5" strokeWidth={3} />
+                                                </button>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Jadwal Kajian</span>
+                                                    <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                                                        <Calendar className="w-3 h-3 text-slate-400" />
+                                                        <span>{entry.date ? formatIndoDate(parseIndoDate(entry.date)!) : '-'}</span>
+                                                        <span className="text-slate-300">|</span>
+                                                        <Clock className="w-3 h-3 text-slate-400" />
+                                                        <span>{entry.waktu}</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <button onClick={() => setPreviewIndex(idx)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg">
+
+                                            <div className="flex gap-1">
+                                                <button onClick={() => setPreviewIndex(idx)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Preview">
                                                     <Eye className="w-4 h-4" />
                                                 </button>
-                                                <button onClick={() => handleDiscard(idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-                                                    <Trash2 className="w-4 h-4" />
+                                                <button onClick={() => handleDeleteEntry(idx)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                                                    <X className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </div>
 
-                                        <div className="space-y-4">
-                                            <div className="flex gap-4">
-                                                <div className="shrink-0 w-24">
-                                                    <ImageUpload
-                                                        label=""
-                                                        value={entry.imageUrl || ''}
-                                                        onChange={(url) => updateEntry(idx, 'imageUrl', url)}
-                                                        className="w-full"
+                                        <div className="p-4 space-y-6">
+                                            {/* Main Info */}
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Tema Kajian</label>
+                                                    <textarea
+                                                        rows={2}
+                                                        value={entry.tema}
+                                                        onChange={(e) => updateEntry(idx, 'tema', e.target.value)}
+                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400 resize-none"
+                                                        placeholder="Judul atau Tema Kajian..."
                                                     />
                                                 </div>
-                                                <div className="flex-1 space-y-3">
+                                                <div>
+                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Pemateri</label>
+                                                    <AutosuggestInput
+                                                        type="pemateri"
+                                                        value={entry.pemateri}
+                                                        onChange={(val) => updateEntry(idx, 'pemateri', val)}
+                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
+                                                        placeholder="Nama Ustadz / Pemateri..."
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="h-px bg-slate-100" />
+
+                                            {/* Location Info */}
+                                            <div className="space-y-4">
+                                                <div className="grid grid-cols-1 gap-4">
                                                     <div>
-                                                        <label className="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Masjid</label>
+                                                        <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">
+                                                            <MapPin className="w-3 h-3" /> Lokasi Masjid
+                                                        </label>
                                                         <AutosuggestInput
                                                             type="masjid"
                                                             value={entry.masjid}
                                                             onChange={(val) => updateEntry(idx, 'masjid', val)}
-                                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-900"
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                            placeholder="Nama Masjid..."
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Pemateri</label>
-                                                        <AutosuggestInput
-                                                            type="pemateri"
-                                                            value={entry.pemateri}
-                                                            onChange={(val) => updateEntry(idx, 'pemateri', val)}
-                                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-900"
-                                                        />
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Kota / Kabupaten</label>
+                                                        <div className="relative">
+                                                            <input
+                                                                type="text"
+                                                                value={entry.city}
+                                                                onChange={(e) => updateEntry(idx, 'city', e.target.value)} // Fallback
+                                                                onClick={() => {
+                                                                    setActiveCityDropdownIndex(activeCityDropdownIndex === idx ? null : idx);
+                                                                    setCityFilter('');
+                                                                }}
+                                                                readOnly
+                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer hover:bg-slate-100 transition-all"
+                                                                placeholder="Pilih Kota..."
+                                                            />
+                                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                                                <LayoutDashboard className="w-4 h-4 rotate-45" />
+                                                            </div>
+
+                                                            {/* Dropdown Kota Mobile */}
+                                                            {activeCityDropdownIndex === idx && (
+                                                                <div className="absolute z-50 mt-2 w-full bg-white rounded-xl shadow-xl border border-slate-100 max-h-60 overflow-y-auto left-0 animate-in fade-in zoom-in-95 duration-100">
+                                                                    <div className="sticky top-0 bg-white p-2 border-b border-slate-100">
+                                                                        <input
+                                                                            type="text"
+                                                                            value={cityFilter}
+                                                                            onChange={(e) => setCityFilter(e.target.value)}
+                                                                            placeholder="Cari kota..."
+                                                                            className="w-full px-3 py-2 bg-slate-50 rounded-lg text-sm border-none focus:ring-2 focus:ring-blue-500"
+                                                                            autoFocus
+                                                                        />
+                                                                    </div>
+                                                                    {indonesianCities
+                                                                        .filter(c => c.toLowerCase().includes(cityFilter.toLowerCase()))
+                                                                        .map(city => (
+                                                                            <button
+                                                                                key={city}
+                                                                                onClick={() => {
+                                                                                    updateEntry(idx, 'city', city);
+                                                                                    setActiveCityDropdownIndex(null);
+                                                                                }}
+                                                                                className="w-full text-left px-4 py-3 text-sm hover:bg-blue-50 hover:text-blue-600 transition-colors border-b border-slate-50 last:border-none"
+                                                                            >
+                                                                                {city}
+                                                                            </button>
+                                                                        ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Kota</label>
+                                            <div className="h-px bg-slate-100" />
+
+                                            {/* Details & Options */}
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="col-span-2">
+                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Narahubung (CP)</label>
                                                     <input
                                                         type="text"
-                                                        value={entry.city}
-                                                        onChange={(e) => updateEntry(idx, 'city', e.target.value)}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700"
+                                                        value={entry.cp || ''}
+                                                        onChange={(e) => updateEntry(idx, 'cp', e.target.value)}
+                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                        placeholder="08..."
                                                     />
                                                 </div>
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Tanggal</label>
-                                                    <div className="relative group">
+
+                                                <div className="col-span-2 grid grid-cols-2 gap-3">
+                                                    <label className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.khususAkhwat ? 'bg-pink-50 border-pink-200 text-pink-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
                                                         <input
-                                                            type="date"
-                                                            value={(() => {
-                                                                const d = parseIndoDate(entry.date);
-                                                                return d ? formatYYYYMMDD(d) : '';
-                                                            })()}
-                                                            onChange={(e) => {
-                                                                const val = e.target.valueAsDate;
-                                                                if (val) updateEntry(idx, 'date', formatIndoDate(val));
-                                                            }}
-                                                            className="w-full pl-9 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-900"
+                                                            type="checkbox"
+                                                            checked={entry.khususAkhwat || false}
+                                                            onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
+                                                            className="hidden"
                                                         />
-                                                        <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none group-focus-within:text-blue-500" />
-                                                    </div>
+                                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.khususAkhwat ? 'border-pink-500 bg-pink-500 text-white' : 'border-slate-300'}`}>
+                                                            {entry.khususAkhwat && <CheckCircle className="w-3 h-3" />}
+                                                        </div>
+                                                        <span className="text-xs font-bold uppercase tracking-wide">Akhwat</span>
+                                                    </label>
+
+                                                    <label className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.isOnline ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={entry.isOnline || false}
+                                                            onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
+                                                            className="hidden"
+                                                        />
+                                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.isOnline ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-300'}`}>
+                                                            {entry.isOnline && <CheckCircle className="w-3 h-3" />}
+                                                        </div>
+                                                        <span className="text-xs font-bold uppercase tracking-wide">Online</span>
+                                                    </label>
                                                 </div>
                                             </div>
 
+                                            <div className="h-px bg-slate-100" />
+
+                                            {/* Media Upload */}
                                             <div>
-                                                <label className="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Tema</label>
-                                                <input
-                                                    type="text"
-                                                    value={entry.tema}
-                                                    onChange={(e) => updateEntry(idx, 'tema', e.target.value)}
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm italic text-slate-900"
+                                                <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Poster Kajian</label>
+                                                <ImageUpload
+                                                    label=""
+                                                    value={entry.imageUrl || ''}
+                                                    onChange={(url) => updateEntry(idx, 'imageUrl', url)}
+                                                    className="w-full"
                                                 />
                                             </div>
 
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Waktu</label>
-                                                    <input
-                                                        type="text"
-                                                        value={entry.waktu}
-                                                        onChange={(e) => updateEntry(idx, 'waktu', e.target.value)}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-900"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-slate-600 uppercase mb-1 block">CP</label>
-                                                    <input
-                                                        type="text"
-                                                        value={entry.cp}
-                                                        onChange={(e) => updateEntry(idx, 'cp', e.target.value)}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-emerald-700"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <label className="flex items-center gap-2 bg-pink-50/50 p-2 rounded-lg cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={entry.khususAkhwat}
-                                                        onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
-                                                        className="w-4 h-4 rounded text-pink-500 border-slate-300"
-                                                    />
-                                                    <span className="text-[10px] font-black text-pink-700 uppercase">Akhwat</span>
-                                                </label>
-                                                <label className="flex items-center gap-2 bg-blue-50/50 p-2 rounded-lg cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={entry.isOnline}
-                                                        onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
-                                                        className="w-4 h-4 rounded text-blue-500 border-slate-300"
-                                                    />
-                                                    <span className="text-[10px] font-black text-blue-700 uppercase">Online</span>
-                                                </label>
-                                            </div>
                                         </div>
                                     </div>
                                 ))}
