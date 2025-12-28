@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { KajianEntry } from '@/lib/parser';
-import { Calendar, MapPin, User, Clock, Search, Trash2, ArrowLeft, History, ListFilter, MessageCircle, Edit, X, Save, Map as MapIcon, Share2, ExternalLink, ImageIcon, Bell } from 'lucide-react';
+import { Calendar, MapPin, User, Clock, Search, Trash2, ArrowLeft, History, ListFilter, MessageCircle, Edit, X, Save, Map as MapIcon, Share2, ExternalLink, ImageIcon, Bell, BookOpen } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 import Link from 'next/link';
@@ -557,13 +557,26 @@ function KajianListContent() {
                                                             <p className="text-xs leading-relaxed font-medium">{kajian.address}</p>
                                                         </div>
                                                     </div>
-                                                    <div className="shrink-0 group/img relative cursor-pointer" onClick={() => setSelectedImage(kajian.imageUrl || '/images/default-kajian.png')}>
-                                                        <img
-                                                            src={kajian.imageUrl || '/images/default-kajian.png'}
-                                                            alt={kajian.tema}
-                                                            className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-2xl border border-slate-100 shadow-sm group-hover/img:scale-105 transition-transform duration-500"
-                                                        />
-                                                        <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 rounded-2xl transition-colors" />
+                                                    <div className="shrink-0 group/img relative cursor-pointer overflow-hidden rounded-2xl shadow-sm border border-slate-100 w-24 h-32 md:w-32 md:h-44" onClick={() => setSelectedImage(kajian.imageUrl || '/images/default-kajian.png')}>
+                                                        {kajian.imageUrl ? (
+                                                            <>
+                                                                <img
+                                                                    src={kajian.imageUrl}
+                                                                    alt={kajian.tema}
+                                                                    className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500"
+                                                                />
+                                                                <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors" />
+                                                            </>
+                                                        ) : (
+                                                            <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex flex-col items-center justify-center relative p-3 text-center group-hover/img:scale-105 transition-transform duration-500">
+                                                                <div className="absolute inset-0 border-[0.5px] border-white/10 m-1.5 rounded-xl"></div>
+                                                                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mb-3 backdrop-blur-sm">
+                                                                    <BookOpen className="w-4 h-4 text-teal-400/90" />
+                                                                </div>
+                                                                <h3 className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] leading-none mb-1">Kajian</h3>
+                                                                <h2 className="text-slate-200 font-serif font-medium text-xs">Ilmiah</h2>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
 
