@@ -92,11 +92,14 @@ export default function OngoingKajianWidget() {
                         </div>
                     </Link>
                 ))}
-                {ongoingList.length > 3 && (
-                    <div className="text-center text-[10px] font-bold text-red-100 mt-2">
-                        + {ongoingList.length - 3} Kajian Lainnya
-                    </div>
-                )}
+                <Link
+                    href="/kajian?ongoing=true"
+                    className="block w-full py-2.5 mt-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-center text-xs font-bold text-white transition-all active:scale-95"
+                >
+                    {ongoingList.length > 3
+                        ? `Lihat ${ongoingList.length} Kajian Berlangsung`
+                        : 'Lihat Semua Kajian Berlangsung'}
+                </Link>
             </div>
         </div>
     );
