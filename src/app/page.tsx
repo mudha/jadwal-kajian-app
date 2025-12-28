@@ -272,7 +272,15 @@ export default function BerandaPage() {
                         <img src={kajian.imageUrl || '/images/default-kajian.png'} alt={kajian.tema} className="w-full h-full object-cover" />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-teal-600 mb-1">{kajian.date}</p>
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-[10px] font-bold text-teal-600 uppercase tracking-wide">{kajian.date}</p>
+                          {kajian.waktu && (
+                            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                              <Clock className="w-2.5 h-2.5" />
+                              {kajian.waktu}
+                            </span>
+                          )}
+                        </div>
                         <h3 className="font-bold text-slate-900 line-clamp-2 mb-1">{kajian.tema}</h3>
                         <p className="text-xs text-slate-500 mb-2">{kajian.pemateri}</p>
                         <p className="text-[10px] text-slate-400 flex items-center gap-1">

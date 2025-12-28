@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Radio } from 'lucide-react';
+import { Radio, Clock } from 'lucide-react';
 import { isKajianOngoing, formatMasjidName } from '@/lib/date-utils';
 
 interface Kajian {
@@ -79,9 +79,15 @@ export default function OngoingKajianWidget() {
                             </div>
                             <h4 className="font-bold text-sm leading-tight mb-1 group-hover:text-red-100 transition-colors">{k.tema}</h4>
                             <p className="text-[10px] text-white/80 line-clamp-1">{k.pemateri}</p>
-                            <div className="mt-2 text-[10px] flex items-center gap-1 text-red-200">
-                                <Radio className="w-3 h-3" />
-                                {formatMasjidName(k.masjid)}
+                            <div className="mt-2 text-[10px] flex items-center justify-between text-red-100">
+                                <div className="flex items-center gap-1">
+                                    <Radio className="w-3 h-3 text-red-200" />
+                                    <span className="truncate max-w-[140px]">{formatMasjidName(k.masjid)}</span>
+                                </div>
+                                <div className="flex items-center gap-1 bg-white/10 px-1.5 py-0.5 rounded">
+                                    <Clock className="w-2.5 h-2.5" />
+                                    {k.waktu}
+                                </div>
                             </div>
                         </div>
                     </Link>

@@ -1,7 +1,7 @@
 
 // Client component imports are top-level
 import { useState, useEffect } from 'react';
-import { HandHeart, Users, Heart, BookOpen } from 'lucide-react';
+import { HandHeart, Users, Heart, BookOpen, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { parseIndoDate, getHijriDate, getKajianStatus } from '@/lib/date-utils';
 
@@ -108,17 +108,21 @@ export default function KajianCard({ id, date, location, title, ustadz, imageUrl
                 </div>
             </div>
             <div className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                    <div>
-                        <p className="text-[10px] font-black tracking-widest text-teal-600 uppercase bg-teal-50 px-2 py-1 rounded-lg inline-block">{date}</p>
-                        <p className="text-[9px] text-slate-400 font-bold mt-1 px-1">
-                            {(() => {
-                                const parsed = parseIndoDate(date);
-                                return parsed ? getHijriDate(parsed) : '';
-                            })()}
-                        </p>
-                    </div>
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <p className="text-[10px] font-black tracking-widest text-teal-600 uppercase bg-teal-50 px-2 py-1 rounded-lg inline-block shrink-0">{date}</p>
+                    {waktu && (
+                        <div className="flex items-center gap-1 text-[10px] font-black tracking-widest text-blue-600 uppercase bg-blue-50 px-2 py-1 rounded-lg shrink-0">
+                            <Clock className="w-3 h-3" />
+                            {waktu}
+                        </div>
+                    )}
                 </div>
+                <p className="text-[9px] text-slate-400 font-bold mb-3 px-1">
+                    {(() => {
+                        const parsed = parseIndoDate(date);
+                        return parsed ? getHijriDate(parsed) : '';
+                    })()}
+                </p>
 
                 <h3 className="font-bold text-slate-900 mb-2 line-clamp-2 leading-tight group-hover:text-teal-600 transition-colors">{title}</h3>
                 <p className="text-sm text-slate-500 mb-4 font-medium">{ustadz}</p>

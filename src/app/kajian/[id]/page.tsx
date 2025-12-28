@@ -452,7 +452,10 @@ export default function KajianDetailPage() {
                                                             <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-lg uppercase tracking-wider">
                                                                 {rk.date.split(',')[0]}
                                                             </span>
-                                                            <span className="text-[10px] text-slate-400 font-bold uppercase truncate">{rk.waktu}</span>
+                                                            <span className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase truncate">
+                                                                <Clock className="w-3 h-3 text-slate-300" />
+                                                                {rk.waktu}
+                                                            </span>
                                                             {getKajianStatus(rk.date, rk.waktu) === 'PAST' && (
                                                                 <span className="text-[10px] font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-lg uppercase tracking-wider">
                                                                     ✓ Selesai
@@ -506,7 +509,10 @@ export default function KajianDetailPage() {
                                                             <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-lg uppercase tracking-wider">
                                                                 {rk.date.split(',')[0]}
                                                             </span>
-                                                            <span className="text-[10px] text-slate-400 font-bold uppercase truncate">{rk.waktu}</span>
+                                                            <span className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase truncate">
+                                                                <Clock className="w-3 h-3 text-slate-300" />
+                                                                {rk.waktu}
+                                                            </span>
                                                             {getKajianStatus(rk.date, rk.waktu) === 'PAST' && (
                                                                 <span className="text-[10px] font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-lg uppercase tracking-wider">
                                                                     ✓ Selesai
