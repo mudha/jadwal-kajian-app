@@ -1,10 +1,11 @@
 'use client';
 
-import { ArrowLeft, Calendar, MapPin, Share2, Clock, Map as MapIcon, Calendar as CalendarIcon, ExternalLink, Hash, User, Loader2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Share2, Clock, Map as MapIcon, Calendar as CalendarIcon, ExternalLink, Hash, User, Loader2, CheckCircle, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { parseIndoDate, getHijriDate, formatMasjidName, getKajianStatus } from '@/lib/date-utils';
+import { useAdmin } from '@/hooks/useAdmin';
 
 // Reusing types locally for simplicity or import if shared
 interface KajianDetail {
@@ -32,6 +33,7 @@ export default function KajianDetailPage() {
     // ... existing state ...
     const params = useParams();
     const router = useRouter();
+    const { isAdmin } = useAdmin();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [kajian, setKajian] = useState<KajianDetail | null>(null);
     const [loading, setLoading] = useState(true);
@@ -78,9 +80,21 @@ export default function KajianDetailPage() {
                 const sevenDaysLater = new Date(now);
                 sevenDaysLater.setDate(now.getDate() + 7);
 
+                // Normalize masjid name for comparison (remove common prefixes/suffixes and trim)
+                const normalizeMasjidName = (name: string) => {
+                    return name.toLowerCase()
+                        .replace(/^(masjid|masjid|msjd|musholla|mushola)\s+/i, '')
+                        .replace(/\s+(masjid|msjd)$/i, '')
+                        .trim();
+                };
+                const normalizedTargetMasjid = normalizeMasjidName(masjidName);
+
                 const related = data.filter(k => {
                     if (k.id === currentId) return false;
-                    if (k.masjid !== masjidName) return false;
+
+                    // Compare normalized masjid names
+                    const normalizedKMasjid = normalizeMasjidName(k.masjid);
+                    if (normalizedKMasjid !== normalizedTargetMasjid) return false;
 
                     const kDate = parseIndoDate(k.date);
                     if (!kDate) return false;
@@ -148,6 +162,22 @@ export default function KajianDetailPage() {
         const details = encodeURIComponent(`Tema: ${kajian.tema}\nLokasi: ${kajian.address}`);
         const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${encodeURIComponent(kajian.address)}&sf=true&output=xml`;
         window.open(url, '_blank');
+    };
+
+    const handleDelete = async () => {
+        if (!kajian || !confirm('Apakah Anda yakin ingin menghapus kajian ini?')) return;
+
+        try {
+            const res = await fetch(`/api/kajian/${kajian.id}`, { method: 'DELETE' });
+            if (res.ok) {
+                router.push('/kajian');
+            } else {
+                alert('Gagal menghapus kajian');
+            }
+        } catch (e) {
+            console.error('Error deleting kajian:', e);
+            alert('Terjadi kesalahan saat menghapus');
+        }
     };
 
     return (
@@ -342,6 +372,29 @@ export default function KajianDetailPage() {
                                         </a>
                                     )}
                                 </div>
+
+                                {/* Admin Controls */}
+                                {isAdmin && (
+                                    <div className="mt-6 pt-6 border-t border-slate-100">
+                                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3">Admin Controls</p>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <Link
+                                                href={`/admin/manage?edit=${kajian.id}`}
+                                                className="flex items-center justify-center gap-2 py-3 bg-blue-50 text-blue-700 rounded-xl font-bold text-sm hover:bg-blue-100 transition-colors"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                                Edit Kajian
+                                            </Link>
+                                            <button
+                                                onClick={handleDelete}
+                                                className="flex items-center justify-center gap-2 py-3 bg-red-50 text-red-700 rounded-xl font-bold text-sm hover:bg-red-100 transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                                Hapus
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Weekly Schedule Section */}
