@@ -80,21 +80,15 @@ export default function KajianDetailPage() {
                 const sevenDaysLater = new Date(now);
                 sevenDaysLater.setDate(now.getDate() + 7);
 
-                // Normalize masjid name for comparison (remove common prefixes/suffixes and trim)
-                const normalizeMasjidName = (name: string) => {
-                    return name.toLowerCase()
-                        .replace(/^(masjid|masjid|msjd|musholla|mushola)\s+/i, '')
-                        .replace(/\s+(masjid|msjd)$/i, '')
-                        .trim();
-                };
-                const normalizedTargetMasjid = normalizeMasjidName(masjidName);
+                // Simple exact match with case-insensitive comparison
+                const targetMasjid = masjidName.toLowerCase().trim();
 
                 const related = data.filter(k => {
                     if (k.id === currentId) return false;
 
-                    // Compare normalized masjid names
-                    const normalizedKMasjid = normalizeMasjidName(k.masjid);
-                    if (normalizedKMasjid !== normalizedTargetMasjid) return false;
+                    // Exact match with case-insensitive comparison
+                    const kMasjid = k.masjid.toLowerCase().trim();
+                    if (kMasjid !== targetMasjid) return false;
 
                     const kDate = parseIndoDate(k.date);
                     if (!kDate) return false;
