@@ -74,7 +74,7 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
         >
             {/* Loading Indicator */}
             <div
-                className="fixed top-0 left-0 w-full flex items-center justify-center pointer-events-none z-50 transition-transform duration-200 ease-out"
+                className="absolute top-0 left-0 w-full flex items-center justify-center pointer-events-none z-30 transition-transform duration-200 ease-out"
                 style={{
                     transform: `translateY(${Math.max(0, currentY - 40)}px)`,
                     opacity: currentY > 0 ? 1 : 0
