@@ -550,7 +550,7 @@ export default function BatchInputPage() {
                                                             <div className="col-span-1 md:col-span-2">
                                                                 <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1 mb-2">
                                                                     Masjid / Lokasi
-                                                                    {entry.lat && <span className="flex items-center gap-1 ml-2 bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[9px] font-bold border border-blue-200"><MapPin className="w-3 h-3" /> {entry.lat.toFixed(4)}, {entry.lng?.toFixed(4)}</span>}
+                                                                    {entry.lat && entry.lng && <span className="flex items-center gap-1 ml-2 bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[9px] font-bold border border-blue-200"><MapPin className="w-3 h-3" /> {(typeof entry.lat === 'number' ? entry.lat : parseFloat(entry.lat)).toFixed(4)}, {(typeof entry.lng === 'number' ? entry.lng : parseFloat(entry.lng)).toFixed(4)}</span>}
                                                                     {entry.khususAkhwat && <span className="ml-2 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[9px] font-black border border-pink-200">🌸 KHUSUS AKHWAT</span>}
                                                                 </label>
                                                                 <AutosuggestInput
@@ -647,9 +647,9 @@ export default function BatchInputPage() {
                                                             <div className="col-span-1 md:col-span-2">
                                                                 <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">CP / Maps / Koordinat</label>
                                                                 <div className="flex flex-col md:flex-row gap-4">
-                                                                    <input type="text" placeholder="CP (Contact Person)" value={entry.cp} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="w-full md:w-1/3 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-emerald-700 placeholder:text-slate-400" />
+                                                                    <input type="text" placeholder="CP (Contact Person)" value={entry.cp || ''} onChange={(e) => updateEntry(idx, 'cp', e.target.value)} className="w-full md:w-1/3 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-emerald-700 placeholder:text-slate-400" />
                                                                     <div className="flex-1 flex flex-col md:flex-row gap-2">
-                                                                        <input type="text" placeholder="Google Maps URL" value={entry.gmapsUrl} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-blue-700 text-sm placeholder:text-slate-400" />
+                                                                        <input type="text" placeholder="Google Maps URL" value={entry.gmapsUrl || ''} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-blue-700 text-sm placeholder:text-slate-400" />
 
                                                                         {/* New Checkboxes */}
                                                                         <div className="flex items-center gap-4 px-2">
