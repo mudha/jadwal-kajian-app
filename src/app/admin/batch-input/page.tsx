@@ -75,7 +75,6 @@ export default function BatchInputPage() {
 
     const handleImageUpload = async (file: File) => {
         setIsOcrLoading(true);
-        setIsImageUploading(true);
         setOcrProgress(0);
         try {
             // 1. Upload to Cloudinary (Unsigned Preset)
