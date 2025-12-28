@@ -23,6 +23,7 @@ interface KajianDetail {
     attendanceCount?: number;
     khususAkhwat?: boolean;
     isOnline?: boolean;
+    cp?: string;
 }
 
 import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
@@ -172,7 +173,7 @@ export default function KajianDetailPage() {
 
         try {
             const res = await fetch(`/api/kajian/${editingKajian.id}`, {
-                method: 'PUT',
+                method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(editingKajian)
             });
@@ -704,6 +705,61 @@ export default function KajianDetailPage() {
                                     value={editingKajian.gmapsUrl || ''}
                                     onChange={e => setEditingKajian({ ...editingKajian, gmapsUrl: e.target.value })}
                                 />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Contact Person (CP)</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-emerald-700"
+                                        value={editingKajian.cp || ''}
+                                        onChange={e => setEditingKajian({ ...editingKajian, cp: e.target.value })}
+                                        placeholder="08..."
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Info (Streaming/Pendaftaran)</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-sm"
+                                        value={editingKajian.linkInfo || ''}
+                                        onChange={e => setEditingKajian({ ...editingKajian, linkInfo: e.target.value })}
+                                        placeholder="https://..."
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">URL Gambar Poster</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-sm"
+                                    value={editingKajian.imageUrl || ''}
+                                    onChange={e => setEditingKajian({ ...editingKajian, imageUrl: e.target.value })}
+                                    placeholder="https://..."
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <label className="flex items-center gap-3 p-4 bg-pink-50 rounded-2xl cursor-pointer hover:bg-pink-100 transition-colors">
+                                    <input
+                                        type="checkbox"
+                                        className="w-5 h-5 rounded-lg border-pink-200 text-pink-600 focus:ring-pink-500"
+                                        checked={editingKajian.khususAkhwat || false}
+                                        onChange={e => setEditingKajian({ ...editingKajian, khususAkhwat: e.target.checked })}
+                                    />
+                                    <span className="font-bold text-pink-700 text-sm">Khusus Akhwat</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl cursor-pointer hover:bg-blue-100 transition-colors">
+                                    <input
+                                        type="checkbox"
+                                        className="w-5 h-5 rounded-lg border-blue-200 text-blue-600 focus:ring-blue-500"
+                                        checked={editingKajian.isOnline || false}
+                                        onChange={e => setEditingKajian({ ...editingKajian, isOnline: e.target.checked })}
+                                    />
+                                    <span className="font-bold text-blue-700 text-sm">Kajian Online</span>
+                                </label>
                             </div>
                         </div>
 
