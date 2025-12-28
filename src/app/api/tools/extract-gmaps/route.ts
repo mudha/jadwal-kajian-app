@@ -70,6 +70,22 @@ function extractCoordinates(url: string, html?: string): { lat: number; lng: num
             return { lat: parseFloat(latMatch[1]), lng: parseFloat(lngMatch[1]) };
         }
 
+
+        // Pattern 6: Direct search coordinates /search/lat,lng
+        match = decodedUrl.match(/\/search\/(-?\d+\.?\d*)[+,](-?\d+\.?\d*)/);
+        if (match) return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
+
+        // Pattern 7: Fallback - any coords in URL (Must be prioritized over HTML to avoid viewport issues)
+        match = decodedUrl.match(/(-?\d+\.\d{4,}),\s*(-?\d+\.\d{4,})/);
+        if (match) {
+            const lat = parseFloat(match[1]);
+            const lng = parseFloat(match[2]);
+            // Strict check for Indonesia region to filter out junk
+            if (lat >= -11 && lat <= 6 && lng >= 95 && lng <= 141) {
+                return { lat, lng };
+            }
+        }
+
         // --- HTML FALLBACK ---
         if (html) {
             // Pattern: window.APP_INITIALIZATION_STATE=[[[zoom, long, lat]
@@ -78,16 +94,6 @@ function extractCoordinates(url: string, html?: string): { lat: number; lng: num
             if (initMatch) {
                 const lng = parseFloat(initMatch[1]);
                 const lat = parseFloat(initMatch[2]);
-                return { lat, lng };
-            }
-        }
-
-        // Pattern 6: Fallback - any coords in URL (Last resort)
-        match = decodedUrl.match(/(-?\d+\.\d{4,}),\s*(-?\d+\.\d{4,})/);
-        if (match) {
-            const lat = parseFloat(match[1]);
-            const lng = parseFloat(match[2]);
-            if (lat >= -11 && lat <= 6 && lng >= 95 && lng <= 141) {
                 return { lat, lng };
             }
         }
