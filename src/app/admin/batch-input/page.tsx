@@ -26,6 +26,7 @@ export default function BatchInputPage() {
     const [lastImageUrl, setLastImageUrl] = useState<string | null>(null);
 
     const [isImageUploading, setIsImageUploading] = useState(false);
+    const [uploadingIndices, setUploadingIndices] = useState<Set<number>>(new Set());
 
     // State for managing which row has the city dropdown open
     const [activeCityDropdownIndex, setActiveCityDropdownIndex] = useState<number | null>(null);
@@ -309,6 +310,39 @@ export default function BatchInputPage() {
             setIsAiLoading(false);
         }
     };
+
+    const handleEntryImageUpload = async (idx: number, file: File) => {
+        setUploadingIndices(prev => new Set(prev).add(idx));
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+
+            if (data.url) {
+                const updated = [...entries];
+                updated[idx] = { ...updated[idx], imageUrl: data.url };
+                setEntries(updated);
+            } else {
+                alert('Upload gagal');
+            }
+        } catch (e) {
+            alert('Error saat upload gambar');
+            console.error(e);
+        } finally {
+            setUploadingIndices(prev => {
+                const next = new Set(prev);
+                next.delete(idx);
+                return next;
+            });
+        }
+    };
+
 
     const toggleSelection = (index: number) => {
         const newSelected = new Set(selectedIndices);
@@ -728,6 +762,58 @@ export default function BatchInputPage() {
                                                                             title="Longitude"
                                                                         />
                                                                     </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="col-span-1 md:col-span-2">
+                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">
+                                                                    Gambar Kajian
+                                                                </label>
+                                                                <div className="flex gap-3 items-center">
+                                                                    {entry.imageUrl ? (
+                                                                        <>
+                                                                            <img
+                                                                                src={entry.imageUrl}
+                                                                                className="w-20 h-20 object-cover rounded-xl border-2 border-slate-200 shadow-sm"
+                                                                                alt="Kajian"
+                                                                            />
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    const updated = [...entries];
+                                                                                    updated[idx] = { ...updated[idx], imageUrl: undefined };
+                                                                                    setEntries(updated);
+                                                                                }}
+                                                                                className="px-3 py-2 bg-red-100 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-colors flex items-center gap-1 font-bold text-xs"
+                                                                            >
+                                                                                <X className="w-4 h-4" />
+                                                                                Hapus
+                                                                            </button>
+                                                                        </>
+                                                                    ) : (
+                                                                        <label className="cursor-pointer">
+                                                                            <input
+                                                                                type="file"
+                                                                                accept="image/*"
+                                                                                className="hidden"
+                                                                                onChange={(e) => {
+                                                                                    const file = e.target.files?.[0];
+                                                                                    if (file) handleEntryImageUpload(idx, file);
+                                                                                }}
+                                                                            />
+                                                                            <div className="px-4 py-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-600 hover:text-white transition-colors flex items-center gap-2 font-bold text-xs">
+                                                                                {uploadingIndices.has(idx) ? (
+                                                                                    <>
+                                                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                                                        Upload...
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <ImageIcon className="w-4 h-4" />
+                                                                                        Upload Gambar
+                                                                                    </>
+                                                                                )}
+                                                                            </div>
+                                                                        </label>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>
