@@ -61,7 +61,7 @@ export default function KajianDetailPage() {
                     }
 
                     // Fetch related kajian (same masjid, next 7 days)
-                    fetchRelated(data.masjid, data.id);
+                    fetchRelated(data.masjid, data.city, data.id);
                 })
                 .catch(() => {
                     setLoading(false);
@@ -69,7 +69,7 @@ export default function KajianDetailPage() {
         }
     }, [params]);
 
-    const fetchRelated = async (masjidName: string, currentId: number) => {
+    const fetchRelated = async (masjidName: string, cityName: string, currentId: number) => {
         setLoadingRelated(true);
         try {
             const res = await fetch('/api/kajian');
@@ -82,13 +82,18 @@ export default function KajianDetailPage() {
 
                 // Simple exact match with case-insensitive comparison
                 const targetMasjid = masjidName.toLowerCase().trim();
+                const targetCity = cityName?.toLowerCase().trim() || '';
 
                 const related = data.filter(k => {
                     if (k.id === currentId) return false;
 
-                    // Exact match with case-insensitive comparison
+                    // Filter by Masjid Name (Exact)
                     const kMasjid = k.masjid.toLowerCase().trim();
                     if (kMasjid !== targetMasjid) return false;
+
+                    // Filter by City (Strict if available)
+                    const kCity = k.city?.toLowerCase().trim() || '';
+                    if (targetCity && kCity && kCity !== targetCity) return false;
 
                     const kDate = parseIndoDate(k.date);
                     if (!kDate) return false;
