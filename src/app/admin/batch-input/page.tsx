@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { KajianEntry, parseKajianBroadcast } from '@/lib/parser';
 import { parseWithGemini } from '@/lib/ai-parser';
-import { Clipboard, Save, Play, CheckCircle, AlertCircle, FileText, Calendar, Clock, MapPin, LogOut, LayoutDashboard, ExternalLink, Database, PlusCircle, History, Info, Trash2, Image as ImageIcon, Loader2, Upload, X, Sparkles } from 'lucide-react';
+import { Clipboard, Save, Play, CheckCircle, AlertCircle, FileText, Calendar, Clock, MapPin, LogOut, LayoutDashboard, ExternalLink, Database, PlusCircle, History, Info, Trash2, Image as ImageIcon, Loader2, Upload, X, Sparkles, Eye } from 'lucide-react';
 import { geocodeAddress } from '@/lib/geocoding';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -11,6 +11,7 @@ import { indonesianCities } from '@/data/cities';
 import { parseIndoDate, formatIndoDate, formatYYYYMMDD } from '@/lib/date-utils';
 import AutosuggestInput from '@/components/admin/AutosuggestInput';
 import AIInputSection from '@/components/admin/AIInputSection';
+import KajianCard from '@/components/KajianCard';
 import './batch-input.css';
 
 export default function BatchInputPage() {
@@ -27,6 +28,7 @@ export default function BatchInputPage() {
 
     const [isImageUploading, setIsImageUploading] = useState(false);
     const [uploadingIndices, setUploadingIndices] = useState<Set<number>>(new Set());
+    const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
     // State for managing which row has the city dropdown open
     const [activeCityDropdownIndex, setActiveCityDropdownIndex] = useState<number | null>(null);
@@ -820,9 +822,14 @@ export default function BatchInputPage() {
                                                     </div>
                                                 </td>
                                                 <td className="p-3 align-top text-right">
-                                                    <button onClick={() => handleDiscard(idx)} className="p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover/row:opacity-100">
-                                                        <Trash2 className="w-5 h-5" />
-                                                    </button>
+                                                    <div className="flex flex-col gap-2">
+                                                        <button onClick={() => setPreviewIndex(idx)} className="p-3 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-2xl transition-all opacity-0 group-hover/row:opacity-100" title="Preview Tampilan">
+                                                            <Eye className="w-5 h-5" />
+                                                        </button>
+                                                        <button onClick={() => handleDiscard(idx)} className="p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover/row:opacity-100" title="Hapus">
+                                                            <Trash2 className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -844,9 +851,14 @@ export default function BatchInputPage() {
                                                 />
                                                 <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Baris #{idx + 1}</span>
                                             </div>
-                                            <button onClick={() => handleDiscard(idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={() => setPreviewIndex(idx)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg">
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
+                                                <button onClick={() => handleDiscard(idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div className="space-y-4">
@@ -988,6 +1000,39 @@ export default function BatchInputPage() {
                     )}
                 </div>
             </div>
+            {/* Preview Modal */}
+            {previewIndex !== null && entries[previewIndex] && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                            <h3 className="font-bold text-slate-900">Preview Tampilan</h3>
+                            <button
+                                onClick={() => setPreviewIndex(null)}
+                                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                            >
+                                <X className="w-5 h-5 text-slate-400" />
+                            </button>
+                        </div>
+                        <div className="p-8 flex justify-center bg-slate-50">
+                            <KajianCard
+                                id={0}
+                                title={entries[previewIndex].tema}
+                                ustadz={entries[previewIndex].pemateri}
+                                date={entries[previewIndex].date}
+                                location={entries[previewIndex].masjid}
+                                imageUrl={entries[previewIndex].imageUrl}
+                                khususAkhwat={entries[previewIndex].khususAkhwat}
+                                isOnline={entries[previewIndex].isOnline}
+                                waktu={entries[previewIndex].waktu}
+                                className="w-full max-w-[280px] shadow-xl"
+                            />
+                        </div>
+                        <div className="p-4 bg-white text-center">
+                            <p className="text-[10px] text-slate-400 font-medium">Ini adalah tampilan kartu kajian yang akan muncul di halaman depan.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

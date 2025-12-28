@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Search, Edit, Trash2, Plus, Calendar, MapPin, X, Save, AlertTriangle, ChevronDown, User, Clock, CheckCircle, Info } from 'lucide-react';
+import { Search, Edit, Trash2, Plus, Calendar, MapPin, X, Save, AlertTriangle, ChevronDown, User, Clock, CheckCircle, Info, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { indonesianCities } from '@/data/cities';
 import { parseIndoDate, formatIndoDate, formatYYYYMMDD } from '@/lib/date-utils';
@@ -333,6 +333,14 @@ export default function AdminManagePage() {
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
+                                                        <Link
+                                                            href={`/kajian/${item.id}`}
+                                                            target="_blank"
+                                                            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                            title="Lihat Preview"
+                                                        >
+                                                            <Eye className="w-4 h-4" />
+                                                        </Link>
                                                         <button
                                                             onClick={() => {
                                                                 setEditingKajian({ ...item });
@@ -370,6 +378,14 @@ export default function AdminManagePage() {
                                             {item.date}
                                         </div>
                                         <div className="flex items-center gap-2">
+                                            <Link
+                                                href={`/kajian/${item.id}`}
+                                                target="_blank"
+                                                className="p-2 text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-xl hover:bg-emerald-100 transition-colors"
+                                                title="Lihat Preview"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </Link>
                                             <button
                                                 onClick={() => {
                                                     setEditingKajian({ ...item });
