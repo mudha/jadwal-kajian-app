@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Calendar, MapPin, Share2, Clock, Map as MapIcon, Calendar as CalendarIcon, ExternalLink, Hash, User, Loader2, CheckCircle, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Share2, Clock, Map as MapIcon, Calendar as CalendarIcon, ExternalLink, Hash, User, Loader2, CheckCircle, Edit, Trash2, X, Save } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -43,6 +43,8 @@ export default function KajianDetailPage() {
     const [relatedKajian, setRelatedKajian] = useState<KajianDetail[]>([]);
     const [relatedUstadzKajian, setRelatedUstadzKajian] = useState<KajianDetail[]>([]);
     const [loadingRelated, setLoadingRelated] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingKajian, setEditingKajian] = useState<KajianDetail | null>(null);
 
     // ... existing useEffect ...
     useEffect(() => {
@@ -155,6 +157,36 @@ export default function KajianDetailPage() {
             await fetch(`/api/kajian/${kajian.id}/attend`, { method: 'POST' });
         } catch (e) {
             console.error(e);
+        }
+    };
+
+    const openEditModal = () => {
+        if (kajian) {
+            setEditingKajian(kajian);
+            setIsEditModalOpen(true);
+        }
+    };
+
+    const saveEdit = async () => {
+        if (!editingKajian) return;
+
+        try {
+            const res = await fetch(`/api/kajian/${editingKajian.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editingKajian)
+            });
+
+            if (res.ok) {
+                setKajian(editingKajian);
+                setIsEditModalOpen(false);
+                alert('Kajian berhasil diupdate!');
+            } else {
+                alert('Gagal mengupdate kajian');
+            }
+        } catch (err) {
+            console.error('Error updating kajian:', err);
+            alert('Error updating kajian');
         }
     };
 
@@ -403,15 +435,13 @@ export default function KajianDetailPage() {
                                     <div className="mt-6 pt-6 border-t border-slate-100">
                                         <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3">Admin Controls</p>
                                         <div className="grid grid-cols-2 gap-3">
-                                            <a
-                                                href={`/admin/manage?edit=${kajian.id}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
+                                            <button
+                                                onClick={openEditModal}
                                                 className="flex items-center justify-center gap-2 py-3 bg-blue-50 text-blue-700 rounded-xl font-bold text-sm hover:bg-blue-100 transition-colors"
                                             >
                                                 <Edit className="w-4 h-4" />
                                                 Edit Kajian
-                                            </a>
+                                            </button>
                                             <button
                                                 onClick={handleDelete}
                                                 className="flex items-center justify-center gap-2 py-3 bg-red-50 text-red-700 rounded-xl font-bold text-sm hover:bg-red-100 transition-colors"
@@ -568,6 +598,126 @@ export default function KajianDetailPage() {
                             alt={kajian.tema}
                             className="w-full h-full object-contain rounded-2xl shadow-2xl"
                         />
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {isEditModalOpen && editingKajian && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
+                        {/* Modal Header */}
+                        <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between rounded-t-3xl">
+                            <h2 className="font-black text-xl text-slate-900">Edit Kajian</h2>
+                            <button
+                                onClick={() => setIsEditModalOpen(false)}
+                                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="p-6 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Nama Masjid</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                        value={editingKajian.masjid}
+                                        onChange={e => setEditingKajian({ ...editingKajian, masjid: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Kota</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                        value={editingKajian.city}
+                                        onChange={e => setEditingKajian({ ...editingKajian, city: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Alamat Lengkap</label>
+                                <textarea
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-sm"
+                                    rows={2}
+                                    value={editingKajian.address}
+                                    onChange={e => setEditingKajian({ ...editingKajian, address: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Pemateri</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                        value={editingKajian.pemateri}
+                                        onChange={e => setEditingKajian({ ...editingKajian, pemateri: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Waktu</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                        value={editingKajian.waktu}
+                                        onChange={e => setEditingKajian({ ...editingKajian, waktu: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tanggal</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                    value={editingKajian.date}
+                                    onChange={e => setEditingKajian({ ...editingKajian, date: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tema Kajian</label>
+                                <textarea
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                    rows={3}
+                                    value={editingKajian.tema}
+                                    onChange={e => setEditingKajian({ ...editingKajian, tema: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Google Maps</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-sm"
+                                    value={editingKajian.gmapsUrl || ''}
+                                    onChange={e => setEditingKajian({ ...editingKajian, gmapsUrl: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 flex gap-3 rounded-b-3xl">
+                            <button
+                                onClick={() => setIsEditModalOpen(false)}
+                                className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={saveEdit}
+                                className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <Save className="w-4 h-4" />
+                                Simpan
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
