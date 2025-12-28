@@ -93,7 +93,7 @@ export default function BatchInputPage() {
                     setLastImageUrl(uploadData.secure_url);
                 }
             }
-            setIsImageUploading(false);
+
 
             // 2. Tesseract OCR
             const result = await Tesseract.recognize(
@@ -114,7 +114,7 @@ export default function BatchInputPage() {
             setMessage('Gagal memproses gambar. Pastikan format benar dan konfigurasi Cloudinary sesuai.');
         } finally {
             setIsOcrLoading(false);
-            setIsImageUploading(false);
+
         }
     };
 
@@ -789,7 +789,7 @@ export default function BatchInputPage() {
                                                 <button onClick={() => setPreviewIndex(idx)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Preview">
                                                     <Eye className="w-4 h-4" />
                                                 </button>
-                                                <button onClick={() => handleDeleteEntry(idx)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                                                <button onClick={() => handleDiscard(idx)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
                                                     <X className="w-4 h-4" />
                                                 </button>
                                             </div>
