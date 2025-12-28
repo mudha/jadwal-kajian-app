@@ -58,6 +58,7 @@ function KajianListContent() {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [isLocatingUser, setIsLocatingUser] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
 
     // Sync from settings
     useEffect(() => {
@@ -249,9 +250,46 @@ function KajianListContent() {
                 setKajianList(prev => prev.map(k => k.id === editingKajian.id ? editingKajian : k));
                 setIsEditModalOpen(false);
                 setEditingKajian(null);
+                alert('Jadwal berhasil diperbarui ✨');
             }
         } catch (e) {
             console.error('Update error', e);
+        }
+    };
+
+    const handlePaste = async (e: React.ClipboardEvent) => {
+        const items = e.clipboardData.items;
+        for (const item of items) {
+            if (item.type.indexOf('image') !== -1) {
+                e.preventDefault();
+                const file = item.getAsFile();
+                if (!file) return;
+
+                setIsUploading(true);
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || '');
+                formData.append('folder', 'jadwal-kajian');
+
+                try {
+                    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (data.secure_url) {
+                        setEditingKajian((prev: any) => prev ? ({ ...prev, imageUrl: data.secure_url }) : null);
+                    } else {
+                        throw new Error(data.error?.message || 'Upload failed');
+                    }
+                } catch (err) {
+                    console.error('Upload failed', err);
+                    alert('Gagal upload gambar paste ke Cloudinary');
+                } finally {
+                    setIsUploading(false);
+                }
+            }
         }
     };
 
@@ -786,9 +824,66 @@ function KajianListContent() {
                                     />
                                 </div>
 
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Latitude</label>
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                            placeholder="Ex: -6.123"
+                                            value={editingKajian.lat || ''}
+                                            onChange={e => setEditingKajian({ ...editingKajian, lat: e.target.value ? parseFloat(e.target.value) : undefined })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Longitude</label>
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                            placeholder="Ex: 106.123"
+                                            value={editingKajian.lng || ''}
+                                            onChange={e => setEditingKajian({ ...editingKajian, lng: e.target.value ? parseFloat(e.target.value) : undefined })}
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Google Maps</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 flex justify-between">
+                                            <span>Link Google Maps</span>
+                                            <button
+                                                type="button"
+                                                onClick={async (e) => {
+                                                    const btn = e.currentTarget;
+                                                    const originalText = btn.innerText;
+                                                    btn.innerText = 'Mencari...';
+                                                    btn.disabled = true;
+
+                                                    // Try geocoding from address first
+                                                    const { geocodeAddress } = await import('@/lib/geocoding');
+                                                    const coords = await geocodeAddress(editingKajian.masjid, editingKajian.address, editingKajian.city);
+
+                                                    if (coords) {
+                                                        setEditingKajian({
+                                                            ...editingKajian,
+                                                            lat: coords.lat,
+                                                            lng: coords.lng,
+                                                            gmapsUrl: editingKajian.gmapsUrl || `https://www.google.com/maps?q=${coords.lat},${coords.lng}`
+                                                        });
+                                                    } else {
+                                                        alert('Gagal mendapatkan koordinat otomatis. Harap isi manual.');
+                                                    }
+
+                                                    btn.innerText = originalText;
+                                                    btn.disabled = false;
+                                                }}
+                                                className="text-blue-600 hover:text-blue-800 lowercase font-bold tracking-normal"
+                                            >
+                                                (Dapatkan Koordinat)
+                                            </button>
+                                        </label>
                                         <input
                                             type="text"
                                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-xs text-blue-600"
@@ -815,11 +910,17 @@ function KajianListContent() {
                                                 <div className="relative flex-1">
                                                     <input
                                                         type="text"
-                                                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-xs truncate"
-                                                        placeholder="https://..."
+                                                        className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-xs truncate"
+                                                        placeholder="https://... atau Paste Gambar (Ctrl+V)"
                                                         value={editingKajian.imageUrl || ''}
                                                         onChange={e => setEditingKajian({ ...editingKajian, imageUrl: e.target.value })}
+                                                        onPaste={handlePaste}
                                                     />
+                                                    {isUploading && (
+                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600 animate-spin">
+                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                        </div>
+                                                    )}
                                                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                                                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                                                     </div>
