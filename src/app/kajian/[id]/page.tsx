@@ -41,6 +41,7 @@ export default function KajianDetailPage() {
     const [count, setCount] = useState(0);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     const [relatedKajian, setRelatedKajian] = useState<KajianDetail[]>([]);
+    const [relatedUstadzKajian, setRelatedUstadzKajian] = useState<KajianDetail[]>([]);
     const [loadingRelated, setLoadingRelated] = useState(false);
 
     // ... existing useEffect ...
@@ -60,8 +61,8 @@ export default function KajianDetailPage() {
                         setHasAttended(true);
                     }
 
-                    // Fetch related kajian (same masjid, next 7 days)
-                    fetchRelated(data.masjid, data.city, data.id);
+                    // Fetch related kajian (same masjid & same ustadz, next 7 days)
+                    fetchRelated(data.masjid, data.city, data.pemateri, data.id);
                 })
                 .catch(() => {
                     setLoading(false);
@@ -69,7 +70,7 @@ export default function KajianDetailPage() {
         }
     }, [params]);
 
-    const fetchRelated = async (masjidName: string, cityName: string, currentId: number) => {
+    const fetchRelated = async (masjidName: string, cityName: string, pemateriName: string, currentId: number) => {
         setLoadingRelated(true);
         try {
             const res = await fetch('/api/kajian');
@@ -109,6 +110,31 @@ export default function KajianDetailPage() {
                 });
 
                 setRelatedKajian(related);
+
+                // --- Filter for Same Ustadz ---
+                const targetUstadz = pemateriName.toLowerCase().trim();
+
+                const relatedUstadz = data.filter(k => {
+                    if (k.id === currentId) return false;
+
+                    // Filter by Ustadz Name (Exact)
+                    const kUstadz = k.pemateri.toLowerCase().trim();
+                    if (kUstadz !== targetUstadz) return false;
+
+                    const kDate = parseIndoDate(k.date);
+                    if (!kDate) return false;
+
+                    return kDate >= now && kDate <= sevenDaysLater;
+                });
+
+                // Sort by date
+                relatedUstadz.sort((a, b) => {
+                    const da = parseIndoDate(a.date)?.getTime() || 0;
+                    const db = parseIndoDate(b.date)?.getTime() || 0;
+                    return da - db;
+                });
+
+                setRelatedUstadzKajian(relatedUstadz);
             }
         } catch (e) {
             console.error('Error fetching related kajian:', e);
@@ -440,6 +466,63 @@ export default function KajianDetailPage() {
                                                     </div>
                                                     <div className="shrink-0">
                                                         <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-all">
+                                                            <ArrowLeft className="w-4 h-4 rotate-180" />
+                                                        </div>
+                                                    </div>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Related Ustadz Section */}
+                            {(loadingRelated || relatedUstadzKajian.length > 0) && (
+                                <div className="mt-8 bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="p-2 bg-blue-50 rounded-xl">
+                                            <User className="w-5 h-5 text-blue-600" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-slate-900">Kajian Lain oleh Ustadz Ini</h3>
+                                            <p className="text-xs text-slate-500 font-medium tracking-wide">(7 Hari Kedepan)</p>
+                                        </div>
+                                    </div>
+
+                                    {loadingRelated ? (
+                                        <div className="flex items-center justify-center py-8">
+                                            <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {relatedUstadzKajian.map((rk) => (
+                                                <Link
+                                                    href={`/kajian/${rk.id}`}
+                                                    key={rk.id}
+                                                    className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl hover:bg-blue-50 transition-all border border-transparent hover:border-blue-100 group"
+                                                >
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-lg uppercase tracking-wider">
+                                                                {rk.date.split(',')[0]}
+                                                            </span>
+                                                            <span className="text-[10px] text-slate-400 font-bold uppercase truncate">{rk.waktu}</span>
+                                                            {getKajianStatus(rk.date, rk.waktu) === 'PAST' && (
+                                                                <span className="text-[10px] font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-lg uppercase tracking-wider">
+                                                                    ✓ Selesai
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <h4 className="font-bold text-slate-800 text-sm mb-1 group-hover:text-blue-700 transition-colors truncate">
+                                                            {rk.tema}
+                                                        </h4>
+                                                        <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
+                                                            <MapPin className="w-3 h-3" />
+                                                            <span className="truncate">{formatMasjidName(rk.masjid)}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="shrink-0">
+                                                        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
                                                             <ArrowLeft className="w-4 h-4 rotate-180" />
                                                         </div>
                                                     </div>
