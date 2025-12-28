@@ -47,6 +47,7 @@ function KajianListContent() {
     const filterCity = searchParams.get('city');
     const filterOnline = searchParams.get('online') === 'true';
     const filterMuslimah = searchParams.get('muslimah') === 'true';
+    const filterNearby = searchParams.get('nearby') === 'true';
 
     const { settings } = useSettings();
     const { isAdmin } = useAdmin();
@@ -381,7 +382,7 @@ function KajianListContent() {
                         </svg>
                     </button>
                     <h1 className="text-lg font-bold flex-1">
-                        {filterOnline ? 'Kajian Online' : filterMuslimah ? 'Kajian Muslimah' : 'Cari Kajian'}
+                        {filterNearby ? 'Kajian Terdekat' : filterOnline ? 'Kajian Online' : filterMuslimah ? 'Kajian Muslimah' : 'Cari Kajian'}
                     </h1>
                     <Link href="/notifikasi" className="p-2 relative hover:bg-white/10 rounded-full transition-colors">
                         <div className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-teal-600"></div>

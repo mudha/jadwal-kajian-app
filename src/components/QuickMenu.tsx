@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { BookText, Clock, Video, Flower2 } from 'lucide-react';
+import { BookText, Clock, Video, Flower2, MapPin, MessageCircle, FileText, Calendar, Home } from 'lucide-react';
 
 export default function QuickMenu() {
     const menuItems = [
@@ -37,32 +37,72 @@ export default function QuickMenu() {
             iconBg: 'bg-pink-50',
             iconColor: 'text-pink-600',
         },
+        {
+            label: 'Kajian Terdekat',
+            icon: MapPin,
+            href: '/kajian?nearby=true',
+            gradient: 'from-amber-500 to-amber-600',
+            iconBg: 'bg-amber-50',
+            iconColor: 'text-amber-600',
+        },
+        {
+            label: 'Hubungi Kami',
+            icon: MessageCircle,
+            href: '/hubungi-kami',
+            gradient: 'from-slate-500 to-slate-600',
+            iconBg: 'bg-slate-50',
+            iconColor: 'text-slate-600',
+        },
+        {
+            label: 'Catatan Kajian',
+            icon: FileText,
+            href: '/catatan-kajian',
+            gradient: 'from-indigo-500 to-indigo-600',
+            iconBg: 'bg-indigo-50',
+            iconColor: 'text-indigo-600',
+        },
+        {
+            label: 'Kalender Puasa',
+            icon: Calendar,
+            href: '/kalender-puasa',
+            gradient: 'from-green-500 to-green-600',
+            iconBg: 'bg-green-50',
+            iconColor: 'text-green-600',
+        },
+        {
+            label: 'Cari Masjid',
+            icon: Home,
+            href: '/masjid',
+            gradient: 'from-red-500 to-red-600',
+            iconBg: 'bg-red-50',
+            iconColor: 'text-red-600',
+        },
     ];
 
     return (
-        <div className="md:hidden mb-6 -mx-4 px-4">
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="md:hidden mb-6">
+            <div className="grid grid-cols-3 gap-3">
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     return (
                         <Link
                             key={item.label}
                             href={item.href}
-                            className="group flex-shrink-0"
+                            className="group"
                         >
-                            <div className={`relative bg-gradient-to-br ${item.gradient} rounded-2xl p-4 w-24 h-28 flex flex-col items-center justify-center shadow-md hover:shadow-xl active:scale-95 transition-all duration-200 border border-white/20`}>
+                            <div className={`relative bg-gradient-to-br ${item.gradient} rounded-xl p-3 w-full aspect-square flex flex-col items-center justify-center shadow-md hover:shadow-xl active:scale-95 transition-all duration-200 border border-white/20`}>
                                 {/* Icon Container */}
-                                <div className={`${item.iconBg} rounded-xl p-3 mb-2 group-hover:scale-110 transition-transform duration-200`}>
-                                    <Icon className={`w-6 h-6 ${item.iconColor}`} />
+                                <div className={`${item.iconBg} rounded-lg p-2.5 mb-1.5 group-hover:scale-110 transition-transform duration-200`}>
+                                    <Icon className={`w-5 h-5 ${item.iconColor}`} />
                                 </div>
 
                                 {/* Label */}
-                                <p className="text-white text-[10px] font-bold text-center leading-tight">
+                                <p className="text-white text-[9px] font-bold text-center leading-tight line-clamp-2">
                                     {item.label}
                                 </p>
 
                                 {/* Decorative glow */}
-                                <div className="absolute inset-0 rounded-2xl bg-white/0 group-hover:bg-white/10 transition-colors pointer-events-none" />
+                                <div className="absolute inset-0 rounded-xl bg-white/0 group-hover:bg-white/10 transition-colors pointer-events-none" />
                             </div>
                         </Link>
                     );
