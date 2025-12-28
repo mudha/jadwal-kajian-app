@@ -24,6 +24,8 @@ interface KajianDetail {
     khususAkhwat?: boolean;
     isOnline?: boolean;
     cp?: string;
+    lat?: number;
+    lng?: number;
 }
 
 import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
@@ -188,6 +190,35 @@ export default function KajianDetailPage() {
         } catch (err) {
             console.error('Error updating kajian:', err);
             alert('Error updating kajian');
+        }
+    };
+
+    const handleExtractCoords = async (url: string) => {
+        if (!url || !editingKajian) return;
+
+        // Use the generic generic tools API 
+        try {
+            const res = await fetch('/api/tools/extract-gmaps', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                setEditingKajian({
+                    ...editingKajian,
+                    lat: data.lat,
+                    lng: data.lng,
+                    gmapsUrl: data.expandedUrl || url
+                });
+                alert(`Koordinat ditemukan: ${data.lat}, ${data.lng}`);
+            } else {
+                alert('Gagal mengekstrak koordinat. Pastikan link valid.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Terjadi kesalahan saat mengekstrak koordinat.');
         }
     };
 
@@ -699,12 +730,48 @@ export default function KajianDetailPage() {
 
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Google Maps</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-sm"
-                                    value={editingKajian.gmapsUrl || ''}
-                                    onChange={e => setEditingKajian({ ...editingKajian, gmapsUrl: e.target.value })}
-                                />
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-sm text-blue-600 truncate"
+                                        value={editingKajian.gmapsUrl || ''}
+                                        onChange={e => setEditingKajian({ ...editingKajian, gmapsUrl: e.target.value })}
+                                        placeholder="https://maps.app.goo.gl/..."
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => handleExtractCoords(editingKajian.gmapsUrl || '')}
+                                        disabled={!editingKajian.gmapsUrl}
+                                        className="px-4 bg-teal-50 text-teal-600 rounded-xl hover:bg-teal-100 transition-colors disabled:opacity-50 border border-teal-100"
+                                        title="Ekstrak Lat/Lng"
+                                    >
+                                        <MapPin className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 mt-2">
+                                    <div className="space-y-1">
+                                        <label className="text-[9px] font-bold text-slate-400 px-1">Latitude</label>
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            placeholder="-7.xxxxx"
+                                            value={editingKajian.lat || ''}
+                                            onChange={e => setEditingKajian({ ...editingKajian, lat: parseFloat(e.target.value) })}
+                                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-900"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[9px] font-bold text-slate-400 px-1">Longitude</label>
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            placeholder="112.xxxxx"
+                                            value={editingKajian.lng || ''}
+                                            onChange={e => setEditingKajian({ ...editingKajian, lng: parseFloat(e.target.value) })}
+                                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-900"
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
