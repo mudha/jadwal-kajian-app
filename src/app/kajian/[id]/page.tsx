@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { parseIndoDate, getHijriDate, formatMasjidName, getKajianStatus, isKajianOngoing } from '@/lib/date-utils';
 import { useAdmin } from '@/hooks/useAdmin';
+import ImageUpload from '@/components/ImageUpload';
 
 // Reusing types locally for simplicity or import if shared
 interface KajianDetail {
@@ -798,13 +799,10 @@ export default function KajianDetailPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">URL Gambar Poster</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-sm"
+                                <ImageUpload
+                                    label="Poster / Gambar Kajian"
                                     value={editingKajian.imageUrl || ''}
-                                    onChange={e => setEditingKajian({ ...editingKajian, imageUrl: e.target.value })}
-                                    placeholder="https://..."
+                                    onChange={(url) => setEditingKajian({ ...editingKajian, imageUrl: url })}
                                 />
                             </div>
 

@@ -13,6 +13,7 @@ import AutosuggestInput from '@/components/admin/AutosuggestInput';
 import AIInputSection from '@/components/admin/AIInputSection';
 import KajianCard from '@/components/KajianCard';
 import './batch-input.css';
+import ImageUpload from '@/components/ImageUpload';
 
 export default function BatchInputPage() {
     const router = useRouter();
@@ -26,8 +27,6 @@ export default function BatchInputPage() {
     const [ocrProgress, setOcrProgress] = useState(0);
     const [lastImageUrl, setLastImageUrl] = useState<string | null>(null);
 
-    const [isImageUploading, setIsImageUploading] = useState(false);
-    const [uploadingIndices, setUploadingIndices] = useState<Set<number>>(new Set());
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
     // State for managing which row has the city dropdown open
@@ -313,37 +312,7 @@ export default function BatchInputPage() {
         }
     };
 
-    const handleEntryImageUpload = async (idx: number, file: File) => {
-        setUploadingIndices(prev => new Set(prev).add(idx));
 
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-
-            if (data.url) {
-                const updated = [...entries];
-                updated[idx] = { ...updated[idx], imageUrl: data.url };
-                setEntries(updated);
-            } else {
-                alert('Upload gagal');
-            }
-        } catch (e) {
-            alert('Error saat upload gambar');
-            console.error(e);
-        } finally {
-            setUploadingIndices(prev => {
-                const next = new Set(prev);
-                next.delete(idx);
-                return next;
-            });
-        }
-    };
 
 
     const toggleSelection = (index: number) => {
@@ -767,56 +736,11 @@ export default function BatchInputPage() {
                                                                 </div>
                                                             </div>
                                                             <div className="col-span-1 md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">
-                                                                    Gambar Kajian
-                                                                </label>
-                                                                <div className="flex gap-3 items-center">
-                                                                    {entry.imageUrl ? (
-                                                                        <>
-                                                                            <img
-                                                                                src={entry.imageUrl}
-                                                                                className="w-20 h-20 object-cover rounded-xl border-2 border-slate-200 shadow-sm"
-                                                                                alt="Kajian"
-                                                                            />
-                                                                            <button
-                                                                                onClick={() => {
-                                                                                    const updated = [...entries];
-                                                                                    updated[idx] = { ...updated[idx], imageUrl: undefined };
-                                                                                    setEntries(updated);
-                                                                                }}
-                                                                                className="px-3 py-2 bg-red-100 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-colors flex items-center gap-1 font-bold text-xs"
-                                                                            >
-                                                                                <X className="w-4 h-4" />
-                                                                                Hapus
-                                                                            </button>
-                                                                        </>
-                                                                    ) : (
-                                                                        <label className="cursor-pointer">
-                                                                            <input
-                                                                                type="file"
-                                                                                accept="image/*"
-                                                                                className="hidden"
-                                                                                onChange={(e) => {
-                                                                                    const file = e.target.files?.[0];
-                                                                                    if (file) handleEntryImageUpload(idx, file);
-                                                                                }}
-                                                                            />
-                                                                            <div className="px-4 py-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-600 hover:text-white transition-colors flex items-center gap-2 font-bold text-xs">
-                                                                                {uploadingIndices.has(idx) ? (
-                                                                                    <>
-                                                                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                                                                        Upload...
-                                                                                    </>
-                                                                                ) : (
-                                                                                    <>
-                                                                                        <ImageIcon className="w-4 h-4" />
-                                                                                        Upload Gambar
-                                                                                    </>
-                                                                                )}
-                                                                            </div>
-                                                                        </label>
-                                                                    )}
-                                                                </div>
+                                                                <ImageUpload
+                                                                    label="Gambar Kajian"
+                                                                    value={entry.imageUrl || ''}
+                                                                    onChange={(url) => updateEntry(idx, 'imageUrl', url)}
+                                                                />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -863,14 +787,14 @@ export default function BatchInputPage() {
 
                                         <div className="space-y-4">
                                             <div className="flex gap-4">
-                                                {entry.imageUrl && (
-                                                    <div className="shrink-0 relative">
-                                                        <img src={entry.imageUrl} className="w-16 h-20 object-cover rounded-xl border border-slate-200" />
-                                                        <button onClick={() => updateEntry(idx, 'imageUrl', '')} className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full">
-                                                            <X className="w-3 h-3" />
-                                                        </button>
-                                                    </div>
-                                                )}
+                                                <div className="shrink-0 w-24">
+                                                    <ImageUpload
+                                                        label=""
+                                                        value={entry.imageUrl || ''}
+                                                        onChange={(url) => updateEntry(idx, 'imageUrl', url)}
+                                                        className="w-full"
+                                                    />
+                                                </div>
                                                 <div className="flex-1 space-y-3">
                                                     <div>
                                                         <label className="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Masjid</label>

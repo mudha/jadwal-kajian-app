@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { indonesianCities } from '@/data/cities';
 import { parseIndoDate, formatIndoDate, formatYYYYMMDD } from '@/lib/date-utils';
 import AutosuggestInput from '@/components/admin/AutosuggestInput';
+import ImageUpload from '@/components/ImageUpload';
 
 interface Kajian {
     id: number;
@@ -34,7 +35,7 @@ export default function AdminManagePage() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingKajian, setEditingKajian] = useState<Kajian | null>(null);
 
-    const [isUploading, setIsUploading] = useState(false);
+
 
     // City Autocomplete State
     const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
@@ -42,41 +43,7 @@ export default function AdminManagePage() {
 
 
 
-    const handlePaste = async (e: React.ClipboardEvent) => {
-        const items = e.clipboardData.items;
-        for (const item of items) {
-            if (item.type.indexOf('image') !== -1) {
-                e.preventDefault();
-                const file = item.getAsFile();
-                if (!file) return;
 
-                setIsUploading(true);
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || '');
-                formData.append('folder', 'jadwal-kajian');
-
-                try {
-                    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-                    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await res.json();
-                    if (data.secure_url) {
-                        setEditingKajian((prev: any) => prev ? ({ ...prev, imageUrl: data.secure_url }) : null);
-                    } else {
-                        throw new Error(data.error?.message || 'Upload failed');
-                    }
-                } catch (err) {
-                    console.error('Upload failed', err);
-                    alert('Gagal upload gambar paste ke Cloudinary');
-                } finally {
-                    setIsUploading(false);
-                }
-            }
-        }
-    };
 
 
 
@@ -670,59 +637,11 @@ export default function AdminManagePage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Poster / Gambar Kajian (URL)</label>
-                                    <div className="flex flex-col gap-3">
-                                        <div className="flex gap-2">
-                                            <div className="relative flex-1">
-                                                <input
-                                                    type="text"
-                                                    className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-sm text-slate-900 truncate transition-all group-hover:bg-white"
-                                                    placeholder="Paste URL atau Gambar (Ctrl+V) di sini..."
-                                                    value={editingKajian.imageUrl || ''}
-                                                    onChange={e => setEditingKajian({ ...editingKajian, imageUrl: e.target.value })}
-                                                    onPaste={handlePaste}
-                                                />
-                                                {isUploading && (
-                                                    <div className="absolute right-12 top-1/2 -translate-y-1/2 text-blue-600 animate-spin">
-                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                                    </div>
-                                                )}
-                                                {editingKajian.imageUrl && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setEditingKajian({ ...editingKajian, imageUrl: '' })}
-                                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                                        title="Hapus URL"
-                                                    >
-                                                        <X className="w-4 h-4" />
-                                                    </button>
-                                                )}
-                                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {editingKajian.imageUrl && (
-                                            <div className="relative w-full h-48 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 group">
-                                                <img
-                                                    src={editingKajian.imageUrl}
-                                                    className="w-full h-full object-cover"
-                                                    alt="Preview"
-                                                    onError={(e) => (e.currentTarget.style.display = 'none')}
-                                                />
-                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setEditingKajian({ ...editingKajian, imageUrl: '' })}
-                                                        className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold text-xs flex items-center gap-2 shadow-lg hover:bg-red-700 transition-all transform hover:scale-105"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" /> Hapus Gambar
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                    <ImageUpload
+                                        label="Poster / Gambar Kajian"
+                                        value={editingKajian.imageUrl || ''}
+                                        onChange={(url) => setEditingKajian({ ...editingKajian, imageUrl: url })}
+                                    />
                                 </div>
 
                                 <label className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-100 transition-all mt-4">
