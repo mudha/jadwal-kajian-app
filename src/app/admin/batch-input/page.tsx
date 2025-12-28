@@ -777,7 +777,7 @@ export default function BatchInputPage() {
                                                     <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Jadwal Kajian</span>
                                                     <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
                                                         <Calendar className="w-3 h-3 text-slate-400" />
-                                                        <span>{entry.date ? formatIndoDate(parseIndoDate(entry.date)!) : '-'}</span>
+                                                        <span>{entry.date && parseIndoDate(entry.date) ? formatIndoDate(parseIndoDate(entry.date)!) : '-'}</span>
                                                         <span className="text-slate-300">|</span>
                                                         <Clock className="w-3 h-3 text-slate-400" />
                                                         <span>{entry.waktu}</span>
