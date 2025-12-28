@@ -4,7 +4,7 @@ import { ArrowLeft, Calendar, MapPin, Share2, Clock, Map as MapIcon, Calendar as
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { parseIndoDate, getHijriDate, formatMasjidName, getKajianStatus } from '@/lib/date-utils';
+import { parseIndoDate, getHijriDate, formatMasjidName, getKajianStatus, isKajianOngoing } from '@/lib/date-utils';
 import { useAdmin } from '@/hooks/useAdmin';
 
 // Reusing types locally for simplicity or import if shared
@@ -296,6 +296,11 @@ export default function KajianDetailPage() {
                                                 {(kajian.khususAkhwat || kajian.pemateri.toLowerCase().includes('ustadzah')) && (
                                                     <span className="inline-block px-3 py-1 bg-pink-50 text-pink-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-pink-100 animate-pulse">
                                                         🌸 Khusus Akhwat
+                                                    </span>
+                                                )}
+                                                {isKajianOngoing(kajian.date, kajian.waktu) && (
+                                                    <span className="inline-block px-3 py-1 bg-red-600 text-white text-[10px] font-black rounded-lg uppercase tracking-widest border border-red-700 shadow-sm animate-pulse">
+                                                        • Sedang Berlangsung
                                                     </span>
                                                 )}
                                                 {getKajianStatus(kajian.date, kajian.waktu) === 'PAST' && (

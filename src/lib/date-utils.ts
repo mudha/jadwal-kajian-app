@@ -67,10 +67,19 @@ export function getKajianStatus(dateStr: string, waktuStr?: string): 'PAST' | 'T
             const lastTime = timeMatches[timeMatches.length - 1];
             const [h, m] = lastTime.split(/[:.]/).map(n => parseInt(n));
 
-            const eventTime = new Date();
+            let eventTime = new Date();
             eventTime.setHours(h, m, 0, 0);
 
-            // If current time is after the last mentioned time, mark as PAST
+            // If only one time is mentioned, or "selesai" is used with a start time,
+            // assume it lasts for 90 minutes (1.5 hours)
+            if (timeMatches.length === 1 || lowerWaktu.includes('selesai')) {
+                // If there are multiple times but it says "selesai", adding 90 mins to the LAST time match
+                // is usually safe as the last match is either the only match (start time)
+                // or a specific end time that might still be extended by "selesai"
+                eventTime = new Date(eventTime.getTime() + 90 * 60 * 1000);
+            }
+
+            // If current time is after the last mentioned time (plus buffer if needed), mark as PAST
             if (now.getTime() > eventTime.getTime()) return 'PAST';
         }
 
@@ -179,23 +188,29 @@ export function isKajianOngoing(dateStr: string, waktuStr: string): boolean {
         }
     }
 
-    // Priority 2: Check explicit time ranges (e.g. "09:00 - 11:00")
-    // Regex to find HH:MM
+    // Priority 2: Check explicit time ranges (e.g. "09:00 - 11:00" or "10:00 - selesai")
     const timeMatches = lowerWaktu.match(/(\d{1,2})[:.](\d{2})/g);
-    if (timeMatches && timeMatches.length >= 2) {
-        // Assume first match is start, last match is end
-        const startMatch = timeMatches[0];
-        const endMatch = timeMatches[timeMatches.length - 1];
-
+    if (timeMatches && timeMatches.length > 0) {
         const parseTimeCoords = (str: string) => {
             const [h, m] = str.split(/[:.]/).map(Number);
             return h * 60 + m;
         };
 
-        const startTime = parseTimeCoords(startMatch);
-        const endTime = parseTimeCoords(endMatch);
+        const startTime = parseTimeCoords(timeMatches[0]);
+        let endTime: number;
 
-        // If "Selesai" is keyword, maybe extend end time? But let's trust explicit time.
+        if (timeMatches.length >= 2) {
+            endTime = parseTimeCoords(timeMatches[timeMatches.length - 1]);
+            // If "selesai" is present even with two times, maybe it's "10:00 - 11:00 (tanya jawab sampai selesai)"
+            if (lowerWaktu.includes('selesai')) {
+                endTime += 30; // Add smaller buffer if end time is already specified but mentioned "selesai"
+            }
+        } else {
+            // Only one time match + "selesai" or just one time
+            // Assume 90 minutes duration
+            endTime = startTime + 90;
+        }
+
         if (currentTime >= startTime && currentTime <= endTime) {
             return true;
         }
