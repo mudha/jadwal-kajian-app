@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { KajianEntry, parseWithRegex } from '@/lib/parser';
+import { KajianEntry, parseKajianBroadcast } from '@/lib/parser';
 import { parseWithGemini } from '@/lib/ai-parser';
 import { Clipboard, Save, Play, CheckCircle, AlertCircle, FileText, Calendar, Clock, MapPin, LogOut, LayoutDashboard, ExternalLink, Database, PlusCircle, History, Info, Trash2, Image as ImageIcon, Loader2, Upload, X, Sparkles } from 'lucide-react';
 import { geocodeAddress } from '@/lib/geocoding';
@@ -139,7 +139,7 @@ export default function BatchInputPage() {
             setIsGeocoding(true);
             setMessage('Sedang mengekstrak data dengan Regex...');
 
-            const parsed = parseWithRegex(inputText);
+            const parsed = parseKajianBroadcast(inputText);
             const enrichedEntries = parsed.map(entry => {
                 const isFriday = entry.waktu?.toLowerCase().includes('jumat') || entry.waktu?.toLowerCase().includes("jum'at") || entry.tema?.toLowerCase().includes('jumat') || entry.tema === '';
                 const defaultImg = isFriday ? '/images/khutbah-jumat-cover.png' : undefined;
