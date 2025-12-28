@@ -7,6 +7,8 @@ import KajianCard from '@/components/KajianCard';
 import MenuGrid from '@/components/MenuGrid';
 import OngoingKajianWidget from '@/components/OngoingKajianWidget';
 import PullToRefresh from '@/components/PullToRefresh';
+import QuickMenu from '@/components/QuickMenu';
+import NextPrayerWidget from '@/components/NextPrayerWidget';
 import Link from 'next/link';
 import { getKajianStatus, parseIndoDate, formatMasjidName, getHijriDate } from '@/lib/date-utils';
 
@@ -153,6 +155,10 @@ export default function BerandaPage() {
         </Link>
       </header>
       <PullToRefresh onRefresh={handleRefresh}>
+        {/* Quick Menu - Mobile Only */}
+        <div className="px-4 pt-4">
+          <QuickMenu />
+        </div>
 
         <div className="px-4 py-6 md:py-8 md:px-0 space-y-6 md:space-y-0 md:grid md:grid-cols-12 md:gap-8">
 
@@ -298,6 +304,11 @@ export default function BerandaPage() {
                 </div>
               </section>
             )}
+
+            {/* Next Prayer Widget - Mobile Only */}
+            <div className="px-4 md:px-0">
+              <NextPrayerWidget />
+            </div>
           </div>
 
 

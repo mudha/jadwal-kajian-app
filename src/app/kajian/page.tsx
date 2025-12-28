@@ -45,6 +45,8 @@ function KajianListContent() {
     const searchParams = useSearchParams();
     const filterMode = searchParams.get('mode');
     const filterCity = searchParams.get('city');
+    const filterOnline = searchParams.get('online') === 'true';
+    const filterMuslimah = searchParams.get('muslimah') === 'true';
 
     const { settings } = useSettings();
     const { isAdmin } = useAdmin();
@@ -182,6 +184,18 @@ function KajianListContent() {
             k.city.toLowerCase().includes(searchTerm.toLowerCase());
 
         if (!matchesSearch) return false;
+
+        // Filter for online kajian
+        if (filterOnline) {
+            const isOnlineKajian = k.isOnline === true || k.city?.toLowerCase() === 'online';
+            if (!isOnlineKajian) return false;
+        }
+
+        // Filter for muslimah/akhwat kajian
+        if (filterMuslimah) {
+            const isMuslimahKajian = k.khususAkhwat === true || k.pemateri?.toLowerCase().includes('ustadzah');
+            if (!isMuslimahKajian) return false;
+        }
 
         if (activeTab === 'all') return true;
 
@@ -366,7 +380,9 @@ function KajianListContent() {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                         </svg>
                     </button>
-                    <h1 className="text-lg font-bold flex-1">Cari Kajian</h1>
+                    <h1 className="text-lg font-bold flex-1">
+                        {filterOnline ? 'Kajian Online' : filterMuslimah ? 'Kajian Muslimah' : 'Cari Kajian'}
+                    </h1>
                     <Link href="/notifikasi" className="p-2 relative hover:bg-white/10 rounded-full transition-colors">
                         <div className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-teal-600"></div>
                         <Bell className="w-5 h-5" />
