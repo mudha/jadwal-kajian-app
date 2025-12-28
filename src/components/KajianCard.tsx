@@ -73,22 +73,11 @@ export default function KajianCard({ id, date, location, title, ustadz, imageUrl
     return (
         <Link href={`/kajian/${id}`} className={`group flex-shrink-0 ${className} bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 block hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative`}>
             <div className="relative aspect-[3/4] overflow-hidden bg-slate-100">
-                {imageUrl ? (
-                    <img
-                        src={imageUrl}
-                        alt={title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex flex-col items-center justify-center relative p-6 text-center group-hover:scale-105 transition-transform duration-500">
-                        <div className="absolute inset-0 border-[0.5px] border-white/10 m-2 rounded-xl"></div>
-                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 backdrop-blur-sm">
-                            <BookOpen className="w-6 h-6 text-teal-400/90" />
-                        </div>
-                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] leading-none mb-2">Kajian</h3>
-                        <h2 className="text-slate-200 font-serif font-medium text-lg">Ilmiah</h2>
-                    </div>
-                )}
+                <img
+                    src={imageUrl || '/images/default-kajian.png'}
+                    alt={title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
 
                 {/* Like Button */}
