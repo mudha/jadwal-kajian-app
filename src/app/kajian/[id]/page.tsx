@@ -403,13 +403,15 @@ export default function KajianDetailPage() {
                                     <div className="mt-6 pt-6 border-t border-slate-100">
                                         <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3">Admin Controls</p>
                                         <div className="grid grid-cols-2 gap-3">
-                                            <Link
+                                            <a
                                                 href={`/admin/manage?edit=${kajian.id}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 className="flex items-center justify-center gap-2 py-3 bg-blue-50 text-blue-700 rounded-xl font-bold text-sm hover:bg-blue-100 transition-colors"
                                             >
                                                 <Edit className="w-4 h-4" />
                                                 Edit Kajian
-                                            </Link>
+                                            </a>
                                             <button
                                                 onClick={handleDelete}
                                                 className="flex items-center justify-center gap-2 py-3 bg-red-50 text-red-700 rounded-xl font-bold text-sm hover:bg-red-100 transition-colors"
