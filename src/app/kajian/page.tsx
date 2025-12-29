@@ -64,13 +64,15 @@ function KajianListContent() {
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [isLocatingUser, setIsLocatingUser] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [radius, setRadius] = useState(settings.radius);
 
     // Sync from settings
     useEffect(() => {
         if (settings.userLocation) {
             setUserLocation(settings.userLocation);
         }
-    }, [settings.userLocation]);
+        setRadius(settings.radius);
+    }, [settings.userLocation, settings.radius]);
 
     const fetchData = async () => {
         try {
@@ -165,7 +167,7 @@ function KajianListContent() {
             if (userLocation) {
                 // If kajian has coordinates, use distance-based filtering
                 if (k.distance !== undefined) {
-                    if (k.distance > settings.radius) return false; // Dynamic radius
+                    if (k.distance > radius) return false; // Use local radius state
                 } else {
                     // If no coordinates, include nearby cities (Jakarta & Tangerang area)
                     const nearbyCities = [
@@ -478,6 +480,50 @@ function KajianListContent() {
                                 </button>
                             ))}
                         </div>
+
+                        {/* Radius Slider for Nearby Mode */}
+                        {filterMode === 'nearby' && (
+                            <div className="bg-white rounded-2xl p-5 mb-8 shadow-sm border border-slate-200">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div>
+                                        <h4 className="text-sm font-black text-slate-700">Jarak Maksimal</h4>
+                                        <p className="text-[10px] text-slate-500 font-medium">Tampilkan kajian dalam radius</p>
+                                    </div>
+                                    <div className="bg-blue-50 px-4 py-2 rounded-xl">
+                                        <span className="text-2xl font-black text-blue-600">{radius}</span>
+                                        <span className="text-sm text-blue-500 font-bold ml-1">km</span>
+                                    </div>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="1"
+                                    max="50"
+                                    value={radius}
+                                    onChange={async (e) => {
+                                        const newRadius = parseInt(e.target.value);
+                                        setRadius(newRadius);
+                                        // Update settings
+                                        await fetch('/api/settings/layout', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                ...settings,
+                                                radius: newRadius
+                                            })
+                                        });
+                                    }}
+                                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                    style={{
+                                        background: `linear-gradient(to right, rgb(37 99 235) 0%, rgb(37 99 235) ${(radius / 50) * 100}%, rgb(226 232 240) ${(radius / 50) * 100}%, rgb(226 232 240) 100%)`
+                                    }}
+                                />
+                                <div className="flex justify-between text-[10px] text-slate-400 font-bold mt-2">
+                                    <span>1 km</span>
+                                    <span>25 km</span>
+                                    <span>50 km</span>
+                                </div>
+                            </div>
+                        )}
 
                         {
                             filteredKajian.length === 0 ? (
