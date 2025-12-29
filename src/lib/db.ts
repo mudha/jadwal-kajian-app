@@ -70,6 +70,42 @@ const initDb = async () => {
   // New migration for catatan/notes field
   try { await db.execute("ALTER TABLE kajian ADD COLUMN catatan TEXT"); } catch (e) { }
 
+  // Sekolah table for Islamic schools directory
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS sekolah (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nama TEXT NOT NULL,
+      slug TEXT UNIQUE NOT NULL,
+      jenjang TEXT NOT NULL,
+      alamat TEXT NOT NULL,
+      kota TEXT NOT NULL,
+      provinsi TEXT,
+      telepon TEXT,
+      handphone TEXT,
+      whatsapp_link TEXT,
+      website TEXT,
+      gmaps_url TEXT,
+      lat REAL,
+      lng REAL,
+      uang_masuk INTEGER,
+      spp_bulanan INTEGER,
+      deskripsi TEXT,
+      khusus_akhwat BOOLEAN DEFAULT 0,
+      khusus_ikhwan BOOLEAN DEFAULT 0,
+      nama_pembina TEXT,
+      ketua_yayasan TEXT,
+      kepala_sekolah TEXT,
+      imageUrl TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Indexes for sekolah table for faster queries
+  try { await db.execute("CREATE INDEX IF NOT EXISTS idx_sekolah_kota ON sekolah(kota)"); } catch (e) { }
+  try { await db.execute("CREATE INDEX IF NOT EXISTS idx_sekolah_jenjang ON sekolah(jenjang)"); } catch (e) { }
+  try { await db.execute("CREATE INDEX IF NOT EXISTS idx_sekolah_slug ON sekolah(slug)"); } catch (e) { }
+
   // Analytics table
   await db.execute(`
     CREATE TABLE IF NOT EXISTS analytics (
