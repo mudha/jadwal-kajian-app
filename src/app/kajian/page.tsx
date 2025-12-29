@@ -157,33 +157,32 @@ function KajianListContent() {
             if (!isKajianOngoing(k.date, k.waktu)) return false;
         }
 
-        // Nearby filtering (Improved)
-        // Only strict filter if no specific city/search is applied
+        // Nearby filtering (Improved & Stricter)
         if ((filterMode === 'nearby' || filterNearby) && !searchTerm && !filterCity) {
             // Filter out PAST events for "Nearby" mode
             const status = getKajianStatus(k.date, k.waktu);
             if (status === 'PAST') return false;
 
-            if (userLocation) {
-                // If kajian has coordinates, use distance-based filtering
-                if (k.distance !== undefined) {
-                    if (k.distance > radius) return false; // Use local radius state
-                } else {
-                    // If no coordinates, include nearby cities (Jakarta & Tangerang area)
-                    const nearbyCities = [
-                        'jakarta', 'tangerang', 'bekasi', 'depok', 'bogor',
-                        'jakarta barat', 'jakarta selatan', 'jakarta timur', 'jakarta utara', 'jakarta pusat',
-                        'tangerang selatan', 'tangerang kota', 'bekasi kota', 'bekasi barat', 'bekasi timur',
-                        'depok kota', 'bogor kota'
-                    ];
+            // If kajian has coordinates and user location is available, use distance
+            if (k.distance !== undefined && userLocation) {
+                if (k.distance > radius) return false;
+            }
+            // If kajian has NO coordinates OR user location not available, use city-based filtering
+            else {
+                const nearbyCities = [
+                    'jakarta', 'tangerang', 'bekasi', 'depok', 'bogor',
+                    'jakarta barat', 'jakarta selatan', 'jakarta timur', 'jakarta utara', 'jakarta pusat',
+                    'tangerang selatan', 'tangerang kota', 'bekasi kota', 'bekasi barat', 'bekasi timur',
+                    'depok kota', 'bogor kota'
+                ];
 
-                    const cityLower = k.city.toLowerCase();
-                    const isNearbyCity = nearbyCities.some(city =>
-                        cityLower.includes(city) || city.includes(cityLower)
-                    );
+                const cityLower = k.city.toLowerCase();
+                const isNearbyCity = nearbyCities.some(city =>
+                    cityLower.includes(city) || city.includes(cityLower)
+                );
 
-                    if (!isNearbyCity) return false;
-                }
+                // Filter OUT if city is not in nearby list
+                if (!isNearbyCity) return false;
             }
         }
 
