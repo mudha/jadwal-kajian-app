@@ -127,6 +127,10 @@ function KajianListContent() {
             }
             return k;
         });
+    } else {
+        // Fallback for debugging (force distance mostly for testing if location fails)
+        // If settings has location but state is null, we rely on useEffect.
+        // It should be working.
     }
 
     const filteredKajian = processedKajian.filter(k => {
