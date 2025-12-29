@@ -86,6 +86,12 @@ export default function AdminTampilanPage() {
         hidden_mobile: ['SidebarMenuWidget:mobile', 'PrayerTimesWidget:mobile', 'ContactWidget:mobile']
     };
 
+    const DEFAULT_DESKTOP_LAYOUT = {
+        sidebar: ['SidebarMenuWidget', 'PrayerTimesWidget', 'ContactWidget'],
+        main: ['HeroWidget', 'QuickMenuWidget', 'OngoingWidget', 'LatestKajianWidget', 'KajianListWidget'],
+        hidden: []
+    };
+
 
 
     const sensors = useSensors(
@@ -209,10 +215,26 @@ export default function AdminTampilanPage() {
                 if (data && (data.sidebar || data.main)) {
                     const mobile = data.mobile || DEFAULT_MOBILE_LAYOUT.mobile;
                     const hidden_mobile = data.hidden_mobile || DEFAULT_MOBILE_LAYOUT.hidden_mobile;
-                    setLayout({ ...data, mobile, hidden_mobile });
+                    // Ensure desktop parts are also present if partially missing (though less likely)
+                    const sidebar = data.sidebar || DEFAULT_DESKTOP_LAYOUT.sidebar;
+                    const main = data.main || DEFAULT_DESKTOP_LAYOUT.main;
+                    const hidden = data.hidden || DEFAULT_DESKTOP_LAYOUT.hidden;
+
+                    setLayout({ ...data, sidebar, main, hidden, mobile, hidden_mobile });
                 } else {
-                    setLayout(prev => ({ ...prev, ...DEFAULT_MOBILE_LAYOUT }));
+                    setLayout({
+                        ...DEFAULT_DESKTOP_LAYOUT,
+                        ...DEFAULT_MOBILE_LAYOUT
+                    });
                 }
+            })
+            .catch(err => {
+                console.error('Failed to fetch layout:', err);
+                // On error, use defaults to ensure UI shows up
+                setLayout({
+                    ...DEFAULT_DESKTOP_LAYOUT,
+                    ...DEFAULT_MOBILE_LAYOUT
+                });
             });
 
         // Fetch Quick Menu
