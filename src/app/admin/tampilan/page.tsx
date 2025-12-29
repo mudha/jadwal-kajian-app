@@ -386,6 +386,75 @@ export default function AdminTampilanPage() {
                     {activeId ? <div className="p-4 bg-white border border-teal-500 rounded-xl shadow-xl">{getLabel(activeId)}</div> : null}
                 </DragOverlay>
             </DndContext>
+
+            {/* Quick Menu Configuration Section */}
+            <div className="mt-12 pt-8 border-t border-slate-200">
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-900">Konfigurasi Menu Cepat</h2>
+                        <p className="text-slate-500">Atur urutan item pada widget Menu Cepat (Grid).</p>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl border border-slate-200">
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragStart={(e) => setActiveId(e.active.id)}
+                        onDragEnd={handleMenuDragEnd}
+                    >
+                        <SortableContext items={menuItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {menuItems.map((item) => (
+                                    <SortableMenuItem key={item.id} item={item} />
+                                ))}
+                            </div>
+                        </SortableContext>
+                        <DragOverlay>
+                            {activeId && menuItems.find(i => i.id === activeId) ? (
+                                <div className="p-3 bg-white border-2 border-teal-500 rounded-lg shadow-xl font-bold text-slate-800">
+                                    {menuItems.find(i => i.id === activeId)?.label}
+                                </div>
+                            ) : null}
+                        </DragOverlay>
+                    </DndContext>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Helper Component for Menu Item
+function SortableMenuItem({ item }: { item: any }) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id: item.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            className={`p-4 rounded-xl border flex items-center gap-3 cursor-grab hover:bg-slate-50 transition-colors ${isDragging ? 'border-teal-500 bg-teal-50' : 'border-slate-200 bg-white'}`}
+        >
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.iconBg || 'bg-slate-100'}`}>
+                <span className={`text-xs font-bold ${item.iconColor || 'text-slate-500'}`}>
+                    {item.label.substring(0, 2).toUpperCase()}
+                </span>
+            </div>
+            <span className="font-medium text-slate-700 text-sm">{item.label}</span>
         </div>
     );
 }
