@@ -406,7 +406,7 @@ export default function AdminTampilanPage() {
                 )}
 
                 <DragOverlay>
-                    {activeId ? <div className="p-4 bg-white border border-teal-500 rounded-xl shadow-xl">{getLabel(activeId)}</div> : null}
+                    {activeId ? <div className="p-4 bg-white border border-teal-500 rounded-xl shadow-xl">{getLabel(String(activeId))}</div> : null}
                 </DragOverlay>
             </DndContext>
 
