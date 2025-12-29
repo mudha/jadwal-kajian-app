@@ -20,6 +20,7 @@ export interface KajianEntry {
     linkInfo?: string; // Link pendaftaran, streaming, atau WAG
     isOnline?: boolean; // True if kajian is online (Zoom, YouTube, etc.)
     attendanceCount?: number; // Count of people planning to attend
+    catatan?: string; // Catatan dari panitia (notes from organizers)
 }
 
 export function parseKajianBroadcast(text: string): KajianEntry[] {

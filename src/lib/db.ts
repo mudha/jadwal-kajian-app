@@ -67,6 +67,9 @@ const initDb = async () => {
   try { await db.execute("ALTER TABLE kajian ADD COLUMN pemateri2 TEXT"); } catch (e) { }
   try { await db.execute("ALTER TABLE kajian ADD COLUMN pemateri3 TEXT"); } catch (e) { }
 
+  // New migration for catatan/notes field
+  try { await db.execute("ALTER TABLE kajian ADD COLUMN catatan TEXT"); } catch (e) { }
+
   // Analytics table
   await db.execute(`
     CREATE TABLE IF NOT EXISTS analytics (

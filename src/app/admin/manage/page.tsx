@@ -31,6 +31,7 @@ interface Kajian {
     attendanceCount?: number;
     lat?: number;
     lng?: number;
+    catatan?: string;
 }
 
 export default function AdminManagePage() {
@@ -637,6 +638,17 @@ export default function AdminManagePage() {
                                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-slate-900 placeholder:text-slate-400"
                                         value={editingKajian.tema}
                                         onChange={e => setEditingKajian({ ...editingKajian, tema: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Catatan dari Panitia</label>
+                                    <textarea
+                                        rows={2}
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-slate-900 placeholder:text-slate-400"
+                                        value={editingKajian.catatan || ''}
+                                        onChange={e => setEditingKajian({ ...editingKajian, catatan: e.target.value })}
+                                        placeholder="Misal: Membawa makanan untuk berbuka, Khusus ikhwan, dll"
                                     />
                                 </div>
 

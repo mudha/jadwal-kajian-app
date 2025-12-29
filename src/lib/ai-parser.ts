@@ -32,9 +32,10 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
         waktu_selesai?: string; // Waktu selesai spesifik (jika ada, default: "Selesai")
         date: string; // Tanggal kajian (Misal: Senin, 23 Desember 2025). Cari di header global jika tidak ada di entri.
         cp: string; // Contact Person (hanya nomor HP/nama, jangan link WA channel)
-        khususAkhwat: boolean; // True jika ada kata "khusus akhwat", "akhwat only", "khusus wanita", ATAU jika pematerinya adalah seorang "Ustadzah" (karena ustadzah biasanya mengisi kajian khusus wanita). False jika untuk umum atau ikhwan-akhwat.
+        khususAkhwat: boolean; // True jika ada kata "khusus akhwat", "akhwat only", "khusus wanita", ATAU jika pematerinya adalah seorang "Ustadzah". False jika untuk umum atau ikhwan-akhwat.
         linkInfo: string; // Link pendaftaran, streaming, atau WAG (Ambil link yang paling penting untuk user)
         isOnline: boolean; // True jika acara diselenggarakan via Zoom, YouTube, GMeet, atau platform online lainnya.
+        catatan?: string; // Catatan tambahan dari panitia (misal: "Membawa makanan untuk berbuka", "Dresscode Muslimah", "Pendaftaran wajib", "Free Konsumsi", "Khusus Ikhwan", dll). Jangan isi jika tidak ada catatan spesial.
     }
 
     ATURAN KHUSUS:
@@ -65,18 +66,22 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
        - Deteksi separator seperti: "&", "dan", "," (koma)
        - Contoh: "Ust. Ahmad & Ust. Budi" -> pemateri: "Ust. Ahmad", pemateri2: "Ust. Budi"
        - Contoh: "Ust. A, Ust. B, Ust. C" -> pemateri: "Ust. A", pemateri2: "Ust. B", pemateri3: "Ust. C"
-    6. **SHOLAT JUMAT**: Jika teks adalah rekapan Sholat Jumat:
+    6. **CATATAN (PENTING!)**: Field 'catatan' untuk informasi tambahan dari panitia:
+       - Contoh catatan: "Membawa makanan untuk berbuka", "Dresscode Muslimah", "Pendaftaran wajib", "Free Konsumsi", "Khusus Ikhwan", "Absensi diwajibkan", "Bawa alat tulis"
+       - JANGAN masukkan info yang sudah masuk kategori lain (tema, pemateri, waktu, dll)
+       - Kosongkan jika tidak ada catatan khusus
+    7. **SHOLAT JUMAT**: Jika teks adalah rekapan Sholat Jumat:
        - Field 'waktu' diisi "Sholat Jumat" (atau waktu spesifik jika ada, misal "11.30 - 13.00 WIB").
        - Field 'pemateri' diambil dari baris "Khatib / Imam".
        - Field 'tema' jika isinya "-" atau strip, kosongkan saja.
-    7. **KAJIAN ONLINE**: Jika acara diselenggarakan secara Online (Zoom, YouTube, dll):
+    8. **KAJIAN ONLINE**: Jika acara diselenggarakan secara Online (Zoom, YouTube, dll):
        - Field 'isOnline' set ke true.
        - Field 'city', 'masjid', dan 'address' otomatis diisi "Online".
        - Simpan link Zoom, Meeting ID, atau detail lainnya di 'linkInfo' atau 'address' agar user tahu cara aksesnya.
-    8. **KHUSUS AKHWAT**: Set true jika ada indikator khusus wanita ATAU pematerinya Ustadzah.
-    9. **LINK INFO**: Ambil link pendaftaran > link Zoom > streaming > WAG.
-    10. **GMAPS**: Ambil link gmaps jika ada. Kosongkan (null) jika Online.
-    11. Output HANYA JSON text murni tanpa markdown formatting (tanpa \`\`\`json).
+    9. **KHUSUS AKHWAT**: Set true jika ada indikator khusus wanita ATAU pematerinya Ustadzah.
+    10. **LINK INFO**: Ambil link pendaftaran > link Zoom > streaming > WAG.
+    11. **GMAPS**: Ambil link gmaps jika ada. Kosongkan (null) jika Online.
+    12. Output HANYA JSON text murni tanpa markdown formatting (tanpa \`\`\`json).
 
         TEKS BROADCAST:
             ${originalText}
