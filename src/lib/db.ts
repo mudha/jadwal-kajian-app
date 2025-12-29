@@ -70,6 +70,38 @@ const initDb = async () => {
   // New migration for catatan/notes field
   try { await db.execute("ALTER TABLE kajian ADD COLUMN catatan TEXT"); } catch (e) { }
 
+  // Migrations for sekolah table
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN slug TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN provinsi TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN whatsapp_link TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN website TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN gmaps_url TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN lat REAL"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN lng REAL"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN uang_masuk INTEGER"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN spp_bulanan INTEGER"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN deskripsi TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN khusus_akhwat BOOLEAN DEFAULT 0"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN khusus_ikhwan BOOLEAN DEFAULT 0"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN nama_pembina TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN ketua_yayasan TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN kepala_sekolah TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN nama_yayasan TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN imageUrl TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN email TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN facebook TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN instagram TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN twitter TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN youtube TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN telegram TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN telpon_2 TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN contact_person_nama TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN contact_person_hp TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN is_full_day BOOLEAN DEFAULT 0"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN is_boarding BOOLEAN DEFAULT 0"); } catch (e) { }
+  try { await db.execute("ALTER TABLE sekolah ADD COLUMN is_paket_abc BOOLEAN DEFAULT 0"); } catch (e) { }
+
+
   // Sekolah table for Islamic schools directory
   await db.execute(`
     CREATE TABLE IF NOT EXISTS sekolah (

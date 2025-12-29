@@ -540,11 +540,7 @@ function KajianListContent() {
                                                                 🌸 Akhwat
                                                             </div>
                                                         )}
-                                                        {isKajianOngoing(kajian.date, kajian.waktu) && (
-                                                            <div className="px-3 py-1 bg-red-600 text-white text-[10px] font-black rounded-lg uppercase tracking-wider shadow-sm animate-pulse whitespace-nowrap">
-                                                                • Berlangsung
-                                                            </div>
-                                                        )}
+                                                        {/* Redundant Badge Removed */}
                                                         {status === 'PAST' && (
                                                             <div className="px-3 py-1 bg-slate-600 text-white text-[10px] font-black rounded-lg uppercase tracking-wider shadow-sm whitespace-nowrap">
                                                                 Selesai

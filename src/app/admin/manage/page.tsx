@@ -290,24 +290,24 @@ export default function AdminManagePage() {
                                 <table className="w-full text-left">
                                     <thead className="bg-slate-50 border-b border-slate-200">
                                         <tr>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Waktu & Tanggal</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Masjid / Lokasi</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Pemateri & Tema</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 text-center">Peserta</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 text-right">Aksi</th>
+                                            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Waktu & Tanggal</th>
+                                            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Masjid / Lokasi</th>
+                                            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Pemateri & Tema</th>
+                                            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 text-center">Peserta</th>
+                                            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 text-right">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
                                         {filteredList.map((item) => (
                                             <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-4 py-4 whitespace-nowrap">
                                                     <div className="flex items-center gap-2 text-slate-900 font-bold">
                                                         <Calendar className="w-4 h-4 text-blue-500" />
                                                         {item.date}
                                                     </div>
                                                     <p className="pl-6 text-sm text-slate-600 font-medium">{item.waktu}</p>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-4 py-4">
                                                     <div className="flex items-center gap-2">
                                                         <div className="font-bold text-slate-900">{item.masjid}</div>
                                                         {item.lat && item.lng && (
@@ -325,16 +325,16 @@ export default function AdminManagePage() {
                                                         {item.city}
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-4 py-4">
                                                     <div className="font-bold text-slate-900">{item.pemateri}</div>
                                                     <p className="text-sm text-slate-600 font-medium line-clamp-1" title={item.tema}>{item.tema}</p>
                                                 </td>
-                                                <td className="px-6 py-4 text-center">
+                                                <td className="px-4 py-4 text-center">
                                                     <span className="inline-flex items-center justify-center px-3 py-1 bg-green-100 text-green-700 rounded-full font-bold text-xs">
                                                         {item.attendanceCount || 0}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-right">
+                                                <td className="px-4 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <Link
                                                             href={`/kajian/${item.id}`}

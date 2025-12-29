@@ -15,6 +15,7 @@ import {
     Home,
     List,
     Merge,
+    School,
 } from 'lucide-react';
 import LogoutButton from '@/components/LogoutButton';
 import { useEffect } from 'react';
@@ -43,6 +44,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
         { href: '/admin/input', icon: FileInput, label: 'Input Kajian' },
         { href: '/admin/ustadz', icon: ListMusic, label: 'Kelola Ustadz' },
         { href: '/admin/masjid', icon: Calendar, label: 'Kelola Masjid' },
+        { href: '/admin/sekolah', icon: School, label: 'Kelola Sekolah' },
     ];
 
     // Add admin management only for Super Admin
@@ -184,7 +186,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                     <div className="w-10" /> {/* Spacer for centering */}
                 </header>
 
-                <main className="p-4 md:p-8 max-w-7xl mx-auto">
+                <main className="p-4 md:p-8 w-full">
                     {children}
                 </main>
             </div>

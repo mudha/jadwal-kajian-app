@@ -14,8 +14,6 @@ export async function GET(request: NextRequest) {
         const limit = parseInt(searchParams.get('limit') || '50');
         const offset = parseInt(searchParams.get('offset') || '0');
 
-        // db is already imported
-
         // Build WHERE clause dynamically
         let whereConditions: string[] = [];
         let params: any[] = [];
@@ -31,8 +29,8 @@ export async function GET(request: NextRequest) {
         }
 
         if (search) {
-            whereConditions.push('(nama LIKE ? OR alamat LIKE ?)');
-            params.push(`%${search}%`, `%${search}%`);
+            whereConditions.push('(nama LIKE ? OR alamat LIKE ? OR kota LIKE ?)');
+            params.push(`%${search}%`, `%${search}%`, `%${search}%`);
         }
 
         const whereClause = whereConditions.length > 0
