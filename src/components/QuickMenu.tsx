@@ -3,83 +3,94 @@
 import Link from 'next/link';
 import { BookText, Clock, Video, Flower2, MapPin, MessageCircle, FileText, Calendar, Home, GraduationCap } from 'lucide-react';
 
-export default function QuickMenu() {
-    const menuItems = [
+
+export default function QuickMenu({ customItems }: { customItems?: any[] }) {
+    const DEFAULT_ITEMS = [
         {
+            id: 'sekolah-sunnah',
             label: 'Sekolah Sunnah',
-            icon: GraduationCap,
+            iconName: 'GraduationCap',
             href: '/sekolah-sunnah',
             gradient: 'from-purple-500 to-purple-600',
             iconBg: 'bg-purple-50',
             iconColor: 'text-purple-600',
         },
         {
+            id: 'dzikir',
             label: 'Dzikir',
-            icon: BookText,
+            iconName: 'BookText',
             href: '/dzikir',
             gradient: 'from-teal-500 to-teal-600',
             iconBg: 'bg-teal-50',
             iconColor: 'text-teal-600',
         },
         {
+            id: 'jadwal-sholat',
             label: 'Jadwal Sholat',
-            icon: Clock,
+            iconName: 'Clock',
             href: '/jadwal-sholat',
             gradient: 'from-blue-500 to-blue-600',
             iconBg: 'bg-blue-50',
             iconColor: 'text-blue-600',
         },
         {
+            id: 'kajian-online',
             label: 'Kajian Online',
-            icon: Video,
+            iconName: 'Video',
             href: '/kajian?online=true',
             gradient: 'from-violet-500 to-violet-600',
             iconBg: 'bg-violet-50',
             iconColor: 'text-violet-600',
         },
         {
+            id: 'kajian-muslimah',
             label: 'Kajian Muslimah',
-            icon: Flower2,
+            iconName: 'Flower2',
             href: '/kajian?muslimah=true',
             gradient: 'from-pink-500 to-pink-600',
             iconBg: 'bg-pink-50',
             iconColor: 'text-pink-600',
         },
         {
+            id: 'kajian-terdekat',
             label: 'Kajian Terdekat',
-            icon: MapPin,
+            iconName: 'MapPin',
             href: '/kajian?nearby=true',
             gradient: 'from-amber-500 to-amber-600',
             iconBg: 'bg-amber-50',
             iconColor: 'text-amber-600',
         },
         {
+            id: 'hubungi-kami',
             label: 'Hubungi Kami',
-            icon: MessageCircle,
+            iconName: 'MessageCircle',
             href: '/hubungi-kami',
             gradient: 'from-slate-500 to-slate-600',
             iconBg: 'bg-slate-50',
             iconColor: 'text-slate-600',
         },
         {
+            id: 'catatan-kajian',
             label: 'Catatan Kajian',
-            icon: FileText,
+            iconName: 'FileText',
             href: '/catatan-kajian',
             gradient: 'from-indigo-500 to-indigo-600',
             iconBg: 'bg-indigo-50',
             iconColor: 'text-indigo-600',
         },
         {
+            id: 'kalender-puasa',
             label: 'Kalender Puasa',
-            icon: Calendar,
+            iconName: 'Calendar',
             href: '/kalender-puasa',
             gradient: 'from-green-500 to-green-600',
             iconBg: 'bg-green-50',
             iconColor: 'text-green-600',
         },
         {
+            id: 'cari-masjid',
             label: 'Cari Masjid',
-            icon: Home,
+            iconName: 'Home',
             href: '/masjid',
             gradient: 'from-red-500 to-red-600',
             iconBg: 'bg-red-50',
@@ -87,11 +98,17 @@ export default function QuickMenu() {
         },
     ];
 
+    const ICON_MAP: any = {
+        BookText, Clock, Video, Flower2, MapPin, MessageCircle, FileText, Calendar, Home, GraduationCap
+    };
+
+    const items = customItems || DEFAULT_ITEMS;
+
     return (
         <div className="mb-6">
             <div className="grid grid-cols-3 md:grid-cols-5 gap-3 md:gap-4">
-                {menuItems.map((item) => {
-                    const Icon = item.icon;
+                {items.map((item) => {
+                    const Icon = ICON_MAP[item.iconName] || Home;
                     return (
                         <Link
                             key={item.label}

@@ -80,22 +80,7 @@ export default function AdminTampilanPage() {
         hidden_mobile: ['SidebarMenuWidget:mobile', 'PrayerTimesWidget:mobile', 'ContactWidget:mobile']
     };
 
-    useEffect(() => {
-        fetch('/api/settings/layout')
-            .then(res => res.json())
-            .then(data => {
-                if (data && (data.sidebar || data.main)) {
-                    // Backward compatibility: If no mobile data, use defaults
-                    const mobile = data.mobile || DEFAULT_MOBILE_LAYOUT.mobile;
-                    const hidden_mobile = data.hidden_mobile || DEFAULT_MOBILE_LAYOUT.hidden_mobile;
-                    setLayout({ ...data, mobile, hidden_mobile });
-                } else {
-                    // Fallback if no settings at all (should be handled by API defaults but safe to have)
-                    setLayout(prev => ({ ...prev, ...DEFAULT_MOBILE_LAYOUT }));
-                }
-                setLoading(false);
-            });
-    }, []);
+
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -194,12 +179,90 @@ export default function AdminTampilanPage() {
     // Use :mobile suffix for mobile widgets to maintain unique IDs in the system
     // but we display them cleanly in the UI.
 
+    const [menuItems, setMenuItems] = useState<any[]>([]);
+
+    const DEFAULT_MENU_ITEMS = [
+        { id: 'sekolah-sunnah', label: 'Sekolah Sunnah', iconName: 'GraduationCap', href: '/sekolah-sunnah', gradient: 'from-purple-500 to-purple-600', iconBg: 'bg-purple-50', iconColor: 'text-purple-600' },
+        { id: 'dzikir', label: 'Dzikir', iconName: 'BookText', href: '/dzikir', gradient: 'from-teal-500 to-teal-600', iconBg: 'bg-teal-50', iconColor: 'text-teal-600' },
+        { id: 'jadwal-sholat', label: 'Jadwal Sholat', iconName: 'Clock', href: '/jadwal-sholat', gradient: 'from-blue-500 to-blue-600', iconBg: 'bg-blue-50', iconColor: 'text-blue-600' },
+        { id: 'kajian-online', label: 'Kajian Online', iconName: 'Video', href: '/kajian?online=true', gradient: 'from-violet-500 to-violet-600', iconBg: 'bg-violet-50', iconColor: 'text-violet-600' },
+        { id: 'kajian-muslimah', label: 'Kajian Muslimah', iconName: 'Flower2', href: '/kajian?muslimah=true', gradient: 'from-pink-500 to-pink-600', iconBg: 'bg-pink-50', iconColor: 'text-pink-600' },
+        { id: 'kajian-terdekat', label: 'Kajian Terdekat', iconName: 'MapPin', href: '/kajian?nearby=true', gradient: 'from-amber-500 to-amber-600', iconBg: 'bg-amber-50', iconColor: 'text-amber-600' },
+        { id: 'hubungi-kami', label: 'Hubungi Kami', iconName: 'MessageCircle', href: '/hubungi-kami', gradient: 'from-slate-500 to-slate-600', iconBg: 'bg-slate-50', iconColor: 'text-slate-600' },
+        { id: 'catatan-kajian', label: 'Catatan Kajian', iconName: 'FileText', href: '/catatan-kajian', gradient: 'from-indigo-500 to-indigo-600', iconBg: 'bg-indigo-50', iconColor: 'text-indigo-600' },
+        { id: 'kalender-puasa', label: 'Kalender Puasa', iconName: 'Calendar', href: '/kalender-puasa', gradient: 'from-green-500 to-green-600', iconBg: 'bg-green-50', iconColor: 'text-green-600' },
+        { id: 'cari-masjid', label: 'Cari Masjid', iconName: 'Home', href: '/masjid', gradient: 'from-red-500 to-red-600', iconBg: 'bg-red-50', iconColor: 'text-red-600' },
+    ];
+
+    useEffect(() => {
+        // Fetch Layout
+        fetch('/api/settings/layout')
+            .then(res => res.json())
+            .then(data => {
+                // ... existing layout fetch logic ...
+                if (data && (data.sidebar || data.main)) {
+                    const mobile = data.mobile || DEFAULT_MOBILE_LAYOUT.mobile;
+                    const hidden_mobile = data.hidden_mobile || DEFAULT_MOBILE_LAYOUT.hidden_mobile;
+                    setLayout({ ...data, mobile, hidden_mobile });
+                } else {
+                    setLayout(prev => ({ ...prev, ...DEFAULT_MOBILE_LAYOUT }));
+                }
+            });
+
+        // Fetch Quick Menu
+        fetch('/api/settings/quick-menu')
+            .then(res => res.json())
+            .then(data => {
+                if (data && Array.isArray(data) && data.length > 0) {
+                    setMenuItems(data);
+                } else {
+                    setMenuItems(DEFAULT_MENU_ITEMS);
+                }
+                setLoading(false);
+            });
+    }, []);
+
+    // ... existing handleDragEnd for widgets ...
+
+    const handleMenuDragEnd = (event: any) => {
+        const { active, over } = event;
+        if (active.id !== over.id) {
+            setMenuItems((items) => {
+                const oldIndex = items.findIndex(i => i.id === active.id);
+                const newIndex = items.findIndex(i => i.id === over.id);
+                return arrayMove(items, oldIndex, newIndex);
+            });
+        }
+    };
+
     const saveLayout = async () => {
+        // Save Layout
         await fetch('/api/settings/layout', {
             method: 'POST',
             body: JSON.stringify(layout)
         });
-        alert('Tampilan berhasil disimpan!');
+
+        // Save Menu
+        // We need to ensure we save the full object structure expected by frontend
+        // Currently menuItems in state only has minimal props? 
+        // Wait, if we pull from default, we might miss properties if we used a simplified DEFAULT list in Admin.
+        // I used simplified DEFAULT_MENU_ITEMS above. 
+        // IMPORTANT: The admin needs the FULL object to save back, otherwise we lose icons/hrefs.
+        // I should update DEFAULT_MENU_ITEMS in Admin to match `QuickMenu.tsx` defaults fully or at least fetch the full object structure.
+        // Actually, easiest way: 
+        // 1. Initial load gets full object.
+        // 2. If default, use full default object.
+        // 3. Save sends back whatever is in state.
+
+        // Let's ensure my DEFAULT_MENU_ITEMS here has all fields needed.
+        // See updated replacement block below for full fields.
+
+        await fetch('/api/settings/quick-menu', {
+            method: 'POST',
+            body: JSON.stringify(menuItems)
+        });
+
+        alert('Tampilan dan Menu berhasil disimpan!');
     };
 
     const [activeTab, setActiveTab] = useState<'desktop' | 'mobile'>('desktop');

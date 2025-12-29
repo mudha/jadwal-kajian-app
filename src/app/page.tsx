@@ -137,6 +137,8 @@ export default function BerandaPage() {
     }
   };
 
+  const [quickMenuItems, setQuickMenuItems] = useState(null);
+
   useEffect(() => {
     fetchData();
     // Fetch Layout
@@ -155,6 +157,14 @@ export default function BerandaPage() {
         console.error("Failed to load layout", err);
         setLayoutLoading(false);
       });
+
+    // Fetch Quick Menu Settings
+    fetch('/api/settings/quick-menu')
+      .then(res => res.json())
+      .then(data => {
+        if (data) setQuickMenuItems(data);
+      })
+      .catch(err => console.error("Failed to load quick menu", err));
   }, []);
 
   const handleRefresh = async () => {
@@ -164,7 +174,8 @@ export default function BerandaPage() {
   const widgetData = {
     featuredKajian,
     latestKajian,
-    sortMode
+    sortMode,
+    quickMenuItems
   };
 
   return (

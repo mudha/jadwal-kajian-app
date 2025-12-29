@@ -2,6 +2,10 @@
 
 import QuickMenu from '@/components/QuickMenu';
 
-export default function QuickMenuWidget() {
-    return <QuickMenu />;
+interface WidgetProps {
+    data?: any;
+}
+
+export default function QuickMenuWidget({ data }: WidgetProps) {
+    return <QuickMenu customItems={data?.quickMenuItems} />;
 }
