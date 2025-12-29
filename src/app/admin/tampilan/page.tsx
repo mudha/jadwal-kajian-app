@@ -9,6 +9,7 @@ import {
     useSensor,
     useSensors,
     DragOverlay,
+    UniqueIdentifier,
 } from '@dnd-kit/core';
 import {
     arrayMove,
@@ -79,7 +80,7 @@ export default function AdminTampilanPage() {
         hidden_mobile: []
     });
     const [loading, setLoading] = useState(true);
-    const [activeId, setActiveId] = useState(null);
+    const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
     const DEFAULT_MOBILE_LAYOUT = {
         mobile: ['HeroWidget:mobile', 'QuickMenuWidget:mobile', 'OngoingWidget:mobile', 'LatestKajianWidget:mobile', 'KajianListWidget:mobile'],
