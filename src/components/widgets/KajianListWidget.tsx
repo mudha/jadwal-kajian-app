@@ -38,31 +38,38 @@ export default function KajianListWidget({ data }: WidgetProps) {
 
     return (
         <section>
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 md:mb-6 gap-2 md:gap-0">
-                <div className="flex flex-col gap-2 flex-1">
-                    <h2 className="font-bold text-lg text-slate-800 whitespace-nowrap">
-                        {sortMode === 'distance' ? 'Kajian Pilihan Terdekat' : 'Kajian Pilihan'}
-                    </h2>
-
-                    {/* Radius Slider (Only show if we have distance data) */}
-                    {hasDistanceData && (
-                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm w-fit">
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Radius</span>
-                            <input
-                                type="range"
-                                min="1"
-                                max="50"
-                                value={maxDistance}
-                                onChange={(e) => setMaxDistance(parseInt(e.target.value))}
-                                className="w-32 md:w-24 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600 hover:accent-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
-                            />
-                            <span className="text-xs font-bold text-teal-600 min-w-[3rem] text-right whitespace-nowrap">{maxDistance} km</span>
-                        </div>
-                    )}
+            <div className="flex flex-col gap-3 mb-4 md:mb-6">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <h2 className="font-bold text-lg text-slate-800">
+                            {sortMode === 'distance' ? 'Kajian Pilihan Terdekat' : 'Kajian Pilihan'}
+                        </h2>
+                        <Link href="/kajian" className="p-1.5 bg-teal-50 text-teal-600 rounded-full hover:bg-teal-100 hover:text-teal-700 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                                <path d="M5 12h14" />
+                                <path d="m12 5 7 7-7 7" />
+                            </svg>
+                        </Link>
+                    </div>
                 </div>
 
-                <Link href="/kajian" className="text-sm text-teal-600 font-medium hover:text-teal-700 whitespace-nowrap self-end md:self-auto">Lihat Semua</Link>
+                {/* Radius Slider (Only show if we have distance data) */}
+                {hasDistanceData && (
+                    <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm w-fit">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Radius</span>
+                        <input
+                            type="range"
+                            min="1"
+                            max="50"
+                            value={maxDistance}
+                            onChange={(e) => setMaxDistance(parseInt(e.target.value))}
+                            className="w-32 md:w-24 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600 hover:accent-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                        />
+                        <span className="text-xs font-bold text-teal-600 min-w-[3rem] text-right whitespace-nowrap">{maxDistance} km</span>
+                    </div>
+                )}
             </div>
+
 
             {/* Mobile: Horizontal Scroll */}
             <div className="flex md:hidden overflow-x-auto gap-4 pb-4 scrollbar-hide -mx-4 px-4">
@@ -84,11 +91,13 @@ export default function KajianListWidget({ data }: WidgetProps) {
             </div>
 
             {/* Empty State if filter removes all */}
-            {filteredKajian.length === 0 && (
-                <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                    <p className="text-slate-500 text-sm">Tidak ada kajian dalam radius {maxDistance} km.</p>
-                </div>
-            )}
+            {
+                filteredKajian.length === 0 && (
+                    <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                        <p className="text-slate-500 text-sm">Tidak ada kajian dalam radius {maxDistance} km.</p>
+                    </div>
+                )
+            }
 
             {/* Desktop: Grid View */}
             <div className="hidden md:grid grid-cols-2 gap-6">
@@ -122,6 +131,6 @@ export default function KajianListWidget({ data }: WidgetProps) {
                     </Link>
                 ))}
             </div>
-        </section>
+        </section >
     );
 }
