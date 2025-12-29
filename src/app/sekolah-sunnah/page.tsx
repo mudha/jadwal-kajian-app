@@ -302,5 +302,6 @@ export default function SekolahSunnahPage() {
                     </div>
                 </div>
             </div>
-            );
+        </div>
+    );
 }
