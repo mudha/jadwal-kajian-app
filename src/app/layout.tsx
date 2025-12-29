@@ -31,6 +31,10 @@ export const metadata: Metadata = {
   },
 };
 
+import GlobalPullToRefresh from "@/components/GlobalPullToRefresh";
+
+// ... existing imports ...
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -45,7 +49,9 @@ export default function RootLayout({
         <Navbar />
         <div className="mx-auto min-h-screen bg-white md:bg-transparent shadow-xl md:shadow-none max-w-md md:max-w-7xl md:px-0">
           <main className="md:container md:mx-auto">
-            {children}
+            <GlobalPullToRefresh>
+              {children}
+            </GlobalPullToRefresh>
           </main>
           <BottomNav />
         </div>
