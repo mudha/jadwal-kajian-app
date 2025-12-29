@@ -43,10 +43,7 @@ export function generateWhatsAppShareText(kajian: {
     text += `🗓 *Hari/Tgl:* ${kajian.date}\n`;
     text += `⏰ *Waktu:* ${kajian.waktu}\n`;
 
-    // Add image link if available (ABOVE Location)
-    if (kajian.imageUrl) {
-        text += `\n📸 *Lihat Poster:*\n${kajian.imageUrl}\n`;
-    }
+
 
     // Cleaned Location URL
     const location = cleanMapsUrl(kajian.gmapsUrl) || kajian.address;
