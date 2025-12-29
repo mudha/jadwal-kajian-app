@@ -30,7 +30,9 @@ export default function WidgetRenderer({ widgetIds, data }: WidgetRendererProps)
     return (
         <>
             {widgetIds.map((id) => {
-                const WidgetComponent = WIDGET_MAP[id];
+                // Support suffixed IDs (e.g. "HeroWidget:mobile") for unique keys in DnD
+                const widgetName = id.split(':')[0];
+                const WidgetComponent = WIDGET_MAP[widgetName];
                 if (!WidgetComponent) return null;
                 return <WidgetComponent key={id} data={data} />;
             })}

@@ -52,7 +52,7 @@ function SortableItem({ id, hidden, onToggle }: { id: string, hidden?: boolean, 
                     <GripVertical className="w-5 h-5" />
                 </div>
                 <span className={`font-medium ${hidden ? 'text-slate-400' : 'text-slate-700'}`}>
-                    {WIDGET_LABELS[id] || id}
+                    {WIDGET_LABELS[id.split(':')[0]] || id.split(':')[0]}
                 </span>
             </div>
             {onToggle && (
@@ -68,7 +68,9 @@ export default function AdminTampilanPage() {
     const [layout, setLayout] = useState({
         sidebar: [],
         main: [],
-        hidden: []
+        mobile: [],
+        hidden: [],
+        hidden_mobile: []
     });
     const [loading, setLoading] = useState(true);
     const [activeId, setActiveId] = useState(null);
@@ -175,6 +177,10 @@ export default function AdminTampilanPage() {
     // I will allow it but maybe warn? Or just let it be and user sees the mess.
     // Let's trust the user for now.
 
+
+    // Use :mobile suffix for mobile widgets to maintain unique IDs in the system
+    // but we display them cleanly in the UI.
+
     const saveLayout = async () => {
         await fetch('/api/settings/layout', {
             method: 'POST',
@@ -183,11 +189,19 @@ export default function AdminTampilanPage() {
         alert('Tampilan berhasil disimpan!');
     };
 
+    const [activeTab, setActiveTab] = useState<'desktop' | 'mobile'>('desktop');
+
     if (loading) return <div>Loading...</div>;
+
+    // Helper to get clean label
+    const getLabel = (id: string) => {
+        const cleanId = id.split(':')[0];
+        return WIDGET_LABELS[cleanId] || cleanId;
+    }
 
     return (
         <div className="p-8 max-w-5xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex justify-between items-center mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900">Kelola Tampilan Depan</h1>
                     <p className="text-slate-500">Atur posisi dan visibilitas widget di halaman depan.</p>
@@ -197,49 +211,97 @@ export default function AdminTampilanPage() {
                 </button>
             </div>
 
+            {/* Tabs */}
+            <div className="flex gap-4 mb-6 border-b border-slate-200">
+                <button
+                    onClick={() => setActiveTab('desktop')}
+                    className={`pb-3 px-4 font-medium transition-colors border-b-2 ${activeTab === 'desktop' ? 'border-teal-600 text-teal-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                >
+                    Tampilan Desktop
+                </button>
+                <button
+                    onClick={() => setActiveTab('mobile')}
+                    className={`pb-3 px-4 font-medium transition-colors border-b-2 ${activeTab === 'mobile' ? 'border-teal-600 text-teal-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                >
+                    Tampilan Mobile
+                </button>
+            </div>
+
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
             >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* Sidebar Column */}
-                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                        <h3 className="font-bold mb-4 text-slate-700 flex items-center justify-between">
-                            Sidebar (Kiri)
-                            <span className="text-xs bg-slate-200 px-2 py-1 rounded-md text-slate-600">Desktop Only</span>
-                        </h3>
-                        <SortableContext items={layout.sidebar} strategy={verticalListSortingStrategy}>
-                            {layout.sidebar.map((id: string) => (
-                                <SortableItem key={id} id={id} />
-                            ))}
-                        </SortableContext>
-                    </div>
+                {activeTab === 'desktop' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {/* Sidebar Column */}
+                        <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                            <h3 className="font-bold mb-4 text-slate-700 flex items-center justify-between">
+                                Sidebar (Kiri)
+                                <span className="text-xs bg-slate-200 px-2 py-1 rounded-md text-slate-600">30%</span>
+                            </h3>
+                            <SortableContext items={layout.sidebar || []} strategy={verticalListSortingStrategy}>
+                                {layout.sidebar?.map((id: string) => (
+                                    <SortableItem key={id} id={id} />
+                                ))}
+                            </SortableContext>
+                        </div>
 
-                    {/* Main Content Column */}
-                    <div className="md:col-span-2 bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                        <h3 className="font-bold mb-4 text-slate-700">Konten Utama</h3>
-                        <SortableContext items={layout.main} strategy={verticalListSortingStrategy}>
-                            {layout.main.map((id: string) => (
-                                <SortableItem key={id} id={id} />
-                            ))}
-                        </SortableContext>
-                    </div>
+                        {/* Main Content Column */}
+                        <div className="md:col-span-2 bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                            <h3 className="font-bold mb-4 text-slate-700 flex items-center justify-between">
+                                Konten Utama
+                                <span className="text-xs bg-slate-200 px-2 py-1 rounded-md text-slate-600">70%</span>
+                            </h3>
+                            <SortableContext items={layout.main || []} strategy={verticalListSortingStrategy}>
+                                {layout.main?.map((id: string) => (
+                                    <SortableItem key={id} id={id} />
+                                ))}
+                            </SortableContext>
+                        </div>
 
-                    {/* Hidden / Disabled */}
-                    <div className="md:col-span-3 bg-red-50 p-6 rounded-2xl border border-red-100 mt-4">
-                        <h3 className="font-bold mb-4 text-red-800">Widget Disembunyikan</h3>
-                        <SortableContext items={layout.hidden} strategy={verticalListSortingStrategy}>
-                            {layout.hidden.map((id: string) => (
-                                <SortableItem key={id} id={id} hidden />
-                            ))}
-                        </SortableContext>
+                        {/* Hidden / Disabled */}
+                        <div className="md:col-span-3 bg-red-50 p-6 rounded-2xl border border-red-100 mt-4">
+                            <h3 className="font-bold mb-4 text-red-800">Widget Disembunyikan (Desktop)</h3>
+                            <SortableContext items={layout.hidden || []} strategy={verticalListSortingStrategy}>
+                                {layout.hidden?.map((id: string) => (
+                                    <SortableItem key={id} id={id} hidden />
+                                ))}
+                            </SortableContext>
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="max-w-md mx-auto">
+                        {/* Mobile Preview Column */}
+                        <div className="bg-white p-4 rounded-[2.5rem] border-8 border-slate-800 shadow-2xl min-h-[600px] relative overflow-hidden">
+                            {/* Notch */}
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-xl z-10"></div>
+
+                            <div className="pt-8 px-2 pb-4 h-full overflow-y-auto scrollbar-hide">
+                                <h3 className="text-center font-bold mb-6 text-slate-400 text-sm uppercase tracking-widest">Mobile View</h3>
+
+                                <SortableContext items={layout.mobile || []} strategy={verticalListSortingStrategy}>
+                                    {layout.mobile?.map((id: string) => (
+                                        <SortableItem key={id} id={id} />
+                                    ))}
+                                </SortableContext>
+
+                                <div className="mt-8 pt-8 border-t border-dashed border-slate-200">
+                                    <h3 className="text-center font-bold mb-4 text-slate-400 text-xs uppercase">Widget Disembunyikan</h3>
+                                    <SortableContext items={layout.hidden_mobile || []} strategy={verticalListSortingStrategy}>
+                                        {layout.hidden_mobile?.map((id: string) => (
+                                            <SortableItem key={id} id={id} hidden />
+                                        ))}
+                                    </SortableContext>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <DragOverlay>
-                    {activeId ? <div className="p-4 bg-white border border-teal-500 rounded-xl shadow-xl">{WIDGET_LABELS[activeId] || activeId}</div> : null}
+                    {activeId ? <div className="p-4 bg-white border border-teal-500 rounded-xl shadow-xl">{getLabel(activeId)}</div> : null}
                 </DragOverlay>
             </DndContext>
         </div>

@@ -43,7 +43,9 @@ function deg2rad(deg: number) {
 const DEFAULT_LAYOUT = {
   sidebar: ['SidebarMenuWidget', 'PrayerTimesWidget', 'ContactWidget'],
   main: ['HeroWidget', 'QuickMenuWidget', 'OngoingWidget', 'LatestKajianWidget', 'KajianListWidget'],
-  hidden: []
+  mobile: ['HeroWidget:mobile', 'QuickMenuWidget:mobile', 'OngoingWidget:mobile', 'LatestKajianWidget:mobile', 'KajianListWidget:mobile'],
+  hidden: [],
+  hidden_mobile: ['SidebarMenuWidget:mobile', 'PrayerTimesWidget:mobile', 'ContactWidget:mobile']
 };
 
 export default function BerandaPage() {
@@ -142,7 +144,10 @@ export default function BerandaPage() {
       .then(res => res.json())
       .then(data => {
         if (data && (data.sidebar || data.main)) {
-          setLayout(data);
+          // Backward compatibility sync
+          const mobile = data.mobile || DEFAULT_LAYOUT.mobile;
+          const hidden_mobile = data.hidden_mobile || DEFAULT_LAYOUT.hidden_mobile;
+          setLayout({ ...data, mobile, hidden_mobile });
         }
         setLayoutLoading(false);
       })
@@ -213,8 +218,19 @@ export default function BerandaPage() {
           </div>
 
           {/* Right Column (Desktop) - Main Content */}
+          {/* Right Column (Desktop) - Main Content */}
           <div className="md:col-span-8 space-y-6 order-2">
-            <WidgetRenderer widgetIds={layout.main} data={widgetData} />
+
+            {/* Desktop Main */}
+            <div className="hidden md:block space-y-6">
+              <WidgetRenderer widgetIds={layout.main || DEFAULT_LAYOUT.main} data={widgetData} />
+            </div>
+
+            {/* Mobile Main */}
+            <div className="md:hidden space-y-6">
+              <WidgetRenderer widgetIds={layout.mobile || DEFAULT_LAYOUT.mobile} data={widgetData} />
+            </div>
+
           </div>
         </div>
       </PullToRefresh>
