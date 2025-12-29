@@ -55,13 +55,17 @@ interface Sekolah {
 interface SchoolFormModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSuccess: () => void;
+    onSuccess?: () => void;
+    onSubmit?: (data: Partial<Sekolah>) => Promise<void>;
     editData?: Sekolah | null;
+    initialData?: Partial<Sekolah> | null; // Add initialData alias for editData compatibility
 }
 
 const JENJANG_OPTIONS = ['DC', 'PAUD', 'TK', 'MI', 'SD', 'MTs', 'SMP', 'MA', 'SMA', 'SMK', 'PT', 'Pesantren', 'Kursus'];
 
-export default function SchoolFormModal({ isOpen, onClose, onSuccess, editData }: SchoolFormModalProps) {
+export default function SchoolFormModal({ isOpen, onClose, onSuccess, onSubmit, editData, initialData }: SchoolFormModalProps) {
+    const dataToEdit = editData || initialData;
+
     const [formData, setFormData] = useState<Partial<Sekolah>>({
         nama: '',
         jenjang: 'SD',
@@ -78,14 +82,14 @@ export default function SchoolFormModal({ isOpen, onClose, onSuccess, editData }
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
-        if (editData) {
+        if (dataToEdit) {
             setFormData({
-                ...editData,
-                khusus_akhwat: !!editData.khusus_akhwat,
-                khusus_ikhwan: !!editData.khusus_ikhwan,
-                is_full_day: !!editData.is_full_day,
-                is_boarding: !!editData.is_boarding,
-                is_paket_abc: !!editData.is_paket_abc,
+                ...dataToEdit,
+                khusus_akhwat: !!dataToEdit.khusus_akhwat,
+                khusus_ikhwan: !!dataToEdit.khusus_ikhwan,
+                is_full_day: !!dataToEdit.is_full_day,
+                is_boarding: !!dataToEdit.is_boarding,
+                is_paket_abc: !!dataToEdit.is_paket_abc,
             });
         } else {
             setFormData({
@@ -101,24 +105,27 @@ export default function SchoolFormModal({ isOpen, onClose, onSuccess, editData }
                 is_paket_abc: false,
             });
         }
-    }, [editData, isOpen]);
+    }, [dataToEdit, isOpen]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
         try {
-            const url = editData?.id ? `/api/admin/sekolah/${editData.id}` : '/api/admin/sekolah';
-            const method = editData?.id ? 'PATCH' : 'POST';
+            if (onSubmit) {
+                await onSubmit({ ...formData, id: dataToEdit?.id });
+            } else {
+                const url = dataToEdit?.id ? `/api/admin/sekolah/${dataToEdit.id}` : '/api/admin/sekolah';
+                const method = dataToEdit?.id ? 'PATCH' : 'POST';
 
-            const res = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
-            });
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData),
+                });
 
-            if (!res.ok) throw new Error('Failed to save');
-
-            onSuccess();
+                if (!res.ok) throw new Error('Failed to save');
+                if (onSuccess) onSuccess();
+            }
         } catch (error) {
             console.error('Error saving school:', error);
             alert('Gagal menyimpan data. Silakan coba lagi.');
