@@ -174,9 +174,7 @@ export default function BerandaPage() {
     ]);
   };
 
-  const handleRefresh = async () => {
-    await fetchData();
-  };
+
 
   const widgetData = {
     featuredKajian,
