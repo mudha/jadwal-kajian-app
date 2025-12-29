@@ -159,7 +159,7 @@ function KajianListContent() {
 
         // Nearby filtering (Improved)
         // Only strict filter if no specific city/search is applied
-        if (filterMode === 'nearby' && !searchTerm && !filterCity) {
+        if ((filterMode === 'nearby' || filterNearby) && !searchTerm && !filterCity) {
             // Filter out PAST events for "Nearby" mode
             const status = getKajianStatus(k.date, k.waktu);
             if (status === 'PAST') return false;
