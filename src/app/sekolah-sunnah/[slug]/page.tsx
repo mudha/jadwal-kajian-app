@@ -116,17 +116,17 @@ export default function SekolahDetailPage() {
                             {isAdmin && (
                                 <button
                                     onClick={() => setShowEditModal(true)}
-                                    className="absolute top-4 right-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold shadow-lg hover:shadow-xl transition-all z-10"
+                                    className="hidden md:flex absolute top-4 right-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl items-center gap-2 font-bold shadow-lg hover:shadow-xl transition-all z-10"
                                 >
                                     <Edit className="w-4 h-4" />
                                     Edit Sekolah
                                 </button>
                             )}
 
-                            <div className="flex gap-6">
+                            <div className="flex flex-col md:flex-row gap-6">
                                 {/* Portrait Gradient Thumbnail */}
-                                <div className="w-40 h-52 shrink-0 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 relative overflow-hidden flex items-center justify-center shadow-lg">
-                                    <GraduationCap className="w-20 h-20 text-white/30" />
+                                <div className="w-full md:w-40 h-40 md:h-52 shrink-0 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 relative overflow-hidden flex items-center justify-center shadow-lg">
+                                    <GraduationCap className="w-16 md:w-20 h-16 md:h-20 text-white/30" />
                                     <div className="absolute top-3 right-3">
                                         <span className="bg-white/20 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-black">
                                             {sekolah.jenjang}
@@ -148,11 +148,22 @@ export default function SekolahDetailPage() {
                                             </span>
                                         )}
                                     </div>
-                                    <h1 className="text-3xl font-black text-slate-900 mb-3 leading-tight">{sekolah.nama}</h1>
-                                    <div className="flex items-start gap-2 text-slate-600">
+                                    <h1 className="text-2xl md:text-3xl font-black text-slate-900 mb-3 leading-tight">{sekolah.nama}</h1>
+                                    <div className="flex items-start gap-2 text-slate-600 mb-4">
                                         <MapPin className="w-5 h-5 mt-0.5 shrink-0 text-purple-600" />
                                         <span className="font-bold">{sekolah.kota}{sekolah.provinsi && `, ${sekolah.provinsi}`}</span>
                                     </div>
+
+                                    {/* Mobile Edit Button */}
+                                    {isAdmin && (
+                                        <button
+                                            onClick={() => setShowEditModal(true)}
+                                            className="md:hidden w-full bg-purple-50 hover:bg-purple-100 text-purple-700 px-4 py-3 rounded-xl flex items-center justify-center gap-2 font-bold border border-purple-100 transition-all"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                            Edit Data Sekolah
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
