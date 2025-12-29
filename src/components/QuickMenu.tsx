@@ -1,10 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { BookText, Clock, Video, Flower2, MapPin, MessageCircle, FileText, Calendar, Home } from 'lucide-react';
+import { BookText, Clock, Video, Flower2, MapPin, MessageCircle, FileText, Calendar, Home, GraduationCap } from 'lucide-react';
 
 export default function QuickMenu() {
     const menuItems = [
+        {
+            label: 'Sekolah Sunnah',
+            icon: GraduationCap,
+            href: '/sekolah-sunnah',
+            gradient: 'from-purple-500 to-purple-600',
+            iconBg: 'bg-purple-50',
+            iconColor: 'text-purple-600',
+        },
         {
             label: 'Dzikir',
             icon: BookText,
@@ -25,9 +33,9 @@ export default function QuickMenu() {
             label: 'Kajian Online',
             icon: Video,
             href: '/kajian?online=true',
-            gradient: 'from-purple-500 to-purple-600',
-            iconBg: 'bg-purple-50',
-            iconColor: 'text-purple-600',
+            gradient: 'from-violet-500 to-violet-600',
+            iconBg: 'bg-violet-50',
+            iconColor: 'text-violet-600',
         },
         {
             label: 'Kajian Muslimah',
