@@ -43,7 +43,7 @@ export default function PrayerTimeWidget() {
                             <MapPin className="w-3 h-3" />
                             <span>Lokasi Anda</span>
                         </div>
-                        <p className="text-xs font-bold truncate max-w-[120px]">{locationName}</p>
+                        <p className="text-xs font-bold max-w-[160px] leading-tight">{locationName}</p>
                     </div>
                 </div>
 

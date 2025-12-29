@@ -48,14 +48,35 @@ export function usePrayerTimes() {
                     const res = await fetch(`https://api.aladhan.com/v1/timings/${timestamp}?latitude=${latitude}&longitude=${longitude}&method=20`);
                     const data = await res.json();
 
+                    let locationName = 'Lokasi Terdeteksi';
+                    try {
+                        // Reverse Geocoding for Kecamatan
+                        const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=id`);
+                        const geoData = await geoRes.json();
+                        // Priority: Locality (Kecamatan) -> City -> PrincipalSubdivision
+                        if (geoData.locality) {
+                            locationName = `Kec. ${geoData.locality}`;
+                            if (geoData.city) locationName += `, ${geoData.city}`;
+                        } else if (geoData.city) {
+                            locationName = geoData.city;
+                        } else if (geoData.principalSubdivision) {
+                            locationName = geoData.principalSubdivision;
+                        }
+                    } catch (geoErr) {
+                        console.error('Reverse geocoding failed', geoErr);
+                        // Fallback to time zone or generic
+                        if (data.data && data.data.meta) {
+                            locationName = data.data.meta.timezone;
+                        }
+                    }
+
                     if (data.code === 200) {
                         const timings = data.data.timings;
-                        const meta = data.data.meta;
 
                         setState(s => ({
                             ...s,
                             timings: timings,
-                            locationName: meta.timezone, // Simplification, usually returns Asia/Jakarta
+                            locationName: locationName,
                             loading: false
                         }));
                     } else {
