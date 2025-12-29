@@ -6,9 +6,13 @@ export interface KajianEntry {
     gmapsUrl: string;
     lat?: number;
     lng?: number;
-    pemateri: string;
+    pemateri: string; // Pemateri utama / Primary speaker
+    pemateri2?: string; // Pemateri kedua (optional)
+    pemateri3?: string; // Pemateri ketiga (optional)
     tema: string;
-    waktu: string;
+    waktu: string; // Legacy field - kombinasi waktu mulai - selesai
+    waktu_mulai?: string; // Waktu mulai (new field)
+    waktu_selesai?: string; // Waktu selesai (new field, default: "Selesai")
     cp: string;
     imageUrl?: string; // Potential future use
     date: string; // From the header
@@ -108,6 +112,47 @@ function normalizeWaktu(waktu: string): string {
     }
 
     return waktu;
+}
+
+// Split waktu into waktu_mulai and waktu_selesai
+export function splitWaktu(waktu: string): { waktu_mulai: string; waktu_selesai: string } {
+    if (!waktu || waktu === 'TBD') {
+        return { waktu_mulai: '', waktu_selesai: 'Selesai' };
+    }
+
+    // Check for time range patterns like "19.00 - 20.00" or "Ba'da Maghrib - Selesai"
+    const rangePattern = /^(.+?)\s*[-–—]\s*(.+)$/;
+    const match = waktu.match(rangePattern);
+
+    if (match) {
+        return {
+            waktu_mulai: match[1].trim(),
+            waktu_selesai: match[2].trim() || 'Selesai'
+        };
+    }
+
+    // If no range, treat entire value as waktu_mulai
+    return {
+        waktu_mulai: waktu,
+        waktu_selesai: 'Selesai'
+    };
+}
+
+// Split pemateri into multiple speakers
+export function splitPemateri(pemateri: string): { pemateri: string; pemateri2?: string; pemateri3?: string } {
+    if (!pemateri) {
+        return { pemateri: '' };
+    }
+
+    // Split by &, 'dan', or comma, but be careful with titles like "Ust." or "Dr."
+    const separators = /\s+(?:&|dan|,)\s+/i;
+    const speakers = pemateri.split(separators).map(s => s.trim()).filter(s => s.length > 0);
+
+    return {
+        pemateri: speakers[0] || '',
+        pemateri2: speakers[1] || undefined,
+        pemateri3: speakers[2] || undefined
+    };
 }
 
 function parseRekapanFormat(lines: string[]): KajianEntry[] {

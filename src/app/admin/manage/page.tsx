@@ -4,8 +4,10 @@ import { Search, Edit, Trash2, Plus, Calendar, MapPin, X, Save, AlertTriangle, C
 import Link from 'next/link';
 import { indonesianCities } from '@/data/cities';
 import { parseIndoDate, formatIndoDate, formatYYYYMMDD } from '@/lib/date-utils';
+import { splitWaktu, splitPemateri } from '@/lib/parser';
 import AutosuggestInput from '@/components/admin/AutosuggestInput';
 import ImageUpload from '@/components/ImageUpload';
+
 
 interface Kajian {
     id: number;
@@ -16,8 +18,12 @@ interface Kajian {
     gmapsUrl?: string; // Optional
     cp?: string; // Optional Contact Person
     pemateri: string;
+    pemateri2?: string;
+    pemateri3?: string;
     tema: string;
     waktu: string;
+    waktu_mulai?: string;
+    waktu_selesai?: string;
     date: string;
     linkInfo?: string;
     khususAkhwat?: boolean;
@@ -101,10 +107,21 @@ export default function AdminManagePage() {
         if (!editingKajian) return;
 
         try {
+            // Merge waktu_mulai and waktu_selesai for backward compatibility
+            const waktu = editingKajian.waktu_mulai && editingKajian.waktu_selesai
+                ? `${editingKajian.waktu_mulai} - ${editingKajian.waktu_selesai}`
+                : editingKajian.waktu || '';
+
+            // Prepare data with merged waktu
+            const dataToSend = {
+                ...editingKajian,
+                waktu
+            };
+
             const res = await fetch(`/api/kajian/${editingKajian.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(editingKajian),
+                body: JSON.stringify(dataToSend),
             });
 
             if (res.ok) {
@@ -328,7 +345,15 @@ export default function AdminManagePage() {
                                                         </Link>
                                                         <button
                                                             onClick={() => {
-                                                                setEditingKajian({ ...item });
+                                                                // Auto-split waktu and pemateri when editing
+                                                                const waktuSplit = splitWaktu(item.waktu);
+                                                                const pemateriSplit = splitPemateri(item.pemateri);
+
+                                                                setEditingKajian({
+                                                                    ...item,
+                                                                    ...waktuSplit,
+                                                                    ...pemateriSplit
+                                                                });
                                                                 setIsEditModalOpen(true);
                                                             }}
                                                             className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -477,19 +502,89 @@ export default function AdminManagePage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Pemateri</label>
+                                <div className="grid grid-cols-1 gap-6">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Pemateri / Ustadz</label>
+                                            {!editingKajian.pemateri2 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setEditingKajian({ ...editingKajian, pemateri2: '' })}
+                                                    className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                                                >
+                                                    <Plus className="w-3 h-3" /> Tambah Pemateri
+                                                </button>
+                                            )}
+                                        </div>
                                         <div className="relative">
                                             <AutosuggestInput
                                                 type="pemateri"
                                                 value={editingKajian.pemateri}
                                                 onChange={(val) => setEditingKajian({ ...editingKajian, pemateri: val })}
                                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                                placeholder="Ketik nama ustadz..."
+                                                placeholder="Pemateri utama..."
                                             />
                                         </div>
+
+                                        {editingKajian.pemateri2 !== undefined && (
+                                            <div className="relative">
+                                                <AutosuggestInput
+                                                    type="pemateri"
+                                                    value={editingKajian.pemateri2 || ''}
+                                                    onChange={(val) => setEditingKajian({ ...editingKajian, pemateri2: val })}
+                                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                                    placeholder="Pemateri kedua..."
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const { pemateri2, ...rest } = editingKajian;
+                                                        setEditingKajian(rest as any);
+                                                    }}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
+                                                    title="Hapus pemateri kedua"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {editingKajian.pemateri2 && !editingKajian.pemateri3 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditingKajian({ ...editingKajian, pemateri3: '' })}
+                                                className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                                            >
+                                                <Plus className="w-3 h-3" /> Tambah Pemateri Ketiga
+                                            </button>
+                                        )}
+
+                                        {editingKajian.pemateri3 !== undefined && (
+                                            <div className="relative">
+                                                <AutosuggestInput
+                                                    type="pemateri"
+                                                    value={editingKajian.pemateri3 || ''}
+                                                    onChange={(val) => setEditingKajian({ ...editingKajian, pemateri3: val })}
+                                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
+                                                    placeholder="Pemateri ketiga..."
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const { pemateri3, ...rest } = editingKajian;
+                                                        setEditingKajian(rest as any);
+                                                    }}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
+                                                    title="Hapus pemateri ketiga"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2 relative">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Kota / Wilayah</label>
                                         <div className="relative">
@@ -566,32 +661,35 @@ export default function AdminManagePage() {
                                             <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none group-focus-within:text-blue-500 transition-colors" />
                                         </div>
                                     </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2 relative">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Waktu</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Waktu Mulai</label>
                                         <div className="relative">
                                             <input
                                                 type="text"
                                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-slate-900 placeholder:text-slate-400"
-                                                value={editingKajian.waktu}
+                                                value={editingKajian.waktu_mulai || ''}
                                                 onChange={e => {
-                                                    setEditingKajian({ ...editingKajian, waktu: e.target.value });
+                                                    setEditingKajian({ ...editingKajian, waktu_mulai: e.target.value });
                                                     setIsWaktuDropdownOpen(true);
                                                 }}
                                                 onFocus={() => setIsWaktuDropdownOpen(true)}
                                                 onBlur={() => setTimeout(() => setIsWaktuDropdownOpen(false), 200)}
-                                                placeholder="Misal: Ba'da Maghrib - Selesai"
+                                                placeholder="Ba'da Maghrib / 19.00"
                                             />
                                             {isWaktuDropdownOpen && (
                                                 <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-xl shadow-xl">
-                                                    {waktuSuggestions
-                                                        .filter(w => w.toLowerCase().includes(editingKajian.waktu.toLowerCase()))
+                                                    {['Ba\'da Shubuh', 'Ba\'da Dhuhur', 'Ba\'da Ashar', 'Ba\'da Maghrib', 'Ba\'da Isya', 'Shubuh', 'Dhuhur', 'Ashar', 'Maghrib', 'Isya', 'Sholat Jumat']
+                                                        .filter(w => w.toLowerCase().includes((editingKajian.waktu_mulai || '').toLowerCase()))
                                                         .map(waktu => (
                                                             <button
                                                                 key={waktu}
                                                                 type="button"
                                                                 className="w-full text-left px-4 py-2 hover:bg-slate-50 font-medium text-slate-700 text-sm"
                                                                 onClick={() => {
-                                                                    setEditingKajian({ ...editingKajian, waktu: waktu });
+                                                                    setEditingKajian({ ...editingKajian, waktu_mulai: waktu });
                                                                     setIsWaktuDropdownOpen(false);
                                                                 }}
                                                             >
@@ -599,14 +697,22 @@ export default function AdminManagePage() {
                                                             </button>
                                                         ))
                                                     }
-                                                    {waktuSuggestions.filter(w => w.toLowerCase().includes(editingKajian.waktu.toLowerCase())).length === 0 && (
-                                                        <div className="px-4 py-3 text-slate-400 text-xs text-center italic">Tidak ada saran waktu</div>
-                                                    )}
                                                 </div>
                                             )}
                                         </div>
                                     </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Waktu Selesai</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-slate-900 placeholder:text-slate-400"
+                                            value={editingKajian.waktu_selesai || 'Selesai'}
+                                            onChange={e => setEditingKajian({ ...editingKajian, waktu_selesai: e.target.value })}
+                                            placeholder="Selesai / 20.00"
+                                        />
+                                    </div>
                                 </div>
+
 
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Alamat Lengkap</label>

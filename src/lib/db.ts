@@ -61,6 +61,12 @@ const initDb = async () => {
   try { await db.execute("ALTER TABLE kajian ADD COLUMN isOnline BOOLEAN DEFAULT 0"); } catch (e) { }
   try { await db.execute("ALTER TABLE admins ADD COLUMN role TEXT DEFAULT 'ADMIN'"); } catch (e) { }
 
+  // New migrations for waktu split and multiple pemateri
+  try { await db.execute("ALTER TABLE kajian ADD COLUMN waktu_mulai TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE kajian ADD COLUMN waktu_selesai TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE kajian ADD COLUMN pemateri2 TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE kajian ADD COLUMN pemateri3 TEXT"); } catch (e) { }
+
   // Analytics table
   await db.execute(`
     CREATE TABLE IF NOT EXISTS analytics (

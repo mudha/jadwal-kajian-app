@@ -23,9 +23,13 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
         masjid: string; // Nama masjid
         address: string; // Alamat lengkap
         gmapsUrl: string; // Link google maps jika ada
-        pemateri: string; // Nama pemateri. Jika ada LEBIH DARI SATU pemateri di acara yang sama, gabungkan dengan " & " (contoh: "Ust A & Ust B"). Untuk Sholat Jumat, ambil dari "Khatib / Imam".
+        pemateri: string; // Pemateri utama / pertama
+        pemateri2?: string; // Pemateri kedua (jika ada lebih dari 1 pemateri di acara yang sama)
+        pemateri3?: string; // Pemateri ketiga (jika ada)
         tema: string; // Judul kajian. Jika ada LEBIH DARI SATU tema untuk acara yang sama, gabungkan dengan " | ". Untuk Sholat Jumat, jika tema "-", biarkan kosong.
         waktu: string; // Jam kajian. PENTING: Normalisasi waktu ke format yang rapi!
+        waktu_mulai?: string; // Waktu mulai spesifik (jika bisa dideteksi)
+        waktu_selesai?: string; // Waktu selesai spesifik (jika ada, default: "Selesai")
         date: string; // Tanggal kajian (Misal: Senin, 23 Desember 2025). Cari di header global jika tidak ada di entri.
         cp: string; // Contact Person (hanya nomor HP/nama, jangan link WA channel)
         khususAkhwat: boolean; // True jika ada kata "khusus akhwat", "akhwat only", "khusus wanita", ATAU jika pematerinya adalah seorang "Ustadzah" (karena ustadzah biasanya mengisi kajian khusus wanita). False jika untuk umum atau ikhwan-akhwat.
@@ -54,15 +58,21 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
        - Jika hanya nama sholat saja (misal: "Maghrib", "Shubuh") tanpa ba'da, format jadi "[Nama Sholat] - Selesai"
        - Jika ada jam spesifik (misal: "19.00", "07:30 WIB"), pertahankan formatnya (misal: "19.00 - Selesai" atau "07.30 WIB")
        - Normalisasi ejaan sholat: subuh/shubuh->Shubuh, dzuhur/dhuhur/zuhur/luhur->Dhuhur, asar/ashar->Ashar, magrib/maghrib->Maghrib, isa/isya->Isya
-    5. **SHOLAT JUMAT**: Jika teks adalah rekapan Sholat Jumat:
+       - Jika bisa detect waktu mulai dan selesai yang berbeda, isi field waktu_mulai dan waktu_selesai juga
+    5. **MULTIPLE PEMATERI (PENTING!)**: Jika ada LEBIH DARI SATU pemateri dalam SATU acara (sama tanggal, sama masjid):
+       - Jangan buat entry terpisah!
+       - Pisahkan pemateri ke field pemateri, pemateri2, dan pemateri3
+       - Deteksi separator seperti: "&", "dan", "," (koma)
+       - Contoh: "Ust. Ahmad & Ust. Budi" -> pemateri: "Ust. Ahmad", pemateri2: "Ust. Budi"
+       - Contoh: "Ust. A, Ust. B, Ust. C" -> pemateri: "Ust. A", pemateri2: "Ust. B", pemateri3: "Ust. C"
+    6. **SHOLAT JUMAT**: Jika teks adalah rekapan Sholat Jumat:
        - Field 'waktu' diisi "Sholat Jumat" (atau waktu spesifik jika ada, misal "11.30 - 13.00 WIB").
        - Field 'pemateri' diambil dari baris "Khatib / Imam".
        - Field 'tema' jika isinya "-" atau strip, kosongkan saja.
-    6. **KAJIAN ONLINE**: Jika acara diselenggarakan secara Online (Zoom, YouTube, dll):
+    7. **KAJIAN ONLINE**: Jika acara diselenggarakan secara Online (Zoom, YouTube, dll):
        - Field 'isOnline' set ke true.
        - Field 'city', 'masjid', dan 'address' otomatis diisi "Online".
        - Simpan link Zoom, Meeting ID, atau detail lainnya di 'linkInfo' atau 'address' agar user tahu cara aksesnya.
-    7. **MULTI-SPEAKER**: Jika satu acara punya BEBERAPA pemateri, gabungkan jadi satu entry dengan " & ".
     8. **KHUSUS AKHWAT**: Set true jika ada indikator khusus wanita ATAU pematerinya Ustadzah.
     9. **LINK INFO**: Ambil link pendaftaran > link Zoom > streaming > WAG.
     10. **GMAPS**: Ambil link gmaps jika ada. Kosongkan (null) jika Online.

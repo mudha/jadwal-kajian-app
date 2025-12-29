@@ -11,6 +11,8 @@ interface KajianCardProps {
     location: string;
     title: string;
     ustadz: string;
+    ustadz2?: string;
+    ustadz3?: string;
     imageUrl?: string;
     attendanceCount?: number;
     khususAkhwat?: boolean;
@@ -19,7 +21,7 @@ interface KajianCardProps {
     className?: string;
 }
 
-export default function KajianCard({ id, date, location, title, ustadz, imageUrl, attendanceCount = 0, khususAkhwat, isOnline, waktu, className = 'w-60' }: KajianCardProps) {
+export default function KajianCard({ id, date, location, title, ustadz, ustadz2, ustadz3, imageUrl, attendanceCount = 0, khususAkhwat, isOnline, waktu, className = 'w-60' }: KajianCardProps) {
     const [count, setCount] = useState(attendanceCount);
     const [hasAttended, setHasAttended] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
@@ -125,7 +127,13 @@ export default function KajianCard({ id, date, location, title, ustadz, imageUrl
                 </p>
 
                 <h3 className="font-bold text-slate-900 mb-2 line-clamp-2 leading-tight group-hover:text-teal-600 transition-colors">{title}</h3>
-                <p className="text-sm text-slate-500 mb-4 font-medium">{ustadz}</p>
+
+                {/* Multiple Pemateri Display */}
+                <div className="text-sm text-slate-500 mb-4 font-medium space-y-0.5">
+                    <p>{ustadz}</p>
+                    {ustadz2 && <p className="text-xs">{ustadz2}</p>}
+                    {ustadz3 && <p className="text-xs">{ustadz3}</p>}
+                </div>
 
                 <div className="flex items-start gap-3 pt-4 border-t border-slate-50">
                     <p className="flex-1 min-w-0 text-xs text-slate-400 flex items-start gap-1.5">
