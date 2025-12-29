@@ -60,6 +60,56 @@ function normalizeCity(city: string): string {
     return map[raw] || cleanValue(city);
 }
 
+function normalizeWaktu(waktu: string): string {
+    if (!waktu || waktu === 'TBD') return waktu;
+
+    const lower = waktu.toLowerCase();
+
+    // Normalize prayer names first
+    const prayerMap: Record<string, string> = {
+        'subuh': 'Shubuh',
+        'shubuh': 'Shubuh',
+        'dzuhur': 'Dhuhur',
+        'dhuhur': 'Dhuhur',
+        'zuhur': 'Dhuhur',
+        'luhur': 'Dhuhur',
+        'asar': 'Ashar',
+        'ashar': 'Ashar',
+        'magrib': 'Maghrib',
+        'maghrib': 'Maghrib',
+        'isa': 'Isya',
+        'isya': 'Isya',
+    };
+
+    // Check if it contains "ba'da" or similar keywords
+    const badaPattern = /(?:ba['']?da|ba['']?dha|bada|setelah|habis|usai)\s+(subuh|shubuh|dzuhur|dhuhur|zuhur|luhur|asar|ashar|magrib|maghrib|isa|isya)/i;
+    const badaMatch = lower.match(badaPattern);
+
+    if (badaMatch) {
+        const prayer = badaMatch[1].toLowerCase();
+        const normalized = prayerMap[prayer] || prayer;
+        return `Ba'da ${normalized} - Selesai`;
+    }
+
+    // Check if it's just a prayer name
+    const prayerOnlyPattern = /^(subuh|shubuh|dzuhur|dhuhur|zuhur|luhur|asar|ashar|magrib|maghrib|isa|isya)\s*(-\s*selesai)?$/i;
+    const prayerMatch = lower.match(prayerOnlyPattern);
+
+    if (prayerMatch) {
+        const prayer = prayerMatch[1].toLowerCase();
+        const normalized = prayerMap[prayer] || prayer;
+        return `${normalized} - Selesai`;
+    }
+
+    // If it has specific time (e.g., "19.00"), keep it as is
+    // Just add " - Selesai" if it doesn't have it
+    if (/\d{1,2}[:.]\d{2}/.test(waktu) && !lower.includes('selesai')) {
+        return `${waktu} - Selesai`;
+    }
+
+    return waktu;
+}
+
 function parseRekapanFormat(lines: string[]): KajianEntry[] {
     const entries: KajianEntry[] = [];
     let currentDate = '';
@@ -76,7 +126,7 @@ function parseRekapanFormat(lines: string[]): KajianEntry[] {
             address: cleanValue(entry.address || entry.masjid),
             pemateri: cleanValue(entry.pemateri || 'TBD'),
             tema: cleanValue(entry.tema || 'Kajian'),
-            waktu: cleanValue(entry.waktu || 'TBD'),
+            waktu: normalizeWaktu(cleanValue(entry.waktu || 'TBD')),
             date: cleanValue(entry.date || currentDate || 'TBD'),
             cp: cleanValue(entry.cp || ''),
             gmapsUrl: entry.gmapsUrl || ''
@@ -288,7 +338,7 @@ function parseDaurohFormat(lines: string[]): KajianEntry[] {
             gmapsUrl: e.gmapsUrl || `https://www.google.com/maps/search/?api=1&query=${searchQuery}`,
             pemateri: e.pemateri || 'TBD',
             tema: e.tema || 'Kajian',
-            waktu: e.waktu || 'TBD',
+            waktu: normalizeWaktu(e.waktu || 'TBD'),
             cp: e.cp || commonCP || '',
             date: e.date || commonDate || 'TBD'
         };
@@ -324,13 +374,19 @@ function parseNarrativeFormat(text: string): KajianEntry[] {
         date: /(?:tgl|tanggal|hari|🗓|📅)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\/|di masjid|masjid|🕌|📍|Waktu|⏰|🕙|[\n\r]|$))/i,
         masjid: /(?:di masjid|masjid|Musholla|🕌|📍|Lokasi|Tempat)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:Kitab|Tema|📚|📝|Waktu|⏰|🕙|dengan|alamat|[\n\r]|$))/i,
         tema: /(?:Kitab|Tema|📚|📝|Membahas|Kajian)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:Waktu|⏰|🕙|di masjid|masjid|[\n\r]|$))/i,
-        waktu: /(?:Waktu|Pukul|Jam|⏰|🕙|Ba'da|Mulai)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\-|sd|sampai|[\n\r]|$))/i
+        // Enhanced waktu pattern to catch ba'da variations and prayer times
+        waktu: /(?:Waktu|Pukul|Jam|⏰|🕙|Ba['']?da|Ba['']?dha|Bada|Setelah|Habis|Usai|Mulai)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\-|sd|sampai|[\n\r]|$))/i
     };
 
     Object.entries(patterns).forEach(([key, regex]) => {
         const match = ocrFixed.match(regex);
         if (match) {
-            (entry as any)[key] = match[1].trim();
+            let value = match[1].trim();
+            // Normalize waktu if it's the waktu field
+            if (key === 'waktu') {
+                value = normalizeWaktu(value);
+            }
+            (entry as any)[key] = value;
         }
     });
 

@@ -33,6 +33,24 @@ export default function BatchInputPage() {
     const [activeCityDropdownIndex, setActiveCityDropdownIndex] = useState<number | null>(null);
     const [cityFilter, setCityFilter] = useState('');
 
+    // State for managing which row has the waktu dropdown open
+    const [activeWaktuDropdownIndex, setActiveWaktuDropdownIndex] = useState<number | null>(null);
+
+    // Common waktu suggestions for kajian
+    const waktuSuggestions = [
+        "Ba'da Shubuh - Selesai",
+        "Ba'da Dhuhur - Selesai",
+        "Ba'da Ashar - Selesai",
+        "Ba'da Maghrib - Selesai",
+        "Ba'da Isya - Selesai",
+        "Shubuh - Selesai",
+        "Dhuhur - Selesai",
+        "Ashar - Selesai",
+        "Maghrib - Selesai",
+        "Isya - Selesai",
+        "Sholat Jumat",
+    ];
+
     // Stats and Recent Data
     const [stats, setStats] = useState({ total: 0, today: 0 });
 
@@ -636,9 +654,45 @@ export default function BatchInputPage() {
                                                                     <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none group-focus-within:text-blue-500" />
                                                                 </div>
                                                             </div>
-                                                            <div className="col-span-1">
+                                                            <div className="col-span-1 relative">
                                                                 <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Waktu</label>
-                                                                <input type="text" value={entry.waktu} onChange={(e) => updateEntry(idx, 'waktu', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400" />
+                                                                <div className="relative">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={entry.waktu}
+                                                                        onChange={(e) => {
+                                                                            updateEntry(idx, 'waktu', e.target.value);
+                                                                            setActiveWaktuDropdownIndex(idx);
+                                                                        }}
+                                                                        onFocus={() => setActiveWaktuDropdownIndex(idx)}
+                                                                        onBlur={() => setTimeout(() => setActiveWaktuDropdownIndex(null), 200)}
+                                                                        className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
+                                                                        placeholder="Ba'da Maghrib - Selesai"
+                                                                    />
+                                                                    {activeWaktuDropdownIndex === idx && (
+                                                                        <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-xl shadow-xl">
+                                                                            {waktuSuggestions
+                                                                                .filter(w => w.toLowerCase().includes(entry.waktu.toLowerCase()))
+                                                                                .map(waktu => (
+                                                                                    <button
+                                                                                        key={waktu}
+                                                                                        type="button"
+                                                                                        className="w-full text-left px-4 py-2 hover:bg-slate-50 font-medium text-slate-700 text-sm"
+                                                                                        onClick={() => {
+                                                                                            updateEntry(idx, 'waktu', waktu);
+                                                                                            setActiveWaktuDropdownIndex(null);
+                                                                                        }}
+                                                                                    >
+                                                                                        {waktu}
+                                                                                    </button>
+                                                                                ))
+                                                                            }
+                                                                            {waktuSuggestions.filter(w => w.toLowerCase().includes(entry.waktu.toLowerCase())).length === 0 && (
+                                                                                <div className="px-4 py-3 text-slate-400 text-xs text-center italic">Tidak ada saran waktu</div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                             <div className="col-span-1 md:col-span-2">
                                                                 <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Alamat</label>

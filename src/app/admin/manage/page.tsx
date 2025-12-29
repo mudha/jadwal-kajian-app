@@ -41,6 +41,24 @@ export default function AdminManagePage() {
     const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
     const [cityFilter, setCityFilter] = useState('');
 
+    // Waktu Autocomplete State
+    const [isWaktuDropdownOpen, setIsWaktuDropdownOpen] = useState(false);
+
+    // Common waktu suggestions for kajian
+    const waktuSuggestions = [
+        "Ba'da Shubuh - Selesai",
+        "Ba'da Dhuhur - Selesai",
+        "Ba'da Ashar - Selesai",
+        "Ba'da Maghrib - Selesai",
+        "Ba'da Isya - Selesai",
+        "Shubuh - Selesai",
+        "Dhuhur - Selesai",
+        "Ashar - Selesai",
+        "Maghrib - Selesai",
+        "Isya - Selesai",
+        "Sholat Jumat",
+    ];
+
 
 
 
@@ -548,14 +566,45 @@ export default function AdminManagePage() {
                                             <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none group-focus-within:text-blue-500 transition-colors" />
                                         </div>
                                     </div>
-                                    <div className="space-y-2">
+                                    <div className="space-y-2 relative">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Waktu</label>
-                                        <input
-                                            type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-slate-900 placeholder:text-slate-400"
-                                            value={editingKajian.waktu}
-                                            onChange={e => setEditingKajian({ ...editingKajian, waktu: e.target.value })}
-                                        />
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-slate-900 placeholder:text-slate-400"
+                                                value={editingKajian.waktu}
+                                                onChange={e => {
+                                                    setEditingKajian({ ...editingKajian, waktu: e.target.value });
+                                                    setIsWaktuDropdownOpen(true);
+                                                }}
+                                                onFocus={() => setIsWaktuDropdownOpen(true)}
+                                                onBlur={() => setTimeout(() => setIsWaktuDropdownOpen(false), 200)}
+                                                placeholder="Misal: Ba'da Maghrib - Selesai"
+                                            />
+                                            {isWaktuDropdownOpen && (
+                                                <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-xl shadow-xl">
+                                                    {waktuSuggestions
+                                                        .filter(w => w.toLowerCase().includes(editingKajian.waktu.toLowerCase()))
+                                                        .map(waktu => (
+                                                            <button
+                                                                key={waktu}
+                                                                type="button"
+                                                                className="w-full text-left px-4 py-2 hover:bg-slate-50 font-medium text-slate-700 text-sm"
+                                                                onClick={() => {
+                                                                    setEditingKajian({ ...editingKajian, waktu: waktu });
+                                                                    setIsWaktuDropdownOpen(false);
+                                                                }}
+                                                            >
+                                                                {waktu}
+                                                            </button>
+                                                        ))
+                                                    }
+                                                    {waktuSuggestions.filter(w => w.toLowerCase().includes(editingKajian.waktu.toLowerCase())).length === 0 && (
+                                                        <div className="px-4 py-3 text-slate-400 text-xs text-center italic">Tidak ada saran waktu</div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 

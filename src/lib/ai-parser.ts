@@ -25,7 +25,7 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
         gmapsUrl: string; // Link google maps jika ada
         pemateri: string; // Nama pemateri. Jika ada LEBIH DARI SATU pemateri di acara yang sama, gabungkan dengan " & " (contoh: "Ust A & Ust B"). Untuk Sholat Jumat, ambil dari "Khatib / Imam".
         tema: string; // Judul kajian. Jika ada LEBIH DARI SATU tema untuk acara yang sama, gabungkan dengan " | ". Untuk Sholat Jumat, jika tema "-", biarkan kosong.
-        waktu: string; // Jam kajian (Misal: 09.00 - Selesai). Untuk Sholat Jumat jika tidak ada jam, isi "Sholat Jumat".
+        waktu: string; // Jam kajian. PENTING: Normalisasi waktu ke format yang rapi!
         date: string; // Tanggal kajian (Misal: Senin, 23 Desember 2025). Cari di header global jika tidak ada di entri.
         cp: string; // Contact Person (hanya nomor HP/nama, jangan link WA channel)
         khususAkhwat: boolean; // True jika ada kata "khusus akhwat", "akhwat only", "khusus wanita", ATAU jika pematerinya adalah seorang "Ustadzah" (karena ustadzah biasanya mengisi kajian khusus wanita). False jika untuk umum atau ikhwan-akhwat.
@@ -44,19 +44,29 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
        - JAK-UT -> Jakarta Utara
        - TANG-SEL -> Tangerang Selatan
        - BOGOR, DEPOK, BEKASI, BANDUNG -> Biarkan normal.
-    4. **SHOLAT JUMAT**: Jika teks adalah rekapan Sholat Jumat:
-       - Field 'waktu' diisi "Sholat Jumat" (atau "11.30 - 13.00 WIB" jika mau spesifik).
+    4. **WAKTU (SANGAT PENTING!)**: Field 'waktu' harus dinormalisasi dengan aturan berikut:
+       - Jika ada kata "ba'da", "ba'da", "ba'dha", "bada", "setelah", "habis", "usai" diikuti nama sholat, normalisasi jadi "Ba'da [Nama Sholat] - Selesai"
+       - Contoh: "ba'da magrib", "bada maghrib", "setelah maghrib" -> "Ba'da Maghrib - Selesai"
+       - Contoh: "ba'da shubuh", "bada subuh" -> "Ba'da Shubuh - Selesai"
+       - Contoh: "ba'da dzuhur", "bada dhuhur", "ba'da luhur" -> "Ba'da Dhuhur - Selesai"
+       - Contoh: "ba'da ashar", "ba'da asar" -> "Ba'da Ashar - Selesai"
+       - Contoh: "ba'da isya", "ba'da isa" -> "Ba'da Isya - Selesai"
+       - Jika hanya nama sholat saja (misal: "Maghrib", "Shubuh") tanpa ba'da, format jadi "[Nama Sholat] - Selesai"
+       - Jika ada jam spesifik (misal: "19.00", "07:30 WIB"), pertahankan formatnya (misal: "19.00 - Selesai" atau "07.30 WIB")
+       - Normalisasi ejaan sholat: subuh/shubuh->Shubuh, dzuhur/dhuhur/zuhur/luhur->Dhuhur, asar/ashar->Ashar, magrib/maghrib->Maghrib, isa/isya->Isya
+    5. **SHOLAT JUMAT**: Jika teks adalah rekapan Sholat Jumat:
+       - Field 'waktu' diisi "Sholat Jumat" (atau waktu spesifik jika ada, misal "11.30 - 13.00 WIB").
        - Field 'pemateri' diambil dari baris "Khatib / Imam".
        - Field 'tema' jika isinya "-" atau strip, kosongkan saja.
-    5. **KAJIAN ONLINE**: Jika acara diselenggarakan secara Online (Zoom, YouTube, dll):
+    6. **KAJIAN ONLINE**: Jika acara diselenggarakan secara Online (Zoom, YouTube, dll):
        - Field 'isOnline' set ke true.
        - Field 'city', 'masjid', dan 'address' otomatis diisi "Online".
        - Simpan link Zoom, Meeting ID, atau detail lainnya di 'linkInfo' atau 'address' agar user tahu cara aksesnya.
-    6. **MULTI-SPEAKER**: Jika satu acara punya BEBERAPA pemateri, gabungkan jadi satu entry dengan " & ".
-    7. **KHUSUS AKHWAT**: Set true jika ada indikator khusus wanita ATAU pematerinya Ustadzah.
-    8. **LINK INFO**: Ambil link pendaftaran > link Zoom > streaming > WAG.
-    9. **GMAPS**: Ambil link gmaps jika ada. Kosongkan (null) jika Online.
-    10. Output HANYA JSON text murni tanpa markdown formatting (tanpa \`\`\`json).
+    7. **MULTI-SPEAKER**: Jika satu acara punya BEBERAPA pemateri, gabungkan jadi satu entry dengan " & ".
+    8. **KHUSUS AKHWAT**: Set true jika ada indikator khusus wanita ATAU pematerinya Ustadzah.
+    9. **LINK INFO**: Ambil link pendaftaran > link Zoom > streaming > WAG.
+    10. **GMAPS**: Ambil link gmaps jika ada. Kosongkan (null) jika Online.
+    11. Output HANYA JSON text murni tanpa markdown formatting (tanpa \`\`\`json).
 
         TEKS BROADCAST:
             ${originalText}
