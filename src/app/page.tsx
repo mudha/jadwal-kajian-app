@@ -141,31 +141,38 @@ export default function BerandaPage() {
 
   useEffect(() => {
     fetchData();
-    // Fetch Layout
-    fetch('/api/settings/layout')
-      .then(res => res.json())
-      .then(data => {
-        if (data && (data.sidebar || data.main)) {
-          // Backward compatibility sync
-          const mobile = data.mobile || DEFAULT_LAYOUT.mobile;
-          const hidden_mobile = data.hidden_mobile || DEFAULT_LAYOUT.hidden_mobile;
-          setLayout({ ...data, mobile, hidden_mobile });
-        }
-        setLayoutLoading(false);
-      })
-      .catch(err => {
-        console.error("Failed to load layout", err);
-        setLayoutLoading(false);
-      });
-
-    // Fetch Quick Menu Settings
-    fetch('/api/settings/quick-menu')
-      .then(res => res.json())
-      .then(data => {
-        if (data) setQuickMenuItems(data);
-      })
-      .catch(err => console.error("Failed to load quick menu", err));
+    fetchLayout();
   }, []);
+
+  const fetchLayout = async () => {
+    try {
+      // Fetch Layout
+      const layoutRes = await fetch('/api/settings/layout');
+      const layoutData = await layoutRes.json();
+      if (layoutData && (layoutData.sidebar || layoutData.main)) {
+        const mobile = layoutData.mobile || DEFAULT_LAYOUT.mobile;
+        const hidden_mobile = layoutData.hidden_mobile || DEFAULT_LAYOUT.hidden_mobile;
+        setLayout({ ...layoutData, mobile, hidden_mobile });
+      }
+      setLayoutLoading(false);
+
+      // Fetch Quick Menu Settings
+      const quickMenuRes = await fetch('/api/settings/quick-menu');
+      const quickMenuData = await quickMenuRes.json();
+      if (quickMenuData) setQuickMenuItems(quickMenuData);
+
+    } catch (err) {
+      console.error("Failed to load settings", err);
+      setLayoutLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    await Promise.all([
+      fetchData(),
+      fetchLayout()
+    ]);
+  };
 
   const handleRefresh = async () => {
     await fetchData();
