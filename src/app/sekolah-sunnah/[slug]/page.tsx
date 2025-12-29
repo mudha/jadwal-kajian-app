@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { GraduationCap, MapPin, Phone, Globe, MessageCircle, DollarSign, ArrowLeft, ExternalLink, User } from 'lucide-react';
+import { GraduationCap, MapPin, Phone, Globe, MessageCircle, DollarSign, ArrowLeft, ExternalLink, User, Edit } from 'lucide-react';
 import Link from 'next/link';
 
 interface Sekolah {
@@ -36,11 +36,17 @@ export default function SekolahDetailPage() {
     const [sekolah, setSekolah] = useState<Sekolah | null>(null);
     const [related, setRelated] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
         if (params.slug) {
             fetchDetail();
         }
+        // Check admin session
+        fetch('/api/admin/check-session')
+            .then(res => res.json())
+            .then(data => setIsAdmin(!!data.isLoggedIn))
+            .catch(() => setIsAdmin(false));
     }, [params.slug]);
 
     const fetchDetail = async () => {
@@ -102,36 +108,49 @@ export default function SekolahDetailPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Hero Image */}
-                        <div className="aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-purple-100 to-blue-100 relative shadow-lg">
-                            {sekolah.imageUrl ? (
-                                <img src={sekolah.imageUrl} alt={sekolah.nama} className="w-full h-full object-cover" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                    <GraduationCap className="w-24 h-24 text-purple-300" />
-                                </div>
+                        {/* Header with Gradient Thumbnail */}
+                        <div className="bg-white rounded-2xl p-6 shadow-sm relative">
+                            {/* Admin Edit Button */}
+                            {isAdmin && (
+                                <Link
+                                    href={`/admin/sekolah?edit=${sekolah.id}`}
+                                    className="absolute top-4 right-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold shadow-lg hover:shadow-xl transition-all z-10"
+                                >
+                                    <Edit className="w-4 h-4" />
+                                    Edit Sekolah
+                                </Link>
                             )}
 
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
-                                <div className="flex gap-2 mb-3">
-                                    <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-black">
-                                        {sekolah.jenjang}
-                                    </span>
-                                    {sekolah.khusus_akhwat && (
-                                        <span className="bg-pink-500 text-white px-3 py-1 rounded-full text-sm font-black">
-                                            🌸 Khusus Akhwat
+                            <div className="flex gap-6">
+                                {/* Portrait Gradient Thumbnail */}
+                                <div className="w-40 h-52 shrink-0 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 relative overflow-hidden flex items-center justify-center shadow-lg">
+                                    <GraduationCap className="w-20 h-20 text-white/30" />
+                                    <div className="absolute top-3 right-3">
+                                        <span className="bg-white/20 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-black">
+                                            {sekolah.jenjang}
                                         </span>
-                                    )}
-                                    {sekolah.khusus_ikhwan && (
-                                        <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-black">
-                                            Khusus Ikhwan
-                                        </span>
-                                    )}
+                                    </div>
                                 </div>
-                                <h1 className="text-3xl font-black text-white mb-2">{sekolah.nama}</h1>
-                                <div className="flex items-center gap-2 text-white/90">
-                                    <MapPin className="w-5 h-5" />
-                                    <span className="font-bold">{sekolah.kota}{sekolah.provinsi && `, ${sekolah.provinsi}`}</span>
+
+                                {/* School Info */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex gap-2 mb-3 flex-wrap">
+                                        {sekolah.khusus_akhwat && (
+                                            <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-xs font-black">
+                                                🌸 Khusus Akhwat
+                                            </span>
+                                        )}
+                                        {sekolah.khusus_ikhwan && (
+                                            <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-black">
+                                                Khusus Ikhwan
+                                            </span>
+                                        )}
+                                    </div>
+                                    <h1 className="text-3xl font-black text-slate-900 mb-3 leading-tight">{sekolah.nama}</h1>
+                                    <div className="flex items-start gap-2 text-slate-600">
+                                        <MapPin className="w-5 h-5 mt-0.5 shrink-0 text-purple-600" />
+                                        <span className="font-bold">{sekolah.kota}{sekolah.provinsi && `, ${sekolah.provinsi}`}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
