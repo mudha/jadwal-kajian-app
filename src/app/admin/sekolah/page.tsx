@@ -171,9 +171,9 @@ export default function AdminSekolahPage() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
             </div>
 
-            {/* Table */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <table className="w-full text-left">
+                {/* Desktop Table */}
+                <table className="w-full text-left hidden md:table">
                     <thead className="bg-slate-50 border-b border-slate-200 text-xs font-black uppercase text-slate-500 tracking-wider">
                         <tr>
                             <th className="px-6 py-4">Nama Sekolah</th>
@@ -195,7 +195,7 @@ export default function AdminSekolahPage() {
                                     <div className="text-xs text-slate-400 font-mono mt-0.5">{item.slug}</div>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className="bg-purple-50 text-purple-700 px-3 py-1 rounded-lg text-xs font-bold border border-purple-100">
+                                    <span className="bg-purple-50 text-purple-700 px-3 py-1 rounded-lg text-xs font-bold border border-purple-100 whitespace-nowrap">
                                         {item.jenjang}
                                     </span>
                                 </td>
@@ -242,6 +242,60 @@ export default function AdminSekolahPage() {
                         ))}
                     </tbody>
                 </table>
+
+                {/* Mobile Card List */}
+                <div className="md:hidden divide-y divide-slate-100">
+                    {loading ? (
+                        <div className="p-8 text-center text-slate-500 animate-pulse">Memuat data direktori...</div>
+                    ) : filtered.length === 0 ? (
+                        <div className="p-8 text-center text-slate-500">Tidak ada data ditemukan</div>
+                    ) : filtered.map(item => (
+                        <div key={item.id} className="p-4 bg-white flex flex-col gap-3">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <div className="font-bold text-slate-900 text-base leading-snug">{cleanSchoolName(item.nama)}</div>
+                                    <div className="text-xs text-slate-400 font-mono mt-0.5 truncate max-w-[200px]">{item.slug}</div>
+                                </div>
+                                <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded-lg text-[10px] font-bold border border-purple-100 whitespace-nowrap shrink-0">
+                                    {item.jenjang}
+                                </span>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-3 text-sm">
+                                <div className="flex items-center gap-1.5 text-slate-600 font-medium bg-slate-50 px-2 py-1 rounded-md text-xs">
+                                    <MapPin className="w-3 h-3 text-slate-400" />
+                                    {item.kota}, {item.provinsi}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2 mt-1 border-t border-dashed border-slate-100">
+                                <div className="flex items-center gap-2">
+                                    {/* Gender Badges Mobile */}
+                                    {item.khusus_ikhwan && (
+                                        <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-bold border border-blue-100">Ikhwan</span>
+                                    )}
+                                    {item.khusus_akhwat && (
+                                        <span className="text-[10px] bg-pink-50 text-pink-600 px-2 py-0.5 rounded-full font-bold border border-pink-100">Akhwat</span>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => openModal(item)}
+                                        className="px-3 py-1.5 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg border border-blue-100 active:scale-95 transition-transform"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(item.id)}
+                                        className="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-bold rounded-lg border border-red-100 active:scale-95 transition-transform"
+                                    >
+                                        Hapus
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             <SchoolFormModal
