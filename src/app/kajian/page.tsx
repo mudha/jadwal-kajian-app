@@ -91,7 +91,7 @@ function KajianListContent() {
     }, []);
 
     // Effect for nearby mode - FIXED to work with URL param
-    const shouldFetchLocation = (filterMode === 'nearby' || filterNearby);
+    const shouldFetchLocation = !!(filterMode === 'nearby' || filterNearby);
     useEffect(() => {
         if (shouldFetchLocation) {
             setIsLocatingUser(true);
