@@ -51,80 +51,29 @@ export default function HubungiKamiPage() {
                 </div>
 
                 {/* Contact Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                                <Mail className="w-5 h-5 text-blue-600" />
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-slate-900">Email</h3>
-                                <p className="text-sm text-slate-500">Hubungi via email</p>
-                            </div>
-                        </div>
-                        <a href="mailto:info@portalkajian.online" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
-                            info@portalkajian.online
-                        </a>
-                    </div>
-
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
-                                <Phone className="w-5 h-5 text-green-600" />
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-slate-900">WhatsApp</h3>
-                                <p className="text-sm text-slate-500">Chat dengan admin</p>
-                            </div>
-                        </div>
-                        <a href="https://wa.me/6281234567890" target="_blank" className="text-green-600 hover:text-green-700 font-medium text-sm">
-                            +62 812-3456-7890
-                        </a>
-                    </div>
-                </div>
-
-                {/* Contact Form */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                    <h2 className="font-bold text-xl text-slate-900 mb-4">Kirim Pesan</h2>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Nama</label>
-                            <input
-                                type="text"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-                                required
-                            />
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center shrink-0">
+                            <Phone className="w-6 h-6 text-green-600" />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Email</label>
-                            <input
-                                type="email"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-                                required
-                            />
+                            <h3 className="font-bold text-lg text-slate-900">WhatsApp Admin</h3>
+                            <p className="text-sm text-slate-500 font-medium">Armudha Abu Naurah</p>
                         </div>
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Pesan</label>
-                            <textarea
-                                value={formData.message}
-                                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                                rows={5}
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent resize-none"
-                                required
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            className="w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                    </div>
+                    <div className="space-y-4">
+                        <p className="text-slate-600 leading-relaxed text-sm">
+                            Jika Anda memiliki pertanyaan, saran, atau ingin menambahkan informasi kajian, silakan hubungi kami melalui WhatsApp.
+                        </p>
+                        <a
+                            href="https://wa.me/6281392135904"
+                            target="_blank"
+                            className="block w-full py-4 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold text-center rounded-xl transition-all shadow-lg shadow-green-100 flex items-center justify-center gap-2"
                         >
-                            <Send className="w-4 h-4" />
-                            Kirim Pesan
-                        </button>
-                    </form>
+                            <Phone className="w-5 h-5" />
+                            Chat via WhatsApp
+                        </a>
+                    </div>
                 </div>
 
                 {/* Footer Note */}
