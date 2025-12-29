@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import db from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +9,7 @@ export async function GET(
 ) {
     try {
         const { slug } = params;
-        const db = await getDb();
+        // db is already imported at top
 
         // Get school detail by slug
         const result = await db.execute({
