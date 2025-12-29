@@ -213,9 +213,21 @@ export default function KajianDetailPage() {
     }
 
     // ... existing helper functions ...
+    import { shareToWhatsApp } from '@/lib/whatsapp-share';
+
+    // ... inside component ...
+
     const shareToWA = () => {
-        const text = `*INFO KAJIAN SUNNAH*\n\n🕌 *Masjid:* ${formatMasjidName(kajian.masjid)}\n👤 *Pemateri:* ${kajian.pemateri}\n📚 *Tema:* ${kajian.tema}\n🗓 *Hari/Tgl:* ${kajian.date}\n⏰ *Waktu:* ${kajian.waktu}\n📍 *Lokasi:* ${kajian.gmapsUrl || kajian.address}\n\n_Link Aplikasi: jadwal-kajian.app_`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        shareToWhatsApp({
+            masjid: formatMasjidName(kajian.masjid),
+            pemateri: kajian.pemateri,
+            tema: kajian.tema,
+            date: kajian.date,
+            waktu: kajian.waktu,
+            gmapsUrl: kajian.gmapsUrl,
+            address: kajian.address,
+            imageUrl: kajian.imageUrl
+        });
     };
 
     const addToCalendar = () => {
