@@ -1,17 +1,15 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Clock, Star, Bell, User } from 'lucide-react';
+import { Home, BookOpen, Star } from 'lucide-react';
 
 export default function BottomNav() {
     const pathname = usePathname();
 
     const navItems = [
         { href: '/', icon: Home, label: 'Beranda' },
-        { href: '/agenda', icon: Clock, label: 'Agenda' },
+        { href: '/kajian', icon: BookOpen, label: 'Kajian' },
         { href: '/favorit', icon: Star, label: 'Favorit' },
-        { href: '/notifikasi', icon: Bell, label: 'Notifikasi' },
-        { href: '/akun', icon: User, label: 'Akun' },
     ];
 
     // Hide bottom nav on admin, login, and dzikir pages
