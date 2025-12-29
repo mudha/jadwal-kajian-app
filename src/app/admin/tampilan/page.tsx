@@ -65,7 +65,13 @@ function SortableItem({ id, hidden, onToggle }: { id: string, hidden?: boolean, 
 }
 
 export default function AdminTampilanPage() {
-    const [layout, setLayout] = useState({
+    const [layout, setLayout] = useState<{
+        sidebar: string[];
+        main: string[];
+        mobile: string[];
+        hidden: string[];
+        hidden_mobile: string[];
+    }>({
         sidebar: [],
         main: [],
         mobile: [],
