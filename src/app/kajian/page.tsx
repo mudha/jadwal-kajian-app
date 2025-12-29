@@ -91,8 +91,9 @@ function KajianListContent() {
     }, []);
 
     // Effect for nearby mode - FIXED to work with URL param
+    const shouldFetchLocation = (filterMode === 'nearby' || filterNearby);
     useEffect(() => {
-        if (filterMode === 'nearby' || filterNearby) {
+        if (shouldFetchLocation) {
             setIsLocatingUser(true);
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -116,7 +117,7 @@ function KajianListContent() {
                 setIsLocatingUser(false);
             }
         }
-    }, [filterMode, filterNearby]);
+    }, [shouldFetchLocation]);
 
     let processedKajian = [...kajianList];
 
