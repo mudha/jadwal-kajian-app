@@ -18,10 +18,11 @@ interface KajianCardProps {
     khususAkhwat?: boolean;
     isOnline?: boolean;
     waktu?: string;
+    distance?: number;
     className?: string;
 }
 
-export default function KajianCard({ id, date, location, title, ustadz, ustadz2, ustadz3, imageUrl, attendanceCount = 0, khususAkhwat, isOnline, waktu, className = 'w-60' }: KajianCardProps) {
+export default function KajianCard({ id, date, location, title, ustadz, ustadz2, ustadz3, imageUrl, attendanceCount = 0, khususAkhwat, isOnline, waktu, distance, className = 'w-60' }: KajianCardProps) {
     const [count, setCount] = useState(attendanceCount);
     const [hasAttended, setHasAttended] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
@@ -136,10 +137,20 @@ export default function KajianCard({ id, date, location, title, ustadz, ustadz2,
                 </div>
 
                 <div className="flex items-start gap-3 pt-4 border-t border-slate-50">
-                    <p className="flex-1 min-w-0 text-xs text-slate-400 flex items-start gap-1.5">
-                        <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-slate-300 mt-1"></span>
-                        <span className="leading-tight">{location}</span>
-                    </p>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs text-slate-400 flex items-start gap-1.5 mb-1.5">
+                            <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-slate-300 mt-1"></span>
+                            <span className="leading-tight">{location}</span>
+                        </p>
+
+                        {/* Distance Badge */}
+                        {distance !== undefined && (
+                            <div className="inline-flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                                <span className="mr-1">📍</span>
+                                {distance.toFixed(1)} km
+                            </div>
+                        )}
+                    </div>
 
                     <div
                         role="button"

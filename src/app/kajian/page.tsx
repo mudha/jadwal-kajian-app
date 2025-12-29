@@ -572,14 +572,7 @@ function KajianListContent() {
                                                         <div className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-green-100 whitespace-nowrap">
                                                             {kajian.city}
                                                         </div>
-                                                        {!kajian.city.toLowerCase().includes('online') &&
-                                                            !kajian.masjid.toLowerCase().includes('live streaming') &&
-                                                            kajian.distance !== undefined && (
-                                                                <div className="px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-amber-100 flex items-center gap-1 whitespace-nowrap">
-                                                                    <MapPin className="w-3 h-3" />
-                                                                    {kajian.distance.toFixed(1)} km
-                                                                </div>
-                                                            )}
+                                                        {/* Distance badge moved to location section */}
                                                         {kajian.khususAkhwat && (
                                                             <div className="px-3 py-1 bg-pink-50 text-pink-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-pink-100 whitespace-nowrap">
                                                                 🌸 Akhwat
@@ -620,7 +613,15 @@ function KajianListContent() {
                                                         </h3>
                                                         <div className="flex items-start text-slate-500 group/loc">
                                                             <MapPin className="w-4 h-4 mr-2 mt-1 flex-shrink-0 group-hover/loc:text-blue-500 transition-colors" />
-                                                            <p className="text-xs leading-relaxed font-medium">{kajian.address}</p>
+                                                            <div>
+                                                                <p className="text-xs leading-relaxed font-medium">{kajian.address}</p>
+                                                                {kajian.distance !== undefined && (
+                                                                    <div className="inline-flex items-center mt-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                                                                        <span className="mr-1">📍</span>
+                                                                        {kajian.distance.toFixed(1)} km
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div className="shrink-0 group/img relative cursor-pointer overflow-hidden rounded-2xl shadow-sm border border-slate-100 w-24 h-32 md:w-32 md:h-44" onClick={() => setSelectedImage(kajian.imageUrl || '/images/default-kajian.png')}>
