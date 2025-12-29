@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { GraduationCap, MapPin, Phone, Globe, MessageCircle, DollarSign, ArrowLeft, ExternalLink, User, Edit } from 'lucide-react';
 import Link from 'next/link';
+import SchoolFormModal from '@/components/admin/SchoolFormModal';
 
 interface Sekolah {
     id: number;
@@ -37,6 +38,7 @@ export default function SekolahDetailPage() {
     const [related, setRelated] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
 
     useEffect(() => {
         if (params.slug) {
@@ -112,13 +114,13 @@ export default function SekolahDetailPage() {
                         <div className="bg-white rounded-2xl p-6 shadow-sm relative">
                             {/* Admin Edit Button */}
                             {isAdmin && (
-                                <Link
-                                    href={`/admin/sekolah?edit=${sekolah.id}`}
+                                <button
+                                    onClick={() => setShowEditModal(true)}
                                     className="absolute top-4 right-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold shadow-lg hover:shadow-xl transition-all z-10"
                                 >
                                     <Edit className="w-4 h-4" />
                                     Edit Sekolah
-                                </Link>
+                                </button>
                             )}
 
                             <div className="flex gap-6">
@@ -323,6 +325,19 @@ export default function SekolahDetailPage() {
                     </div>
                 )}
             </div>
+
+            {/* Edit Modal */}
+            {isAdmin && showEditModal && sekolah && (
+                <SchoolFormModal
+                    isOpen={showEditModal}
+                    onClose={() => setShowEditModal(false)}
+                    onSuccess={() => {
+                        setShowEditModal(false);
+                        fetchDetail(); // Refresh data
+                    }}
+                    editData={sekolah}
+                />
+            )}
         </div>
     );
 }
