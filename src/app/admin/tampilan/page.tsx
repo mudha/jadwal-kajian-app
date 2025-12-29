@@ -75,11 +75,24 @@ export default function AdminTampilanPage() {
     const [loading, setLoading] = useState(true);
     const [activeId, setActiveId] = useState(null);
 
+    const DEFAULT_MOBILE_LAYOUT = {
+        mobile: ['HeroWidget:mobile', 'QuickMenuWidget:mobile', 'OngoingWidget:mobile', 'LatestKajianWidget:mobile', 'KajianListWidget:mobile'],
+        hidden_mobile: ['SidebarMenuWidget:mobile', 'PrayerTimesWidget:mobile', 'ContactWidget:mobile']
+    };
+
     useEffect(() => {
         fetch('/api/settings/layout')
             .then(res => res.json())
             .then(data => {
-                setLayout(data);
+                if (data && (data.sidebar || data.main)) {
+                    // Backward compatibility: If no mobile data, use defaults
+                    const mobile = data.mobile || DEFAULT_MOBILE_LAYOUT.mobile;
+                    const hidden_mobile = data.hidden_mobile || DEFAULT_MOBILE_LAYOUT.hidden_mobile;
+                    setLayout({ ...data, mobile, hidden_mobile });
+                } else {
+                    // Fallback if no settings at all (should be handled by API defaults but safe to have)
+                    setLayout(prev => ({ ...prev, ...DEFAULT_MOBILE_LAYOUT }));
+                }
                 setLoading(false);
             });
     }, []);
