@@ -1,16 +1,12 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Search, User, Clock, MapPin, HandHeart } from 'lucide-react';
-import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
-import LeftSidebar from '@/components/LeftSidebar';
-import KajianCard from '@/components/KajianCard';
-import MenuGrid from '@/components/MenuGrid';
-import OngoingKajianWidget from '@/components/OngoingKajianWidget';
+import { Search } from 'lucide-react';
 import PullToRefresh from '@/components/PullToRefresh';
 import QuickMenu from '@/components/QuickMenu';
-import NextPrayerWidget from '@/components/NextPrayerWidget';
 import Link from 'next/link';
-import { getKajianStatus, parseIndoDate, formatMasjidName, getHijriDate } from '@/lib/date-utils';
+import { getKajianStatus, parseIndoDate } from '@/lib/date-utils';
+import WidgetRenderer from '@/components/WidgetRenderer';
+import SidebarMenuWidget from '@/components/widgets/SidebarMenuWidget';
 
 interface KajianWithId {
   id: number;
@@ -44,11 +40,19 @@ function deg2rad(deg: number) {
   return deg * (Math.PI / 180);
 }
 
+const DEFAULT_LAYOUT = {
+  sidebar: ['SidebarMenuWidget', 'PrayerTimesWidget', 'ContactWidget'],
+  main: ['HeroWidget', 'QuickMenuWidget', 'OngoingWidget', 'LatestKajianWidget', 'KajianListWidget'],
+  hidden: []
+};
+
 export default function BerandaPage() {
   const [featuredKajian, setFeaturedKajian] = useState<KajianWithId[]>([]);
   const [latestKajian, setLatestKajian] = useState<KajianWithId[]>([]);
   const [sortMode, setSortMode] = useState<'date' | 'distance'>('date');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [layout, setLayout] = useState(DEFAULT_LAYOUT);
+  const [layoutLoading, setLayoutLoading] = useState(true); // Optimize flicker if needed
 
   const fetchData = async () => {
     try {
@@ -133,10 +137,29 @@ export default function BerandaPage() {
 
   useEffect(() => {
     fetchData();
+    // Fetch Layout
+    fetch('/api/settings/layout')
+      .then(res => res.json())
+      .then(data => {
+        if (data && (data.sidebar || data.main)) {
+          setLayout(data);
+        }
+        setLayoutLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to load layout", err);
+        setLayoutLoading(false);
+      });
   }, []);
 
   const handleRefresh = async () => {
     await fetchData();
+  };
+
+  const widgetData = {
+    featuredKajian,
+    latestKajian,
+    sortMode
   };
 
   return (
@@ -149,7 +172,10 @@ export default function BerandaPage() {
             <p className="text-teal-100 text-xs">PortalKajian.online</p>
           </div>
           <div className="p-4 overflow-y-auto flex-1">
-            <LeftSidebar />
+            {/* Sidebar Mobile is static for now or uses same widget? 
+                Ideally mobile sidebar is mostly Menu. We can re-use SidebarMenuWidget.
+            */}
+            <SidebarMenuWidget />
           </div>
         </div>
       </div>
@@ -183,157 +209,13 @@ export default function BerandaPage() {
 
           {/* Left Column (Desktop) - Sidebar & Widgets */}
           <div className="hidden md:block md:col-span-4 space-y-6 order-1">
-            {/* Menu & Nav */}
-            <LeftSidebar />
-
-            {/* Ongoing Kajian Widget */}
-            <OngoingKajianWidget />
-
-            {/* NEW: LATEST / RECENTLY ADDED KAJIAN WIDGET */}
-            <div className="bg-gradient-to-br from-teal-600 to-teal-800 rounded-3xl p-6 shadow-xl text-white relative overflow-hidden">
-              {/* Decorative Background Elements */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-teal-500/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
-
-              <div className="flex items-center justify-between mb-5 relative z-10">
-                <div>
-                  <h3 className="font-bold text-xl text-white">Info Kajian Terbaru</h3>
-                  <p className="text-teal-100 text-xs opacity-80">Baru saja diupdate admin</p>
-                </div>
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-teal-700"></span>
-                </span>
-              </div>
-
-              <div className="space-y-4 relative z-10">
-                {latestKajian.map((k) => (
-                  <Link href={`/kajian/${k.id}`} key={k.id} className="block group">
-                    <div className="flex gap-3 items-start p-2 rounded-xl hover:bg-white/10 transition-colors">
-                      <div className="w-12 h-16 bg-white/20 backdrop-blur-sm rounded-lg shrink-0 overflow-hidden relative border border-white/10">
-                        {k.imageUrl ? (
-                          <img src={k.imageUrl} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-teal-100">
-                            <User className="w-6 h-6" />
-                          </div>
-                        )}
-                        <div className="absolute top-0 left-0 bg-red-500 text-white text-[8px] font-bold px-1 py-0.5 rounded-br-lg">NEW</div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-teal-200 mb-0.5 flex flex-wrap items-center gap-1 leading-tight">
-                          {k.city === 'Online' ? 'ONLINE' : k.city}
-                        </p>
-                        <p className="text-xs font-bold text-white leading-tight line-clamp-2 group-hover:text-teal-200 transition-colors mb-0.5">{k.tema}</p>
-                        <p className="text-[9px] text-teal-100/70 truncate mb-1">Oleh: {k.pemateri}</p>
-                        <p className="text-[9px] text-white/50 flex items-center gap-1">
-                          <Clock className="w-2.5 h-2.5" /> {k.date}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                ))
-                }
-                {latestKajian.length === 0 && (
-                  <div className="text-center py-6 text-teal-100/60 text-xs italic bg-white/5 rounded-xl border border-white/5">
-                    Belum ada data terbaru.
-                  </div>
-                )}
-              </div>
-            </div>
+            <WidgetRenderer widgetIds={layout.sidebar} data={widgetData} />
           </div>
 
           {/* Right Column (Desktop) - Main Content */}
           <div className="md:col-span-8 space-y-6 order-2">
-
-            {/* Hero Section on Desktop */}
-            <div className="hidden md:block bg-teal-600 rounded-3xl p-8 text-white relative overflow-hidden">
-              <div className="relative z-10">
-                <h1 className="text-3xl font-bold mb-4">Selamat Datang di PortalKajian.online</h1>
-                <p className="text-teal-100 max-w-lg mb-6">Temukan informasi kajian sunnah terdekat, artikel islami, dan fitur ibadah lainnya.</p>
-                <Link href="/kajian" className="inline-block bg-white text-teal-600 font-bold px-6 py-3 rounded-xl hover:bg-teal-50 transition-colors">
-                  Cari Kajian Sekarang
-                </Link>
-              </div>
-              <div className="absolute right-0 bottom-0 opacity-10">
-                <Search className="w-64 h-64 -mb-12 -mr-12" />
-              </div>
-            </div>
-
-            {/* Quick Menu - Desktop & Mobile */}
-            <QuickMenu />
-
-            {/* Featured Kajian Cards */}
-            {featuredKajian.length > 0 && (
-              <section>
-                <div className="flex items-center justify-between mb-4 md:mb-6">
-                  <h2 className="font-bold text-lg text-slate-800">
-                    {sortMode === 'distance' ? 'Kajian Pilihan Terdekat' : 'Kajian Pilihan'}
-                  </h2>
-                  <Link href="/kajian" className="text-sm text-teal-600 font-medium hover:text-teal-700">Lihat Semua</Link>
-                </div>
-
-                {/* Mobile: Horizontal Scroll */}
-                <div className="flex md:hidden overflow-x-auto gap-4 pb-4 scrollbar-hide -mx-4 px-4">
-                  {featuredKajian.map((kajian) => (
-                    <KajianCard
-                      key={kajian.id}
-                      id={kajian.id}
-                      date={`${kajian.date}`}
-                      location={kajian.distance && kajian.distance < 1000
-                        ? `${formatMasjidName(kajian.masjid)} • ${kajian.distance.toFixed(1)} km`
-                        : `${formatMasjidName(kajian.masjid)} • ${kajian.city}`}
-                      title={kajian.tema}
-                      ustadz={kajian.pemateri}
-                      imageUrl={kajian.imageUrl}
-                      attendanceCount={kajian.attendanceCount}
-                      waktu={kajian.waktu}
-                    />
-                  ))}
-                </div>
-
-                {/* Desktop: Grid View */}
-                <div className="hidden md:grid grid-cols-2 gap-6">
-                  {featuredKajian.map((kajian) => (
-                    <Link href={`/kajian/${kajian.id}`} key={kajian.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex gap-4 block">
-                      <div className="w-24 h-24 bg-slate-200 rounded-xl shrink-0 overflow-hidden">
-                        <img src={kajian.imageUrl || '/images/default-kajian.png'} alt={kajian.tema} className="w-full h-full object-cover" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-[10px] font-bold text-teal-600 uppercase tracking-wide">{kajian.date}</p>
-                          {kajian.waktu && (
-                            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md flex items-center gap-1">
-                              <Clock className="w-2.5 h-2.5" />
-                              {kajian.waktu}
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="font-bold text-slate-900 line-clamp-2 mb-1">{kajian.tema}</h3>
-                        <p className="text-xs text-slate-500 mb-2">{kajian.pemateri}</p>
-                        <p className="text-[10px] text-slate-400 flex items-center gap-1">
-                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-                          {formatMasjidName(kajian.masjid)}, {kajian.city}
-                          {kajian.distance && kajian.distance < 1000 && (
-                            <span className="flex items-center gap-0.5 text-teal-600 font-bold ml-1 bg-teal-50 px-1.5 py-0.5 rounded-md">
-                              <MapPin className="w-2.5 h-2.5" /> {kajian.distance.toFixed(1)} km
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Next Prayer Widget - Mobile Only */}
-            <div className="px-4 md:px-0">
-              <NextPrayerWidget />
-            </div>
+            <WidgetRenderer widgetIds={layout.main} data={widgetData} />
           </div>
-
-
         </div>
       </PullToRefresh>
     </div>

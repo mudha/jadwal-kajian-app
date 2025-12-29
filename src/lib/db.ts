@@ -152,6 +152,14 @@ const initDb = async () => {
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Settings table for dynamic configuration (JSON values)
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT
+    )
+  `);
 };
 
 // Auto-init on import (Note: top-level await needs ES modules or handling in app startup)

@@ -45,6 +45,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
         { href: '/admin/ustadz', icon: ListMusic, label: 'Kelola Ustadz' },
         { href: '/admin/masjid', icon: Calendar, label: 'Kelola Masjid' },
         { href: '/admin/sekolah', icon: School, label: 'Kelola Sekolah' },
+        { href: '/admin/tampilan', icon: LayoutDashboard, label: 'Kelola Tampilan' },
     ];
 
     // Add admin management only for Super Admin
