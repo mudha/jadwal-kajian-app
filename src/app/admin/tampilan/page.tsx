@@ -88,7 +88,7 @@ export default function AdminTampilanPage() {
     };
 
     const DEFAULT_DESKTOP_LAYOUT = {
-        sidebar: ['SidebarMenuWidget', 'PrayerTimesWidget', 'ContactWidget'],
+        sidebar: ['SidebarBrandWidget', 'SidebarMenuWidget', 'PrayerTimesWidget', 'ContactWidget'],
         main: ['HeroWidget', 'QuickMenuWidget', 'OngoingWidget', 'LatestKajianWidget', 'KajianListWidget'],
         hidden: []
     };
@@ -212,14 +212,18 @@ export default function AdminTampilanPage() {
         fetch('/api/settings/layout')
             .then(res => res.json())
             .then(data => {
-                // ... existing layout fetch logic ...
                 if (data && (data.sidebar || data.main)) {
                     const mobile = data.mobile || DEFAULT_MOBILE_LAYOUT.mobile;
                     const hidden_mobile = data.hidden_mobile || DEFAULT_MOBILE_LAYOUT.hidden_mobile;
-                    // Ensure desktop parts are also present if partially missing (though less likely)
-                    const sidebar = data.sidebar || DEFAULT_DESKTOP_LAYOUT.sidebar;
+
+                    let sidebar = data.sidebar || DEFAULT_DESKTOP_LAYOUT.sidebar;
                     const main = data.main || DEFAULT_DESKTOP_LAYOUT.main;
                     const hidden = data.hidden || DEFAULT_DESKTOP_LAYOUT.hidden;
+
+                    // Ensure SidebarBrandWidget is present in Admin too
+                    if (Array.isArray(sidebar) && !sidebar.includes('SidebarBrandWidget')) {
+                        sidebar = ['SidebarBrandWidget', ...sidebar];
+                    }
 
                     setLayout({ ...data, sidebar, main, hidden, mobile, hidden_mobile });
                 } else {
@@ -228,14 +232,15 @@ export default function AdminTampilanPage() {
                         ...DEFAULT_MOBILE_LAYOUT
                     });
                 }
+                setLoading(false);
             })
             .catch(err => {
                 console.error('Failed to fetch layout:', err);
-                // On error, use defaults to ensure UI shows up
                 setLayout({
                     ...DEFAULT_DESKTOP_LAYOUT,
                     ...DEFAULT_MOBILE_LAYOUT
                 });
+                setLoading(false);
             });
 
         // Fetch Quick Menu
