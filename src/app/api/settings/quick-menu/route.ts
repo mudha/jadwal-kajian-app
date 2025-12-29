@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import db from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 const SETTING_KEY = 'quick_menu_items';
