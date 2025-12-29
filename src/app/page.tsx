@@ -152,7 +152,17 @@ export default function BerandaPage() {
       if (layoutData && (layoutData.sidebar || layoutData.main)) {
         const mobile = layoutData.mobile || DEFAULT_LAYOUT.mobile;
         const hidden_mobile = layoutData.hidden_mobile || DEFAULT_LAYOUT.hidden_mobile;
-        setLayout({ ...layoutData, mobile, hidden_mobile });
+
+        // Ensure SidebarBrandWidget is present
+        let sidebar = layoutData.sidebar || DEFAULT_LAYOUT.sidebar;
+        if (Array.isArray(sidebar) && !sidebar.includes('SidebarBrandWidget')) {
+          sidebar = ['SidebarBrandWidget', ...sidebar];
+        }
+
+        setLayout({ ...layoutData, sidebar, mobile, hidden_mobile });
+      } else {
+        // Force update default if no data found
+        setLayout(DEFAULT_LAYOUT);
       }
       setLayoutLoading(false);
 
