@@ -19,19 +19,6 @@ export default function SidebarMenuWidget() {
 
     return (
         <div className="space-y-6">
-            {/* App Branding (Only for Desktop Sidebar) */}
-            <div className="hidden lg:block bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-                <div className="flex items-center gap-3">
-                    <div className="bg-teal-600 p-2 rounded-xl text-white shadow-lg shadow-teal-100">
-                        <ShieldCheck className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <h1 className="font-black text-lg text-slate-900 leading-tight">PortalKajian</h1>
-                        <p className="text-[10px] text-teal-600 font-black uppercase tracking-widest">Online</p>
-                    </div>
-                </div>
-            </div>
-
             {/* Navigation Menu */}
             <nav className="bg-white rounded-3xl p-3 shadow-sm border border-slate-100 space-y-1">
                 <p className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400">Menu Utama</p>

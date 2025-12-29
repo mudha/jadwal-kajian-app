@@ -41,7 +41,7 @@ function deg2rad(deg: number) {
 }
 
 const DEFAULT_LAYOUT = {
-  sidebar: ['SidebarMenuWidget', 'PrayerTimesWidget', 'ContactWidget'],
+  sidebar: ['SidebarBrandWidget', 'SidebarMenuWidget', 'PrayerTimesWidget', 'ContactWidget'],
   main: ['HeroWidget', 'QuickMenuWidget', 'OngoingWidget', 'LatestKajianWidget', 'KajianListWidget'],
   mobile: ['HeroWidget:mobile', 'QuickMenuWidget:mobile', 'OngoingWidget:mobile', 'LatestKajianWidget:mobile', 'KajianListWidget:mobile'],
   hidden: [],

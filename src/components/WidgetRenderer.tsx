@@ -9,8 +9,9 @@ import QuickMenuWidget from './widgets/QuickMenuWidget';
 import OngoingWidget from './widgets/OngoingWidget';
 import LatestKajianWidget from './widgets/LatestKajianWidget';
 import KajianListWidget from './widgets/KajianListWidget';
+import SidebarBrandWidget from './widgets/SidebarBrandWidget';
 
-const WIDGET_MAP: Record<string, React.ComponentType<any>> = {
+const WIDGET_MAP: Record<string, React.FC<any>> = {
     'SidebarMenuWidget': SidebarMenuWidget,
     'ContactWidget': ContactWidget,
     'PrayerTimesWidget': PrayerTimesWidget,
@@ -19,6 +20,7 @@ const WIDGET_MAP: Record<string, React.ComponentType<any>> = {
     'OngoingWidget': OngoingWidget,
     'LatestKajianWidget': LatestKajianWidget,
     'KajianListWidget': KajianListWidget,
+    'SidebarBrandWidget': SidebarBrandWidget,
 };
 
 interface WidgetRendererProps {
