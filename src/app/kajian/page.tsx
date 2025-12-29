@@ -90,21 +90,23 @@ function KajianListContent() {
         fetchData();
     }, []);
 
-    // Effect for nearby mode
+    // Effect for nearby mode - FIXED to work with URL param
     useEffect(() => {
-        if (filterMode === 'nearby') {
+        if (filterMode === 'nearby' || filterNearby) {
             setIsLocatingUser(true);
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        setUserLocation({
+                        const loc = {
                             lat: position.coords.latitude,
                             lng: position.coords.longitude
-                        });
+                        };
+                        setUserLocation(loc);
                         setIsLocatingUser(false);
+                        console.log('✅ User location detected:', loc);
                     },
                     (error) => {
-                        console.error('Error getting location', error);
+                        console.error('❌ Error getting location', error);
                         setIsLocatingUser(false);
                         alert('Gagal mengambil lokasi Anda. Pastikan GPS aktif.');
                     }
@@ -114,7 +116,7 @@ function KajianListContent() {
                 setIsLocatingUser(false);
             }
         }
-    }, [filterMode]);
+    }, [filterMode, filterNearby]);
 
     let processedKajian = [...kajianList];
 
