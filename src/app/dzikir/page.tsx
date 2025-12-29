@@ -61,6 +61,7 @@ const DZIKIR_CATEGORIES: DzikirCategory[] = [
         gradient: 'from-green-500 to-green-600',
         iconBg: 'bg-green-50',
         iconColor: 'text-green-600',
+        soon: true,
     },
 ];
 
