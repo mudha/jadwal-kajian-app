@@ -482,7 +482,7 @@ function KajianListContent() {
                         </div>
 
                         {/* Radius Slider for Nearby Mode */}
-                        {filterMode === 'nearby' && (
+                        {(filterMode === 'nearby' || filterNearby) && (
                             <div className="bg-white rounded-2xl p-5 mb-8 shadow-sm border border-slate-200">
                                 <div className="flex items-center justify-between mb-3">
                                     <div>
