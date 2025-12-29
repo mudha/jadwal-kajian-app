@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { KajianEntry, parseKajianBroadcast } from '@/lib/parser';
+import { KajianEntry, parseKajianBroadcast, splitPemateri, splitWaktu } from '@/lib/parser';
 import { parseWithGemini } from '@/lib/ai-parser';
 import { Clipboard, Save, Play, CheckCircle, AlertCircle, FileText, Calendar, Clock, MapPin, LogOut, LayoutDashboard, ExternalLink, Database, PlusCircle, History, Info, Trash2, Image as ImageIcon, Loader2, Upload, X, Sparkles, Eye } from 'lucide-react';
 import { geocodeAddress } from '@/lib/geocoding';
@@ -162,7 +162,17 @@ export default function BatchInputPage() {
             const enrichedEntries = parsed.map(entry => {
                 const isFriday = entry.waktu?.toLowerCase().includes('jumat') || entry.waktu?.toLowerCase().includes("jum'at") || entry.tema?.toLowerCase().includes('jumat') || entry.tema === '';
                 const defaultImg = isFriday ? '/images/khutbah-jumat-cover.png' : undefined;
-                return { ...entry, imageUrl: lastImageUrl || defaultImg };
+
+                // Auto-split waktu and pemateri
+                const waktuSplit = splitWaktu(entry.waktu);
+                const pemateriSplit = splitPemateri(entry.pemateri);
+
+                return {
+                    ...entry,
+                    ...waktuSplit,
+                    ...pemateriSplit,
+                    imageUrl: lastImageUrl || defaultImg
+                };
             });
             setEntries(enrichedEntries);
             setSelectedIndices(new Set(enrichedEntries.map((_, i) => i)));
@@ -249,7 +259,17 @@ export default function BatchInputPage() {
             const enrichedEntries = parsed.map(entry => {
                 const isFriday = entry.waktu?.toLowerCase().includes('jumat') || entry.waktu?.toLowerCase().includes("jum'at") || entry.tema?.toLowerCase().includes('jumat') || entry.tema === '';
                 const defaultImg = isFriday ? '/images/khutbah-jumat-cover.png' : undefined;
-                return { ...entry, imageUrl: lastImageUrl || defaultImg };
+
+                // Auto-split waktu and pemateri if AI didn't do it
+                const waktuSplit = entry.waktu_mulai ? {} : splitWaktu(entry.waktu);
+                const pemateriSplit = entry.pemateri2 ? {} : splitPemateri(entry.pemateri);
+
+                return {
+                    ...entry,
+                    ...waktuSplit,
+                    ...pemateriSplit,
+                    imageUrl: lastImageUrl || defaultImg
+                };
             });
             setEntries(enrichedEntries);
             setSelectedIndices(new Set(enrichedEntries.map((_, i) => i)));
@@ -578,14 +598,86 @@ export default function BatchInputPage() {
                                                                     className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all text-base placeholder:text-slate-400"
                                                                 />
                                                             </div>
-                                                            <div className="col-span-1">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Pemateri</label>
-                                                                <AutosuggestInput
-                                                                    type="pemateri"
-                                                                    value={entry.pemateri}
-                                                                    onChange={(val) => updateEntry(idx, 'pemateri', val)}
-                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
-                                                                />
+                                                            <div className="col-span-1 md:col-span-2">
+                                                                <div className="space-y-3">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">Pemateri / Ustadz</label>
+                                                                        {!entry.pemateri2 && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => updateEntry(idx, 'pemateri2', '')}
+                                                                                className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                                                                            >
+                                                                                <PlusCircle className="w-3 h-3" /> Tambah
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                    <AutosuggestInput
+                                                                        type="pemateri"
+                                                                        value={entry.pemateri}
+                                                                        onChange={(val) => updateEntry(idx, 'pemateri', val)}
+                                                                        className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
+                                                                        placeholder="Pemateri utama..."
+                                                                    />
+
+                                                                    {entry.pemateri2 !== undefined && (
+                                                                        <div className="relative">
+                                                                            <AutosuggestInput
+                                                                                type="pemateri"
+                                                                                value={entry.pemateri2 || ''}
+                                                                                onChange={(val) => updateEntry(idx, 'pemateri2', val)}
+                                                                                className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
+                                                                                placeholder="Pemateri kedua..."
+                                                                            />
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    const newEntries = [...entries];
+                                                                                    const { pemateri2, ...rest } = newEntries[idx];
+                                                                                    newEntries[idx] = rest as any;
+                                                                                    setEntries(newEntries);
+                                                                                }}
+                                                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
+                                                                            >
+                                                                                <X className="w-4 h-4" />
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {entry.pemateri2 && !entry.pemateri3 && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => updateEntry(idx, 'pemateri3', '')}
+                                                                            className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                                                                        >
+                                                                            <PlusCircle className="w-3 h-3" /> Tambah Ketiga
+                                                                        </button>
+                                                                    )}
+
+                                                                    {entry.pemateri3 !== undefined && (
+                                                                        <div className="relative">
+                                                                            <AutosuggestInput
+                                                                                type="pemateri"
+                                                                                value={entry.pemateri3 || ''}
+                                                                                onChange={(val) => updateEntry(idx, 'pemateri3', val)}
+                                                                                className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
+                                                                                placeholder="Pemateri ketiga..."
+                                                                            />
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    const newEntries = [...entries];
+                                                                                    const { pemateri3, ...rest } = newEntries[idx];
+                                                                                    newEntries[idx] = rest as any;
+                                                                                    setEntries(newEntries);
+                                                                                }}
+                                                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
+                                                                            >
+                                                                                <X className="w-4 h-4" />
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                             <div className="col-span-1 relative">
                                                                 <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Kota</label>
@@ -655,31 +747,31 @@ export default function BatchInputPage() {
                                                                 </div>
                                                             </div>
                                                             <div className="col-span-1 relative">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Waktu</label>
+                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Waktu Mulai</label>
                                                                 <div className="relative">
                                                                     <input
                                                                         type="text"
-                                                                        value={entry.waktu}
+                                                                        value={entry.waktu_mulai || ''}
                                                                         onChange={(e) => {
-                                                                            updateEntry(idx, 'waktu', e.target.value);
+                                                                            updateEntry(idx, 'waktu_mulai', e.target.value);
                                                                             setActiveWaktuDropdownIndex(idx);
                                                                         }}
                                                                         onFocus={() => setActiveWaktuDropdownIndex(idx)}
                                                                         onBlur={() => setTimeout(() => setActiveWaktuDropdownIndex(null), 200)}
                                                                         className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
-                                                                        placeholder="Ba'da Maghrib - Selesai"
+                                                                        placeholder="Ba'da Maghrib / 19.00"
                                                                     />
                                                                     {activeWaktuDropdownIndex === idx && (
                                                                         <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-xl shadow-xl">
-                                                                            {waktuSuggestions
-                                                                                .filter(w => w.toLowerCase().includes(entry.waktu.toLowerCase()))
+                                                                            {['Ba\'da Shubuh', 'Ba\'da Dhuhur', 'Ba\'da Ashar', 'Ba\'da Maghrib', 'Ba\'da Isya', 'Shubuh', 'Dhuhur', 'Ashar', 'Maghrib', 'Isya', 'Sholat Jumat']
+                                                                                .filter(w => w.toLowerCase().includes((entry.waktu_mulai || '').toLowerCase()))
                                                                                 .map(waktu => (
                                                                                     <button
                                                                                         key={waktu}
                                                                                         type="button"
                                                                                         className="w-full text-left px-4 py-2 hover:bg-slate-50 font-medium text-slate-700 text-sm"
                                                                                         onClick={() => {
-                                                                                            updateEntry(idx, 'waktu', waktu);
+                                                                                            updateEntry(idx, 'waktu_mulai', waktu);
                                                                                             setActiveWaktuDropdownIndex(null);
                                                                                         }}
                                                                                     >
@@ -687,12 +779,19 @@ export default function BatchInputPage() {
                                                                                     </button>
                                                                                 ))
                                                                             }
-                                                                            {waktuSuggestions.filter(w => w.toLowerCase().includes(entry.waktu.toLowerCase())).length === 0 && (
-                                                                                <div className="px-4 py-3 text-slate-400 text-xs text-center italic">Tidak ada saran waktu</div>
-                                                                            )}
                                                                         </div>
                                                                     )}
                                                                 </div>
+                                                            </div>
+                                                            <div className="col-span-1">
+                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Waktu Selesai</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={entry.waktu_selesai || 'Selesai'}
+                                                                    onChange={(e) => updateEntry(idx, 'waktu_selesai', e.target.value)}
+                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
+                                                                    placeholder="Selesai / 20.00"
+                                                                />
                                                             </div>
                                                             <div className="col-span-1 md:col-span-2">
                                                                 <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Alamat</label>
