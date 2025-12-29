@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { parseIndoDate, getHijriDate, formatMasjidName, getKajianStatus, isKajianOngoing } from '@/lib/date-utils';
 import { useAdmin } from '@/hooks/useAdmin';
 import ImageUpload from '@/components/ImageUpload';
+import { shareToWhatsApp } from '@/lib/whatsapp-share';
 
 // Reusing types locally for simplicity or import if shared
 interface KajianDetail {
@@ -213,9 +214,7 @@ export default function KajianDetailPage() {
     }
 
     // ... existing helper functions ...
-    import { shareToWhatsApp } from '@/lib/whatsapp-share';
 
-    // ... inside component ...
 
     const shareToWA = () => {
         shareToWhatsApp({
