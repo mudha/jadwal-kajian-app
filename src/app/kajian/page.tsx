@@ -537,14 +537,29 @@ function KajianListContent() {
                                     <div className="bg-slate-50 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-300">
                                         <Calendar className="w-10 h-10" />
                                     </div>
-                                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Tidak ditemukan jadwal</h2>
-                                    <p className="text-slate-500 mb-8 max-w-sm mx-auto">Coba ubah kriteria pencarian atau pindah kategori filter.</p>
-                                    <Link
-                                        href="/admin/batch-input"
-                                        className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-lg shadow-blue-200 transition-all active:scale-95"
-                                    >
-                                        Input Jadwal Baru
-                                    </Link>
+                                    <h2 className="text-xl font-bold text-slate-800 mb-2">Belum ada jadwal kajian</h2>
+                                    <p className="text-slate-500 text-sm mb-6 max-w-sm mx-auto leading-relaxed">
+                                        Mungkin belum ada data yang sesuai dengan filter lokasi atau tanggal yang Anda pilih.
+                                    </p>
+                                    <div className="flex justify-center gap-3">
+                                        <button
+                                            onClick={() => {
+                                                setSearchTerm('');
+                                                setFilterMode('upcoming');
+                                                setRadius(50);
+                                            }}
+                                            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-sm transition-colors"
+                                        >
+                                            Reset Filter
+                                        </button>
+                                        <a
+                                            href="https://wa.me/6281392135904"
+                                            target="_blank"
+                                            className="px-5 py-2.5 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-xl font-bold text-sm transition-colors"
+                                        >
+                                            Info ke Admin
+                                        </a>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
