@@ -545,7 +545,7 @@ function KajianListContent() {
                                         <button
                                             onClick={() => {
                                                 setSearchTerm('');
-                                                setFilterMode('upcoming');
+                                                setActiveTab('upcoming');
                                                 setRadius(50);
                                             }}
                                             className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-sm transition-colors"
