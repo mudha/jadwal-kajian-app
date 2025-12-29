@@ -11,6 +11,7 @@ interface DzikirCategory {
     gradient: string;
     iconBg: string;
     iconColor: string;
+    soon?: boolean;
 }
 
 const DZIKIR_CATEGORIES: DzikirCategory[] = [
@@ -40,6 +41,7 @@ const DZIKIR_CATEGORIES: DzikirCategory[] = [
         gradient: 'from-teal-500 to-teal-600',
         iconBg: 'bg-teal-50',
         iconColor: 'text-teal-600',
+        soon: true,
     },
     {
         title: 'Dzikir Perjalanan',
@@ -49,6 +51,7 @@ const DZIKIR_CATEGORIES: DzikirCategory[] = [
         gradient: 'from-purple-500 to-purple-600',
         iconBg: 'bg-purple-50',
         iconColor: 'text-purple-600',
+        soon: true,
     },
     {
         title: 'Doa Sehari-hari',
@@ -84,42 +87,62 @@ export default function DzikirIndexPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {DZIKIR_CATEGORIES.map((category) => {
                         const Icon = category.icon;
+                        const Component = category.soon ? 'div' : Link;
+                        const props: any = category.soon ? {
+                            onClick: () => alert('Fitur ini sedang dalam pengembangan Insya Allah segera hadir.')
+                        } : {
+                            href: category.href
+                        };
+
                         return (
-                            <Link
-                                key={category.href}
-                                href={category.href}
-                                className="group block"
+                            <Component
+                                key={category.title}
+                                {...props}
+                                className={`group block ${category.soon ? 'cursor-not-allowed opacity-90' : ''}`}
                             >
-                                <div className={`relative bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden`}>
+                                <div className={`relative bg-white rounded-2xl p-6 shadow-sm border border-slate-100 ${!category.soon && 'hover:shadow-xl hover:-translate-y-1'} transition-all duration-300 overflow-hidden`}>
                                     {/* Gradient Background Accent */}
                                     <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${category.gradient} opacity-5 rounded-full blur-3xl group-hover:opacity-10 transition-opacity`} />
 
                                     {/* Content */}
                                     <div className="relative z-10 flex items-start gap-4">
                                         {/* Icon */}
-                                        <div className={`${category.iconBg} rounded-2xl p-4 group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
+                                        <div className={`${category.iconBg} rounded-2xl p-4 ${!category.soon && 'group-hover:scale-110'} transition-transform duration-300 shadow-sm relative`}>
                                             <Icon className={`w-8 h-8 ${category.iconColor}`} />
+
                                         </div>
 
                                         {/* Text */}
                                         <div className="flex-1 min-w-0">
-                                            <h2 className="font-bold text-slate-900 text-lg mb-1 group-hover:text-teal-600 transition-colors">
-                                                {category.title}
-                                            </h2>
-                                            <p className="text-sm text-slate-500 leading-relaxed">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h2 className={`font-bold text-slate-900 text-lg ${!category.soon && 'group-hover:text-teal-600'} transition-colors`}>
+                                                    {category.title}
+                                                </h2>
+                                                {category.soon && (
+                                                    <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200 uppercase tracking-wide">
+                                                        Soon
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-sm text-slate-500 leading-relaxed grid grid-rows-[0fr] group-hover:grid-rows-[1fr]">
                                                 {category.description}
                                             </p>
                                         </div>
 
                                         {/* Arrow */}
                                         <div className="shrink-0 mt-1">
-                                            <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-teal-600 group-hover:text-white transition-all">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${category.soon ? 'bg-slate-100 text-slate-300' : 'bg-slate-50 group-hover:bg-teal-600 group-hover:text-white'}`}>
                                                 <ArrowLeft className="w-4 h-4 rotate-180" />
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Overlay for "soon" items to ensure click capture on the whole card */}
+                                    {category.soon && (
+                                        <div className="absolute inset-0 bg-slate-50/10 z-20" />
+                                    )}
                                 </div>
-                            </Link>
+                            </Component>
                         );
                     })}
                 </div>
