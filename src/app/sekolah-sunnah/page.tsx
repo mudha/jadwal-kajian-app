@@ -22,6 +22,22 @@ interface Sekolah {
 
 const JENJANG_OPTIONS = ['Semua', 'DC', 'PAUD', 'TK', 'MI', 'MTs', 'MA', 'SD', 'SMP', 'SMA', 'SMK', 'PT', 'Pesantren', 'Kursus'];
 
+const JENJANG_MAP: Record<string, string> = {
+    'DC': 'Day Care',
+    'PAUD': 'Pendidikan Anak Usia Dini',
+    'TK': 'Taman Kanak-Kanak',
+    'MI': 'Madrasah Ibtidaiyah',
+    'MTs': 'Madrasah Tsanawiyah',
+    'MA': 'Madrasah Aliyah',
+    'SD': 'Sekolah Dasar',
+    'SMP': 'Sekolah Menengah Pertama',
+    'SMA': 'Sekolah Menengah Atas',
+    'SMK': 'Sekolah Menengah Kejuruan',
+    'PT': 'Perguruan Tinggi',
+    'Pesantren': 'Pondok Pesantren',
+    'Kursus': 'Lembaga Kursus'
+};
+
 export default function SekolahSunnahPage() {
     const [sekolahList, setSekolahList] = useState<Sekolah[]>([]);
     const [loading, setLoading] = useState(true);
@@ -39,7 +55,10 @@ export default function SekolahSunnahPage() {
         setLoading(true);
         try {
             const params = new URLSearchParams();
-            if (jenjang !== 'Semua') params.append('jenjang', jenjang);
+            if (jenjang !== 'Semua') {
+                const mappedJenjang = JENJANG_MAP[jenjang] || jenjang;
+                params.append('jenjang', mappedJenjang);
+            }
             if (kota) params.append('kota', kota);
             if (search) params.append('search', search);
             params.append('limit', '50');
@@ -133,8 +152,8 @@ export default function SekolahSunnahPage() {
                                                 key={j}
                                                 onClick={() => setJenjang(j)}
                                                 className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${jenjang === j
-                                                        ? 'bg-purple-600 text-white'
-                                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                    ? 'bg-purple-600 text-white'
+                                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                                     }`}
                                             >
                                                 {j}

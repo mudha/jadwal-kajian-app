@@ -15,13 +15,22 @@ interface DzikirCategory {
 
 const DZIKIR_CATEGORIES: DzikirCategory[] = [
     {
-        title: 'Dzikir Pagi & Petang',
-        description: 'Dzikir harian yang dibaca saat pagi dan petang hari',
+        title: 'Dzikir Pagi',
+        description: 'Dzikir pembuka hari',
         icon: Sunrise,
-        href: '/dzikir/harian',
+        href: '/dzikir/harian?mode=pagi',
         gradient: 'from-blue-500 to-blue-600',
         iconBg: 'bg-blue-50',
         iconColor: 'text-blue-600',
+    },
+    {
+        title: 'Dzikir Petang',
+        description: 'Dzikir di sore hari',
+        icon: Sunset,
+        href: '/dzikir/harian?mode=petang',
+        gradient: 'from-indigo-500 to-indigo-600',
+        iconBg: 'bg-indigo-50',
+        iconColor: 'text-indigo-600',
     },
     {
         title: 'Dzikir Sehabis Sholat',

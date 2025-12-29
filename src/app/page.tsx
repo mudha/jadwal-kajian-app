@@ -60,11 +60,26 @@ export default function BerandaPage() {
         setLatestKajian(data.slice(0, 5));
 
         // 2. Filter & Sort for "Featured" (Upcoming events)
-        // Filter: Only Future events
-        const upcoming = data.map((k: any) => ({
-          ...k,
-          _parsedDate: getKajianStatus(k.date, k.waktu) === 'PAST' ? null : parseIndoDate(k.date)
-        })).filter((k: any) => k._parsedDate !== null);
+        const upcoming = data.map((k: any) => {
+          const d = parseIndoDate(k.date);
+          if (d && k.waktu) {
+            // Try to add hours/minutes for better sorting
+            const timeMatch = k.waktu.match(/(\d{1,2})[:.](\d{2})/);
+            if (timeMatch) {
+              d.setHours(parseInt(timeMatch[1]), parseInt(timeMatch[2]));
+            } else if (k.waktu.toLowerCase().includes('maghrib')) {
+              d.setHours(18, 15);
+            } else if (k.waktu.toLowerCase().includes('isya')) {
+              d.setHours(19, 30);
+            } else if (k.waktu.toLowerCase().includes('subuh') || k.waktu.toLowerCase().includes('shubuh')) {
+              d.setHours(4, 45);
+            }
+          }
+          return {
+            ...k,
+            _parsedDate: getKajianStatus(k.date, k.waktu) === 'PAST' ? null : d
+          };
+        }).filter((k: any) => k._parsedDate !== null);
 
         // Try to sort by location if available
         if (navigator.geolocation) {
@@ -73,19 +88,25 @@ export default function BerandaPage() {
               const userLat = position.coords.latitude;
               const userLng = position.coords.longitude;
 
-              const sortedByDistance = upcoming.map((k: any) => {
-                let distance = 9999999; // Default infinite distance
+              const withDistance = upcoming.map((k: any) => {
+                let distance = 9999999;
                 if (k.lat && k.lng) {
                   distance = getDistanceFromLatLonInKm(userLat, userLng, k.lat, k.lng);
                 }
                 return { ...k, distance };
-              }).sort((a: any, b: any) => {
-                // Primary Sort: Distance
-                if (Math.abs(a.distance - b.distance) > 0.1) {
-                  return a.distance - b.distance;
+              });
+
+              // Sort logic: 
+              // 1. If distance difference is small (< 5km), prioritize DATE (Chronological)
+              // 2. Otherwise prioritize DISTANCE
+              const sortedByDistance = [...withDistance].sort((a: any, b: any) => {
+                const distDiff = a.distance - b.distance;
+                const timeDiff = (a._parsedDate?.getTime() || 0) - (b._parsedDate?.getTime() || 0);
+
+                if (Math.abs(distDiff) < 5.0) {
+                  return timeDiff || distDiff;
                 }
-                // Secondary Sort: Date
-                return (a._parsedDate?.getTime() || 0) - (b._parsedDate?.getTime() || 0);
+                return distDiff || timeDiff;
               });
 
               setFeaturedKajian(sortedByDistance.slice(0, 25));
@@ -156,9 +177,7 @@ export default function BerandaPage() {
       </header>
       <PullToRefresh onRefresh={handleRefresh}>
         {/* Quick Menu - Mobile Only */}
-        <div className="px-4 pt-4">
-          <QuickMenu />
-        </div>
+
 
         <div className="px-4 py-6 md:py-8 md:px-0 space-y-6 md:space-y-0 md:grid md:grid-cols-12 md:gap-8">
 
@@ -240,6 +259,9 @@ export default function BerandaPage() {
                 <Search className="w-64 h-64 -mb-12 -mr-12" />
               </div>
             </div>
+
+            {/* Quick Menu - Desktop & Mobile */}
+            <QuickMenu />
 
             {/* Featured Kajian Cards */}
             {featuredKajian.length > 0 && (

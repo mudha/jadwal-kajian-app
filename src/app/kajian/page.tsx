@@ -14,6 +14,7 @@ import OngoingKajianWidget from '@/components/OngoingKajianWidget';
 import { shareToWhatsApp } from '@/lib/whatsapp-share';
 import { useSettings } from '@/hooks/useSettings';
 import { useAdmin } from '@/hooks/useAdmin';
+import EditKajianModal, { KajianDetail } from '@/components/EditKajianModal';
 
 const KajianMap = dynamic(() => import('@/components/KajianMap'), {
     ssr: false,
@@ -255,19 +256,16 @@ function KajianListContent() {
         setIsEditModalOpen(true);
     };
 
-    const handleUpdate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!editingKajian) return;
-
+    const handleUpdate = async (updated: KajianDetail) => {
         try {
-            const res = await fetch(`/api/kajian/${editingKajian.id}`, {
+            const res = await fetch(`/api/kajian/${updated.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(editingKajian),
+                body: JSON.stringify(updated),
             });
 
             if (res.ok) {
-                setKajianList(prev => prev.map(k => k.id === editingKajian.id ? editingKajian : k));
+                setKajianList(prev => prev.map(k => k.id === updated.id ? updated as KajianWithId : k));
                 setIsEditModalOpen(false);
                 setEditingKajian(null);
                 alert('Jadwal berhasil diperbarui ✨');
@@ -753,254 +751,15 @@ function KajianListContent() {
                     </main>
                 </div>
             </div>
-            {
-                isEditModalOpen && editingKajian && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-                        <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
-                            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
-                                <h2 className="text-2xl font-black text-slate-900">Edit Jadwal Kajian</h2>
-                                <button
-                                    onClick={() => setIsEditModalOpen(false)}
-                                    className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all"
-                                >
-                                    <X className="w-6 h-6" />
-                                </button>
-                            </div>
+            {isEditModalOpen && editingKajian && (
+                <EditKajianModal
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                    kajian={editingKajian as KajianDetail}
+                    onSave={handleUpdate}
+                />
+            )}
 
-                            <form onSubmit={handleUpdate} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Masjid / Lokasi</label>
-                                        <input
-                                            type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                            value={editingKajian.masjid}
-                                            onChange={e => setEditingKajian({ ...editingKajian, masjid: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Kota / Wilayah</label>
-                                        <input
-                                            type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                            value={editingKajian.city}
-                                            onChange={e => setEditingKajian({ ...editingKajian, city: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Alamat Lengkap</label>
-                                    <textarea
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-sm"
-                                        rows={2}
-                                        value={editingKajian.address}
-                                        onChange={e => setEditingKajian({ ...editingKajian, address: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Pemateri</label>
-                                        <input
-                                            type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                            value={editingKajian.pemateri}
-                                            onChange={e => setEditingKajian({ ...editingKajian, pemateri: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Waktu</label>
-                                        <input
-                                            type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                            value={editingKajian.waktu}
-                                            onChange={e => setEditingKajian({ ...editingKajian, waktu: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tanggal</label>
-                                        <input
-                                            type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                            value={editingKajian.date}
-                                            onChange={e => setEditingKajian({ ...editingKajian, date: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Kontak (CP)</label>
-                                        <input
-                                            type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                            value={editingKajian.cp}
-                                            onChange={e => setEditingKajian({ ...editingKajian, cp: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Tema Kajian</label>
-                                    <textarea
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                        rows={3}
-                                        value={editingKajian.tema}
-                                        onChange={e => setEditingKajian({ ...editingKajian, tema: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Latitude</label>
-                                        <input
-                                            type="number"
-                                            step="any"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                            placeholder="Ex: -6.123"
-                                            value={editingKajian.lat || ''}
-                                            onChange={e => setEditingKajian({ ...editingKajian, lat: e.target.value ? parseFloat(e.target.value) : undefined })}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Longitude</label>
-                                        <input
-                                            type="number"
-                                            step="any"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold"
-                                            placeholder="Ex: 106.123"
-                                            value={editingKajian.lng || ''}
-                                            onChange={e => setEditingKajian({ ...editingKajian, lng: e.target.value ? parseFloat(e.target.value) : undefined })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 flex justify-between">
-                                            <span>Link Google Maps</span>
-                                            <button
-                                                type="button"
-                                                onClick={async (e) => {
-                                                    const btn = e.currentTarget;
-                                                    const originalText = btn.innerText;
-                                                    btn.innerText = 'Mencari...';
-                                                    btn.disabled = true;
-
-                                                    // Try geocoding from address first
-                                                    const { geocodeAddress } = await import('@/lib/geocoding');
-                                                    const coords = await geocodeAddress(editingKajian.masjid, editingKajian.address, editingKajian.city);
-
-                                                    if (coords) {
-                                                        setEditingKajian({
-                                                            ...editingKajian,
-                                                            lat: coords.lat,
-                                                            lng: coords.lng,
-                                                            gmapsUrl: editingKajian.gmapsUrl || `https://www.google.com/maps?q=${coords.lat},${coords.lng}`
-                                                        });
-                                                    } else {
-                                                        alert('Gagal mendapatkan koordinat otomatis. Harap isi manual.');
-                                                    }
-
-                                                    btn.innerText = originalText;
-                                                    btn.disabled = false;
-                                                }}
-                                                className="text-blue-600 hover:text-blue-800 lowercase font-bold tracking-normal"
-                                            >
-                                                (Dapatkan Koordinat)
-                                            </button>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-xs text-blue-600"
-                                            value={editingKajian.gmapsUrl}
-                                            onChange={e => setEditingKajian({ ...editingKajian, gmapsUrl: e.target.value })}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Pendaftaran / Streaming / Info</label>
-                                        <input
-                                            type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none font-medium text-xs text-purple-600"
-                                            placeholder="https://..."
-                                            value={editingKajian.linkInfo || ''}
-                                            onChange={e => setEditingKajian({ ...editingKajian, linkInfo: e.target.value })}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Poster / Gambar Kajian (URL)</label>
-                                        <div className="flex flex-col gap-3">
-                                            <div className="flex gap-2">
-                                                <div className="relative flex-1">
-                                                    <input
-                                                        type="text"
-                                                        className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-medium text-xs truncate"
-                                                        placeholder="https://... atau Paste Gambar (Ctrl+V)"
-                                                        value={editingKajian.imageUrl || ''}
-                                                        onChange={e => setEditingKajian({ ...editingKajian, imageUrl: e.target.value })}
-                                                        onPaste={handlePaste}
-                                                    />
-                                                    {isUploading && (
-                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600 animate-spin">
-                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                                        </div>
-                                                    )}
-                                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {editingKajian.imageUrl && (
-                                                <div className="relative w-full h-48 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 group">
-                                                    <img
-                                                        src={editingKajian.imageUrl}
-                                                        className="w-full h-full object-cover"
-                                                        alt="Preview"
-                                                        onError={(e) => (e.currentTarget.style.display = 'none')}
-                                                    />
-                                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                        <p className="text-white text-xs font-bold">Preview Gambar</p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <label className="flex items-center gap-3 p-4 bg-pink-50/50 border border-pink-100 rounded-2xl cursor-pointer group hover:bg-pink-50 transition-all">
-                                        <input
-                                            type="checkbox"
-                                            className="w-5 h-5 rounded-lg border-pink-200 text-pink-600 focus:ring-pink-500"
-                                            checked={editingKajian.khususAkhwat || false}
-                                            onChange={e => setEditingKajian({ ...editingKajian, khususAkhwat: e.target.checked })}
-                                        />
-                                        <span className="text-sm font-black text-pink-700 uppercase tracking-widest">🌸 Khusus Akhwat</span>
-                                    </label>
-                                </div>
-
-                                <div className="pt-6 flex gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsEditModalOpen(false)}
-                                        className="flex-1 px-6 py-4 border-2 border-slate-100 rounded-2xl text-slate-600 font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all"
-                                    >
-                                        Batal
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="flex-[2] px-6 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <Save className="w-4 h-4" /> Simpan Perubahan
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )
-            }
 
             {/* Image Modal (Lightbox) */}
             {
@@ -1023,7 +782,7 @@ function KajianListContent() {
                     </div>
                 )
             }
-        </div>
+        </div >
     );
 }
 

@@ -88,8 +88,8 @@ export default function QuickMenu() {
     ];
 
     return (
-        <div className="md:hidden mb-6">
-            <div className="grid grid-cols-3 gap-3">
+        <div className="mb-6">
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-3 md:gap-4">
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     return (
