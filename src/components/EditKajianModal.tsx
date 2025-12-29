@@ -43,7 +43,24 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave }: Edi
     const [isExtracting, setIsExtracting] = useState(false);
 
     useEffect(() => {
-        setFormData({ ...kajian });
+        // Parse existing waktu to split start and end
+        const splitWaktu = (waktu: string) => {
+            if (!waktu) return { start: '', end: 'Selesai' };
+            // Try splitting by ' - ' first
+            const parts = waktu.split(' - ');
+            if (parts.length >= 2) {
+                return { start: parts[0], end: parts.slice(1).join(' - ') };
+            }
+            return { start: waktu, end: 'Selesai' };
+        };
+
+        const { start, end } = splitWaktu(kajian.waktu || '');
+
+        setFormData({
+            ...kajian,
+            waktu_mulai: kajian.waktu_mulai || start,
+            waktu_selesai: kajian.waktu_selesai || end
+        });
     }, [kajian]);
 
     if (!isOpen) return null;
@@ -55,7 +72,17 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave }: Edi
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            await onSave(formData);
+            // Recombine waktu
+            const start = formData.waktu_mulai || '';
+            const end = formData.waktu_selesai || 'Selesai';
+            const combinedWaktu = `${start} - ${end}`;
+
+            const payload = {
+                ...formData,
+                waktu: combinedWaktu
+            };
+
+            await onSave(payload);
         } finally {
             setIsSaving(false);
         }
@@ -269,7 +296,7 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave }: Edi
                             <input
                                 type="text"
                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 rounded-xl outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
-                                value={formData.waktu_mulai || formData.waktu}
+                                value={formData.waktu_mulai || ''}
                                 onChange={e => handleChange('waktu_mulai', e.target.value)}
                                 placeholder="Ba'da Maghrib / 19.00"
                             />
