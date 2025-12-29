@@ -45,7 +45,7 @@ export default function SekolahDetailPage() {
         // Check admin session
         fetch('/api/admin/check-session')
             .then(res => res.json())
-            .then(data => setIsAdmin(!!data.isLoggedIn))
+            .then(data => setIsAdmin(!!data.authenticated))
             .catch(() => setIsAdmin(false));
     }, [params.slug]);
 
