@@ -196,6 +196,7 @@ export default function AdminTampilanPage() {
 
     const DEFAULT_MENU_ITEMS = [
         { id: 'sekolah-sunnah', label: 'Sekolah Sunnah', iconName: 'GraduationCap', href: '/sekolah-sunnah', gradient: 'from-purple-500 to-purple-600', iconBg: 'bg-purple-50', iconColor: 'text-purple-600' },
+        { id: 'loker', label: 'Lowongan Kerja', iconName: 'Briefcase', href: '#', gradient: 'from-orange-500 to-orange-600', iconBg: 'bg-orange-50', iconColor: 'text-orange-600', badge: 'SOON' },
         { id: 'dzikir', label: 'Dzikir', iconName: 'BookText', href: '/dzikir', gradient: 'from-teal-500 to-teal-600', iconBg: 'bg-teal-50', iconColor: 'text-teal-600' },
         { id: 'jadwal-sholat', label: 'Jadwal Sholat', iconName: 'Clock', href: '/jadwal-sholat', gradient: 'from-blue-500 to-blue-600', iconBg: 'bg-blue-50', iconColor: 'text-blue-600' },
         { id: 'kajian-online', label: 'Kajian Online', iconName: 'Video', href: '/kajian?online=true', gradient: 'from-violet-500 to-violet-600', iconBg: 'bg-violet-50', iconColor: 'text-violet-600' },
@@ -248,7 +249,10 @@ export default function AdminTampilanPage() {
             .then(res => res.json())
             .then(data => {
                 if (data && Array.isArray(data) && data.length > 0) {
-                    setMenuItems(data);
+                    // Merge logic: Add default items that are missing from saved data
+                    const savedIds = new Set(data.map((item: any) => item.id));
+                    const missingDefaults = DEFAULT_MENU_ITEMS.filter(item => !savedIds.has(item.id));
+                    setMenuItems([...data, ...missingDefaults]);
                 } else {
                     setMenuItems(DEFAULT_MENU_ITEMS);
                 }
