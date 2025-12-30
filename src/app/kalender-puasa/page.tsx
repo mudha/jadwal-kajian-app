@@ -270,12 +270,12 @@ export default function KalenderPuasaPage() {
                                 <button
                                     key={day}
                                     onClick={() => setSelectedDate(new Date(year, month, day))}
-                                    className={`relative aspect-square rounded-xl p-2 transition-all hover:scale-105 ${dayInfo.bgColor} ${dayInfo.borderColor} ${isToday ? 'ring-2 ring-green-500 ring-offset-2' : ''}`}
+                                    className={`relative aspect-square rounded-xl p-1 transition-all hover:scale-105 overflow-hidden ${dayInfo.bgColor} ${dayInfo.borderColor} ${isToday ? 'ring-2 ring-green-500 ring-offset-2' : ''}`}
                                 >
-                                    <div className={`text-sm font-bold ${dateNumColor}`}>{day}</div>
-                                    <div className={`text-[8px] mt-0.5 ${hijriColor}`}>{dayInfo.hijri.day} {dayInfo.hijri.monthName.slice(0, 3)}</div>
+                                    <div className={`text-sm font-bold ${dateNumColor} leading-none`}>{day}</div>
+                                    <div className={`text-[7px] mt-0.5 leading-tight ${hijriColor}`}>{dayInfo.hijri.day} {dayInfo.hijri.monthName.slice(0, 3)}</div>
                                     {dayInfo.label && (
-                                        <div className={`text-[8px] font-bold mt-0.5 ${labelColor}`}>{dayInfo.label}</div>
+                                        <div className={`text-[7px] font-bold mt-0.5 truncate leading-tight ${labelColor}`}>{dayInfo.label}</div>
                                     )}
                                 </button>
                             );
