@@ -23,29 +23,35 @@ const GREGORIAN_MONTHS = [
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ];
 
-// Simplified Hijri conversion (approximation - for production use proper library)
+// Simplified Hijri conversion using Intl API
 function toHijri(gregorianDate: Date): HijriDate {
-    const gYear = gregorianDate.getFullYear();
-    const gMonth = gregorianDate.getMonth();
-    const gDay = gregorianDate.getDate();
+    try {
+        const formatter = new Intl.DateTimeFormat('en-TN-u-ca-islamic', {
+            day: 'numeric',
+            month: 'numeric',
+            year: 'numeric'
+        });
+        const parts = formatter.formatToParts(gregorianDate);
 
-    // Simplified conversion - this is an approximation
-    // In production, use a proper Hijri calendar library
-    const julianDay = Math.floor((1461 * (gYear + 4800 + Math.floor((gMonth - 14) / 12))) / 4) +
-        Math.floor((367 * (gMonth - 2 - 12 * (Math.floor((gMonth - 14) / 12)))) / 12) -
-        Math.floor((3 * (Math.floor((gYear + 4900 + Math.floor((gMonth - 14) / 12)) / 100))) / 4) +
-        gDay - 32075;
-    const hijriJD = julianDay - 1948440 + 10632;
-    const y = Math.floor((30 * hijriJD + 10646) / 10631);
-    const month = Math.min(12, Math.ceil((hijriJD - 29 - Math.floor((y - 1) * 10631 / 30)) / 29.5) + 1);
-    const day = hijriJD - Math.floor((y - 1) * 10631 / 30) - Math.floor((month - 1) * 29.5) + 1;
+        const yearPart = parts.find(p => p.type === 'year')?.value;
+        const monthPart = parts.find(p => p.type === 'month')?.value;
+        const dayPart = parts.find(p => p.type === 'day')?.value;
 
-    return {
-        year: Math.floor(y),
-        month: Math.floor(month),
-        day: Math.floor(day),
-        monthName: HIJRI_MONTHS[Math.floor(month) - 1] || 'Unknown'
-    };
+        const year = parseInt(yearPart?.split(' ')[0] || '1445');
+        const month = parseInt(monthPart || '1');
+        const day = parseInt(dayPart || '1');
+
+        return {
+            year,
+            month,
+            day,
+            monthName: HIJRI_MONTHS[month - 1] || 'Unknown'
+        };
+    } catch (e) {
+        console.error("Hijri conversion error", e);
+        // Fallback or rough estimate if Intl fails (unlikely in modern env)
+        return { year: 1445, month: 1, day: 1, monthName: 'Error' };
+    }
 }
 
 function isMondayOrThursday(date: Date): boolean {
@@ -71,6 +77,10 @@ function isTasua(hijriMonth: number, hijriDay: number): boolean {
 
 function isFirst9DhulHijjah(hijriMonth: number, hijriDay: number): boolean {
     return hijriMonth === 12 && hijriDay >= 1 && hijriDay <= 9;
+}
+
+function isRamadhan(hijriMonth: number): boolean {
+    return hijriMonth === 9;
 }
 
 export default function KalenderPuasaPage() {
@@ -105,6 +115,7 @@ export default function KalenderPuasaPage() {
         const date = new Date(year, month, day);
         const hijri = toHijri(date);
 
+        const ramadhan = isRamadhan(hijri.month);
         const mondayThursday = isMondayOrThursday(date);
         const ayyamulBidh = isAyyamulBidh(hijri.day);
         const arafah = isArafah(hijri.month, hijri.day);
@@ -115,8 +126,14 @@ export default function KalenderPuasaPage() {
         let bgColor = '';
         let borderColor = '';
         let label = '';
+        let textColor = '';
 
-        if (arafah) {
+        if (ramadhan) {
+            bgColor = 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md';
+            borderColor = 'border-none';
+            label = 'Ramadhan';
+            textColor = 'text-white/90';
+        } else if (arafah) {
             bgColor = 'bg-gradient-to-br from-amber-100 to-amber-200';
             borderColor = 'border-2 border-amber-400';
             label = 'Arafah';
@@ -141,7 +158,7 @@ export default function KalenderPuasaPage() {
             borderColor = 'border border-green-300';
         }
 
-        return { hijri, bgColor, borderColor, label, mondayThursday, ayyamulBidh, arafah, ashura, tasua, first9DH };
+        return { hijri, bgColor, borderColor, label, textColor, mondayThursday, ayyamulBidh, arafah, ashura, tasua, first9DH, ramadhan };
     };
 
     return (
@@ -154,8 +171,8 @@ export default function KalenderPuasaPage() {
                             <ArrowLeft className="w-5 h-5" />
                         </Link>
                         <div>
-                            <h1 className="font-bold text-2xl md:text-3xl leading-tight">Kalender Puasa Sunnah</h1>
-                            <p className="text-green-100 text-sm font-medium mt-1">Jadwal puasa sunnah berdasarkan Masehi & Hijriyah</p>
+                            <h1 className="font-bold text-2xl md:text-3xl leading-tight">Kalender Puasa</h1>
+                            <p className="text-green-100 text-sm font-medium mt-1">Jadwal puasa sunnah & wajib (Ramadhan)</p>
                         </div>
                     </div>
 
@@ -180,28 +197,28 @@ export default function KalenderPuasaPage() {
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                     <h3 className="font-bold text-lg text-slate-900 mb-4 flex items-center gap-2">
                         <Info className="w-5 h-5 text-green-600" />
-                        Keterangan Hari Puasa Sunnah
+                        Keterangan Hari Puasa
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg shadow-sm"></div>
+                            <span className="text-sm text-slate-700 font-bold">Puasa Ramadhan</span>
+                        </div>
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-green-50 border border-green-200 rounded-lg"></div>
                             <span className="text-sm text-slate-700">Senin/Kamis</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-gradient-to-br from-teal-100 to-teal-200 border border-teal-300 rounded-lg"></div>
-                            <span className="text-sm text-slate-700">Ayyamul Bidh (13-15)</span>
+                            <span className="text-sm text-slate-700">Ayyamul Bidh</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-gradient-to-br from-amber-100 to-amber-200 border-2 border-amber-400 rounded-lg"></div>
-                            <span className="text-sm text-slate-700">Arafah (9 Dzulhijjah)</span>
+                            <span className="text-sm text-slate-700">Arafah</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-gradient-to-br from-blue-100 to-blue-200 border-2 border-blue-400 rounded-lg"></div>
-                            <span className="text-sm text-slate-700">Asyura (10 Muharram)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-blue-50 border border-blue-200 rounded-lg"></div>
-                            <span className="text-sm text-slate-700">Tasua (9 Muharram)</span>
+                            <span className="text-sm text-slate-700">Asyura</span>
                         </div>
                     </div>
                 </div>
@@ -227,16 +244,21 @@ export default function KalenderPuasaPage() {
                             const dayInfo = getDayInfo(day);
                             const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
 
+                            // Adjust text colors for dark backgrounds (Ramadhan)
+                            const dateNumColor = dayInfo.ramadhan ? 'text-white' : 'text-slate-900';
+                            const hijriColor = dayInfo.ramadhan ? 'text-white/80' : 'text-slate-600';
+                            const labelColor = dayInfo.ramadhan ? 'text-yellow-300' : 'text-green-700';
+
                             return (
                                 <button
                                     key={day}
                                     onClick={() => setSelectedDate(new Date(year, month, day))}
-                                    className={`aspect-square rounded-xl p-2 transition-all hover:scale-105 ${dayInfo.bgColor} ${dayInfo.borderColor} ${isToday ? 'ring-2 ring-green-500 ring-offset-2' : ''}`}
+                                    className={`relative aspect-square rounded-xl p-2 transition-all hover:scale-105 ${dayInfo.bgColor} ${dayInfo.borderColor} ${isToday ? 'ring-2 ring-green-500 ring-offset-2' : ''}`}
                                 >
-                                    <div className="text-sm font-bold text-slate-900">{day}</div>
-                                    <div className="text-[8px] text-slate-600 mt-0.5">{dayInfo.hijri.day} {dayInfo.hijri.monthName.slice(0, 3)}</div>
+                                    <div className={`text-sm font-bold ${dateNumColor}`}>{day}</div>
+                                    <div className={`text-[8px] mt-0.5 ${hijriColor}`}>{dayInfo.hijri.day} {dayInfo.hijri.monthName.slice(0, 3)}</div>
                                     {dayInfo.label && (
-                                        <div className="text-[8px] font-bold text-green-700 mt-0.5">{dayInfo.label}</div>
+                                        <div className={`text-[8px] font-bold mt-0.5 ${labelColor}`}>{dayInfo.label}</div>
                                     )}
                                 </button>
                             );
@@ -246,8 +268,11 @@ export default function KalenderPuasaPage() {
 
                 {/* Info Panel */}
                 <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-3xl p-8 border border-green-100">
-                    <h3 className="font-bold text-xl text-green-900 mb-4">Dalil Puasa Sunnah</h3>
+                    <h3 className="font-bold text-xl text-green-900 mb-4">Dalil Puasa</h3>
                     <div className="space-y-4 text-sm text-slate-700 leading-relaxed">
+                        <div>
+                            <strong className="text-indigo-800">Puasa Ramadhan (Wajib):</strong> "Hai orang-orang yang beriman, diwajibkan atas kamu berpuasa sebagaimana diwajibkan atas orang-orang sebelum kamu agar kamu bertakwa." (QS. Al-Baqarah: 183)
+                        </div>
                         <div>
                             <strong className="text-green-800">Puasa Senin & Kamis:</strong> Rasulullah ﷺ bersabda: "Amalan-amalan dihadapkan (kepada Allah) pada hari Senin dan Kamis, dan aku ingin amalanku dihadapkan sedangkan aku dalam keadaan berpuasa." (HR. Tirmidzi)
                         </div>
@@ -256,9 +281,6 @@ export default function KalenderPuasaPage() {
                         </div>
                         <div>
                             <strong className="text-green-800">Puasa Arafah:</strong> Puasa pada 9 Dhul Hijjah bagi yang tidak berhaji. Rasulullah ﷺ bersabda: "Puasa Arafah menghapus dosa 2 tahun." (HR. Muslim)
-                        </div>
-                        <div>
-                            <strong className="text-green-800">Puasa Asyura & Tasua:</strong> Puasa 10 Muharram dan dianjurkan juga 9 Muharram. "Puasa Asyura menghapus dosa 1 tahun." (HR. Muslim)
                         </div>
                     </div>
                 </div>
