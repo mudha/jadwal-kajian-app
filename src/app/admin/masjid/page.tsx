@@ -530,7 +530,7 @@ export default function MasjidManagementPage() {
                                 <table className="w-full">
                                     <thead className="bg-slate-50 border-b border-slate-100">
                                         <tr>
-                                            <th className="px-6 py-4 text-left w-10">
+                                            <th className="px-3 py-3 text-left w-10">
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedForMerge.size === filteredMasjid.length && filteredMasjid.length > 0}
@@ -544,28 +544,28 @@ export default function MasjidManagementPage() {
                                                     className="w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-2 focus:ring-teal-500"
                                                 />
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                            <th className="px-2 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-12">
                                                 No
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                                                 Nama Masjid
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                                                 Kota
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider max-w-[150px]">
                                                 Alamat
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                                Google Maps
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                G.Maps
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                                                 Lat/Lng
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                                Jumlah Kajian
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                Kajian
                                             </th>
-                                            <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                            <th className="px-3 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
                                                 Aksi
                                             </th>
                                         </tr>
@@ -573,7 +573,7 @@ export default function MasjidManagementPage() {
                                     <tbody className="divide-y divide-slate-100">
                                         {filteredMasjid.map((masjid, index) => (
                                             <tr key={masjid.id} className={`hover:bg-slate-50 transition-colors ${selectedForMerge.has(masjid.id) ? 'bg-amber-50' : ''}`}>
-                                                <td className="px-6 py-4">
+                                                <td className="px-3 py-3">
                                                     <input
                                                         type="checkbox"
                                                         checked={selectedForMerge.has(masjid.id)}
@@ -581,52 +581,51 @@ export default function MasjidManagementPage() {
                                                         className="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-2 focus:ring-amber-500"
                                                     />
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-slate-500">
+                                                <td className="px-2 py-3 text-sm text-slate-500">
                                                     {index + 1}
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
-                                                            <MapPin className="w-5 h-5 text-teal-600" />
+                                                <td className="px-3 py-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center shrink-0">
+                                                            <MapPin className="w-4 h-4 text-teal-600" />
                                                         </div>
-                                                        <span className="font-bold text-slate-900">{masjid.name}</span>
+                                                        <span className="font-bold text-slate-900 text-sm">{masjid.name}</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg">
+                                                <td className="px-3 py-3">
+                                                    <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg">
                                                         {masjid.city}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-slate-600 max-w-[200px]">
-                                                    <div className="break-words whitespace-normal leading-relaxed">
+                                                <td className="px-3 py-3 text-sm text-slate-600 max-w-[150px]">
+                                                    <div className="break-words whitespace-normal leading-relaxed truncate">
                                                         {masjid.address || '-'}
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-3 py-3">
                                                     {masjid.gmapsUrl ? (
                                                         <a
                                                             href={masjid.gmapsUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 text-xs font-bold rounded-lg hover:bg-green-100 transition-colors"
+                                                            className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-lg hover:bg-green-100 transition-colors"
                                                         >
                                                             <MapPin className="w-3 h-3" />
-                                                            Lihat Map
-                                                            <ExternalLink className="w-3 h-3" />
+                                                            Map
                                                         </a>
                                                     ) : (
                                                         <span className="text-xs text-slate-400">-</span>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 text-xs font-mono text-slate-500">
+                                                <td className="px-3 py-3 text-xs font-mono text-slate-500">
                                                     {masjid.lat && masjid.lng ? (
-                                                        <div className="flex flex-col">
-                                                            <span>{masjid.lat}</span>
-                                                            <span>{masjid.lng}</span>
+                                                        <div className="flex flex-col text-xs">
+                                                            <span>{masjid.lat.toFixed(4)}</span>
+                                                            <span>{masjid.lng.toFixed(4)}</span>
                                                         </div>
                                                     ) : '-'}
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-3 py-3">
                                                     {masjid.kajianCount && masjid.kajianCount > 0 ? (
                                                         <button
                                                             onClick={() => {
@@ -634,33 +633,33 @@ export default function MasjidManagementPage() {
                                                                 setIsKajianListModalOpen(true);
                                                                 fetchKajianByMasjid(masjid.name);
                                                             }}
-                                                            className="px-3 py-1.5 bg-orange-50 text-orange-700 text-sm font-bold rounded-lg hover:bg-orange-100 transition-colors border border-orange-200"
+                                                            className="px-2 py-1 bg-orange-50 text-orange-700 text-xs font-bold rounded-lg hover:bg-orange-100 transition-colors border border-orange-200"
                                                         >
-                                                            {masjid.kajianCount} kajian
+                                                            {masjid.kajianCount}
                                                         </button>
                                                     ) : (
-                                                        <span className="text-sm text-slate-400">0 kajian</span>
+                                                        <span className="text-xs text-slate-400">0</span>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center justify-end gap-2">
+                                                <td className="px-3 py-3">
+                                                    <div className="flex items-center justify-end gap-1">
                                                         <button
                                                             onClick={() => handleSingleSync(masjid)}
                                                             disabled={!masjid.gmapsUrl || loading}
                                                             title="Sinkronisasi Nama & Koordinat dari Google Maps"
-                                                            className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors disabled:opacity-30"
+                                                            className="p-1.5 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors disabled:opacity-30"
                                                         >
                                                             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                                                         </button>
                                                         <button
                                                             onClick={() => openEditModal(masjid)}
-                                                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                         >
                                                             <Edit className="w-4 h-4" />
                                                         </button>
                                                         <button
                                                             onClick={() => handleDelete(masjid.id)}
-                                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>
