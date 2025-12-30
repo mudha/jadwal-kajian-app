@@ -302,6 +302,9 @@ export default function KalenderPuasaPage() {
                         <div>
                             <strong className="text-green-800">Puasa Arafah:</strong> Puasa pada 9 Dhul Hijjah bagi yang tidak berhaji. Rasulullah ﷺ bersabda: "Puasa Arafah menghapus dosa 2 tahun." (HR. Muslim)
                         </div>
+                        <div>
+                            <strong className="text-blue-800">Puasa Asyura & Tasu'a:</strong> Puasa pada 10 Muharram (Asyura) menghapus dosa setahun yang lalu. Dan disunnahkan berpuasa juga pada tanggal 9 (Tasu'a). Rasulullah ﷺ bersabda: "Puasa hari 'Asyura, aku berharap kepada Allah semoga dapat menghapuskan dosa setahun yang lalu." (HR. Muslim)
+                        </div>
                     </div>
 
                     {/* Disclaimer Note */}
