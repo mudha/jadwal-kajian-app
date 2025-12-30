@@ -83,6 +83,10 @@ function isRamadhan(hijriMonth: number): boolean {
     return hijriMonth === 9;
 }
 
+function isSyawal(hijriMonth: number, hijriDay: number): boolean {
+    return hijriMonth === 10 && hijriDay >= 2 && hijriDay <= 7; // Recommended 6 days (2-7 Shawwal)
+}
+
 export default function KalenderPuasaPage() {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -116,6 +120,7 @@ export default function KalenderPuasaPage() {
         const hijri = toHijri(date);
 
         const ramadhan = isRamadhan(hijri.month);
+        const syawal = isSyawal(hijri.month, hijri.day);
         const mondayThursday = isMondayOrThursday(date);
         const ayyamulBidh = isAyyamulBidh(hijri.day);
         const arafah = isArafah(hijri.month, hijri.day);
@@ -132,6 +137,11 @@ export default function KalenderPuasaPage() {
             bgColor = 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md';
             borderColor = 'border-none';
             label = 'Ramadhan';
+            textColor = 'text-white/90';
+        } else if (syawal) {
+            bgColor = 'bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-md';
+            borderColor = 'border-none';
+            label = 'Syawal';
             textColor = 'text-white/90';
         } else if (arafah) {
             bgColor = 'bg-gradient-to-br from-amber-100 to-amber-200';
@@ -158,7 +168,7 @@ export default function KalenderPuasaPage() {
             borderColor = 'border border-green-300';
         }
 
-        return { hijri, bgColor, borderColor, label, textColor, mondayThursday, ayyamulBidh, arafah, ashura, tasua, first9DH, ramadhan };
+        return { hijri, bgColor, borderColor, label, textColor, mondayThursday, ayyamulBidh, arafah, ashura, tasua, first9DH, ramadhan, syawal };
     };
 
     return (
@@ -174,6 +184,15 @@ export default function KalenderPuasaPage() {
                             <h1 className="font-bold text-2xl md:text-3xl leading-tight">Kalender Puasa</h1>
                             <p className="text-green-100 text-sm font-medium mt-1">Jadwal puasa sunnah & wajib (Ramadhan)</p>
                         </div>
+                    </div>
+
+                    {/* Disclaimer Alert */}
+                    <div className="bg-yellow-500/20 backdrop-blur-md border border-yellow-400/30 rounded-xl p-3 mb-6 flex gap-3 items-start">
+                        <Info className="w-5 h-5 text-yellow-200 shrink-0 mt-0.5" />
+                        <p className="text-xs text-yellow-50 leading-relaxed">
+                            <span className="font-bold text-yellow-200">Catatan:</span> Tanggal Puasa Ramadhan & Syawal di bawah ini adalah perkiraan hisab.
+                            Keputusan final tetap menunggu sidang isbat pemerintah.
+                        </p>
                     </div>
 
                     {/* Month Navigation */}
@@ -202,7 +221,11 @@ export default function KalenderPuasaPage() {
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg shadow-sm"></div>
-                            <span className="text-sm text-slate-700 font-bold">Puasa Ramadhan</span>
+                            <span className="text-sm text-slate-700 font-bold">Ramadhan</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg shadow-sm"></div>
+                            <span className="text-sm text-slate-700 font-bold">Syawal (6 Hari)</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-green-50 border border-green-200 rounded-lg"></div>
@@ -272,6 +295,9 @@ export default function KalenderPuasaPage() {
                     <div className="space-y-4 text-sm text-slate-700 leading-relaxed">
                         <div>
                             <strong className="text-indigo-800">Puasa Ramadhan (Wajib):</strong> "Hai orang-orang yang beriman, diwajibkan atas kamu berpuasa sebagaimana diwajibkan atas orang-orang sebelum kamu agar kamu bertakwa." (QS. Al-Baqarah: 183)
+                        </div>
+                        <div>
+                            <strong className="text-teal-700">Puasa Syawal (Sunnah):</strong> Rasulullah ﷺ bersabda: "Barangsiapa yang berpuasa Ramadhan kemudian berpuasa enam hari di bulan Syawal, maka dia berpuasa seperti setahun penuh." (HR. Muslim)
                         </div>
                         <div>
                             <strong className="text-green-800">Puasa Senin & Kamis:</strong> Rasulullah ﷺ bersabda: "Amalan-amalan dihadapkan (kepada Allah) pada hari Senin dan Kamis, dan aku ingin amalanku dihadapkan sedangkan aku dalam keadaan berpuasa." (HR. Tirmidzi)
