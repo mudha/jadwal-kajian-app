@@ -113,7 +113,20 @@ export default function QuickMenu({ customItems }: { customItems?: any[] }) {
         BookText, Clock, Video, Flower2, MapPin, MessageCircle, FileText, Calendar, Home, GraduationCap, Briefcase
     };
 
-    const items = customItems || DEFAULT_ITEMS;
+    // Robust item selection: if customItems exists, merge missing Default Items into it
+    // to ensure new features like 'Lowongan Kerja' appear even on accounts with saved custom layouts.
+    const getMergedItems = () => {
+        if (!customItems || !Array.isArray(customItems) || customItems.length === 0) {
+            return DEFAULT_ITEMS;
+        }
+
+        const customIds = new Set(customItems.map(i => i.id));
+        const missingDefaults = DEFAULT_ITEMS.filter(i => !customIds.has(i.id));
+
+        return [...customItems, ...missingDefaults];
+    };
+
+    const items = getMergedItems();
 
     return (
         <div className="mb-6">
