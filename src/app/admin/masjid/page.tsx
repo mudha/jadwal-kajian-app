@@ -41,6 +41,10 @@ export default function MasjidManagementPage() {
     const [masjidToDelete, setMasjidToDelete] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // List Modal States
+    const [isMasjidListModalOpen, setIsMasjidListModalOpen] = useState(false);
+    const [isCityListModalOpen, setIsCityListModalOpen] = useState(false);
+
     useEffect(() => {
         fetchMasjid();
     }, []);
@@ -434,30 +438,38 @@ export default function MasjidManagementPage() {
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                <button
+                    onClick={() => setIsMasjidListModalOpen(true)}
+                    className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all cursor-pointer text-left group"
+                >
                     <div className="flex items-center gap-4">
-                        <div className="bg-teal-100 p-3 rounded-xl">
+                        <div className="bg-teal-100 p-3 rounded-xl group-hover:bg-teal-200 transition-colors">
                             <MapPin className="w-6 h-6 text-teal-600" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                             <p className="text-slate-500 text-sm font-medium">Total Masjid</p>
                             <p className="text-2xl font-bold text-slate-900">{masjidList.length}</p>
                         </div>
+                        <ExternalLink className="w-5 h-5 text-slate-400 group-hover:text-teal-600 transition-colors" />
                     </div>
-                </div>
-                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                </button>
+                <button
+                    onClick={() => setIsCityListModalOpen(true)}
+                    className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-pointer text-left group"
+                >
                     <div className="flex items-center gap-4">
-                        <div className="bg-blue-100 p-3 rounded-xl">
+                        <div className="bg-blue-100 p-3 rounded-xl group-hover:bg-blue-200 transition-colors">
                             <MapPin className="w-6 h-6 text-blue-600" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                             <p className="text-slate-500 text-sm font-medium">Total Kota</p>
                             <p className="text-2xl font-bold text-slate-900">
                                 {new Set(masjidList.map(m => m.city)).size}
                             </p>
                         </div>
+                        <ExternalLink className="w-5 h-5 text-slate-400 group-hover:text-blue-600 transition-colors" />
                     </div>
-                </div>
+                </button>
             </div>
 
             {/* Content Area */}
@@ -977,6 +989,116 @@ export default function MasjidManagementPage() {
                 cancelText={syncType === 'form' ? "Tidak, Biarkan Nama Lama" : "Batal"}
                 type="info"
             />
+
+            {/* Masjid List Modal */}
+            {isMasjidListModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
+                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                                    <MapPin className="w-5 h-5 text-teal-600" />
+                                    Daftar Masjid ({masjidList.length})
+                                </h2>
+                                <p className="text-sm text-slate-500 mt-1">Semua masjid yang terdaftar di sistem</p>
+                            </div>
+                            <button
+                                onClick={() => setIsMasjidListModalOpen(false)}
+                                className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto">
+                            <div className="space-y-2">
+                                {masjidList.map((masjid, idx) => (
+                                    <div
+                                        key={masjid.id}
+                                        className="flex items-center gap-4 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                                    >
+                                        <div className="flex-shrink-0 w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                                            <span className="text-teal-700 font-bold text-sm">{idx + 1}</span>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-slate-900 truncate">{masjid.name}</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="text-xs text-slate-500">{masjid.city}</span>
+                                                {masjid.kajianCount !== undefined && masjid.kajianCount > 0 && (
+                                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
+                                                        {masjid.kajianCount} kajian
+                                                    </span>
+                                                )}
+                                                {masjid.lat && masjid.lng && (
+                                                    <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full font-bold">
+                                                        GPS
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {masjid.gmapsUrl && (
+                                            <a
+                                                href={masjid.gmapsUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                                                title="Buka di Google Maps"
+                                            >
+                                                <ExternalLink className="w-4 h-4" />
+                                            </a>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* City List Modal */}
+            {isCityListModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
+                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                                    <MapPin className="w-5 h-5 text-blue-600" />
+                                    Daftar Kota ({new Set(masjidList.map(m => m.city)).size})
+                                </h2>
+                                <p className="text-sm text-slate-500 mt-1">Kota yang memiliki masjid terdaftar</p>
+                            </div>
+                            <button
+                                onClick={() => setIsCityListModalOpen(false)}
+                                className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {Array.from(new Set(masjidList.map(m => m.city)))
+                                    .sort()
+                                    .map((city, idx) => {
+                                        const count = masjidList.filter(m => m.city === city).length;
+                                        return (
+                                            <div
+                                                key={city}
+                                                className="flex items-center gap-3 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                                            >
+                                                <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                    <span className="text-blue-700 font-bold text-sm">{idx + 1}</span>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-bold text-slate-900 truncate">{city}</p>
+                                                    <p className="text-xs text-slate-500">{count} masjid</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
