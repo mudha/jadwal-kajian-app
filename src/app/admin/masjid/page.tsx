@@ -48,6 +48,11 @@ export default function MasjidManagementPage() {
     const [selectedMasjidForKajian, setSelectedMasjidForKajian] = useState<Masjid | null>(null);
     const [kajianList, setKajianList] = useState<any[]>([]);
 
+    // Kajian Delete Modal State
+    const [isKajianDeleteModalOpen, setIsKajianDeleteModalOpen] = useState(false);
+    const [kajianToDelete, setKajianToDelete] = useState<any>(null);
+    const [isDeletingKajian, setIsDeletingKajian] = useState(false);
+
     useEffect(() => {
         fetchMasjid();
     }, []);
@@ -148,6 +153,28 @@ export default function MasjidManagementPage() {
         } catch (error) {
             console.error('Error fetching kajian:', error);
             setKajianList([]);
+        }
+    };
+
+    const confirmDeleteKajian = async () => {
+        if (!kajianToDelete) return;
+        setIsDeletingKajian(true);
+        try {
+            const res = await fetch(`/api/kajian/${kajianToDelete.id}`, { method: 'DELETE' });
+            if (res.ok) {
+                // Refresh kajian list
+                if (selectedMasjidForKajian) {
+                    fetchKajianByMasjid(selectedMasjidForKajian.name);
+                }
+                // Refresh masjid list to update count
+                fetchMasjid();
+                setIsKajianDeleteModalOpen(false);
+                setKajianToDelete(null);
+            }
+        } catch (error) {
+            console.error('Error deleting kajian:', error);
+        } finally {
+            setIsDeletingKajian(false);
         }
     };
 
@@ -1209,23 +1236,9 @@ export default function MasjidManagementPage() {
                                                     <Edit className="w-4 h-4" />
                                                 </a>
                                                 <button
-                                                    onClick={async () => {
-                                                        if (confirm(`Hapus kajian "${kajian.tema}"?`)) {
-                                                            try {
-                                                                const res = await fetch(`/api/kajian/${kajian.id}`, { method: 'DELETE' });
-                                                                if (res.ok) {
-                                                                    // Refresh kajian list
-                                                                    fetchKajianByMasjid(selectedMasjidForKajian.name);
-                                                                    // Refresh masjid list to update count
-                                                                    fetchMasjid();
-                                                                } else {
-                                                                    alert('Gagal menghapus kajian');
-                                                                }
-                                                            } catch (error) {
-                                                                console.error('Error deleting kajian:', error);
-                                                                alert('Terjadi kesalahan saat menghapus');
-                                                            }
-                                                        }
+                                                    onClick={() => {
+                                                        setKajianToDelete(kajian);
+                                                        setIsKajianDeleteModalOpen(true);
                                                     }}
                                                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                     title="Hapus Kajian"
@@ -1240,6 +1253,24 @@ export default function MasjidManagementPage() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Kajian Delete Modal */}
+            {isKajianDeleteModalOpen && kajianToDelete && (
+                <ConfirmationModal
+                    isOpen={isKajianDeleteModalOpen}
+                    onClose={() => {
+                        setIsKajianDeleteModalOpen(false);
+                        setKajianToDelete(null);
+                    }}
+                    onConfirm={confirmDeleteKajian}
+                    title="Hapus Kajian?"
+                    message={`Apakah Anda yakin ingin menghapus kajian "${kajianToDelete.tema}"? Data yang dihapus tidak dapat dikembalikan.`}
+                    confirmText="Hapus Kajian"
+                    cancelText="Batal"
+                    type="danger"
+                    isLoading={isDeletingKajian}
+                />
             )}
         </div>
     );
