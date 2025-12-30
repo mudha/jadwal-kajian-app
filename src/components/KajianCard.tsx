@@ -17,12 +17,13 @@ interface KajianCardProps {
     attendanceCount?: number;
     khususAkhwat?: boolean;
     isOnline?: boolean;
+    isKidsFriendly?: boolean;
     waktu?: string;
     distance?: number;
     className?: string;
 }
 
-export default function KajianCard({ id, date, location, title, ustadz, ustadz2, ustadz3, imageUrl, attendanceCount = 0, khususAkhwat, isOnline, waktu, distance, className = 'w-60' }: KajianCardProps) {
+export default function KajianCard({ id, date, location, title, ustadz, ustadz2, ustadz3, imageUrl, attendanceCount = 0, khususAkhwat, isOnline, isKidsFriendly, waktu, distance, className = 'w-60' }: KajianCardProps) {
     const [count, setCount] = useState(attendanceCount);
     const [hasAttended, setHasAttended] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
@@ -104,8 +105,13 @@ export default function KajianCard({ id, date, location, title, ustadz, ustadz2,
                         </div>
                     )}
                     {isOnline && (
-                        <div className="px-2 py-1 bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-blue-200/50">
+                        <div className="px-2 py-1 bg-blue-600 text-white text-[8px] font-black uppercase tracking-wider rounded-lg shadow-lg shadow-blue-200/50">
                             🎥 Online
+                        </div>
+                    )}
+                    {isKidsFriendly && (
+                        <div className="px-2 py-1 bg-orange-500 text-white text-[8px] font-black uppercase tracking-wider rounded-lg shadow-lg shadow-orange-200/50 animate-bounce">
+                            🎈 Anak
                         </div>
                     )}
                 </div>

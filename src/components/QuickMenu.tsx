@@ -63,6 +63,15 @@ export default function QuickMenu({ customItems }: { customItems?: any[] }) {
             iconColor: 'text-pink-600',
         },
         {
+            id: 'kajian-anak',
+            label: 'Kajian Anak',
+            iconName: 'Puzzle',
+            href: '/kajian?mode=anak',
+            gradient: 'from-orange-500 to-orange-600',
+            iconBg: 'bg-orange-50',
+            iconColor: 'text-orange-600',
+        },
+        {
             id: 'kajian-terdekat',
             label: 'Kajian Terdekat',
             iconName: 'MapPin',

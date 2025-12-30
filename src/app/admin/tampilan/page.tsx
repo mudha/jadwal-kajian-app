@@ -201,6 +201,7 @@ export default function AdminTampilanPage() {
         { id: 'jadwal-sholat', label: 'Jadwal Sholat', iconName: 'Clock', href: '/jadwal-sholat', gradient: 'from-blue-500 to-blue-600', iconBg: 'bg-blue-50', iconColor: 'text-blue-600' },
         { id: 'kajian-online', label: 'Kajian Online', iconName: 'Video', href: '/kajian?online=true', gradient: 'from-violet-500 to-violet-600', iconBg: 'bg-violet-50', iconColor: 'text-violet-600' },
         { id: 'kajian-muslimah', label: 'Kajian Muslimah', iconName: 'Flower2', href: '/kajian?muslimah=true', gradient: 'from-pink-500 to-pink-600', iconBg: 'bg-pink-50', iconColor: 'text-pink-600' },
+        { id: 'kajian-anak', label: 'Kajian Anak', iconName: 'Puzzle', href: '/kajian?mode=anak', gradient: 'from-orange-500 to-orange-600', iconBg: 'bg-orange-50', iconColor: 'text-orange-600' },
         { id: 'kajian-terdekat', label: 'Kajian Terdekat', iconName: 'MapPin', href: '/kajian?nearby=true', gradient: 'from-amber-500 to-amber-600', iconBg: 'bg-amber-50', iconColor: 'text-amber-600' },
         { id: 'hubungi-kami', label: 'Hubungi Kami', iconName: 'MessageCircle', href: '/hubungi-kami', gradient: 'from-slate-500 to-slate-600', iconBg: 'bg-slate-50', iconColor: 'text-slate-600' },
         { id: 'catatan-kajian', label: 'Catatan Kajian', iconName: 'FileText', href: '/catatan-kajian', gradient: 'from-indigo-500 to-indigo-600', iconBg: 'bg-indigo-50', iconColor: 'text-indigo-600' },

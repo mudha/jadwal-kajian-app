@@ -165,6 +165,17 @@ function KajianListContent() {
             if (!isAkhwat) return false;
         }
 
+        if (filterMode === 'anak') {
+            // Strict filtering: Explicitly marked OR matches keywords (for legacy data)
+            const isExplicitlyKids = k.isKidsFriendly;
+            const kidsRegex = /(?:Kajian Anak|Dongeng|Kids|Cilik|Santri Cilik|Untuk Anak|Adik-Adik|Kak\s+[A-Z])/i;
+            const matchesKeyword = (k.tema && kidsRegex.test(k.tema)) ||
+                (k.catatan && kidsRegex.test(k.catatan)) ||
+                (k.pemateri && kidsRegex.test(k.pemateri));
+
+            if (!isExplicitlyKids && !matchesKeyword) return false;
+        }
+
         if (filterOngoing) {
             if (!isKajianOngoing(k.date, k.waktu)) return false;
         }
@@ -615,6 +626,11 @@ function KajianListContent() {
                                                         {status === 'PAST' && (
                                                             <div className="px-3 py-1 bg-slate-600 text-white text-[10px] font-black rounded-lg uppercase tracking-wider shadow-sm whitespace-nowrap">
                                                                 Selesai
+                                                            </div>
+                                                        )}
+                                                        {kajian.isKidsFriendly && (
+                                                            <div className="px-3 py-1 bg-orange-500 text-white text-[10px] font-black rounded-lg uppercase tracking-wider shadow-sm shadow-orange-200 animate-bounce whitespace-nowrap">
+                                                                🎈 Anak
                                                             </div>
                                                         )}
                                                     </div>

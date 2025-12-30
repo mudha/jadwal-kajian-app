@@ -25,6 +25,7 @@ interface KajianDetail {
     attendanceCount?: number;
     khususAkhwat?: boolean;
     isOnline?: boolean;
+    isKidsFriendly?: boolean;
     cp?: string;
     lat?: number;
     lng?: number;
@@ -316,6 +317,11 @@ export default function KajianDetailPage() {
                                                 {kajian.isOnline && (
                                                     <span className="inline-block px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-blue-100">
                                                         🎥 Kajian Online
+                                                    </span>
+                                                )}
+                                                {kajian.isKidsFriendly && (
+                                                    <span className="inline-block px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-orange-100 animate-bounce">
+                                                        🎈 Kajian Anak
                                                     </span>
                                                 )}
                                                 {(kajian.khususAkhwat || kajian.pemateri.toLowerCase().includes('ustadzah')) && (

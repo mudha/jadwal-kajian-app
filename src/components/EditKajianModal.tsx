@@ -24,6 +24,7 @@ export interface KajianDetail {
     attendanceCount?: number;
     khususAkhwat?: boolean;
     isOnline?: boolean;
+    isKidsFriendly?: boolean;
     cp?: string;
     lat?: number;
     lng?: number;
@@ -397,6 +398,47 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave }: Edi
                             placeholder="https://..."
                         />
                     </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 px-6">
+                    <label className={`flex items-center gap-3 p-4 border rounded-2xl cursor-pointer transition-all ${formData.khususAkhwat ? 'bg-pink-50 border-pink-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                        <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={formData.khususAkhwat || false}
+                            onChange={e => handleChange('khususAkhwat', e.target.checked)}
+                        />
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${formData.khususAkhwat ? 'border-pink-500 bg-pink-500 text-white' : 'border-slate-300 bg-white'}`}>
+                            {formData.khususAkhwat && <div className="w-2.5 h-2.5 bg-white rounded-sm" />}
+                        </div>
+                        <span className={`font-bold text-sm ${formData.khususAkhwat ? 'text-pink-700' : 'text-slate-600'}`}>Khusus Akhwat</span>
+                    </label>
+
+                    <label className={`flex items-center gap-3 p-4 border rounded-2xl cursor-pointer transition-all ${formData.isOnline ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                        <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={formData.isOnline || false}
+                            onChange={e => handleChange('isOnline', e.target.checked)}
+                        />
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${formData.isOnline ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-300 bg-white'}`}>
+                            {formData.isOnline && <div className="w-2.5 h-2.5 bg-white rounded-sm" />}
+                        </div>
+                        <span className={`font-bold text-sm ${formData.isOnline ? 'text-blue-700' : 'text-slate-600'}`}>Online / Streaming</span>
+                    </label>
+
+                    <label className={`flex items-center gap-3 p-4 border rounded-2xl cursor-pointer transition-all ${formData.isKidsFriendly ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                        <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={formData.isKidsFriendly || false}
+                            onChange={e => handleChange('isKidsFriendly', e.target.checked)}
+                        />
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${formData.isKidsFriendly ? 'border-orange-500 bg-orange-500 text-white' : 'border-slate-300 bg-white'}`}>
+                            {formData.isKidsFriendly && <div className="w-2.5 h-2.5 bg-white rounded-sm" />}
+                        </div>
+                        <span className={`font-bold text-sm ${formData.isKidsFriendly ? 'text-orange-700' : 'text-slate-600'}`}>🎈 Kajian Anak</span>
+                    </label>
                 </div>
 
                 {/* Footer */}

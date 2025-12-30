@@ -27,6 +27,8 @@ interface Kajian {
     date: string;
     linkInfo?: string;
     khususAkhwat?: boolean;
+    isOnline?: boolean;
+    isKidsFriendly?: boolean;
     imageUrl?: string;
     attendanceCount?: number;
     lat?: number;
@@ -829,16 +831,37 @@ export default function AdminManagePage() {
                                     />
                                 </div>
 
-                                <label className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-100 transition-all mt-4">
-                                    <input
-                                        type="checkbox"
-                                        id="khususAkhwat"
-                                        className="w-5 h-5 rounded border-slate-300 text-pink-600 focus:ring-pink-500"
-                                        checked={editingKajian.khususAkhwat || false}
-                                        onChange={e => setEditingKajian({ ...editingKajian, khususAkhwat: e.target.checked })}
-                                    />
-                                    <span className="font-bold text-slate-900">Khusus Akhwat / Muslimah</span>
-                                </label>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                                    <label className={`flex items-center gap-3 p-4 border rounded-2xl cursor-pointer transition-all ${editingKajian.khususAkhwat ? 'bg-pink-50 border-pink-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                                        <input
+                                            type="checkbox"
+                                            className="w-5 h-5 rounded border-slate-300 text-pink-600 focus:ring-pink-500"
+                                            checked={editingKajian.khususAkhwat || false}
+                                            onChange={e => setEditingKajian({ ...editingKajian, khususAkhwat: e.target.checked })}
+                                        />
+                                        <span className={`font-bold ${editingKajian.khususAkhwat ? 'text-pink-700' : 'text-slate-600'}`}>Khusus Akhwat</span>
+                                    </label>
+
+                                    <label className={`flex items-center gap-3 p-4 border rounded-2xl cursor-pointer transition-all ${editingKajian.isOnline ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                                        <input
+                                            type="checkbox"
+                                            className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                            checked={editingKajian.isOnline || false}
+                                            onChange={e => setEditingKajian({ ...editingKajian, isOnline: e.target.checked })}
+                                        />
+                                        <span className={`font-bold ${editingKajian.isOnline ? 'text-blue-700' : 'text-slate-600'}`}>Online / Streaming</span>
+                                    </label>
+
+                                    <label className={`flex items-center gap-3 p-4 border rounded-2xl cursor-pointer transition-all ${editingKajian.isKidsFriendly ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                                        <input
+                                            type="checkbox"
+                                            className="w-5 h-5 rounded border-slate-300 text-orange-600 focus:ring-orange-500"
+                                            checked={editingKajian.isKidsFriendly || false}
+                                            onChange={e => setEditingKajian({ ...editingKajian, isKidsFriendly: e.target.checked })}
+                                        />
+                                        <span className={`font-bold ${editingKajian.isKidsFriendly ? 'text-orange-700' : 'text-slate-600'}`}>🎈 Kajian Anak</span>
+                                    </label>
+                                </div>
                             </form>
                         </div>
 

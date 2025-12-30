@@ -19,6 +19,7 @@ export interface KajianEntry {
     khususAkhwat?: boolean; // True if kajian is exclusively for women
     linkInfo?: string; // Link pendaftaran, streaming, atau WAG
     isOnline?: boolean; // True if kajian is online (Zoom, YouTube, etc.)
+    isKidsFriendly?: boolean; // True if kajian is for kids
     attendanceCount?: number; // Count of people planning to attend
     catatan?: string; // Catatan dari panitia (notes from organizers)
 }
@@ -423,9 +424,15 @@ function parseNarrativeFormat(text: string): KajianEntry[] {
         entry.isOnline = true;
     }
 
+    // Detect Kids/Anak indicators
+    const isKids = /(?:Kajian Anak|Dongeng|Kids|Cilik|Santri Cilik|Untuk Anak|Adik-Adik|Kak\s+[A-Z])/i.test(ocrFixed);
+    if (isKids) {
+        entry.isKidsFriendly = true;
+    }
+
     // Patterns for noisy OCR / Narrative
     const patterns = {
-        pemateri: /(?:Ustadz|Ust\.|🎙|👤|Pemateri|Bersama|Oleh)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\(|حفظه|tgl|tanggal|hari|di masjid|masjid|🕌|📍|Waktu|Pukul|Jam|⏰|🕙|dengan|tema|Kitab|📚|📝|[\n\r]|$))/i,
+        pemateri: /(?:Ustadz|Ust\.|🎙|👤|Pemateri|Bersama|Oleh|Kak|Penceramah)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\(|حفظه|tgl|tanggal|hari|di masjid|masjid|🕌|📍|Waktu|Pukul|Jam|⏰|🕙|dengan|tema|Kitab|📚|📝|[\n\r]|$))/i,
         date: /(?:tgl|tanggal|hari|🗓|📅)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\/|di masjid|masjid|🕌|📍|Waktu|Pukul|Jam|⏰|🕙|[\n\r]|$))/i,
         masjid: /(?:di masjid|masjid|Musholla|🕌|📍|Lokasi|Tempat)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:Kitab|Tema|📚|📝|Waktu|Pukul|Jam|⏰|🕙|dengan|alamat|[\n\r]|$))/i,
         tema: /(?:Kitab|Tema|📚|📝|Membahas|Kajian)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:Waktu|Pukul|Jam|⏰|🕙|di masjid|masjid|[\n\r]|$))/i,

@@ -794,14 +794,30 @@ export default function BatchInputPage() {
                                                                 <input type="text" value={entry.tema} onChange={(e) => updateEntry(idx, 'tema', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400" />
                                                             </div>
                                                             <div className="col-span-1 md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Catatan dari Panitia</label>
-                                                                <input
-                                                                    type="text"
-                                                                    value={entry.catatan || ''}
-                                                                    onChange={(e) => updateEntry(idx, 'catatan', e.target.value)}
-                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none text-slate-900 transition-all placeholder:text-slate-400"
-                                                                    placeholder="Misal: Membawa makanan untuk berbuka, Khusus ikhwan, dll"
-                                                                />
+                                                                <div className="flex gap-4 items-end">
+                                                                    <div className="flex-1">
+                                                                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Catatan dari Panitia</label>
+                                                                        <input
+                                                                            type="text"
+                                                                            value={entry.catatan || ''}
+                                                                            onChange={(e) => updateEntry(idx, 'catatan', e.target.value)}
+                                                                            className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none text-slate-900 transition-all placeholder:text-slate-400"
+                                                                            placeholder="Misal: Membawa makanan untuk berbuka, Khusus ikhwan, dll"
+                                                                        />
+                                                                    </div>
+                                                                    <label className={`flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border transition-all h-[42px] mb-[1px] ${entry.isKidsFriendly ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-orange-200 hover:text-orange-500'}`}>
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={entry.isKidsFriendly || false}
+                                                                            onChange={(e) => updateEntry(idx, 'isKidsFriendly', e.target.checked)}
+                                                                            className="hidden"
+                                                                        />
+                                                                        <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${entry.isKidsFriendly ? 'border-orange-500 bg-orange-500 text-white' : 'border-slate-300 bg-white'}`}>
+                                                                            {entry.isKidsFriendly && <CheckCircle className="w-3 h-3" />}
+                                                                        </div>
+                                                                        <span className="text-[10px] font-black uppercase tracking-wider whitespace-nowrap">🎈 Kajian Anak</span>
+                                                                    </label>
+                                                                </div>
                                                             </div>
                                                             <div className="col-span-1">
                                                                 <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
@@ -1037,6 +1053,20 @@ export default function BatchInputPage() {
                                                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400 resize-none"
                                                         placeholder="Judul atau Tema Kajian..."
                                                     />
+                                                    <div className="flex justify-end mt-2">
+                                                        <label className={`inline-flex items-center gap-2 cursor-pointer px-3 py-2 rounded-xl border transition-all ${entry.isKidsFriendly ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-orange-200 hover:text-orange-500'}`}>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={entry.isKidsFriendly || false}
+                                                                onChange={(e) => updateEntry(idx, 'isKidsFriendly', e.target.checked)}
+                                                                className="hidden"
+                                                            />
+                                                            <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${entry.isKidsFriendly ? 'border-orange-500 bg-orange-500 text-white' : 'border-slate-300 bg-white'}`}>
+                                                                {entry.isKidsFriendly && <CheckCircle className="w-3 h-3" />}
+                                                            </div>
+                                                            <span className="text-[10px] font-black uppercase tracking-wider">🎈 Kajian Anak</span>
+                                                        </label>
+                                                    </div>
                                                 </div>
                                                 <div>
                                                     <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Pemateri</label>
