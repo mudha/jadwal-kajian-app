@@ -13,6 +13,11 @@ export default function Navbar() {
     }
 
     const navItems = [
+        { href: '/', icon: Home, label: 'Beranda' },
+        { href: '/kajian', icon: Search, label: 'Cari Kajian' },
+        { href: '/agenda', icon: Calendar, label: 'Agenda' },
+        { href: '/favorit', icon: Star, label: 'Favorit' },
+        { href: '/notifikasi', icon: Bell, label: 'Notifikasi' },
         { href: '/akun', icon: User, label: 'Akun' },
     ];
 
@@ -22,7 +27,9 @@ export default function Navbar() {
                 <div className="flex justify-between h-16">
                     <div className="flex">
                         <div className="flex-shrink-0 flex items-center">
-                            <span className="font-bold text-teal-600 text-xl">PortalKajian.online</span>
+                            <Link href="/">
+                                <span className="font-bold text-teal-600 text-xl cursor-pointer">PortalKajian.online</span>
+                            </Link>
                         </div>
                         <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
                             {navItems.map((item) => {
