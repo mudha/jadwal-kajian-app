@@ -190,38 +190,37 @@ export default function AdminManagementPage() {
                                         </button>
                                     </td>
                                 </tr>
-                            ))            {/* Role Update Modal */}
-                            <ConfirmationModal
-                                isOpen={!!roleUpdate}
-                                onClose={() => setRoleUpdate(null)}
-                                onConfirm={confirmUpdateRole}
-                                title="Ubah Role Admin?"
-                                message={roleUpdate ? `Apakah Anda yakin ingin mengubah role admin ini menjadi ${roleUpdate.currentRole === 'SUPER_ADMIN' ? 'ADMIN' : 'SUPER_ADMIN'}?` : ''}
-                                confirmText="Ya, Ubah Role"
-                                cancelText="Batal"
-                                type="warning"
-                                isLoading={isProcessing}
-                            />
-
-                            {/* Delete Admin Modal */}
-                            <ConfirmationModal
-                                isOpen={!!deleteId}
-                                onClose={() => setDeleteId(null)}
-                                onConfirm={confirmDelete}
-                                title="Hapus Akun Admin?"
-                                message="Tindakan ini permanen. Akun yang dihapus tidak dapat dipulihkan kembali."
-                                confirmText="Hapus Permanen"
-                                cancelText="Batal"
-                                type="danger"
-                                isLoading={isProcessing}
-                            />
-                        </div>
-                        );
-}
-                    </tbody>
-                </table>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
+            {/* Role Update Modal */}
+            <ConfirmationModal
+                isOpen={!!roleUpdate}
+                onClose={() => setRoleUpdate(null)}
+                onConfirm={confirmUpdateRole}
+                title="Ubah Role Admin?"
+                message={roleUpdate ? `Apakah Anda yakin ingin mengubah role admin ini menjadi ${roleUpdate.currentRole === 'SUPER_ADMIN' ? 'ADMIN' : 'SUPER_ADMIN'}?` : ''}
+                confirmText="Ya, Ubah Role"
+                cancelText="Batal"
+                type="warning"
+                isLoading={isProcessing}
+            />
+
+            {/* Delete Admin Modal */}
+            <ConfirmationModal
+                isOpen={!!deleteId}
+                onClose={() => setDeleteId(null)}
+                onConfirm={confirmDelete}
+                title="Hapus Admin?"
+                message="Admin yang dihapus tidak dapat lagi mengakses panel admin."
+                confirmText="Hapus Permanen"
+                cancelText="Batal"
+                type="danger"
+                isLoading={isProcessing}
+            />
         </div>
-        </div >
     );
 }
