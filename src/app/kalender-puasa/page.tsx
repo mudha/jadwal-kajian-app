@@ -188,14 +188,6 @@ export default function KalenderPuasaPage() {
                         </div>
                     </div>
 
-                    {/* Disclaimer Alert */}
-                    <div className="bg-yellow-500/20 backdrop-blur-md border border-yellow-400/30 rounded-xl p-3 mb-6 flex gap-3 items-start">
-                        <Info className="w-5 h-5 text-yellow-200 shrink-0 mt-0.5" />
-                        <p className="text-xs text-yellow-50 leading-relaxed">
-                            <span className="font-bold text-yellow-200">Catatan:</span> Tanggal Puasa Ramadhan & Syawal di bawah ini adalah perkiraan hisab.
-                            Keputusan final tetap menunggu sidang isbat pemerintah.
-                        </p>
-                    </div>
 
                     {/* Month Navigation */}
                     <div className="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4">
@@ -310,6 +302,15 @@ export default function KalenderPuasaPage() {
                         <div>
                             <strong className="text-green-800">Puasa Arafah:</strong> Puasa pada 9 Dhul Hijjah bagi yang tidak berhaji. Rasulullah ﷺ bersabda: "Puasa Arafah menghapus dosa 2 tahun." (HR. Muslim)
                         </div>
+                    </div>
+
+                    {/* Disclaimer Note */}
+                    <div className="mt-6 bg-yellow-100 border border-yellow-200 rounded-xl p-4 flex gap-3 items-start">
+                        <Info className="w-5 h-5 text-yellow-700 shrink-0 mt-0.5" />
+                        <p className="text-sm text-yellow-800 leading-relaxed">
+                            <span className="font-bold">Catatan Penting:</span> Tanggal Puasa Ramadhan & Syawal pada kalender di atas adalah perkiraan metode hisab.
+                            Keputusan final penetapan 1 Ramadhan & 1 Syawal tetap menunggu hasil sidang isbat pemerintah.
+                        </p>
                     </div>
                 </div>
             </div>
