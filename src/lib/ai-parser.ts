@@ -82,7 +82,8 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
     10. **LINK INFO**: Ambil link pendaftaran > link Zoom > streaming > WAG.
     11. **GMAPS**: Ambil link gmaps jika ada. Kosongkan (null) jika Online.
     12. Output HANYA JSON text murni tanpa markdown formatting (tanpa \`\`\`json).
-
+    13. JANGAN PERNAH MENGGUNAKAN NILAI 'undefined' dalam JSON. Jika field kosong/tidak ada, gunakan NULL atau string kosong "". JSON tidak valid jika ada 'undefined'.
+    14. Pastikan struktur JSON valid sepenuhnya.
         TEKS BROADCAST:
             ${originalText}
     `;
@@ -93,7 +94,10 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
         const text = response.text();
 
         // Clean markdown code blocks if present
-        const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        let cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+        // SANITIZE: Replace invalid 'undefined' values with 'null' because Gemini sometimes hallucinates undefined in JSON
+        cleanJson = cleanJson.replace(/:\s*undefined/g, ': null');
 
         return JSON.parse(cleanJson) as KajianEntry[];
     } catch (error: any) {
