@@ -44,6 +44,9 @@ export default function MasjidManagementPage() {
     // List Modal States
     const [isMasjidListModalOpen, setIsMasjidListModalOpen] = useState(false);
     const [isCityListModalOpen, setIsCityListModalOpen] = useState(false);
+    const [isKajianListModalOpen, setIsKajianListModalOpen] = useState(false);
+    const [selectedMasjidForKajian, setSelectedMasjidForKajian] = useState<Masjid | null>(null);
+    const [kajianList, setKajianList] = useState<any[]>([]);
 
     useEffect(() => {
         fetchMasjid();
@@ -134,6 +137,18 @@ export default function MasjidManagementPage() {
         setEditingMasjid(null);
         setFormData({ name: '', city: '', address: '', gmapsUrl: '', lat: '', lng: '' });
         setIsModalOpen(true);
+    };
+
+    const fetchKajianByMasjid = async (masjidName: string) => {
+        try {
+            const response = await fetch('/api/kajian');
+            const data = await response.json();
+            const filtered = data.filter((k: any) => k.masjid === masjidName);
+            setKajianList(filtered);
+        } catch (error) {
+            console.error('Error fetching kajian:', error);
+            setKajianList([]);
+        }
     };
 
     const [pendingSyncData, setPendingSyncData] = useState<any>(null);
@@ -584,8 +599,21 @@ export default function MasjidManagementPage() {
                                                         </div>
                                                     ) : '-'}
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-slate-600">
-                                                    {masjid.kajianCount || 0} kajian
+                                                <td className="px-6 py-4">
+                                                    {masjid.kajianCount && masjid.kajianCount > 0 ? (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedMasjidForKajian(masjid);
+                                                                setIsKajianListModalOpen(true);
+                                                                fetchKajianByMasjid(masjid.name);
+                                                            }}
+                                                            className="px-3 py-1.5 bg-orange-50 text-orange-700 text-sm font-bold rounded-lg hover:bg-orange-100 transition-colors border border-orange-200"
+                                                        >
+                                                            {masjid.kajianCount} kajian
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-sm text-slate-400">0 kajian</span>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center justify-end gap-2">
@@ -1095,6 +1123,78 @@ export default function MasjidManagementPage() {
                                         );
                                     })}
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Kajian List Modal */}
+            {isKajianListModalOpen && selectedMasjidForKajian && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
+                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                                    <MapPin className="w-5 h-5 text-orange-600" />
+                                    Kajian di {selectedMasjidForKajian.name}
+                                </h2>
+                                <p className="text-sm text-slate-500 mt-1">{kajianList.length} kajian terdaftar</p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setIsKajianListModalOpen(false);
+                                    setSelectedMasjidForKajian(null);
+                                    setKajianList([]);
+                                }}
+                                className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto">
+                            {kajianList.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <p className="text-slate-400">Tidak ada kajian terdaftar</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {kajianList.map((kajian, idx) => (
+                                        <div
+                                            key={kajian.id}
+                                            className="flex items-start gap-4 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                                        >
+                                            <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                                <span className="text-orange-700 font-bold text-sm">{idx + 1}</span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-bold text-slate-900 mb-1">{kajian.tema}</p>
+                                                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                                                    <span className="flex items-center gap-1">
+                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                        </svg>
+                                                        {kajian.pemateri}
+                                                    </span>
+                                                    <span>•</span>
+                                                    <span className="flex items-center gap-1">
+                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                        {kajian.date}
+                                                    </span>
+                                                    <span>•</span>
+                                                    <span className="flex items-center gap-1">
+                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        {kajian.waktu}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
