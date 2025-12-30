@@ -385,35 +385,9 @@ export default function BatchInputPage() {
         }
 
         try {
-            // Check for duplicates
-            const duplicateChecks = await Promise.all(
-                entriesToSave.map(async (entry) => {
-                    const response = await fetch('/api/admin/check-duplicate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            masjid: entry.masjid,
-                            pemateri: entry.pemateri,
-                            date: entry.date,
-                            waktu: entry.waktu,
-                        }),
-                    });
-                    const data = await response.json();
-                    return { entry, ...data };
-                })
-            );
+            setIsSaving(true);
 
-            const duplicates = duplicateChecks.filter(check => check.isDuplicate);
-
-            if (duplicates.length > 0) {
-                setDuplicateEntries(duplicates);
-                setPendingSaveEntries(entriesToSave);
-                setShowDuplicateModal(true);
-                setIsSaving(false);
-                return;
-            }
-
-            // Proceed with saving
+            // Try to save directly
             const response = await fetch('/api/kajian', {
                 method: 'POST',
                 headers: {
@@ -422,9 +396,20 @@ export default function BatchInputPage() {
                 body: JSON.stringify(entriesToSave),
             });
 
+            const data = await response.json();
+
+            // Handle duplicate detection (409 status)
+            if (response.status === 409 && data.duplicates) {
+                setDuplicateEntries(data.duplicates);
+                setPendingSaveEntries(entriesToSave);
+                setShowDuplicateModal(true);
+                setIsSaving(false);
+                return;
+            }
+
             if (!response.ok) {
-                const errorData = await response.json();
-                setMessage(`Gagal menyimpan: ${errorData.error || 'Server error'}`);
+                setMessage(`Gagal menyimpan: ${data.error || 'Server error'}`);
+                setIsSaving(false);
                 return;
             }
 
@@ -455,13 +440,13 @@ export default function BatchInputPage() {
         let finalEntries = [...pendingSaveEntries];
 
         if (action === 'skip') {
-            // Filter out duplicates
+            // Filter out duplicates using new format
             const duplicateSignatures = new Set(duplicateEntries.map(d =>
-                `${d.entry.masjid}|${d.entry.pemateri}|${d.entry.date}|${d.entry.waktu}`
+                `${d.new.masjid}|${d.new.date}|${d.new.waktu}`
             ));
 
             finalEntries = pendingSaveEntries.filter(e =>
-                !duplicateSignatures.has(`${e.masjid}|${e.pemateri}|${e.date}|${e.waktu}`)
+                !duplicateSignatures.has(`${e.masjid}|${e.date}|${e.waktu}`)
             );
         }
 
@@ -478,9 +463,11 @@ export default function BatchInputPage() {
                 body: JSON.stringify(finalEntries),
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                const errorData = await response.json();
-                setMessage(`Gagal menyimpan: ${errorData.error || 'Server error'}`);
+                setMessage(`Gagal menyimpan: ${data.error || 'Server error'}`);
+                setIsSaving(false);
                 return;
             }
 
@@ -1248,27 +1235,46 @@ export default function BatchInputPage() {
                         </div>
 
                         <div className="p-6 max-h-[60vh] overflow-y-auto bg-slate-50">
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                                 {duplicateEntries.map((d, i) => (
-                                    <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                                        <div className="flex items-start gap-3">
+                                    <div key={i} className="bg-white p-4 rounded-xl border-2 border-amber-200 shadow-sm">
+                                        <div className="flex items-start gap-3 mb-3">
                                             <div className="mt-1">
-                                                <Info className="w-4 h-4 text-amber-500" />
+                                                <AlertCircle className="w-5 h-5 text-amber-500" />
                                             </div>
-                                            <div>
-                                                <h4 className="font-bold text-slate-800 text-sm">{d.entry.tema || 'Tanpa Tema'}</h4>
-                                                <p className="text-xs text-slate-500 mt-1 flex flex-col gap-1">
-                                                    <span>👤 {d.entry.pemateri}</span>
-                                                    <span>🕌 {d.entry.masjid}</span>
-                                                    <span>📅 {d.entry.date} • {d.entry.waktu}</span>
-                                                </p>
+                                            <div className="flex-1">
+                                                <h4 className="font-bold text-amber-700 text-sm mb-1">Duplikat #{i + 1}</h4>
+                                                <p className="text-xs text-slate-500">Masjid, tanggal, dan waktu yang sama sudah ada</p>
+                                            </div>
+                                        </div>
+
+                                        {/* New Entry */}
+                                        <div className="bg-blue-50 p-3 rounded-lg mb-2">
+                                            <p className="text-xs font-bold text-blue-700 mb-2">📝 Data Baru (yang akan disimpan):</p>
+                                            <div className="text-xs text-slate-700 space-y-1">
+                                                <p className="font-bold">{d.new.tema}</p>
+                                                <p>👤 {d.new.pemateri}</p>
+                                                <p>🕌 {d.new.masjid}</p>
+                                                <p>📅 {d.new.date} • ⏰ {d.new.waktu}</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Existing Entry */}
+                                        <div className="bg-red-50 p-3 rounded-lg">
+                                            <p className="text-xs font-bold text-red-700 mb-2">⚠️ Data yang Sudah Ada (ID: {d.existing.id}):</p>
+                                            <div className="text-xs text-slate-700 space-y-1">
+                                                <p className="font-bold">{d.existing.tema}</p>
+                                                <p>👤 {d.existing.pemateri}</p>
+                                                <p>🕌 {d.existing.masjid}</p>
+                                                <p>📅 {d.existing.date} • ⏰ {d.existing.waktu}</p>
                                             </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                            <p className="mt-6 text-sm text-center text-slate-500">
-                                Apakah Anda ingin tetap menyimpan semua data ini, atau melewati data yang duplikat?
+                            <p className="mt-6 text-sm text-center text-slate-600 bg-white p-3 rounded-lg border border-slate-200">
+                                <strong>Perhatian:</strong> Kajian dengan masjid, tanggal, dan waktu yang sama terdeteksi sebagai duplikat.
+                                <br />Pilih tindakan yang sesuai di bawah ini.
                             </p>
                         </div>
 
