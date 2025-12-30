@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { User } from 'lucide-react';
+import { User, Home, Search, Calendar, Star, Bell } from 'lucide-react';
 
 export default function Navbar() {
     const pathname = usePathname();
