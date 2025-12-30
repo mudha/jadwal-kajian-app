@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Calendar, Star, Bell, User, Search } from 'lucide-react';
+import { User } from 'lucide-react';
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -13,11 +13,6 @@ export default function Navbar() {
     }
 
     const navItems = [
-        { href: '/', icon: Home, label: 'Beranda' },
-        { href: '/kajian', icon: Search, label: 'Cari Kajian' },
-        { href: '/agenda', icon: Calendar, label: 'Agenda' },
-        { href: '/favorit', icon: Star, label: 'Favorit' },
-        { href: '/notifikasi', icon: Bell, label: 'Notifikasi' },
         { href: '/akun', icon: User, label: 'Akun' },
     ];
 
