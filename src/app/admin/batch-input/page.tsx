@@ -36,6 +36,12 @@ export default function BatchInputPage() {
     // State for managing which row has the waktu dropdown open
     const [activeWaktuDropdownIndex, setActiveWaktuDropdownIndex] = useState<number | null>(null);
 
+    // Duplicate Check State
+    const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+    const [duplicateEntries, setDuplicateEntries] = useState<any[]>([]);
+    const [pendingSaveEntries, setPendingSaveEntries] = useState<KajianEntry[]>([]);
+    const [isSaving, setIsSaving] = useState(false);
+
     // Common waktu suggestions for kajian
     const waktuSuggestions = [
         "Ba'da Shubuh - Selesai",
@@ -400,21 +406,11 @@ export default function BatchInputPage() {
             const duplicates = duplicateChecks.filter(check => check.isDuplicate);
 
             if (duplicates.length > 0) {
-                const duplicateInfo = duplicates.map(d =>
-                    `- ${d.entry.masjid} | ${d.entry.pemateri} | ${d.entry.date}`
-                ).join('\n');
-
-                const confirmSave = confirm(
-                    `⚠️ PERINGATAN DUPLIKAT!\n\n` +
-                    `Ditemukan ${duplicates.length} jadwal yang mungkin sudah ada:\n\n` +
-                    `${duplicateInfo}\n\n` +
-                    `Apakah Anda yakin ingin tetap menyimpan semua data?`
-                );
-
-                if (!confirmSave) {
-                    setMessage('Penyimpanan dibatalkan karena ada duplikat.');
-                    return;
-                }
+                setDuplicateEntries(duplicates);
+                setPendingSaveEntries(entriesToSave);
+                setShowDuplicateModal(true);
+                setIsSaving(false);
+                return;
             }
 
             // Proceed with saving
@@ -434,11 +430,82 @@ export default function BatchInputPage() {
 
             setMessage(`Alhamdulillah, ${entriesToSave.length} jadwal berhasil disimpan!`);
             fetchStats();
-            setEntries([]);
-            setInputText('');
+
+            // Remove saved entries from list
+            const savedIndices = new Set(entriesToSave.map(e => entries.indexOf(e)));
+            const remainingEntries = entries.filter((_, i) => !savedIndices.has(i));
+            setEntries(remainingEntries);
+            setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
+
+            if (remainingEntries.length === 0) {
+                setInputText('');
+            }
         } catch (e) {
             setMessage('Kesalahan koneksi atau sistem saat menyimpan.');
             console.error(e);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleConfirmSave = async (action: 'all' | 'skip') => {
+        setIsSaving(true);
+        setShowDuplicateModal(false);
+
+        let finalEntries = [...pendingSaveEntries];
+
+        if (action === 'skip') {
+            // Filter out duplicates
+            const duplicateSignatures = new Set(duplicateEntries.map(d =>
+                `${d.entry.masjid}|${d.entry.pemateri}|${d.entry.date}|${d.entry.waktu}`
+            ));
+
+            finalEntries = pendingSaveEntries.filter(e =>
+                !duplicateSignatures.has(`${e.masjid}|${e.pemateri}|${e.date}|${e.waktu}`)
+            );
+        }
+
+        if (finalEntries.length === 0) {
+            setMessage('Tidak ada data baru untuk disimpan (semua dilewati).');
+            setIsSaving(false);
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/kajian', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(finalEntries),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                setMessage(`Gagal menyimpan: ${errorData.error || 'Server error'}`);
+                return;
+            }
+
+            setMessage(`Alhamdulillah, ${finalEntries.length} jadwal berhasil disimpan!`);
+            fetchStats();
+
+            // Remove saved entries from list but handle indices carefully
+            // It's safer to just remove the saved objects from the entries array
+            const savedObjects = new Set(finalEntries);
+            const remainingEntries = entries.filter(e => !savedObjects.has(e));
+
+            setEntries(remainingEntries);
+            setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
+
+            if (remainingEntries.length === 0) {
+                setInputText('');
+            }
+
+        } catch (e) {
+            setMessage('Gagal menyimpan data.');
+            console.error(e);
+        } finally {
+            setIsSaving(false);
+            setDuplicateEntries([]);
+            setPendingSaveEntries([]);
         }
     };
 
@@ -1136,6 +1203,74 @@ export default function BatchInputPage() {
                     )}
                 </div>
             </div>
+            {/* Duplicate Warning Modal */}
+            {showDuplicateModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-6 border-b border-slate-100 flex items-center gap-4 bg-amber-50">
+                            <div className="p-3 bg-amber-100 rounded-full text-amber-600">
+                                <AlertCircle className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-900 text-lg">Peringatan Duplikat</h3>
+                                <p className="text-sm text-slate-600">Ditemukan {duplicateEntries.length} jadwal yang mungkin sudah ada.</p>
+                            </div>
+                        </div>
+
+                        <div className="p-6 max-h-[60vh] overflow-y-auto bg-slate-50">
+                            <div className="space-y-3">
+                                {duplicateEntries.map((d, i) => (
+                                    <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                                        <div className="flex items-start gap-3">
+                                            <div className="mt-1">
+                                                <Info className="w-4 h-4 text-amber-500" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-slate-800 text-sm">{d.entry.tema || 'Tanpa Tema'}</h4>
+                                                <p className="text-xs text-slate-500 mt-1 flex flex-col gap-1">
+                                                    <span>👤 {d.entry.pemateri}</span>
+                                                    <span>🕌 {d.entry.masjid}</span>
+                                                    <span>📅 {d.entry.date} • {d.entry.waktu}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="mt-6 text-sm text-center text-slate-500">
+                                Apakah Anda ingin tetap menyimpan semua data ini, atau melewati data yang duplikat?
+                            </p>
+                        </div>
+
+                        <div className="p-4 border-t border-slate-100 bg-white flex flex-col-reverse sm:flex-row gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowDuplicateModal(false);
+                                    setPendingSaveEntries([]);
+                                    setDuplicateEntries([]);
+                                    setMessage('Penyimpanan dibatalkan.');
+                                }}
+                                className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors flex-1"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={() => handleConfirmSave('skip')}
+                                className="px-4 py-2 bg-white border-2 border-amber-500 text-amber-600 font-bold hover:bg-amber-50 rounded-xl transition-colors flex-1"
+                            >
+                                Lewati Duplikat
+                            </button>
+                            <button
+                                onClick={() => handleConfirmSave('all')}
+                                className="px-4 py-2 bg-blue-600 text-white font-bold hover:bg-blue-700 rounded-xl transition-colors flex-1"
+                            >
+                                Simpan Semua
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Preview Modal */}
             {previewIndex !== null && entries[previewIndex] && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
