@@ -4,7 +4,8 @@ import { KajianEntry } from '@/lib/parser';
 import { cookies } from 'next/headers';
 import { formatMasjidName } from '@/lib/date-utils';
 
-export const dynamic = 'force-dynamic';
+// Enable ISR with 60 second revalidation for better performance under high traffic
+export const revalidate = 60; // Cache for 60 seconds
 
 export async function GET() {
     try {
@@ -14,10 +15,15 @@ export async function GET() {
         const rows = result.rows.map(row => ({
             ...row,
             khususAkhwat: !!row.khususAkhwat,
-            isOnline: !!row.isOnline
+            isOnline: !!row.isOnline,
+            isKidsFriendly: !!row.isKidsFriendly
         }));
 
-        return NextResponse.json(rows);
+        return NextResponse.json(rows, {
+            headers: {
+                'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
+            }
+        });
     } catch (error) {
         console.error('Database Error:', error);
         return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
