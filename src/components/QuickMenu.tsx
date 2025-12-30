@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { BookText, Clock, Video, Flower2, MapPin, MessageCircle, FileText, Calendar, Home, GraduationCap } from 'lucide-react';
+import { BookText, Clock, Video, Flower2, MapPin, MessageCircle, FileText, Calendar, Home, GraduationCap, Briefcase } from 'lucide-react';
 
 
 export default function QuickMenu({ customItems }: { customItems?: any[] }) {
     const DEFAULT_ITEMS = [
+        // ... existing items ...
         {
             id: 'sekolah-sunnah',
             label: 'Sekolah Sunnah',
@@ -14,6 +15,16 @@ export default function QuickMenu({ customItems }: { customItems?: any[] }) {
             gradient: 'from-purple-500 to-purple-600',
             iconBg: 'bg-purple-50',
             iconColor: 'text-purple-600',
+        },
+        {
+            id: 'loker',
+            label: 'Lowongan Kerja',
+            iconName: 'Briefcase',
+            href: '#',
+            gradient: 'from-orange-500 to-orange-600',
+            iconBg: 'bg-orange-50',
+            iconColor: 'text-orange-600',
+            badge: 'SOON'
         },
         {
             id: 'dzikir',
@@ -99,7 +110,7 @@ export default function QuickMenu({ customItems }: { customItems?: any[] }) {
     ];
 
     const ICON_MAP: any = {
-        BookText, Clock, Video, Flower2, MapPin, MessageCircle, FileText, Calendar, Home, GraduationCap
+        BookText, Clock, Video, Flower2, MapPin, MessageCircle, FileText, Calendar, Home, GraduationCap, Briefcase
     };
 
     const items = customItems || DEFAULT_ITEMS;
@@ -113,9 +124,15 @@ export default function QuickMenu({ customItems }: { customItems?: any[] }) {
                         <Link
                             key={item.label}
                             href={item.href}
-                            className="group"
+                            className={`group ${item.badge === 'SOON' ? 'cursor-not-allowed opacity-80' : ''}`}
+                            onClick={(e) => item.badge === 'SOON' && e.preventDefault()}
                         >
                             <div className={`relative bg-gradient-to-br ${item.gradient} rounded-xl p-3 w-full aspect-square flex flex-col items-center justify-center shadow-md hover:shadow-xl active:scale-95 transition-all duration-200 border border-white/20`}>
+                                {item.badge && (
+                                    <span className="absolute top-1 right-1 bg-white/90 text-red-600 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-sm z-10 border border-red-100 uppercase tracking-wide">
+                                        {item.badge}
+                                    </span>
+                                )}
                                 {/* Icon Container */}
                                 <div className={`${item.iconBg} rounded-lg p-2.5 mb-1.5 group-hover:scale-110 transition-transform duration-200`}>
                                     <Icon className={`w-5 h-5 ${item.iconColor}`} />

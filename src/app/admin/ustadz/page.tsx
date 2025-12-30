@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, User, GitMerge, Sparkles, X } from 'lucide-react';
 import DuplicateGroupList from '@/components/admin/DuplicateGroupList';
 
+import ConfirmationModal from '@/components/admin/ConfirmationModal';
+
 interface Ustadz {
     id: number;
     name: string;
@@ -20,6 +22,11 @@ export default function UstadzManagementPage() {
     const [loading, setLoading] = useState(true);
     const [selectedForMerge, setSelectedForMerge] = useState<Set<string>>(new Set());
     const [mergeTarget, setMergeTarget] = useState('');
+
+    // Delete Modal State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [ustadzToDelete, setUstadzToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         fetchUstadz();
@@ -62,19 +69,31 @@ export default function UstadzManagementPage() {
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Apakah Anda yakin ingin menghapus ustadz ini?')) return;
+    const handleDelete = (id: number) => {
+        setUstadzToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
 
+    const confirmDelete = async () => {
+        if (!ustadzToDelete) return;
+        setIsDeleting(true);
         try {
-            const response = await fetch(`/api/admin/ustadz/${id}`, {
+            const response = await fetch(`/api/admin/ustadz/${ustadzToDelete}`, {
                 method: 'DELETE',
             });
 
             if (response.ok) {
                 fetchUstadz();
+                setIsDeleteModalOpen(false);
+                setUstadzToDelete(null);
+            } else {
+                alert('Gagal menghapus ustadz');
             }
         } catch (error) {
             console.error('Error deleting ustadz:', error);
+            alert('Terjadi kesalahan saat menghapus data');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -553,6 +572,18 @@ export default function UstadzManagementPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Hapus Data Ustadz?"
+                message="Data ustadz yang dihapus akan hilang permanen beserta informasi terkaitnya."
+                confirmText="Hapus Ustadz"
+                cancelText="Batal"
+                type="danger"
+                isLoading={isDeleting}
+            />
         </div>
     );
 }

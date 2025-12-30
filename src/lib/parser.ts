@@ -414,15 +414,59 @@ function parseNarrativeFormat(text: string): KajianEntry[] {
         gmapsUrl: ''
     };
 
+    // Detect Online indicators
+    const isOnline = /(?:Zoom|Google Meet|Live Stream|Youtube|Online)/i.test(ocrFixed) || /Meeting ID/i.test(ocrFixed);
+    if (isOnline) {
+        entry.masjid = 'Online';
+        entry.city = 'Online';
+        entry.address = 'Online';
+        entry.isOnline = true;
+    }
+
     // Patterns for noisy OCR / Narrative
     const patterns = {
-        pemateri: /(?:Ustadz|Ust\.|🎙|👤|Pemateri|Bersama|Oleh)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\(|حفظه|tgl|tanggal|hari|di masjid|masjid|🕌|📍|Waktu|⏰|🕙|dengan|tema|Kitab|📚|📝|[\n\r]|$))/i,
-        date: /(?:tgl|tanggal|hari|🗓|📅)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\/|di masjid|masjid|🕌|📍|Waktu|⏰|🕙|[\n\r]|$))/i,
-        masjid: /(?:di masjid|masjid|Musholla|🕌|📍|Lokasi|Tempat)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:Kitab|Tema|📚|📝|Waktu|⏰|🕙|dengan|alamat|[\n\r]|$))/i,
-        tema: /(?:Kitab|Tema|📚|📝|Membahas|Kajian)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:Waktu|⏰|🕙|di masjid|masjid|[\n\r]|$))/i,
+        pemateri: /(?:Ustadz|Ust\.|🎙|👤|Pemateri|Bersama|Oleh)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\(|حفظه|tgl|tanggal|hari|di masjid|masjid|🕌|📍|Waktu|Pukul|Jam|⏰|🕙|dengan|tema|Kitab|📚|📝|[\n\r]|$))/i,
+        date: /(?:tgl|tanggal|hari|🗓|📅)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\/|di masjid|masjid|🕌|📍|Waktu|Pukul|Jam|⏰|🕙|[\n\r]|$))/i,
+        masjid: /(?:di masjid|masjid|Musholla|🕌|📍|Lokasi|Tempat)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:Kitab|Tema|📚|📝|Waktu|Pukul|Jam|⏰|🕙|dengan|alamat|[\n\r]|$))/i,
+        tema: /(?:Kitab|Tema|📚|📝|Membahas|Kajian)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:Waktu|Pukul|Jam|⏰|🕙|di masjid|masjid|[\n\r]|$))/i,
         // Enhanced waktu pattern to catch ba'da variations and prayer times
         waktu: /(?:Waktu|Pukul|Jam|⏰|🕙|Ba['']?da|Ba['']?dha|Bada|Setelah|Habis|Usai|Mulai)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\-|sd|sampai|[\n\r]|$))/i
     };
+
+    // Specific Handling for the user's format (Date on separate lines)
+    if (ocrFixed.includes('Rabu Malam') || ocrFixed.match(/\d{1,2}\s+[A-Za-z]+\s+\d{4}/)) {
+        // Try to capture date from line context if standard regex failed
+        const lines = ocrFixed.split('\n').map(l => l.trim()).filter(l => l);
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            // Date detection: "31 Desember 2025" or "12 Rajab 1447 H"
+            if (/\d{1,2}\s+(?:Jan|Feb|Mar|Apr|Mei|Jun|Jul|Agu|Sep|Okt|Nov|Des|Rajab|Muharram|Ramadhan|Syawal|Dzulqa|Dzulhi)[a-z]*\s+\d{4}/i.test(line)) {
+                // If line contains Hijri, prefer the AD date if available in nearby lines
+                if (!entry.date || entry.date === 'TBD' || line.includes('Masehi') || !line.includes('H.')) {
+                    entry.date = cleanValue(line);
+                }
+            }
+
+            // Time detection: "(Pukul: 20.00 WIB - Selesai)"
+            if (line.includes('Pukul') || line.includes('WIB') || /[:.]\d{2}/.test(line)) {
+                if (entry.waktu === 'TBD') {
+                    const timeMatch = line.match(/(?:Pukul|Jam)?\s*(\d{1,2}[:.]\d{2}.*?)(?:\)|$)/i);
+                    if (timeMatch) entry.waktu = normalizeWaktu(timeMatch[1]);
+                }
+            }
+
+            // Pemateri detection from simple line start "Ustadz ..."
+            if (line.startsWith('Ustadz') || line.startsWith('Ust.')) {
+                if (entry.pemateri === 'TBD') entry.pemateri = cleanValue(line);
+            }
+
+            // Theme detection - often first line or after "Membahas"
+            if (i < 3 && !line.includes('Online') && !line.includes('Ustadz') && entry.tema === 'Kajian') {
+                // Heuristic: Short line at start is often Title/Theme
+                if (line.length > 5 && line.length < 50) entry.tema = cleanValue(line);
+            }
+        }
+    }
 
     Object.entries(patterns).forEach(([key, regex]) => {
         const match = ocrFixed.match(regex);
@@ -432,7 +476,10 @@ function parseNarrativeFormat(text: string): KajianEntry[] {
             if (key === 'waktu') {
                 value = normalizeWaktu(value);
             }
-            (entry as any)[key] = value;
+            // Only overwrite if TBD or empty (preserve specific line detection)
+            if ((entry as any)[key] === 'TBD' || !(entry as any)[key]) {
+                (entry as any)[key] = value;
+            }
         }
     });
 
@@ -440,6 +487,22 @@ function parseNarrativeFormat(text: string): KajianEntry[] {
     const phoneMatch = ocrFixed.match(/(?:08|\+62)\d{8,12}/g);
     if (phoneMatch) {
         entry.cp = Array.from(new Set(phoneMatch)).join(', ');
+    }
+
+    // Extract Zoom/Meet Links if Online
+    if (isOnline) {
+        const zoomMatch = ocrFixed.match(/Meeting ID:\s*([\d\s]+)/i);
+        if (zoomMatch) {
+            entry.linkInfo = `Zoom ID: ${zoomMatch[1].trim()}`;
+            const passMatch = ocrFixed.match(/Password:\s*([\w]+)/i);
+            if (passMatch) entry.linkInfo += ` Pass: ${passMatch[1]}`;
+        }
+
+        const linkMatch = ocrFixed.match(/https?:\/\/(?:bit\.ly|zoom\.us|meet\.google)[^\s]+/);
+        if (linkMatch) {
+            if (!entry.linkInfo) entry.linkInfo = linkMatch[0];
+            else entry.linkInfo += ` ${linkMatch[0]}`;
+        }
     }
 
     // Try to extract City if mention of a city name is found (simplified list)
@@ -451,11 +514,16 @@ function parseNarrativeFormat(text: string): KajianEntry[] {
         }
     }
 
-    // Use Masjid for address fallback
-    if (entry.masjid && entry.masjid !== 'TBD') {
+    // Final Validation: Must have at least Pemateri or Masjid/Online to be valid
+    if (entry.pemateri !== 'TBD' || entry.masjid !== 'TBD' || isOnline) {
+        if (entry.masjid === 'TBD' && isOnline) {
+            entry.masjid = 'Online';
+            entry.address = 'Online';
+        }
+
         const query = encodeURIComponent(`${entry.masjid} ${entry.city}`);
-        entry.gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
-        entry.address = entry.masjid;
+        entry.gmapsUrl = entry.gmapsUrl || `https://www.google.com/maps/search/?api=1&query=${query}`;
+
         return [entry as KajianEntry];
     }
 

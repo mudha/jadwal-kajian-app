@@ -34,6 +34,8 @@ interface Kajian {
     catatan?: string;
 }
 
+import ConfirmationModal from '@/components/admin/ConfirmationModal';
+
 export default function AdminManagePage() {
     const [kajianList, setKajianList] = useState<Kajian[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -41,6 +43,11 @@ export default function AdminManagePage() {
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingKajian, setEditingKajian] = useState<Kajian | null>(null);
+
+    // Delete Modal State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
 
 
@@ -90,16 +97,27 @@ export default function AdminManagePage() {
         fetchData();
     }, []);
 
-    const handleDelete = async (id: number) => {
-        if (confirm('PERINGATAN: Apakah Anda yakin ingin menghapus jadwal ini?')) {
-            try {
-                const res = await fetch(`/api/kajian/${id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    setKajianList(prev => prev.filter(k => k.id !== id));
-                }
-            } catch (e) {
-                alert('Gagal menghapus data');
+    const handleDelete = (id: number) => {
+        setItemToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
+        setIsDeleting(true);
+        try {
+            const res = await fetch(`/api/kajian/${itemToDelete}`, { method: 'DELETE' });
+            if (res.ok) {
+                setKajianList(prev => prev.filter(k => k.id !== itemToDelete));
+                setIsDeleteModalOpen(false);
+                setItemToDelete(null);
+            } else {
+                alert('Gagal menghapus data'); // Keep simple alert for error for now, or upgrade later
             }
+        } catch (e) {
+            alert('Gagal menghapus data');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -843,6 +861,19 @@ export default function AdminManagePage() {
                         </div>
                     </div>
                 </div>
+            )}
+            {isDeleteModalOpen && (
+                <ConfirmationModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => setIsDeleteModalOpen(false)}
+                    onConfirm={confirmDelete}
+                    title="Hapus Jadwal Kajian?"
+                    message="Tindakan ini tidak dapat dibatalkan. Data jadwal yang dihapus akan hilang permanen dari database."
+                    confirmText="Hapus Sekarang"
+                    cancelText="Batal"
+                    type="danger"
+                    isLoading={isDeleting}
+                />
             )}
         </div>
     );

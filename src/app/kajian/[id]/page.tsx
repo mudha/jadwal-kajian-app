@@ -34,6 +34,7 @@ import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
 import LeftSidebar from '@/components/LeftSidebar';
 import OngoingKajianWidget from '@/components/OngoingKajianWidget';
 import EditKajianModal from '@/components/EditKajianModal';
+import ConfirmationModal from '@/components/admin/ConfirmationModal';
 
 export default function KajianDetailPage() {
     // ... existing state ...
@@ -51,6 +52,9 @@ export default function KajianDetailPage() {
     const [loadingRelated, setLoadingRelated] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingKajian, setEditingKajian] = useState<KajianDetail | null>(null);
+
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // ... existing useEffect ...
     useEffect(() => {
@@ -236,9 +240,13 @@ export default function KajianDetailPage() {
         window.open(url, '_blank');
     };
 
-    const handleDelete = async () => {
-        if (!kajian || !confirm('Apakah Anda yakin ingin menghapus kajian ini?')) return;
+    const handleDelete = () => {
+        setIsDeleteModalOpen(true);
+    };
 
+    const confirmDelete = async () => {
+        if (!kajian) return;
+        setIsDeleting(true);
         try {
             const res = await fetch(`/api/kajian/${kajian.id}`, { method: 'DELETE' });
             if (res.ok) {
@@ -249,6 +257,8 @@ export default function KajianDetailPage() {
         } catch (e) {
             console.error('Error deleting kajian:', e);
             alert('Terjadi kesalahan saat menghapus');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -632,7 +642,17 @@ export default function KajianDetailPage() {
                 />
             )}
 
-
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Hapus Kajian?"
+                message="Data kajian ini akan dihapus permanen. Lanjutkan?"
+                confirmText="Hapus"
+                cancelText="Batal"
+                type="danger"
+                isLoading={isDeleting}
+            />
         </div >
     );
 }

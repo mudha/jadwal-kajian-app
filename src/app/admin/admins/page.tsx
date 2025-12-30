@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { Users, Trash2, Shield, ShieldCheck, Mail, Calendar, AlertCircle } from 'lucide-react';
 
+import ConfirmationModal from '@/components/admin/ConfirmationModal';
+
 interface Admin {
     id: number;
     username: string;
@@ -15,6 +17,11 @@ export default function AdminManagementPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
+
+    // Confirmation State
+    const [deleteId, setDeleteId] = useState<number | null>(null);
+    const [roleUpdate, setRoleUpdate] = useState<{ id: number, currentRole: string } | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     useEffect(() => {
         fetchAdmins();
@@ -33,9 +40,15 @@ export default function AdminManagementPage() {
         }
     };
 
-    const handleUpdateRole = async (id: number, currentRole: string) => {
+    const handleUpdateRole = (id: number, currentRole: string) => {
+        setRoleUpdate({ id, currentRole });
+    };
+
+    const confirmUpdateRole = async () => {
+        if (!roleUpdate) return;
+        setIsProcessing(true);
+        const { id, currentRole } = roleUpdate;
         const newRole = currentRole === 'SUPER_ADMIN' ? 'ADMIN' : 'SUPER_ADMIN';
-        if (!confirm(`Ubah role admin ini menjadi ${newRole}?`)) return;
 
         try {
             const res = await fetch(`/api/admin/admins/${id}`, {
@@ -48,20 +61,28 @@ export default function AdminManagementPage() {
                 setMessage('Role berhasil diperbarui');
                 fetchAdmins();
                 setTimeout(() => setMessage(''), 3000);
+                setRoleUpdate(null);
             } else {
                 const data = await res.json();
                 setError(data.error || 'Gagal memperbarui role');
             }
         } catch (err) {
             setError('Terjadi kesalahan sistem');
+        } finally {
+            setIsProcessing(false);
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Hapus akun admin ini secara permanen?')) return;
+    const handleDelete = (id: number) => {
+        setDeleteId(id);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteId) return;
+        setIsProcessing(true);
 
         try {
-            const res = await fetch(`/api/admin/admins/${id}`, {
+            const res = await fetch(`/api/admin/admins/${deleteId}`, {
                 method: 'DELETE',
             });
 
@@ -69,12 +90,15 @@ export default function AdminManagementPage() {
                 setMessage('Admin berhasil dihapus');
                 fetchAdmins();
                 setTimeout(() => setMessage(''), 3000);
+                setDeleteId(null);
             } else {
                 const data = await res.json();
                 setError(data.error || 'Gagal menghapus admin');
             }
         } catch (err) {
             setError('Terjadi kesalahan sistem');
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -150,8 +174,8 @@ export default function AdminManagementPage() {
                                         <button
                                             onClick={() => handleUpdateRole(admin.id, admin.role)}
                                             className={`px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase transition-all shadow-sm ${admin.role === 'SUPER_ADMIN'
-                                                    ? 'bg-amber-500 text-white shadow-amber-100 hover:bg-amber-600'
-                                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                ? 'bg-amber-500 text-white shadow-amber-100 hover:bg-amber-600'
+                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                                 }`}
                                         >
                                             {admin.role}
@@ -166,11 +190,38 @@ export default function AdminManagementPage() {
                                         </button>
                                     </td>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            ))            {/* Role Update Modal */}
+                            <ConfirmationModal
+                                isOpen={!!roleUpdate}
+                                onClose={() => setRoleUpdate(null)}
+                                onConfirm={confirmUpdateRole}
+                                title="Ubah Role Admin?"
+                                message={roleUpdate ? `Apakah Anda yakin ingin mengubah role admin ini menjadi ${roleUpdate.currentRole === 'SUPER_ADMIN' ? 'ADMIN' : 'SUPER_ADMIN'}?` : ''}
+                                confirmText="Ya, Ubah Role"
+                                cancelText="Batal"
+                                type="warning"
+                                isLoading={isProcessing}
+                            />
+
+                            {/* Delete Admin Modal */}
+                            <ConfirmationModal
+                                isOpen={!!deleteId}
+                                onClose={() => setDeleteId(null)}
+                                onConfirm={confirmDelete}
+                                title="Hapus Akun Admin?"
+                                message="Tindakan ini permanen. Akun yang dihapus tidak dapat dipulihkan kembali."
+                                confirmText="Hapus Permanen"
+                                cancelText="Batal"
+                                type="danger"
+                                isLoading={isProcessing}
+                            />
+                        </div>
+                        );
+}
+                    </tbody>
+                </table>
             </div>
         </div>
+        </div >
     );
 }

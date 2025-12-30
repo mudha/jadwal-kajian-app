@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, MapPin, ExternalLink, GitMerge, Sparkles, X, RefreshCw } from 'lucide-react';
 import DuplicateGroupList from '@/components/admin/DuplicateGroupList';
 
+import ConfirmationModal from '@/components/admin/ConfirmationModal';
+
 interface Masjid {
     id: string;
     name: string;
@@ -33,6 +35,11 @@ export default function MasjidManagementPage() {
     const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
     const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
     const [filterNoCoords, setFilterNoCoords] = useState(false);
+
+    // Delete Modal State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [masjidToDelete, setMasjidToDelete] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         fetchMasjid();
@@ -75,11 +82,16 @@ export default function MasjidManagementPage() {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Apakah Anda yakin ingin menghapus masjid ini?')) return;
+    const handleDelete = (id: string) => {
+        setMasjidToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
 
+    const confirmDelete = async () => {
+        if (!masjidToDelete) return;
+        setIsDeleting(true);
         try {
-            const masjid = masjidList.find(m => m.id === id);
+            const masjid = masjidList.find(m => m.id === masjidToDelete);
             if (!masjid) return;
 
             const response = await fetch(`/api/admin/masjid/${encodeURIComponent(masjid.name)}`, {
@@ -88,9 +100,16 @@ export default function MasjidManagementPage() {
 
             if (response.ok) {
                 fetchMasjid();
+                setIsDeleteModalOpen(false);
+                setMasjidToDelete(null);
+            } else {
+                alert('Gagal menghapus masjid');
             }
         } catch (error) {
             console.error('Error deleting masjid:', error);
+            alert('Terjadi kesalahan saat menghapus data');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -113,8 +132,13 @@ export default function MasjidManagementPage() {
         setIsModalOpen(true);
     };
 
+    const [pendingSyncData, setPendingSyncData] = useState<any>(null);
+    const [isSyncConfirmOpen, setIsSyncConfirmOpen] = useState(false);
+    const [syncType, setSyncType] = useState<'form' | 'list' | null>(null); // 'form' for edit modal, 'list' for single sync
+
     const handleExtractCoords = async (url: string) => {
         if (!url) return;
+        setLoading(true);
         try {
             const res = await fetch('/api/tools/extract-gmaps', {
                 method: 'POST',
@@ -122,28 +146,71 @@ export default function MasjidManagementPage() {
                 body: JSON.stringify({ url })
             });
             const data = await res.json();
-            if (data.success) {
-                setFormData(prev => ({
-                    ...prev,
-                    lat: data.lat,
-                    lng: data.lng,
-                    gmapsUrl: data.expandedUrl || url
-                }));
+            setLoading(false); // Stop loading before showing modal/result
 
+            if (data.success) {
                 if (data.placeName && data.placeName !== formData.name) {
-                    if (confirm(`Titik koordinat ditemukan.\n\nNama di Google Maps: "${data.placeName}"\nNama saat ini: "${formData.name}"\n\nApakah Anda ingin memperbarui nama masjid sesuai Google Maps?`)) {
-                        setFormData(prev => ({ ...prev, name: data.placeName }));
-                    }
+                    // Ask for confirmation
+                    setPendingSyncData(data);
+                    setSyncType('form');
+                    setIsSyncConfirmOpen(true);
                 } else {
-                    alert(`Koordinat ditemukan: ${data.lat}, ${data.lng}`);
+                    // Direct update if name matches or no name found
+                    setFormData(prev => ({
+                        ...prev,
+                        lat: data.lat,
+                        lng: data.lng,
+                        gmapsUrl: data.expandedUrl || url
+                    }));
+                    // Use a toast here in future, for now just silent or small info?
+                    // alert(`Koordinat ditemukan: ${data.lat}, ${data.lng}`); // Removing this alert as per request, maybe just fill fields
                 }
             } else {
-                alert('Gagal mengekstrak koordinat dari URL tersebut.');
+                alert('Gagal mengekstrak koordinat dari URL tersebut.'); // Keep error alert for now or replace with modal later
             }
         } catch (error) {
             console.error(error);
+            setLoading(false);
             alert('Terjadi kesalahan saat mengekstrak koordinat.');
         }
+    };
+
+    const confirmSync = (updateName: boolean) => {
+        if (!pendingSyncData) return;
+
+        if (syncType === 'form') {
+            setFormData(prev => ({
+                ...prev,
+                lat: pendingSyncData.lat,
+                lng: pendingSyncData.lng,
+                gmapsUrl: pendingSyncData.expandedUrl || prev.gmapsUrl,
+                name: updateName ? pendingSyncData.placeName : prev.name
+            }));
+        } else if (syncType === 'list') {
+            // Handle list item sync finalization
+            const masjid = pendingSyncData.originalMasjid;
+            const newName = updateName ? pendingSyncData.placeName : masjid.name;
+
+            // Trigger actual update API
+            fetch(`/api/admin/masjid/${encodeURIComponent(masjid.name)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: newName,
+                    city: masjid.city,
+                    address: masjid.address,
+                    gmapsUrl: pendingSyncData.expandedUrl || masjid.gmapsUrl,
+                    lat: pendingSyncData.lat,
+                    lng: pendingSyncData.lng
+                })
+            }).then(() => {
+                fetchMasjid();
+            });
+        }
+
+        setIsSyncConfirmOpen(false);
+        setPendingSyncData(null);
+        setSyncType(null);
     };
 
     const filteredMasjid = masjidList.filter(m => {
@@ -282,21 +349,10 @@ export default function MasjidManagementPage() {
 
             if (data.success) {
                 const newName = data.placeName || masjid.name;
-                if (confirm(`Titik ditemukan!\n\nNama di Google Maps: "${newName}"\n\nUpdate nama dan koordinat masjid ini?`)) {
-                    await fetch(`/api/admin/masjid/${encodeURIComponent(masjid.name)}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            name: newName,
-                            city: masjid.city,
-                            address: masjid.address,
-                            gmapsUrl: data.expandedUrl || masjid.gmapsUrl,
-                            lat: data.lat,
-                            lng: data.lng
-                        })
-                    });
-                    fetchMasjid();
-                }
+                // Store original masjid to reference ID/City etc later
+                setPendingSyncData({ ...data, originalMasjid: masjid });
+                setSyncType('list');
+                setIsSyncConfirmOpen(true);
             } else {
                 alert('Gagal mengambil data dari Google Maps.');
             }
@@ -887,6 +943,40 @@ export default function MasjidManagementPage() {
                     </div>
                 </div>
             )}
+            {isDeleteModalOpen && (
+                <ConfirmationModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => setIsDeleteModalOpen(false)}
+                    onConfirm={confirmDelete}
+                    title="Hapus Data Masjid?"
+                    message="Masjid yang dihapus akan hilang permanen beserta seluruh relasi kajianya jika ada."
+                    confirmText="Hapus Masjid"
+                    cancelText="Batal"
+                    type="danger"
+                    isLoading={isDeleting}
+                />
+            )}
+            {/* Sync Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={isSyncConfirmOpen}
+                onClose={() => {
+                    setIsSyncConfirmOpen(false);
+                    setPendingSyncData(null);
+                    setSyncType(null);
+                }}
+                onConfirm={() => confirmSync(true)}
+                title={syncType === 'form' ? "Update Nama Masjid?" : "Sinkronisasi Data?"}
+                message={
+                    pendingSyncData
+                        ? (syncType === 'form'
+                            ? `Nama di Google Maps: "${pendingSyncData.placeName}".\nApakah Anda ingin mengubah nama masjid saat ini menjadi nama tersebut?`
+                            : `Ditemukan data baru dari Google Maps: "${pendingSyncData.placeName}".\nUpdate nama dan koordinat masjid ini?`)
+                        : ''
+                }
+                confirmText={syncType === 'form' ? "Ya, Ubah Nama" : "Ya, Update Data"}
+                cancelText={syncType === 'form' ? "Tidak, Biarkan Nama Lama" : "Batal"}
+                type="info"
+            />
         </div>
     );
 }

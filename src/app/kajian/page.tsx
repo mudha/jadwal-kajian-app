@@ -42,6 +42,8 @@ function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
     return d;
 }
 
+import ConfirmationModal from '@/components/admin/ConfirmationModal';
+
 function KajianListContent() {
     const searchParams = useSearchParams();
     const filterMode = searchParams.get('mode');
@@ -65,6 +67,9 @@ function KajianListContent() {
     const [isLocatingUser, setIsLocatingUser] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [radius, setRadius] = useState(settings.radius);
+
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<number | null>(null);
 
     // Sync from settings
     useEffect(() => {
@@ -246,16 +251,22 @@ function KajianListContent() {
         }
     };
 
-    const deleteIndividual = async (id: number) => {
-        if (confirm('Hapus jadwal kajian ini?')) {
-            try {
-                const res = await fetch(`/api/kajian/${id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    setKajianList(prev => prev.filter(k => k.id !== id));
-                }
-            } catch (e) {
-                console.error('Delete error', e);
+    const deleteIndividual = (id: number) => {
+        setItemToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
+        try {
+            const res = await fetch(`/api/kajian/${itemToDelete}`, { method: 'DELETE' });
+            if (res.ok) {
+                setKajianList(prev => prev.filter(k => k.id !== itemToDelete));
+                setIsDeleteModalOpen(false);
+                setItemToDelete(null);
             }
+        } catch (e) {
+            console.error('Delete error', e);
         }
     };
 
@@ -846,6 +857,17 @@ function KajianListContent() {
                     </div>
                 )
             }
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Hapus Jadwal Kajian?"
+                message="Jadwal kajian yang dihapus tidak dapat dikembalikan."
+                confirmText="Hapus"
+                cancelText="Batal"
+                type="danger"
+            />
         </div >
     );
 }

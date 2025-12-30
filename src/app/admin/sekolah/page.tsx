@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, MapPin, Loader2, Wand2 } from 'lucide-react';
 import SchoolFormModal from '@/components/admin/SchoolFormModal';
+import ConfirmationModal from '@/components/admin/ConfirmationModal';
 
 interface Sekolah {
     id: number;
@@ -37,6 +38,13 @@ export default function AdminSekolahPage() {
     const [editingItem, setEditingItem] = useState<Partial<Sekolah> | null>(null);
     const [isCleaning, setIsCleaning] = useState(false);
 
+    // Confirmation Modals State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const [isCleanupModalOpen, setIsCleanupModalOpen] = useState(false);
+
     // Initial load
     useEffect(() => {
         fetchData();
@@ -54,15 +62,27 @@ export default function AdminSekolahPage() {
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Yakin ingin menghapus data ini?')) return;
+    const handleDelete = (id: number) => {
+        setItemToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
+        setIsDeleting(true);
         try {
-            await fetch(`/api/admin/sekolah/${id}`, { method: 'DELETE' });
-            setList(l => l.filter(i => i.id !== id));
+            await fetch(`/api/admin/sekolah/${itemToDelete}`, { method: 'DELETE' });
+            setList(l => l.filter(i => i.id !== itemToDelete));
+            setIsDeleteModalOpen(false);
+            setItemToDelete(null);
         } catch (e) {
             alert('Gagal menghapus');
+        } finally {
+            setIsDeleting(false);
         }
     };
+
+    // ... (handleFormSubmit and openModal remain unchanged)
 
     const handleFormSubmit = async (data: Partial<Sekolah>) => {
         const isEdit = !!data.id;
@@ -101,9 +121,12 @@ export default function AdminSekolahPage() {
         setIsModalOpen(true);
     };
 
-    const handleCleanupData = async () => {
-        if (!confirm('Fitur ini akan membersihkan nama sekolah dengan menghapus kata "Akhwat Ikhwan" dari nama sekolah. Lanjutkan?')) return;
+    const handleCleanupData = () => {
+        setIsCleanupModalOpen(true);
+    };
 
+    const confirmCleanup = async () => {
+        setIsCleanupModalOpen(false);
         setIsCleaning(true);
         let correctedCount = 0;
 
@@ -303,6 +326,31 @@ export default function AdminSekolahPage() {
                 onClose={() => setIsModalOpen(false)}
                 onSubmit={handleFormSubmit}
                 initialData={editingItem}
+            />
+
+            {/* Confirmation Modals */}
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Hapus Data Sekolah?"
+                message="Data sekolah yang dihapus tidak dapat dikembalikan."
+                confirmText="Hapus"
+                cancelText="Batal"
+                type="danger"
+                isLoading={isDeleting}
+            />
+
+            <ConfirmationModal
+                isOpen={isCleanupModalOpen}
+                onClose={() => setIsCleanupModalOpen(false)}
+                onConfirm={confirmCleanup}
+                title="Perbaiki Data Nama?"
+                message='Fitur ini akan otomatis menghapus kata "Akhwat Ikhwan" yang tidak perlu dari akhir nama sekolah. Proses ini mungkin memakan waktu.'
+                confirmText="Mulai Perbaikan"
+                cancelText="Batal"
+                type="info"
+                isLoading={isCleaning}
             />
         </div>
     );
