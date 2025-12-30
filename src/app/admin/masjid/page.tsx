@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search, MapPin, ExternalLink, GitMerge, Sparkles, X, RefreshCw } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, MapPin, ExternalLink, GitMerge, Sparkles, X, RefreshCw, Eye } from 'lucide-react';
 import DuplicateGroupList from '@/components/admin/DuplicateGroupList';
 
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
@@ -1190,6 +1190,48 @@ export default function MasjidManagementPage() {
                                                         {kajian.waktu}
                                                     </span>
                                                 </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <a
+                                                    href={`/kajian/${kajian.id}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                    title="Preview Kajian"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </a>
+                                                <a
+                                                    href={`/admin/manage?edit=${kajian.id}`}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="Edit Kajian"
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                </a>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (confirm(`Hapus kajian "${kajian.tema}"?`)) {
+                                                            try {
+                                                                const res = await fetch(`/api/kajian/${kajian.id}`, { method: 'DELETE' });
+                                                                if (res.ok) {
+                                                                    // Refresh kajian list
+                                                                    fetchKajianByMasjid(selectedMasjidForKajian.name);
+                                                                    // Refresh masjid list to update count
+                                                                    fetchMasjid();
+                                                                } else {
+                                                                    alert('Gagal menghapus kajian');
+                                                                }
+                                                            } catch (error) {
+                                                                console.error('Error deleting kajian:', error);
+                                                                alert('Terjadi kesalahan saat menghapus');
+                                                            }
+                                                        }
+                                                    }}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Hapus Kajian"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
