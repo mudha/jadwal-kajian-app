@@ -84,7 +84,7 @@ function isRamadhan(hijriMonth: number): boolean {
 }
 
 function isSyawal(hijriMonth: number, hijriDay: number): boolean {
-    return hijriMonth === 10 && hijriDay >= 2 && hijriDay <= 7; // Recommended 6 days (2-7 Shawwal)
+    return hijriMonth === 10 && hijriDay >= 2; // Valid for the whole month of Shawwal (excluding Eid)
 }
 
 export default function KalenderPuasaPage() {
@@ -138,10 +138,7 @@ export default function KalenderPuasaPage() {
             borderColor = 'border-none';
             label = 'Ramadhan';
             textColor = 'text-white/90';
-        } else if (syawal) {
-            bgColor = 'bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-md';
-            borderColor = 'border-none';
-            label = 'Syawal';
+            label = 'Ramadhan';
             textColor = 'text-white/90';
         } else if (arafah) {
             bgColor = 'bg-gradient-to-br from-amber-100 to-amber-200';
@@ -166,6 +163,11 @@ export default function KalenderPuasaPage() {
         } else if (first9DH) {
             bgColor = 'bg-green-50';
             borderColor = 'border border-green-300';
+        } else if (syawal) {
+            // Lower priority: Fill the rest of Syawal days
+            bgColor = 'bg-teal-50/50 dashed border border-teal-200';
+            borderColor = '';
+            label = 'Syawal';
         }
 
         return { hijri, bgColor, borderColor, label, textColor, mondayThursday, ayyamulBidh, arafah, ashura, tasua, first9DH, ramadhan, syawal };
@@ -224,8 +226,8 @@ export default function KalenderPuasaPage() {
                             <span className="text-sm text-slate-700 font-bold">Ramadhan</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg shadow-sm"></div>
-                            <span className="text-sm text-slate-700 font-bold">Syawal (6 Hari)</span>
+                            <div className="w-8 h-8 bg-teal-50 border border-teal-200 rounded-lg border-dashed"></div>
+                            <span className="text-sm text-slate-700 font-bold">Syawal (Bebas)</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-green-50 border border-green-200 rounded-lg"></div>
