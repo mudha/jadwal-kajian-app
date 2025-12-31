@@ -131,11 +131,11 @@ export default function AdminManagePage() {
     const scanDuplicates = () => {
         setIsScanning(true);
 
-        // Group kajian by masjid + date + waktu
+        // Group kajian by city + masjid + date + waktu
         const groups = new Map<string, Kajian[]>();
 
         kajianList.forEach(kajian => {
-            const key = `${kajian.masjid}|${kajian.date}|${kajian.waktu}`;
+            const key = `${kajian.city}|${kajian.masjid}|${kajian.date}|${kajian.waktu}`;
             if (!groups.has(key)) {
                 groups.set(key, []);
             }
@@ -146,7 +146,7 @@ export default function AdminManagePage() {
         const duplicates = Array.from(groups.values())
             .filter(group => group.length > 1)
             .map(group => ({
-                key: `${group[0].masjid} - ${group[0].date} - ${group[0].waktu}`,
+                key: `${group[0].city} - ${group[0].masjid} - ${group[0].date} - ${group[0].waktu}`,
                 items: group.sort((a, b) => a.id - b.id) // Sort by ID
             }));
 
@@ -1016,6 +1016,7 @@ export default function AdminManagePage() {
                                                                 <p className="font-bold text-slate-900 text-sm">{item.tema}</p>
                                                                 <div className="text-xs text-slate-600 mt-1 space-y-0.5">
                                                                     <p>👤 {item.pemateri}</p>
+                                                                    <p>🏙️ {item.city}</p>
                                                                     <p>🕌 {item.masjid}</p>
                                                                     <p>📅 {item.date} • ⏰ {item.waktu}</p>
                                                                 </div>
@@ -1029,9 +1030,37 @@ export default function AdminManagePage() {
                                                                 >
                                                                     <Eye className="w-4 h-4" />
                                                                 </Link>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setEditingKajian(item);
+                                                                        setIsEditModalOpen(true);
+                                                                        setIsDuplicateScanModalOpen(false);
+                                                                    }}
+                                                                    className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                                    title="Edit kajian"
+                                                                >
+                                                                    <Edit className="w-4 h-4" />
+                                                                </button>
                                                                 {itemIdx > 0 && (
                                                                     <button
-                                                                        onClick={() => handleDelete(item.id)}
+                                                                        onClick={async () => {
+                                                                            if (confirm(`Hapus kajian duplikat "${item.tema}"?`)) {
+                                                                                try {
+                                                                                    const res = await fetch(`/api/kajian/${item.id}`, { method: 'DELETE' });
+                                                                                    if (res.ok) {
+                                                                                        // Refresh data and rescan
+                                                                                        await fetchData();
+                                                                                        setIsDuplicateScanModalOpen(false);
+                                                                                        // Auto rescan after delete
+                                                                                        setTimeout(() => scanDuplicates(), 500);
+                                                                                    } else {
+                                                                                        alert('Gagal menghapus kajian');
+                                                                                    }
+                                                                                } catch (e) {
+                                                                                    alert('Terjadi kesalahan saat menghapus');
+                                                                                }
+                                                                            }
+                                                                        }}
                                                                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                                         title="Hapus duplikat"
                                                                     >
