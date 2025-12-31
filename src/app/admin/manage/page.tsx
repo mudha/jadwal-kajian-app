@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Search, Edit, Trash2, Plus, Calendar, MapPin, X, Save, AlertTriangle, ChevronDown, User, Clock, CheckCircle, Info, Eye } from 'lucide-react';
+import { Search, Edit, Trash2, Plus, Calendar, MapPin, X, Save, AlertTriangle, ChevronDown, User, Clock, CheckCircle, Info, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { indonesianCities } from '@/data/cities';
 import { parseIndoDate, formatIndoDate, formatYYYYMMDD } from '@/lib/date-utils';
@@ -45,7 +45,12 @@ import ConfirmationModal from '@/components/admin/ConfirmationModal';
 export default function AdminManagePage() {
     const [kajianList, setKajianList] = useState<Kajian[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+
     const [isLoading, setIsLoading] = useState(true);
+
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 20;
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingKajian, setEditingKajian] = useState<Kajian | null>(null);
@@ -128,12 +133,12 @@ export default function AdminManagePage() {
 
     const ResizeHandle = ({ col }: { col: string }) => (
         <div
-            className="absolute top-0 right-0 h-full w-4 cursor-col-resize flex items-center justify-center group z-10 hover:bg-slate-100/50"
+            className="absolute top-0 right-0 h-full w-6 cursor-col-resize flex items-center justify-center z-[100] hover:bg-blue-50/50 touch-none select-none"
             style={{ transform: 'translateX(50%)' }}
             onMouseDown={(e) => startResize(e, col)}
             onClick={(e) => e.stopPropagation()}
         >
-            <div className={`w-[2px] h-1/2 rounded-full bg-slate-300 opacity-0 group-hover:opacity-100 transition-opacity ${resizing?.col === col ? 'bg-blue-500 opacity-100' : ''}`} />
+            <div className={`w-1 h-3/4 rounded-full transition-colors ${resizing?.col === col ? 'bg-blue-600 w-[4px]' : 'bg-slate-300 hover:bg-blue-400'}`} />
         </div>
     );
 
@@ -340,14 +345,27 @@ export default function AdminManagePage() {
         }
     };
 
-    const filteredList = kajianList
+    const filteredList = kajianList.filter(k =>
+        k.masjid.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        k.pemateri.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        k.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        k.tema.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-        .filter(k =>
-            k.masjid.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            k.pemateri.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            k.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            k.tema.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+    // Pagination Logic
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredList.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredList.length / itemsPerPage);
+
+    // Reset to page 1 when search changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
+
+    const handlePageChange = (pageNumber: number) => {
+        setCurrentPage(pageNumber);
+    };
 
     // ...
 
@@ -459,12 +477,12 @@ export default function AdminManagePage() {
                         <p className="font-medium">Tidak ada data ditemukan</p>
                     </div>
                 ) : (
-                    <>
+                    <div className="space-y-6">
                         {/* Desktop Table View */}
                         {/* Desktop Table View */}
                         <div className="hidden md:block w-full bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                             <div className="overflow-x-auto pb-12"> {/* Add padding bottom for potential dropdowns overflow */}
-                                <table className="min-w-full text-left table-fixed">
+                                <table className="w-max text-left table-fixed">
                                     <thead className="bg-slate-50 border-b border-slate-200">
                                         <tr>
                                             <th className="relative pl-4 pr-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.waktu }}>
@@ -493,7 +511,7 @@ export default function AdminManagePage() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
-                                        {filteredList.map((item) => (
+                                        {currentItems.map((item) => (
                                             <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
                                                 <td className="pl-4 pr-2 py-4 align-top truncate"> {/* align-top for consistency */}
                                                     <div className="flex items-center gap-2 text-slate-900 font-bold truncate">
@@ -582,7 +600,7 @@ export default function AdminManagePage() {
 
                         {/* Mobile Card View */}
                         <div className="grid grid-cols-1 gap-4 md:hidden w-full max-w-full overflow-hidden">
-                            {filteredList.map((item) => (
+                            {currentItems.map((item) => (
                                 <div key={item.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                                     {/* Header: Date & Actions */}
                                     <div className="flex items-start justify-between">
@@ -672,7 +690,37 @@ export default function AdminManagePage() {
                                 </div>
                             ))}
                         </div>
-                    </>
+
+                        {/* Pagination Controls */}
+                        {filteredList.length > itemsPerPage && (
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-200">
+                                <div className="text-sm text-slate-500 font-medium">
+                                    Menampilkan {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredList.length)} dari {filteredList.length} data
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                        className="flex items-center gap-1 px-3 py-2 border border-slate-200 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+                                    >
+                                        <ChevronLeft className="w-4 h-4" />
+                                        Prev
+                                    </button>
+                                    <div className="px-4 py-2 bg-slate-50 rounded-lg text-sm font-bold text-slate-700">
+                                        {currentPage} / {totalPages}
+                                    </div>
+                                    <button
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                        className="flex items-center gap-1 px-3 py-2 border border-slate-200 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+                                    >
+                                        Next
+                                        <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
 
