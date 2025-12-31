@@ -412,6 +412,7 @@ export default function AdminManagePage() {
                                     <thead className="bg-slate-50 border-b border-slate-200">
                                         <tr>
                                             <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Waktu & Tanggal</th>
+                                            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Poster</th>
                                             <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Masjid / Lokasi</th>
                                             <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Pemateri & Tema</th>
                                             <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 text-center">Peserta</th>
@@ -427,6 +428,22 @@ export default function AdminManagePage() {
                                                         {item.date}
                                                     </div>
                                                     <p className="pl-6 text-sm text-slate-600 font-medium">{item.waktu}</p>
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    {item.imageUrl ? (
+                                                        <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 group cursor-pointer">
+                                                            <Image
+                                                                src={item.imageUrl}
+                                                                alt={item.tema}
+                                                                fill
+                                                                className="object-cover group-hover:scale-110 transition-transform"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-12 h-12 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center">
+                                                            <span className="text-[10px] text-slate-300 italic">No img</span>
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 <td className="px-4 py-4">
                                                     <div className="flex items-center gap-2">
@@ -447,22 +464,8 @@ export default function AdminManagePage() {
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-4">
-                                                    <div className="flex items-start gap-3">
-                                                        {item.imageUrl && (
-                                                            <div className="relative w-10 h-10 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
-                                                                <Image
-                                                                    src={item.imageUrl}
-                                                                    alt={item.tema}
-                                                                    fill
-                                                                    className="object-cover"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                        <div>
-                                                            <div className="font-bold text-slate-900">{item.pemateri}</div>
-                                                            <p className="text-sm text-slate-600 font-medium line-clamp-1" title={item.tema}>{item.tema}</p>
-                                                        </div>
-                                                    </div>
+                                                    <div className="font-bold text-slate-900">{item.pemateri}</div>
+                                                    <p className="text-sm text-slate-600 font-medium line-clamp-1" title={item.tema}>{item.tema}</p>
                                                 </td>
                                                 <td className="px-4 py-4 text-center">
                                                     <span className="inline-flex items-center justify-center px-3 py-1 bg-green-100 text-green-700 rounded-full font-bold text-xs">
