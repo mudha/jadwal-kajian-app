@@ -26,6 +26,8 @@ export interface KajianDetail {
     isOnline?: boolean;
     isKidsFriendly?: boolean;
     cp?: string;
+    cp2?: string;
+    cp3?: string;
     lat?: number;
     lng?: number;
     catatan?: string;
@@ -259,9 +261,9 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave }: Edi
                     {/* Catatan dari Panitia */}
                     <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Catatan dari Panitia</label>
-                        <input
-                            type="text"
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 rounded-xl outline-none text-slate-900 transition-all placeholder:text-slate-400"
+                        <textarea
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 rounded-xl outline-none font-medium text-slate-900 transition-all placeholder:text-slate-400 resize-y min-h-[80px]"
+                            rows={3}
                             value={formData.catatan || ''}
                             onChange={e => handleChange('catatan', e.target.value)}
                             placeholder="Misal: Membawa makanan untuk berbuka, Khusus ikhwan, dll"
@@ -328,8 +330,19 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave }: Edi
 
                     {/* Contact Person & Link Google Maps */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Contact Person (CP)</label>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Contact Person (CP)</label>
+                                {formData.cp2 === undefined && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleChange('cp2', '')}
+                                        className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                                    >
+                                        <PlusCircle className="w-3 h-3" /> Tambah
+                                    </button>
+                                )}
+                            </div>
                             <input
                                 type="text"
                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 rounded-xl outline-none font-bold text-emerald-700 transition-all placeholder:text-slate-400"
@@ -337,6 +350,60 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave }: Edi
                                 onChange={e => handleChange('cp', e.target.value)}
                                 placeholder="08..."
                             />
+
+                            {formData.cp2 !== undefined && (
+                                <div className="relative animate-in slide-in-from-top-2 duration-200">
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 rounded-xl outline-none font-bold text-emerald-700 transition-all placeholder:text-slate-400"
+                                        value={formData.cp2}
+                                        onChange={e => handleChange('cp2', e.target.value)}
+                                        placeholder="CP 2..."
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const { cp2, ...rest } = formData;
+                                            setFormData(rest as KajianDetail);
+                                        }}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )}
+
+                            {formData.cp2 !== undefined && formData.cp3 === undefined && (
+                                <button
+                                    type="button"
+                                    onClick={() => handleChange('cp3', '')}
+                                    className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 ml-auto"
+                                >
+                                    <PlusCircle className="w-3 h-3" /> Tambah CP 3
+                                </button>
+                            )}
+
+                            {formData.cp3 !== undefined && (
+                                <div className="relative animate-in slide-in-from-top-2 duration-200">
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 rounded-xl outline-none font-bold text-emerald-700 transition-all placeholder:text-slate-400"
+                                        value={formData.cp3}
+                                        onChange={e => handleChange('cp3', e.target.value)}
+                                        placeholder="CP 3..."
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const { cp3, ...rest } = formData;
+                                            setFormData(rest as KajianDetail);
+                                        }}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Link Google Maps</label>

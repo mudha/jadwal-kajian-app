@@ -70,6 +70,10 @@ const initDb = async () => {
   // New migration for catatan/notes field
   try { await db.execute("ALTER TABLE kajian ADD COLUMN catatan TEXT"); } catch (e) { }
 
+  // New migration for multiple contact persons
+  try { await db.execute("ALTER TABLE kajian ADD COLUMN cp2 TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE kajian ADD COLUMN cp3 TEXT"); } catch (e) { }
+
   // Migrations for sekolah table
   try { await db.execute("ALTER TABLE sekolah ADD COLUMN slug TEXT"); } catch (e) { }
   try { await db.execute("ALTER TABLE sekolah ADD COLUMN provinsi TEXT"); } catch (e) { }

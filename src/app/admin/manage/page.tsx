@@ -17,6 +17,8 @@ interface Kajian {
     address: string;
     gmapsUrl?: string; // Optional
     cp?: string; // Optional Contact Person
+    cp2?: string;
+    cp3?: string;
     pemateri: string;
     pemateri2?: string;
     pemateri3?: string;
@@ -855,8 +857,19 @@ export default function AdminManagePage() {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Contact Person (CP)</label>
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Contact Person (CP)</label>
+                                            {editingKajian.cp2 === undefined && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setEditingKajian({ ...editingKajian, cp2: '' })}
+                                                    className="text-[10px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                                                >
+                                                    <Plus className="w-3 h-3" /> Tambah
+                                                </button>
+                                            )}
+                                        </div>
                                         <input
                                             type="text"
                                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-emerald-700 placeholder:text-slate-400"
@@ -864,6 +877,60 @@ export default function AdminManagePage() {
                                             onChange={e => setEditingKajian({ ...editingKajian, cp: e.target.value })}
                                             placeholder="08..."
                                         />
+
+                                        {editingKajian.cp2 !== undefined && (
+                                            <div className="relative animate-in slide-in-from-top-1">
+                                                <input
+                                                    type="text"
+                                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-emerald-700 placeholder:text-slate-400"
+                                                    value={editingKajian.cp2}
+                                                    onChange={e => setEditingKajian({ ...editingKajian, cp2: e.target.value })}
+                                                    placeholder="CP 2..."
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const { cp2, ...rest } = editingKajian;
+                                                        setEditingKajian(rest as Kajian);
+                                                    }}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {editingKajian.cp2 !== undefined && editingKajian.cp3 === undefined && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditingKajian({ ...editingKajian, cp3: '' })}
+                                                className="text-[10px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 ml-auto"
+                                            >
+                                                <Plus className="w-3 h-3" /> Tambah CP 3
+                                            </button>
+                                        )}
+
+                                        {editingKajian.cp3 !== undefined && (
+                                            <div className="relative animate-in slide-in-from-top-1">
+                                                <input
+                                                    type="text"
+                                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-emerald-700 placeholder:text-slate-400"
+                                                    value={editingKajian.cp3}
+                                                    onChange={e => setEditingKajian({ ...editingKajian, cp3: e.target.value })}
+                                                    placeholder="CP 3..."
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const { cp3, ...rest } = editingKajian;
+                                                        setEditingKajian(rest as Kajian);
+                                                    }}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Link Google Maps</label>
@@ -918,6 +985,16 @@ export default function AdminManagePage() {
                                         value={editingKajian.linkInfo || ''}
                                         onChange={e => setEditingKajian({ ...editingKajian, linkInfo: e.target.value })}
                                         placeholder="https://..."
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Catatan</label>
+                                    <textarea
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-slate-700 placeholder:text-slate-400 min-h-[100px] resize-y"
+                                        value={editingKajian.catatan || ''}
+                                        onChange={e => setEditingKajian({ ...editingKajian, catatan: e.target.value })}
+                                        placeholder="Info tambahan, pengumuman, dsb..."
                                     />
                                 </div>
 

@@ -31,11 +31,13 @@ export async function POST(request: Request) {
                                     "date": "string (human readable date, like 'Ahad, 25 Okt 2025')",
                                         "cp": "string (contact person or phone number)",
                                             "region": "INDONESIA",
-                                                "gmapsUrl": ""
+                                                "gmapsUrl": "",
+                                                "catatan": "string (additional notes, IMPORTANT: preserve line breaks as \n)"
         }
             If any field is unknown, use an empty string.
             IMPORTANT: If the event is ONLINE(e.g., mentions 'Live Streaming', 'Zoom', 'Youtube', 'Google Meet', 'IG Live'), set "city" to "Online" and "masjid" to the platform name or "Live Streaming".
             Do NOT include markdown formatting or any text other than the JSON array.
+            Make sure "catatan" captures any additional announcements, rules, or details NOT covered by other fields, and keep the original newlines with \n.
         `;
 
         let result;

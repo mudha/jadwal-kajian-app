@@ -1141,14 +1141,88 @@ export default function BatchInputPage() {
 
                                             {/* Details & Options */}
                                             <div className="grid grid-cols-2 gap-4">
-                                                <div className="col-span-2">
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Narahubung (CP)</label>
+                                                <div className="col-span-2 space-y-2">
+                                                    <div className="flex justify-between items-center">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Narahubung (CP)</label>
+                                                        {entry.cp2 === undefined && (
+                                                            <button
+                                                                onClick={() => updateEntry(idx, 'cp2', '')}
+                                                                className="text-[10px] text-blue-500 font-bold hover:text-blue-600 flex items-center gap-1 transition-colors"
+                                                            >
+                                                                <PlusCircle className="w-3 h-3" /> Tambah
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                     <input
                                                         type="text"
                                                         value={entry.cp || ''}
                                                         onChange={(e) => updateEntry(idx, 'cp', e.target.value)}
                                                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                                        placeholder="08..."
+                                                        placeholder="CP Utama (08...)"
+                                                    />
+
+                                                    {entry.cp2 !== undefined && (
+                                                        <div className="flex gap-2 animate-in slide-in-from-top-2 duration-200">
+                                                            <input
+                                                                type="text"
+                                                                value={entry.cp2}
+                                                                onChange={(e) => updateEntry(idx, 'cp2', e.target.value)}
+                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                                placeholder="CP Kedua..."
+                                                            />
+                                                            <button
+                                                                onClick={() => {
+                                                                    // Remove cp2 logic: set explicitly to undefined or empty, 
+                                                                    // but here updateEntry handles 'key': undefined fine.
+                                                                    updateEntry(idx, 'cp2', undefined);
+                                                                    if (entry.cp3) {
+                                                                        // Shift cp3 to cp2 if needed? Or just keep cp3?
+                                                                        // Simpler to just delete cp2.
+                                                                    }
+                                                                }}
+                                                                className="p-3 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-xl border border-slate-200 transition-colors"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </button>
+                                                            {entry.cp3 === undefined && (
+                                                                <button
+                                                                    onClick={() => updateEntry(idx, 'cp3', '')}
+                                                                    className="p-3 text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-colors"
+                                                                    title="Tambah CP 3"
+                                                                >
+                                                                    <PlusCircle className="w-4 h-4" />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {entry.cp3 !== undefined && (
+                                                        <div className="flex gap-2 animate-in slide-in-from-top-2 duration-200">
+                                                            <input
+                                                                type="text"
+                                                                value={entry.cp3}
+                                                                onChange={(e) => updateEntry(idx, 'cp3', e.target.value)}
+                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                                placeholder="CP Ketiga..."
+                                                            />
+                                                            <button
+                                                                onClick={() => updateEntry(idx, 'cp3', undefined)}
+                                                                className="p-3 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-xl border border-slate-200 transition-colors"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="col-span-2">
+                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Catatan (Optional)</label>
+                                                    <textarea
+                                                        value={entry.catatan || ''}
+                                                        onChange={(e) => updateEntry(idx, 'catatan', e.target.value)}
+                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-y min-h-[80px]"
+                                                        placeholder="Info tambahan, pengumuman, dsb..."
+                                                        rows={3}
                                                     />
                                                 </div>
 

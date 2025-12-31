@@ -14,6 +14,8 @@ export interface KajianEntry {
     waktu_mulai?: string; // Waktu mulai (new field)
     waktu_selesai?: string; // Waktu selesai (new field, default: "Selesai")
     cp: string;
+    cp2?: string; // Contact person 2
+    cp3?: string; // Contact person 3
     imageUrl?: string; // Potential future use
     date: string; // From the header
     khususAkhwat?: boolean; // True if kajian is exclusively for women
@@ -51,6 +53,17 @@ function cleanValue(val: string): string {
     result = result.replace(/[ \-\:\|\u200B-\u200D\uFEFF\u2063\t\n\r\.\,]+$/, '');
 
     return result.trim();
+}
+
+function cleanMultiLineValue(val: string): string {
+    if (!val) return '';
+    // Similar to cleanValue but preserves newlines
+    let result = val.replace(/[】】］\]\[［【○●▶️🚩📍🕌🕍🌏≡]/gu, ' ');
+    result = result.replace(/[\*_~`]/g, '');
+
+    // Only strip leading/trailing whitespace/punctuation, not internal newlines
+    result = result.trim();
+    return result;
 }
 
 function normalizeCity(city: string): string {
@@ -157,6 +170,34 @@ export function splitPemateri(pemateri: string): { pemateri: string; pemateri2?:
     };
 }
 
+// Split CP into multiple contact persons
+export function splitCP(cpString: string): { cp: string; cp2?: string; cp3?: string } {
+    if (!cpString) return { cp: '' };
+
+    // Regex to match phone numbers
+    const phoneRegex = /(?:08|\+62)\d{8,12}/g;
+    const matches = cpString.match(phoneRegex);
+
+    if (matches && matches.length > 0) {
+        // If strict phone numbers found
+        const unique = Array.from(new Set(matches));
+        return {
+            cp: unique[0] || '',
+            cp2: unique[1] || undefined,
+            cp3: unique[2] || undefined
+        };
+    }
+
+    // Fallback: split by comma or 'dan' if no strict phone pattern matches (e.g. names)
+    // But usually CP is number.
+    const parts = cpString.split(/[,&]|\bdan\b/i).map(s => s.trim()).filter(s => s);
+    return {
+        cp: parts[0] || cpString,
+        cp2: parts[1] || undefined,
+        cp3: parts[2] || undefined
+    };
+}
+
 function parseRekapanFormat(lines: string[]): KajianEntry[] {
     const entries: KajianEntry[] = [];
     let currentDate = '';
@@ -175,7 +216,7 @@ function parseRekapanFormat(lines: string[]): KajianEntry[] {
             tema: cleanValue(entry.tema || 'Kajian'),
             waktu: normalizeWaktu(cleanValue(entry.waktu || 'TBD')),
             date: cleanValue(entry.date || currentDate || 'TBD'),
-            cp: cleanValue(entry.cp || ''),
+            ...splitCP(cleanValue(entry.cp || '')),
             gmapsUrl: entry.gmapsUrl || ''
         });
     };
@@ -386,7 +427,7 @@ function parseDaurohFormat(lines: string[]): KajianEntry[] {
             pemateri: e.pemateri || 'TBD',
             tema: e.tema || 'Kajian',
             waktu: normalizeWaktu(e.waktu || 'TBD'),
-            cp: e.cp || commonCP || '',
+            ...splitCP(e.cp || commonCP || ''),
             date: e.date || commonDate || 'TBD'
         };
     });
@@ -437,7 +478,9 @@ function parseNarrativeFormat(text: string): KajianEntry[] {
         masjid: /(?:di masjid|masjid|Musholla|🕌|📍|Lokasi|Tempat)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:Kitab|Tema|📚|📝|Waktu|Pukul|Jam|⏰|🕙|dengan|alamat|[\n\r]|$))/i,
         tema: /(?:Kitab|Tema|📚|📝|Membahas|Kajian)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:Waktu|Pukul|Jam|⏰|🕙|di masjid|masjid|[\n\r]|$))/i,
         // Enhanced waktu pattern to catch ba'da variations and prayer times
-        waktu: /(?:Waktu|Pukul|Jam|⏰|🕙|Ba['']?da|Ba['']?dha|Bada|Setelah|Habis|Usai|Mulai)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\-|sd|sampai|[\n\r]|$))/i
+        waktu: /(?:Waktu|Pukul|Jam|⏰|🕙|Ba['']?da|Ba['']?dha|Bada|Setelah|Habis|Usai|Mulai)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\-|sd|sampai|[\n\r]|$))/i,
+        // Catatan: Capture until the end or next major keyword, allow newlines
+        catatan: /(?:Catatan|Note|NB|Perhatian|Info Tambahan)\s*[:\-]\s*([\s\S]+?)(?=$)/i
     };
 
     // Specific Handling for the user's format (Date on separate lines)
@@ -478,7 +521,15 @@ function parseNarrativeFormat(text: string): KajianEntry[] {
     Object.entries(patterns).forEach(([key, regex]) => {
         const match = ocrFixed.match(regex);
         if (match) {
-            let value = match[1].trim();
+            let value = match[1];
+
+            // Apply appropriate cleaning
+            if (key === 'catatan') {
+                value = cleanMultiLineValue(value);
+            } else {
+                value = value.trim();
+            }
+
             // Normalize waktu if it's the waktu field
             if (key === 'waktu') {
                 value = normalizeWaktu(value);
@@ -493,7 +544,10 @@ function parseNarrativeFormat(text: string): KajianEntry[] {
     // Extract CP (Phone numbers)
     const phoneMatch = ocrFixed.match(/(?:08|\+62)\d{8,12}/g);
     if (phoneMatch) {
-        entry.cp = Array.from(new Set(phoneMatch)).join(', ');
+        const unique = Array.from(new Set(phoneMatch));
+        entry.cp = unique[0] || '';
+        entry.cp2 = unique[1];
+        entry.cp3 = unique[2];
     }
 
     // Extract Zoom/Meet Links if Online

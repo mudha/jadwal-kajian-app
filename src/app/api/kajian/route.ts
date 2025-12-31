@@ -80,8 +80,8 @@ export async function POST(request: Request) {
         // Batch insert using transactions
         const statements = entries.map(item => ({
             sql: `
-        INSERT INTO kajian (region, city, masjid, address, gmapsUrl, lat, lng, pemateri, tema, waktu, cp, date, khususAkhwat, linkInfo, imageUrl, isOnline, isKidsFriendly, catatan)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO kajian (region, city, masjid, address, gmapsUrl, lat, lng, pemateri, tema, waktu, cp, cp2, cp3, date, khususAkhwat, linkInfo, imageUrl, isOnline, isKidsFriendly, catatan)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
             args: [
                 item.region,
@@ -95,6 +95,8 @@ export async function POST(request: Request) {
                 item.tema,
                 item.waktu,
                 item.cp,
+                item.cp2 || null,
+                item.cp3 || null,
                 item.date,
                 item.khususAkhwat ? 1 : 0, // SQLite boolean as integer
                 item.linkInfo || null,
