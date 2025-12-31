@@ -56,6 +56,11 @@ export default function AdminManagePage() {
     const [duplicateGroups, setDuplicateGroups] = useState<any[]>([]);
     const [isScanning, setIsScanning] = useState(false);
 
+    // Delete Duplicate Modal State
+    const [isDeleteDuplicateModalOpen, setIsDeleteDuplicateModalOpen] = useState(false);
+    const [duplicateToDelete, setDuplicateToDelete] = useState<Kajian | null>(null);
+    const [isDeletingDuplicate, setIsDeletingDuplicate] = useState(false);
+
 
 
     // City Autocomplete State
@@ -153,6 +158,27 @@ export default function AdminManagePage() {
         setDuplicateGroups(duplicates);
         setIsDuplicateScanModalOpen(true);
         setIsScanning(false);
+    };
+
+    const confirmDeleteDuplicate = async () => {
+        if (!duplicateToDelete) return;
+        setIsDeletingDuplicate(true);
+        try {
+            const res = await fetch(`/api/kajian/${duplicateToDelete.id}`, { method: 'DELETE' });
+            if (res.ok) {
+                // Refresh data and rescan
+                await fetchData();
+                setIsDeleteDuplicateModalOpen(false);
+                setDuplicateToDelete(null);
+                setIsDuplicateScanModalOpen(false);
+                // Auto rescan after delete
+                setTimeout(() => scanDuplicates(), 500);
+            }
+        } catch (e) {
+            console.error('Error deleting duplicate:', e);
+        } finally {
+            setIsDeletingDuplicate(false);
+        }
     };
 
     const handleUpdate = async (e: React.FormEvent) => {
@@ -1043,23 +1069,9 @@ export default function AdminManagePage() {
                                                                 </button>
                                                                 {itemIdx > 0 && (
                                                                     <button
-                                                                        onClick={async () => {
-                                                                            if (confirm(`Hapus kajian duplikat "${item.tema}"?`)) {
-                                                                                try {
-                                                                                    const res = await fetch(`/api/kajian/${item.id}`, { method: 'DELETE' });
-                                                                                    if (res.ok) {
-                                                                                        // Refresh data and rescan
-                                                                                        await fetchData();
-                                                                                        setIsDuplicateScanModalOpen(false);
-                                                                                        // Auto rescan after delete
-                                                                                        setTimeout(() => scanDuplicates(), 500);
-                                                                                    } else {
-                                                                                        alert('Gagal menghapus kajian');
-                                                                                    }
-                                                                                } catch (e) {
-                                                                                    alert('Terjadi kesalahan saat menghapus');
-                                                                                }
-                                                                            }
+                                                                        onClick={() => {
+                                                                            setDuplicateToDelete(item);
+                                                                            setIsDeleteDuplicateModalOpen(true);
                                                                         }}
                                                                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                                         title="Hapus duplikat"
@@ -1088,6 +1100,24 @@ export default function AdminManagePage() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Delete Duplicate Confirmation Modal */}
+            {isDeleteDuplicateModalOpen && duplicateToDelete && (
+                <ConfirmationModal
+                    isOpen={isDeleteDuplicateModalOpen}
+                    onClose={() => {
+                        setIsDeleteDuplicateModalOpen(false);
+                        setDuplicateToDelete(null);
+                    }}
+                    onConfirm={confirmDeleteDuplicate}
+                    title="Hapus Kajian Duplikat?"
+                    message={`Apakah Anda yakin ingin menghapus kajian duplikat "${duplicateToDelete.tema}"? Data yang dihapus tidak dapat dikembalikan.`}
+                    confirmText="Hapus Kajian"
+                    cancelText="Batal"
+                    type="danger"
+                    isLoading={isDeletingDuplicate}
+                />
             )}
         </div>
     );
