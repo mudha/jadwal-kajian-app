@@ -356,7 +356,7 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave }: Edi
                                     <input
                                         type="text"
                                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 rounded-xl outline-none font-bold text-emerald-700 transition-all placeholder:text-slate-400"
-                                        value={formData.cp2}
+                                        value={formData.cp2 || ''}
                                         onChange={e => handleChange('cp2', e.target.value)}
                                         placeholder="CP 2..."
                                     />
@@ -388,7 +388,7 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave }: Edi
                                     <input
                                         type="text"
                                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 rounded-xl outline-none font-bold text-emerald-700 transition-all placeholder:text-slate-400"
-                                        value={formData.cp3}
+                                        value={formData.cp3 || ''}
                                         onChange={e => handleChange('cp3', e.target.value)}
                                         placeholder="CP 3..."
                                     />
