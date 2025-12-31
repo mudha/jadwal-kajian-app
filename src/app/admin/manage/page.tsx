@@ -51,6 +51,11 @@ export default function AdminManagePage() {
     const [itemToDelete, setItemToDelete] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // Duplicate Scan State
+    const [isDuplicateScanModalOpen, setIsDuplicateScanModalOpen] = useState(false);
+    const [duplicateGroups, setDuplicateGroups] = useState<any[]>([]);
+    const [isScanning, setIsScanning] = useState(false);
+
 
 
     // City Autocomplete State
@@ -121,6 +126,33 @@ export default function AdminManagePage() {
         } finally {
             setIsDeleting(false);
         }
+    };
+
+    const scanDuplicates = () => {
+        setIsScanning(true);
+
+        // Group kajian by masjid + date + waktu
+        const groups = new Map<string, Kajian[]>();
+
+        kajianList.forEach(kajian => {
+            const key = `${kajian.masjid}|${kajian.date}|${kajian.waktu}`;
+            if (!groups.has(key)) {
+                groups.set(key, []);
+            }
+            groups.get(key)!.push(kajian);
+        });
+
+        // Filter only groups with duplicates (more than 1 item)
+        const duplicates = Array.from(groups.values())
+            .filter(group => group.length > 1)
+            .map(group => ({
+                key: `${group[0].masjid} - ${group[0].date} - ${group[0].waktu}`,
+                items: group.sort((a, b) => a.id - b.id) // Sort by ID
+            }));
+
+        setDuplicateGroups(duplicates);
+        setIsDuplicateScanModalOpen(true);
+        setIsScanning(false);
     };
 
     const handleUpdate = async (e: React.FormEvent) => {
@@ -249,6 +281,24 @@ export default function AdminManagePage() {
                     <p className="text-slate-600">Update, edit, atau hapus jadwal kajian yang terdaftar.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                    <button
+                        onClick={scanDuplicates}
+                        disabled={isScanning}
+                        className={`inline-flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg font-bold text-sm transition-all ${isScanning ? 'bg-amber-800 cursor-not-allowed' : 'bg-amber-600 hover:bg-amber-700'}`}
+                        title="Scan kajian duplikat di database"
+                    >
+                        {isScanning ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                Scanning...
+                            </>
+                        ) : (
+                            <>
+                                <AlertTriangle className="w-4 h-4" />
+                                Scan Duplikat
+                            </>
+                        )}
+                    </button>
                     <button
                         onClick={handleExtractCoordinates}
                         disabled={isExtracting}
@@ -897,6 +947,118 @@ export default function AdminManagePage() {
                     type="danger"
                     isLoading={isDeleting}
                 />
+            )}
+
+            {/* Duplicate Scan Modal */}
+            {isDuplicateScanModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
+                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                                    <AlertTriangle className="w-5 h-5 text-amber-600" />
+                                    Hasil Scan Duplikat
+                                </h2>
+                                <p className="text-sm text-slate-500 mt-1">
+                                    {duplicateGroups.length === 0
+                                        ? 'Tidak ada kajian duplikat ditemukan'
+                                        : `Ditemukan ${duplicateGroups.length} grup duplikat`}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setIsDuplicateScanModalOpen(false)}
+                                className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 overflow-y-auto">
+                            {duplicateGroups.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                                    <p className="text-lg font-bold text-slate-900">Alhamdulillah!</p>
+                                    <p className="text-slate-500 mt-2">Tidak ada kajian duplikat di database</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {duplicateGroups.map((group, groupIdx) => (
+                                        <div key={groupIdx} className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4">
+                                            <div className="flex items-start gap-3 mb-3">
+                                                <div className="bg-amber-100 p-2 rounded-lg">
+                                                    <AlertTriangle className="w-5 h-5 text-amber-600" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h3 className="font-bold text-amber-900 text-sm">Duplikat #{groupIdx + 1}</h3>
+                                                    <p className="text-xs text-amber-700 mt-1">{group.key}</p>
+                                                    <p className="text-xs text-amber-600 mt-1">{group.items.length} kajian dengan masjid, tanggal, dan waktu yang sama</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                {group.items.map((item: Kajian, itemIdx: number) => (
+                                                    <div key={item.id} className="bg-white p-3 rounded-lg border border-amber-200">
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <span className="text-xs font-bold text-slate-500">ID: {item.id}</span>
+                                                                    {itemIdx === 0 && (
+                                                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">
+                                                                            Original
+                                                                        </span>
+                                                                    )}
+                                                                    {itemIdx > 0 && (
+                                                                        <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">
+                                                                            Duplikat
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="font-bold text-slate-900 text-sm">{item.tema}</p>
+                                                                <div className="text-xs text-slate-600 mt-1 space-y-0.5">
+                                                                    <p>👤 {item.pemateri}</p>
+                                                                    <p>🕌 {item.masjid}</p>
+                                                                    <p>📅 {item.date} • ⏰ {item.waktu}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex gap-1">
+                                                                <Link
+                                                                    href={`/kajian/${item.id}`}
+                                                                    target="_blank"
+                                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                                    title="Preview"
+                                                                >
+                                                                    <Eye className="w-4 h-4" />
+                                                                </Link>
+                                                                {itemIdx > 0 && (
+                                                                    <button
+                                                                        onClick={() => handleDelete(item.id)}
+                                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                                        title="Hapus duplikat"
+                                                                    >
+                                                                        <Trash2 className="w-4 h-4" />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-4 border-t border-slate-100 bg-white flex justify-end">
+                            <button
+                                onClick={() => setIsDuplicateScanModalOpen(false)}
+                                className="px-6 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                            >
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
