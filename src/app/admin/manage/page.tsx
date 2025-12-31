@@ -1127,7 +1127,10 @@ function ManageKajianList() {
                                                     step="any"
                                                     placeholder="Latitude"
                                                     value={editingKajian.lat || ''}
-                                                    onChange={e => setEditingKajian({ ...editingKajian, lat: parseFloat(e.target.value) })}
+                                                    onChange={e => {
+                                                        const val = e.target.value.replace(',', '.');
+                                                        setEditingKajian({ ...editingKajian, lat: val === '' ? undefined : parseFloat(val) });
+                                                    }}
                                                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-900 placeholder:text-slate-400"
                                                 />
                                             </div>
@@ -1137,7 +1140,10 @@ function ManageKajianList() {
                                                     step="any"
                                                     placeholder="Longitude"
                                                     value={editingKajian.lng || ''}
-                                                    onChange={e => setEditingKajian({ ...editingKajian, lng: parseFloat(e.target.value) })}
+                                                    onChange={e => {
+                                                        const val = e.target.value.replace(',', '.');
+                                                        setEditingKajian({ ...editingKajian, lng: val === '' ? undefined : parseFloat(val) });
+                                                    }}
                                                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-900 placeholder:text-slate-400"
                                                 />
                                             </div>

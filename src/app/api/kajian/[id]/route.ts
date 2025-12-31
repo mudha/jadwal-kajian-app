@@ -54,25 +54,58 @@ export async function PATCH(
         await db.execute({
             sql: `
             UPDATE kajian 
-            SET masjid = ?, address = ?, pemateri = ?, tema = ?, waktu = ?, date = ?, city = ?, cp = ?, gmapsUrl = ?, lat = ?, lng = ?, khususAkhwat = ?, linkInfo = ?, imageUrl = ?, isOnline = ?
+            SET 
+                masjid = ?, 
+                address = ?, 
+                pemateri = ?, 
+                pemateri2 = ?,
+                pemateri3 = ?,
+                tema = ?, 
+                waktu = ?, 
+                waktu_mulai = ?,
+                waktu_selesai = ?,
+                date = ?, 
+                city = ?, 
+                region = ?,
+                cp = ?, 
+                cp2 = ?,
+                cp3 = ?,
+                gmapsUrl = ?, 
+                lat = ?, 
+                lng = ?, 
+                khususAkhwat = ?, 
+                linkInfo = ?, 
+                imageUrl = ?, 
+                isOnline = ?,
+                isKidsFriendly = ?,
+                catatan = ?
             WHERE id = ?
         `,
             args: [
                 body.masjid,
                 body.address,
                 body.pemateri,
+                body.pemateri2 || null,
+                body.pemateri3 || null,
                 body.tema,
                 body.waktu,
+                body.waktu_mulai || null,
+                body.waktu_selesai || null,
                 body.date,
                 body.city,
+                body.region || 'INDONESIA',
                 body.cp,
+                body.cp2 || null,
+                body.cp3 || null,
                 body.gmapsUrl,
-                body.lat || null,
-                body.lng || null,
+                (body.lat !== undefined && body.lat !== null && !isNaN(Number(body.lat))) ? Number(body.lat) : null,
+                (body.lng !== undefined && body.lng !== null && !isNaN(Number(body.lng))) ? Number(body.lng) : null,
                 body.khususAkhwat ? 1 : 0,
                 body.linkInfo || null,
                 body.imageUrl || null,
                 body.isOnline ? 1 : 0,
+                body.isKidsFriendly ? 1 : 0,
+                body.catatan || null,
                 id
             ]
         });

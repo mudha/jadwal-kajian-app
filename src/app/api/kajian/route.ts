@@ -80,25 +80,33 @@ export async function POST(request: Request) {
         // Batch insert using transactions
         const statements = entries.map(item => ({
             sql: `
-        INSERT INTO kajian (region, city, masjid, address, gmapsUrl, lat, lng, pemateri, tema, waktu, cp, cp2, cp3, date, khususAkhwat, linkInfo, imageUrl, isOnline, isKidsFriendly, catatan)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO kajian (
+            region, city, masjid, address, gmapsUrl, lat, lng, 
+            pemateri, pemateri2, pemateri3, tema, waktu, waktu_mulai, waktu_selesai, 
+            cp, cp2, cp3, date, khususAkhwat, linkInfo, imageUrl, isOnline, isKidsFriendly, catatan
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
             args: [
-                item.region,
+                item.region || 'INDONESIA',
                 item.city,
                 formatMasjidName(item.masjid),
                 item.address === item.masjid ? formatMasjidName(item.masjid) : item.address,
                 item.gmapsUrl,
-                item.lat || null,
-                item.lng || null,
+                (item.lat !== undefined && item.lat !== null && !isNaN(Number(item.lat))) ? Number(item.lat) : null,
+                (item.lng !== undefined && item.lng !== null && !isNaN(Number(item.lng))) ? Number(item.lng) : null,
                 item.pemateri,
+                item.pemateri2 || null,
+                item.pemateri3 || null,
                 item.tema,
                 item.waktu,
+                item.waktu_mulai || null,
+                item.waktu_selesai || null,
                 item.cp,
                 item.cp2 || null,
                 item.cp3 || null,
                 item.date,
-                item.khususAkhwat ? 1 : 0, // SQLite boolean as integer
+                item.khususAkhwat ? 1 : 0,
                 item.linkInfo || null,
                 item.imageUrl || null,
                 item.isOnline ? 1 : 0,
