@@ -411,7 +411,7 @@ export default function AdminManagePage() {
                                 <table className="w-full text-left">
                                     <thead className="bg-slate-50 border-b border-slate-200">
                                         <tr>
-                                            <th className="pl-4 pr-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Waktu & Tanggal</th>
+                                            <th className="pl-4 pr-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 w-[1%] whitespace-nowrap">Waktu & Tanggal</th>
                                             <th className="px-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 w-[1%] whitespace-nowrap">Poster</th>
                                             <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Masjid / Lokasi</th>
                                             <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Pemateri & Tema</th>
