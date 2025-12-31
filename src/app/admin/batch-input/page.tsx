@@ -496,7 +496,7 @@ export default function BatchInputPage() {
         }
     };
 
-    const updateEntry = (index: number, field: keyof KajianEntry, value: string | number | boolean) => {
+    const updateEntry = (index: number, field: keyof KajianEntry, value: string | number | boolean | undefined) => {
         setEntries(prev => {
             const newEntries = [...prev];
             newEntries[index] = { ...newEntries[index], [field]: value };
