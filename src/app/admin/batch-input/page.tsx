@@ -667,6 +667,13 @@ function BatchInputPageContent() {
                                                                     type="masjid"
                                                                     value={entry.masjid}
                                                                     onChange={(val) => updateEntry(idx, 'masjid', val)}
+                                                                    onSelect={(item) => {
+                                                                        if (item.address) updateEntry(idx, 'address', item.address);
+                                                                        if (item.city) updateEntry(idx, 'city', item.city);
+                                                                        if (item.gmapsUrl || item.gmapsurl) updateEntry(idx, 'gmapsUrl', item.gmapsUrl || item.gmapsurl);
+                                                                        if (item.lat !== undefined) updateEntry(idx, 'lat', item.lat);
+                                                                        if (item.lng !== undefined) updateEntry(idx, 'lng', item.lng);
+                                                                    }}
                                                                     className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all text-base placeholder:text-slate-400"
                                                                 />
                                                             </div>
@@ -1168,6 +1175,13 @@ function BatchInputPageContent() {
                                                             type="masjid"
                                                             value={entry.masjid}
                                                             onChange={(val) => updateEntry(idx, 'masjid', val)}
+                                                            onSelect={(item) => {
+                                                                if (item.address) updateEntry(idx, 'address', item.address);
+                                                                if (item.city) updateEntry(idx, 'city', item.city);
+                                                                if (item.gmapsUrl || item.gmapsurl) updateEntry(idx, 'gmapsUrl', item.gmapsUrl || item.gmapsurl);
+                                                                if (item.lat !== undefined) updateEntry(idx, 'lat', item.lat);
+                                                                if (item.lng !== undefined) updateEntry(idx, 'lng', item.lng);
+                                                            }}
                                                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                                                             placeholder="Nama Masjid..."
                                                         />

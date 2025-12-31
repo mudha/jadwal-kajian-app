@@ -778,10 +778,10 @@ function ManageKajianList() {
                                                         ...prev,
                                                         masjid: item.value,
                                                         ...(item.address ? { address: item.address } : {}),
-                                                        ...(item.gmapsUrl ? { gmapsUrl: item.gmapsUrl } : {}),
+                                                        ...((item.gmapsUrl || item.gmapsurl) ? { gmapsUrl: item.gmapsUrl || item.gmapsurl } : {}),
                                                         ...(item.city ? { city: item.city } : {}),
-                                                        ...(item.lat ? { lat: item.lat } : {}),
-                                                        ...(item.lng ? { lng: item.lng } : {})
+                                                        ...(item.lat !== undefined ? { lat: item.lat } : {}),
+                                                        ...(item.lng !== undefined ? { lng: item.lng } : {})
                                                     };
                                                 });
                                             }}
