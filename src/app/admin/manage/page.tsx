@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Image from 'next/image';
 import { Search, Edit, Trash2, Plus, Calendar, MapPin, X, Save, AlertTriangle, ChevronDown, User, Clock, CheckCircle, Info, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -42,7 +42,7 @@ interface Kajian {
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
 
 
-export default function AdminManagePage() {
+function ManageKajianList() {
     const [kajianList, setKajianList] = useState<Kajian[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -1403,5 +1403,13 @@ export default function AdminManagePage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function AdminManagePage() {
+    return (
+        <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat data...</div>}>
+            <ManageKajianList />
+        </Suspense>
     );
 }

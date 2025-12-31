@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { KajianEntry, parseKajianBroadcast, splitPemateri, splitWaktu } from '@/lib/parser';
 import { parseWithGemini } from '@/lib/ai-parser';
 import { Clipboard, Save, Play, CheckCircle, AlertCircle, FileText, Calendar, Clock, MapPin, LogOut, LayoutDashboard, ExternalLink, Database, PlusCircle, History, Info, Trash2, Image as ImageIcon, Loader2, Upload, X, Sparkles, Eye } from 'lucide-react';
@@ -15,7 +15,7 @@ import KajianCard from '@/components/KajianCard';
 import './batch-input.css';
 import ImageUpload from '@/components/ImageUpload';
 
-export default function BatchInputPage() {
+function BatchInputPageContent() {
     const router = useRouter();
     const [inputText, setInputText] = useState('');
     const [entries, setEntries] = useState<KajianEntry[]>([]);
@@ -1485,5 +1485,13 @@ export default function BatchInputPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function BatchInputPage() {
+    return (
+        <Suspense fallback={<div className="p-8 text-center text-slate-500">Memuat data...</div>}>
+            <BatchInputPageContent />
+        </Suspense>
     );
 }

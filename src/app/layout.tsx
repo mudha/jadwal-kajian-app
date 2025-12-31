@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import Navbar from "@/components/Navbar";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import { Suspense } from 'react';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,7 +21,6 @@ export const metadata: Metadata = {
   description: "Portal lengkap jadwal kajian islami se-Indonesia. Cari kajian di sekitarmu dengan mudah melalui PortalKajian.online, lengkap dengan peta lokasi dan kontak admin.",
   keywords: ["kajian sunnah", "jadwal kajian", "kajian indonesia", "islam", "ustadz", "masjid"],
   manifest: "/manifest.json",
-  themeColor: "#0d9488",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -29,6 +29,10 @@ export const metadata: Metadata = {
   icons: {
     apple: "/icon-512.png",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0d9488",
 };
 
 import GlobalPullToRefresh from "@/components/GlobalPullToRefresh";
@@ -54,7 +58,9 @@ export default function RootLayout({
               {children}
             </GlobalPullToRefresh>
           </main>
-          <BottomNav />
+          <Suspense fallback={null}>
+            <BottomNav />
+          </Suspense>
         </div>
       </body>
     </html>

@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { Bell, ArrowLeft, CheckCheck, Info, Clock, MapPin } from 'lucide-react';
 import Link from 'next/link';
-import BottomNav from '@/components/BottomNav';
 
 export default function NotifikasiPage() {
     const [notifications, setNotifications] = useState([
@@ -107,7 +106,7 @@ export default function NotifikasiPage() {
                 </div>
             </div>
 
-            <BottomNav />
+            {/* BottomNav removed as it is now in global layout */}
         </div>
     );
 }

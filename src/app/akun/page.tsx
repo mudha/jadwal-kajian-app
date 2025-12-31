@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { User, Settings, Heart, Calendar, LogOut, ChevronRight, Moon, Bell, HelpCircle, Shield } from 'lucide-react';
 import Link from 'next/link';
-import BottomNav from '@/components/BottomNav';
 
 export default function AkunPage() {
     const [stats, setStats] = useState({ attended: 0, liked: 0 });
@@ -91,8 +90,6 @@ export default function AkunPage() {
             <div className="text-center pb-8 opacity-50">
                 <p className="text-[10px] text-slate-400">PortalKajian.online v1.0.0</p>
             </div>
-
-            <BottomNav />
         </div>
     );
 }

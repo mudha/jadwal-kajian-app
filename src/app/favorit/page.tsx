@@ -1,9 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Heart, ArrowLeft, Ban } from 'lucide-react';
+import { Heart, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import KajianCard from '@/components/KajianCard';
-import BottomNav from '@/components/BottomNav';
 import { parseIndoDate, formatMasjidName } from '@/lib/date-utils';
 
 interface Kajian {
@@ -47,8 +46,6 @@ export default function FavoritPage() {
                     const data = await response.json();
 
                     // 3. Sort by Date (Newest first maybe? Or upcoming?)
-                    // For favorites, usually recently added or upcoming.
-                    // Let's sort by Upcoming first.
                     const sorted = data.sort((a: any, b: any) => {
                         const dateA = parseIndoDate(a.date) || new Date(0);
                         const dateB = parseIndoDate(b.date) || new Date(0);
@@ -114,8 +111,7 @@ export default function FavoritPage() {
                     </div>
                 )}
             </div>
-
-            <BottomNav />
+            {/* BottomNav removed as it is now in global layout */}
         </div>
     );
 }

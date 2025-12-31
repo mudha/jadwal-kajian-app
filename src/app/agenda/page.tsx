@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { Calendar, ArrowLeft, Clock } from 'lucide-react';
 import Link from 'next/link';
 import KajianCard from '@/components/KajianCard';
-import BottomNav from '@/components/BottomNav';
 import { getKajianStatus, parseIndoDate, formatMasjidName } from '@/lib/date-utils';
 
 interface Kajian {
@@ -163,7 +162,7 @@ export default function AgendaPage() {
                 )}
             </div>
 
-            <BottomNav />
+            {/* BottomNav removed as it is now in global layout */}
         </div>
     );
 }
