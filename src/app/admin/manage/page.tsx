@@ -90,17 +90,20 @@ export default function AdminManagePage() {
     });
     const [resizing, setResizing] = useState<{ col: string, startX: number, startWidth: number } | null>(null);
 
-    // Handle mouse move for resizing (Global Effect)
+    // Handle mouse/touch move for resizing (Global Effect)
     useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
+        const handleMove = (clientX: number) => {
             if (resizing) {
-                const diff = e.clientX - resizing.startX;
+                const diff = clientX - resizing.startX;
                 const newWidth = Math.max(50, resizing.startWidth + diff);
                 setColumnWidths(prev => ({ ...prev, [resizing.col]: newWidth }));
             }
         };
 
-        const handleMouseUp = () => {
+        const handleMouseMove = (e: MouseEvent) => handleMove(e.clientX);
+        const handleTouchMove = (e: TouchEvent) => handleMove(e.touches[0].clientX);
+
+        const handleEnd = () => {
             if (resizing) {
                 setResizing(null);
                 document.body.style.cursor = 'default';
@@ -110,32 +113,49 @@ export default function AdminManagePage() {
 
         if (resizing) {
             window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
+            window.addEventListener('mouseup', handleEnd);
+            window.addEventListener('touchmove', handleTouchMove);
+            window.addEventListener('touchend', handleEnd);
             document.body.style.cursor = 'col-resize';
             document.body.style.userSelect = 'none'; // Prevent text selection while dragging
         }
 
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('mouseup', handleEnd);
+            window.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('touchend', handleEnd);
         };
     }, [resizing]);
 
-    const startResize = (e: React.MouseEvent, col: string) => {
-        e.preventDefault();
+    const startResize = (e: React.MouseEvent | React.TouchEvent, col: string) => {
+        // Prevent default only for mouse events to allow potential scrolling if needed,
+        // though strictly for resizing we usually want to block default.
+        // For touch, preventDefault stops scrolling while dragging.
+        // e.preventDefault(); 
+
         e.stopPropagation();
+
+        let clientX;
+        if ('touches' in e) {
+            clientX = e.touches[0].clientX;
+        } else {
+            clientX = (e as React.MouseEvent).clientX;
+        }
+
         setResizing({
             col,
-            startX: e.clientX,
+            startX: clientX,
             startWidth: columnWidths[col]
         });
     };
 
     const ResizeHandle = ({ col }: { col: string }) => (
         <div
-            className="absolute top-0 right-0 h-full w-6 cursor-col-resize flex items-center justify-center z-[100] hover:bg-blue-50/50 touch-none select-none"
+            className="absolute top-0 right-0 h-full w-8 cursor-col-resize flex items-center justify-center z-[100] hover:bg-blue-50/50 touch-none select-none"
             style={{ transform: 'translateX(50%)' }}
             onMouseDown={(e) => startResize(e, col)}
+            onTouchStart={(e) => startResize(e, col)}
             onClick={(e) => e.stopPropagation()}
         >
             <div className={`w-1 h-3/4 rounded-full transition-colors ${resizing?.col === col ? 'bg-blue-600 w-[4px]' : 'bg-slate-300 hover:bg-blue-400'}`} />
