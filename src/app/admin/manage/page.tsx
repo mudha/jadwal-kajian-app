@@ -485,23 +485,23 @@ export default function AdminManagePage() {
                                 <table className="w-max text-left table-fixed">
                                     <thead className="bg-slate-50 border-b border-slate-200">
                                         <tr>
-                                            <th className="relative pl-4 pr-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.waktu }}>
+                                            <th className="relative z-50 select-none pl-4 pr-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.waktu }}>
                                                 Waktu & Tanggal
                                                 <ResizeHandle col="waktu" />
                                             </th>
-                                            <th className="relative px-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.poster }}>
+                                            <th className="relative z-40 select-none px-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.poster }}>
                                                 Poster
                                                 <ResizeHandle col="poster" />
                                             </th>
-                                            <th className="relative px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.masjid }}>
+                                            <th className="relative z-30 select-none px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.masjid }}>
                                                 Masjid / Lokasi
                                                 <ResizeHandle col="masjid" />
                                             </th>
-                                            <th className="relative px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.pemateri }}>
+                                            <th className="relative z-20 select-none px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.pemateri }}>
                                                 Pemateri & Tema
                                                 <ResizeHandle col="pemateri" />
                                             </th>
-                                            <th className="relative px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 text-center" style={{ width: columnWidths.peserta }}>
+                                            <th className="relative z-10 select-none px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 text-center" style={{ width: columnWidths.peserta }}>
                                                 Peserta
                                                 <ResizeHandle col="peserta" />
                                             </th>
