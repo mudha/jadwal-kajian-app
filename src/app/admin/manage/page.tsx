@@ -411,8 +411,8 @@ export default function AdminManagePage() {
                                 <table className="w-full text-left">
                                     <thead className="bg-slate-50 border-b border-slate-200">
                                         <tr>
-                                            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Waktu & Tanggal</th>
-                                            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Poster</th>
+                                            <th className="pl-4 pr-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Waktu & Tanggal</th>
+                                            <th className="px-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 w-[1%] whitespace-nowrap">Poster</th>
                                             <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Masjid / Lokasi</th>
                                             <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Pemateri & Tema</th>
                                             <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 text-center">Peserta</th>
@@ -422,14 +422,14 @@ export default function AdminManagePage() {
                                     <tbody className="divide-y divide-slate-100">
                                         {filteredList.map((item) => (
                                             <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                                <td className="px-4 py-4 whitespace-nowrap">
+                                                <td className="pl-4 pr-2 py-4 whitespace-nowrap">
                                                     <div className="flex items-center gap-2 text-slate-900 font-bold">
                                                         <Calendar className="w-4 h-4 text-blue-500" />
                                                         {item.date}
                                                     </div>
                                                     <p className="pl-6 text-sm text-slate-600 font-medium">{item.waktu}</p>
                                                 </td>
-                                                <td className="px-4 py-4">
+                                                <td className="px-2 py-4">
                                                     {item.imageUrl ? (
                                                         <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 group cursor-pointer">
                                                             <Image
