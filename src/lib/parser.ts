@@ -476,7 +476,8 @@ function parseNarrativeFormat(text: string): KajianEntry[] {
         pemateri: /(?:Ustadz|Ust\.|🎙|👤|Pemateri|Bersama|Oleh|Kak|Penceramah)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\(|حفظه|tgl|tanggal|hari|di masjid|masjid|🕌|📍|Waktu|Pukul|Jam|⏰|🕙|dengan|tema|Kitab|📚|📝|[\n\r]|$))/i,
         date: /(?:tgl|tanggal|hari|🗓|📅)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\/|di masjid|masjid|🕌|📍|Waktu|Pukul|Jam|⏰|🕙|[\n\r]|$))/i,
         masjid: /(?:di masjid|masjid|Musholla|🕌|📍|Lokasi|Tempat)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:Kitab|Tema|📚|📝|Waktu|Pukul|Jam|⏰|🕙|dengan|alamat|[\n\r]|$))/i,
-        tema: /(?:Kitab|Tema|📚|📝|Membahas|Kajian)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:Waktu|Pukul|Jam|⏰|🕙|di masjid|masjid|[\n\r]|$))/i,
+        // Update: Allow multi-line capture for Tema
+        tema: /(?:Kitab|Tema|📚|📝|Membahas|Kajian)\s*[:\-]*\s*([\s\S]+?)(?=\s*(?:Waktu|Pukul|Jam|⏰|🕙|di masjid|masjid|Oleh|Pemateri|Ustadz|🎙|👤|$))/i,
         // Enhanced waktu pattern to catch ba'da variations and prayer times
         waktu: /(?:Waktu|Pukul|Jam|⏰|🕙|Ba['']?da|Ba['']?dha|Bada|Setelah|Habis|Usai|Mulai)\s*[:\-]*\s*([^📋🗓📍🕌🎙📝\n\r]+?)(?=\s*(?:\-|sd|sampai|[\n\r]|$))/i,
         // Catatan: Capture until the end or next major keyword, allow newlines
@@ -525,6 +526,8 @@ function parseNarrativeFormat(text: string): KajianEntry[] {
 
             // Apply appropriate cleaning
             if (key === 'catatan') {
+                value = cleanMultiLineValue(value);
+            } else if (key === 'tema') {
                 value = cleanMultiLineValue(value);
             } else {
                 value = value.trim();

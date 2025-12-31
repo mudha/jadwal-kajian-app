@@ -29,15 +29,19 @@ export async function POST(request: Request) {
                             "tema": "string (topic/theme of the lecture)",
                                 "waktu": "string (time, like 'Ba'da Maghrib' or '09:00 - 11:00')",
                                     "date": "string (human readable date, like 'Ahad, 25 Okt 2025')",
-                                        "cp": "string (contact person or phone number)",
+                                        "cp": "string (main contact person phone number)",
+                                        "cp2": "string (second contact person phone number, optional)",
+                                        "cp3": "string (third contact person phone number, optional)",
                                             "region": "INDONESIA",
                                                 "gmapsUrl": "",
-                                                "catatan": "string (additional notes, IMPORTANT: preserve line breaks as \n)"
+                                                "catatan": "string (additional notes, preserve line breaks as \n)"
         }
             If any field is unknown, use an empty string.
             IMPORTANT: If the event is ONLINE(e.g., mentions 'Live Streaming', 'Zoom', 'Youtube', 'Google Meet', 'IG Live'), set "city" to "Online" and "masjid" to the platform name or "Live Streaming".
             Do NOT include markdown formatting or any text other than the JSON array.
-            Make sure "catatan" captures any additional announcements, rules, or details NOT covered by other fields, and keep the original newlines with \n.
+            Make sure "catatan" captures any additional announcements, rules, or details NOT covered by other fields.
+            Extract all contact numbers found into cp, cp2, and cp3 respectively.
+            Preserve original newlines with \n for "tema" and "catatan".
         `;
 
         let result;
