@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { Search, Edit, Trash2, Plus, Calendar, MapPin, X, Save, AlertTriangle, ChevronDown, User, Clock, CheckCircle, Info, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { indonesianCities } from '@/data/cities';
@@ -446,8 +447,22 @@ export default function AdminManagePage() {
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-4">
-                                                    <div className="font-bold text-slate-900">{item.pemateri}</div>
-                                                    <p className="text-sm text-slate-600 font-medium line-clamp-1" title={item.tema}>{item.tema}</p>
+                                                    <div className="flex items-start gap-3">
+                                                        {item.imageUrl && (
+                                                            <div className="relative w-10 h-10 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+                                                                <Image
+                                                                    src={item.imageUrl}
+                                                                    alt={item.tema}
+                                                                    fill
+                                                                    className="object-cover"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                        <div>
+                                                            <div className="font-bold text-slate-900">{item.pemateri}</div>
+                                                            <p className="text-sm text-slate-600 font-medium line-clamp-1" title={item.tema}>{item.tema}</p>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                                 <td className="px-4 py-4 text-center">
                                                     <span className="inline-flex items-center justify-center px-3 py-1 bg-green-100 text-green-700 rounded-full font-bold text-xs">
@@ -538,23 +553,37 @@ export default function AdminManagePage() {
                                     </div>
 
                                     {/* Content */}
-                                    <div>
-                                        <h3 className="font-bold text-lg text-slate-900 leading-tight mb-2 line-clamp-2">{item.tema}</h3>
-
-                                        <div className="flex items-center gap-2 text-slate-600 text-sm mb-4 font-medium">
-                                            <User className="w-4 h-4 text-purple-500" /> {item.pemateri}
-                                        </div>
-
-                                        <div className="bg-slate-50 p-4 rounded-xl space-y-3 border border-slate-100">
-                                            <div className="flex items-start gap-2 text-sm text-slate-700">
-                                                <MapPin className="w-4 h-4 mt-0.5 text-slate-400 shrink-0" />
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-bold text-slate-900">{item.masjid}</p>
-                                                    <p className="text-xs text-slate-600 font-bold truncate">{item.city}</p>
-                                                </div>
+                                    <div className="flex gap-4">
+                                        {/* Thumbnail for Mobile */}
+                                        {item.imageUrl && (
+                                            <div className="relative w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 mt-1">
+                                                <Image
+                                                    src={item.imageUrl}
+                                                    alt={item.tema}
+                                                    fill
+                                                    className="object-cover"
+                                                />
                                             </div>
-                                            <div className="flex items-center gap-2 text-xs text-slate-600 font-bold pl-6 border-t border-slate-200 pt-3 mt-1">
-                                                <Clock className="w-3 h-3" /> {item.waktu}
+                                        )}
+
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-bold text-lg text-slate-900 leading-tight mb-2 line-clamp-2">{item.tema}</h3>
+
+                                            <div className="flex items-center gap-2 text-slate-600 text-sm mb-4 font-medium">
+                                                <User className="w-4 h-4 text-purple-500" /> {item.pemateri}
+                                            </div>
+
+                                            <div className="bg-slate-50 p-4 rounded-xl space-y-3 border border-slate-100">
+                                                <div className="flex items-start gap-2 text-sm text-slate-700">
+                                                    <MapPin className="w-4 h-4 mt-0.5 text-slate-400 shrink-0" />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-bold text-slate-900">{item.masjid}</p>
+                                                        <p className="text-xs text-slate-600 font-bold truncate">{item.city}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs text-slate-600 font-bold pl-6 border-t border-slate-200 pt-3 mt-1">
+                                                    <Clock className="w-3 h-3" /> {item.waktu}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -883,7 +912,7 @@ export default function AdminManagePage() {
                                                 <input
                                                     type="text"
                                                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-emerald-700 placeholder:text-slate-400"
-                                                    value={editingKajian.cp2}
+                                                    value={editingKajian.cp2 || ''}
                                                     onChange={e => setEditingKajian({ ...editingKajian, cp2: e.target.value })}
                                                     placeholder="CP 2..."
                                                 />
@@ -915,7 +944,7 @@ export default function AdminManagePage() {
                                                 <input
                                                     type="text"
                                                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-emerald-700 placeholder:text-slate-400"
-                                                    value={editingKajian.cp3}
+                                                    value={editingKajian.cp3 || ''}
                                                     onChange={e => setEditingKajian({ ...editingKajian, cp3: e.target.value })}
                                                     placeholder="CP 3..."
                                                 />
