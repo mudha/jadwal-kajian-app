@@ -464,7 +464,7 @@ export default function AdminManagePage() {
                         {/* Desktop Table View */}
                         <div className="hidden md:block w-full bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                             <div className="overflow-x-auto pb-12"> {/* Add padding bottom for potential dropdowns overflow */}
-                                <table className="min-w-full text-left table-fixed"> {/* Use table-fixed for precise sizing */}
+                                <table className="min-w-full text-left table-fixed">
                                     <thead className="bg-slate-50 border-b border-slate-200">
                                         <tr>
                                             <th className="relative pl-4 pr-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.waktu }}>
