@@ -61,6 +61,9 @@ export default function AdminManagePage() {
     const [duplicateToDelete, setDuplicateToDelete] = useState<Kajian | null>(null);
     const [isDeletingDuplicate, setIsDeletingDuplicate] = useState(false);
 
+    // Notification Toast State
+    const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
+
 
 
     // City Autocomplete State
@@ -109,6 +112,16 @@ export default function AdminManagePage() {
         fetchData();
     }, []);
 
+    // Auto-dismiss notification after 5 seconds
+    useEffect(() => {
+        if (notification) {
+            const timer = setTimeout(() => {
+                setNotification(null);
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [notification]);
+
     const handleDelete = (id: number) => {
         setItemToDelete(id);
         setIsDeleteModalOpen(true);
@@ -124,10 +137,10 @@ export default function AdminManagePage() {
                 setIsDeleteModalOpen(false);
                 setItemToDelete(null);
             } else {
-                alert('Gagal menghapus data'); // Keep simple alert for error for now, or upgrade later
+                setNotification({ message: 'Gagal menghapus data', type: 'error' });
             }
         } catch (e) {
-            alert('Gagal menghapus data');
+            setNotification({ message: 'Gagal menghapus data', type: 'error' });
         } finally {
             setIsDeleting(false);
         }
@@ -208,11 +221,11 @@ export default function AdminManagePage() {
                 setIsEditModalOpen(false);
                 setEditingKajian(null);
             } else {
-                alert('Gagal memperbarui data');
+                setNotification({ message: 'Gagal memperbarui data', type: 'error' });
             }
         } catch (e) {
             console.error(e);
-            alert('Terjadi kesalahan saat menyimpan');
+            setNotification({ message: 'Terjadi kesalahan saat menyimpan', type: 'error' });
         }
     };
 
@@ -246,15 +259,15 @@ export default function AdminManagePage() {
                     ).join('\n');
                 }
 
-                alert(message);
+                setNotification({ message, type: 'success' });
                 // Refresh data
                 fetchData();
             } else {
-                alert(`✗ Gagal: ${data.error}`);
+                setNotification({ message: `Gagal: ${data.error}`, type: 'error' });
             }
         } catch (error) {
             console.error('Error extracting coordinates:', error);
-            alert('Terjadi kesalahan saat mengekstrak koordinat');
+            setNotification({ message: 'Terjadi kesalahan saat mengekstrak koordinat', type: 'error' });
         } finally {
             setIsExtracting(false);
         }
@@ -289,13 +302,13 @@ export default function AdminManagePage() {
                     lng: data.lng,
                     gmapsUrl: data.expandedUrl || url
                 });
-                alert(`Koordinat ditemukan: ${data.lat}, ${data.lng}`);
+                setNotification({ message: `Koordinat ditemukan: ${data.lat}, ${data.lng}`, type: 'success' });
             } else {
-                alert('Gagal mengekstrak koordinat dari URL tersebut.');
+                setNotification({ message: 'Gagal mengekstrak koordinat dari URL tersebut', type: 'error' });
             }
         } catch (error) {
             console.error(error);
-            alert('Terjadi kesalahan saat mengekstrak koordinat.');
+            setNotification({ message: 'Terjadi kesalahan saat mengekstrak koordinat', type: 'error' });
         }
     };
 
@@ -1118,6 +1131,26 @@ export default function AdminManagePage() {
                     type="danger"
                     isLoading={isDeletingDuplicate}
                 />
+            )}
+
+            {/* Toast Notification */}
+            {notification && (
+                <div className="fixed bottom-4 right-4 z-[200] animate-in slide-in-from-bottom-5 duration-300">
+                    <div className={`px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 min-w-[300px] max-w-md ${notification.type === 'success' ? 'bg-green-600 text-white' :
+                        notification.type === 'error' ? 'bg-red-600 text-white' :
+                            'bg-blue-600 text-white'
+                        }`}>
+                        <div className="flex-1">
+                            <p className="font-bold text-sm">{notification.message}</p>
+                        </div>
+                        <button
+                            onClick={() => setNotification(null)}
+                            className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
             )}
         </div>
     );
