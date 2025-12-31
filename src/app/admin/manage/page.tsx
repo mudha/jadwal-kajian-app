@@ -179,16 +179,25 @@ export default function AdminManagePage() {
         try {
             const res = await fetch(`/api/kajian/${duplicateToDelete.id}`, { method: 'DELETE' });
             if (res.ok) {
-                // Refresh data and rescan
+                // Refresh data
                 await fetchData();
+
+                // Remove deleted item from current duplicate groups
+                const updatedGroups = duplicateGroups.map(group => ({
+                    ...group,
+                    items: group.items.filter((item: Kajian) => item.id !== duplicateToDelete.id)
+                })).filter(group => group.items.length > 1); // Keep only groups with 2+ items
+
+                setDuplicateGroups(updatedGroups);
                 setIsDeleteDuplicateModalOpen(false);
                 setDuplicateToDelete(null);
-                setIsDuplicateScanModalOpen(false);
-                // Auto rescan after delete
-                setTimeout(() => scanDuplicates(), 500);
+
+                // Show success notification
+                setNotification({ message: 'Kajian duplikat berhasil dihapus', type: 'success' });
             }
         } catch (e) {
             console.error('Error deleting duplicate:', e);
+            setNotification({ message: 'Gagal menghapus kajian duplikat', type: 'error' });
         } finally {
             setIsDeletingDuplicate(false);
         }
