@@ -34,6 +34,7 @@ export default function UstadzManagementPage() {
         title: string;
         message: string;
         type: 'danger' | 'warning' | 'info';
+        onConfirm?: () => void;
     }>({
         isOpen: false,
         title: '',
@@ -41,8 +42,8 @@ export default function UstadzManagementPage() {
         type: 'info'
     });
 
-    const showAlert = (title: string, message: string, type: 'danger' | 'warning' | 'info' = 'info') => {
-        setAlertConfig({ isOpen: true, title, message, type });
+    const showAlert = (title: string, message: string, type: 'danger' | 'warning' | 'info' = 'info', onConfirm?: () => void) => {
+        setAlertConfig({ isOpen: true, title, message, type, onConfirm });
     };
 
     useEffect(() => {
@@ -166,7 +167,9 @@ export default function UstadzManagementPage() {
             });
 
             if (response.ok) {
-                showAlert('Berhasil', `Berhasil menggabungkan ${sourceNames.length} nama ustadz`, 'info');
+                showAlert('Berhasil', `Berhasil menggabungkan ${sourceNames.length} nama ustadz`, 'info', () => {
+                    setIsDuplicateModalOpen(true);
+                });
                 setSelectedForMerge(new Set());
                 setMergeTarget('');
                 setIsMergeModalOpen(false);
@@ -604,8 +607,14 @@ export default function UstadzManagementPage() {
 
             <ConfirmationModal
                 isOpen={alertConfig.isOpen}
-                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
-                onConfirm={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                onClose={() => {
+                    setAlertConfig(prev => ({ ...prev, isOpen: false }));
+                    if (alertConfig.onConfirm) alertConfig.onConfirm();
+                }}
+                onConfirm={() => {
+                    setAlertConfig(prev => ({ ...prev, isOpen: false }));
+                    if (alertConfig.onConfirm) alertConfig.onConfirm();
+                }}
                 title={alertConfig.title}
                 message={alertConfig.message}
                 confirmText="OK"

@@ -47,6 +47,7 @@ export default function MasjidManagementPage() {
         title: string;
         message: string;
         type: 'danger' | 'warning' | 'info';
+        onConfirm?: () => void;
     }>({
         isOpen: false,
         title: '',
@@ -54,8 +55,8 @@ export default function MasjidManagementPage() {
         type: 'info'
     });
 
-    const showAlert = (title: string, message: string, type: 'danger' | 'warning' | 'info' = 'info') => {
-        setAlertConfig({ isOpen: true, title, message, type });
+    const showAlert = (title: string, message: string, type: 'danger' | 'warning' | 'info' = 'info', onConfirm?: () => void) => {
+        setAlertConfig({ isOpen: true, title, message, type, onConfirm });
     };
 
     // List Modal States
@@ -337,7 +338,9 @@ export default function MasjidManagementPage() {
             });
 
             if (response.ok) {
-                showAlert('Berhasil', `Berhasil menggabungkan ${sourceNames.length} masjid`, 'info');
+                showAlert('Berhasil', `Berhasil menggabungkan ${sourceNames.length} masjid`, 'info', () => {
+                    setIsDuplicateModalOpen(true);
+                });
                 setSelectedForMerge(new Set());
                 setMergeTarget('');
                 setIsMergeModalOpen(false);
@@ -1368,8 +1371,14 @@ export default function MasjidManagementPage() {
 
             <ConfirmationModal
                 isOpen={alertConfig.isOpen}
-                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
-                onConfirm={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                onClose={() => {
+                    setAlertConfig(prev => ({ ...prev, isOpen: false }));
+                    if (alertConfig.onConfirm) alertConfig.onConfirm();
+                }}
+                onConfirm={() => {
+                    setAlertConfig(prev => ({ ...prev, isOpen: false }));
+                    if (alertConfig.onConfirm) alertConfig.onConfirm();
+                }}
                 title={alertConfig.title}
                 message={alertConfig.message}
                 confirmText="OK"
