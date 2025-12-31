@@ -41,6 +41,7 @@ interface Kajian {
 
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
 
+
 export default function AdminManagePage() {
     const [kajianList, setKajianList] = useState<Kajian[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -67,14 +68,74 @@ export default function AdminManagePage() {
     // Notification Toast State
     const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
 
-
-
     // City Autocomplete State
     const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
     const [cityFilter, setCityFilter] = useState('');
 
     // Waktu Autocomplete State
     const [isWaktuDropdownOpen, setIsWaktuDropdownOpen] = useState(false);
+
+    // Column Resizing State
+    const [columnWidths, setColumnWidths] = useState<{ [key: string]: number }>({
+        waktu: 200,
+        poster: 80,
+        masjid: 250,
+        pemateri: 250,
+        peserta: 100
+    });
+    const [resizing, setResizing] = useState<{ col: string, startX: number, startWidth: number } | null>(null);
+
+    // Handle mouse move for resizing (Global Effect)
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (resizing) {
+                const diff = e.clientX - resizing.startX;
+                const newWidth = Math.max(50, resizing.startWidth + diff);
+                setColumnWidths(prev => ({ ...prev, [resizing.col]: newWidth }));
+            }
+        };
+
+        const handleMouseUp = () => {
+            if (resizing) {
+                setResizing(null);
+                document.body.style.cursor = 'default';
+                document.body.style.userSelect = 'auto'; // Re-enable selection
+            }
+        };
+
+        if (resizing) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none'; // Prevent text selection while dragging
+        }
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [resizing]);
+
+    const startResize = (e: React.MouseEvent, col: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setResizing({
+            col,
+            startX: e.clientX,
+            startWidth: columnWidths[col]
+        });
+    };
+
+    const ResizeHandle = ({ col }: { col: string }) => (
+        <div
+            className="absolute top-0 right-0 h-full w-4 cursor-col-resize flex items-center justify-center group z-10 hover:bg-slate-100/50"
+            style={{ transform: 'translateX(50%)' }}
+            onMouseDown={(e) => startResize(e, col)}
+            onClick={(e) => e.stopPropagation()}
+        >
+            <div className={`w-[2px] h-1/2 rounded-full bg-slate-300 opacity-0 group-hover:opacity-100 transition-opacity ${resizing?.col === col ? 'bg-blue-500 opacity-100' : ''}`} />
+        </div>
+    );
 
     // Common waktu suggestions for kajian
     const waktuSuggestions = [
@@ -90,12 +151,6 @@ export default function AdminManagePage() {
         "Isya - Selesai",
         "Sholat Jumat",
     ];
-
-
-
-
-
-
 
     const fetchData = async () => {
         try {
@@ -406,38 +461,51 @@ export default function AdminManagePage() {
                 ) : (
                     <>
                         {/* Desktop Table View */}
+                        {/* Desktop Table View */}
                         <div className="hidden md:block w-full bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
+                            <div className="overflow-x-auto pb-12"> {/* Add padding bottom for potential dropdowns overflow */}
+                                <table className="min-w-full text-left table-fixed"> {/* Use table-fixed for precise sizing */}
                                     <thead className="bg-slate-50 border-b border-slate-200">
                                         <tr>
-                                            <th className="pl-4 pr-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 w-[1%] whitespace-nowrap">Waktu & Tanggal</th>
-                                            <th className="px-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 w-[1%] whitespace-nowrap">Poster</th>
-                                            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Masjid / Lokasi</th>
-                                            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600">Pemateri & Tema</th>
-                                            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 text-center">Peserta</th>
-                                            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 text-right">Aksi</th>
+                                            <th className="relative pl-4 pr-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.waktu }}>
+                                                Waktu & Tanggal
+                                                <ResizeHandle col="waktu" />
+                                            </th>
+                                            <th className="relative px-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.poster }}>
+                                                Poster
+                                                <ResizeHandle col="poster" />
+                                            </th>
+                                            <th className="relative px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.masjid }}>
+                                                Masjid / Lokasi
+                                                <ResizeHandle col="masjid" />
+                                            </th>
+                                            <th className="relative px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.pemateri }}>
+                                                Pemateri & Tema
+                                                <ResizeHandle col="pemateri" />
+                                            </th>
+                                            <th className="relative px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 text-center" style={{ width: columnWidths.peserta }}>
+                                                Peserta
+                                                <ResizeHandle col="peserta" />
+                                            </th>
+                                            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 text-right w-[100px]"> {/* Fixed Action Width */}
+                                                Aksi
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
                                         {filteredList.map((item) => (
                                             <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                                <td className="pl-4 pr-2 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center gap-2 text-slate-900 font-bold">
-                                                        <Calendar className="w-4 h-4 text-blue-500" />
-                                                        {item.date}
+                                                <td className="pl-4 pr-2 py-4 align-top truncate"> {/* align-top for consistency */}
+                                                    <div className="flex items-center gap-2 text-slate-900 font-bold truncate">
+                                                        <Calendar className="w-4 h-4 text-blue-500 shrink-0" />
+                                                        <span className="truncate">{item.date}</span>
                                                     </div>
-                                                    <p className="pl-6 text-sm text-slate-600 font-medium">{item.waktu}</p>
+                                                    <p className="pl-6 text-sm text-slate-600 font-medium truncate">{item.waktu}</p>
                                                 </td>
-                                                <td className="px-2 py-4">
+                                                <td className="px-2 py-4 align-top">
                                                     {item.imageUrl ? (
-                                                        <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 group cursor-pointer">
-                                                            <Image
-                                                                src={item.imageUrl}
-                                                                alt={item.tema}
-                                                                fill
-                                                                className="object-cover group-hover:scale-110 transition-transform"
-                                                            />
+                                                        <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 group cursor-pointer" onClick={() => window.open(item.imageUrl, '_blank')}>
+                                                            <Image src={item.imageUrl} alt={item.tema} fill className="object-cover group-hover:scale-110 transition-transform" />
                                                         </div>
                                                     ) : (
                                                         <div className="w-12 h-12 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center">
@@ -445,27 +513,23 @@ export default function AdminManagePage() {
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td className="px-4 py-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="font-bold text-slate-900">{item.masjid}</div>
+                                                <td className="px-4 py-4 align-top">
+                                                    <div className="flex items-center gap-2 truncate">
+                                                        <div className="font-bold text-slate-900 truncate" title={item.masjid}>{item.masjid}</div>
                                                         {item.lat && item.lng && (
-                                                            <span
-                                                                className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-teal-50 text-teal-600 rounded-md text-[9px] font-black uppercase tracking-tighter border border-teal-100"
-                                                                title={`GPS Active: ${item.lat}, ${item.lng}`}
-                                                            >
-                                                                <MapPin className="w-2 h-2 fill-teal-600" />
-                                                                GPS
+                                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-teal-50 text-teal-600 rounded-md text-[9px] font-black uppercase tracking-tighter border border-teal-100 shrink-0">
+                                                                <MapPin className="w-2 h-2 fill-teal-600" /> GPS
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <div className="flex items-center gap-1 text-sm text-slate-600 mt-1 font-medium">
-                                                        <MapPin className="w-3 h-3" />
-                                                        {item.city}
+                                                    <div className="flex items-center gap-1 text-sm text-slate-600 mt-1 font-medium truncate">
+                                                        <MapPin className="w-3 h-3 shrink-0" />
+                                                        <span className="truncate" title={item.city}>{item.city}</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-4">
-                                                    <div className="font-bold text-slate-900">{item.pemateri}</div>
-                                                    <p className="text-sm text-slate-600 font-medium line-clamp-1" title={item.tema}>{item.tema}</p>
+                                                <td className="px-4 py-4 align-top">
+                                                    <div className="font-bold text-slate-900 truncate" title={item.pemateri}>{item.pemateri}</div>
+                                                    <p className="text-sm text-slate-600 font-medium line-clamp-2 leading-snug" title={item.tema}>{item.tema}</p>
                                                 </td>
                                                 <td className="px-4 py-4 text-center">
                                                     <span className="inline-flex items-center justify-center px-3 py-1 bg-green-100 text-green-700 rounded-full font-bold text-xs">
