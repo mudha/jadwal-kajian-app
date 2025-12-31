@@ -30,6 +30,8 @@ interface KajianDetail {
     lat?: number;
     lng?: number;
     catatan?: string;
+    cp2?: string;
+    cp3?: string;
 }
 
 import { Info } from 'lucide-react';
