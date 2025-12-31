@@ -12,6 +12,7 @@ interface ConfirmationModalProps {
     cancelText?: string;
     type?: 'danger' | 'warning' | 'info';
     isLoading?: boolean;
+    showCancel?: boolean;
 }
 
 export default function ConfirmationModal({
@@ -23,7 +24,8 @@ export default function ConfirmationModal({
     confirmText = 'Ya, Lanjutkan',
     cancelText = 'Batal',
     type = 'danger',
-    isLoading = false
+    isLoading = false,
+    showCancel = true
 }: ConfirmationModalProps) {
     const [isVisible, setIsVisible] = useState(false);
 
@@ -89,13 +91,15 @@ export default function ConfirmationModal({
                 </div>
 
                 <div className="p-4 border-t border-slate-100 bg-slate-50 flex gap-3">
-                    <button
-                        onClick={onClose}
-                        disabled={isLoading}
-                        className="flex-1 px-4 py-2.5 text-slate-600 font-bold hover:bg-slate-200 hover:text-slate-800 rounded-xl transition-colors disabled:opacity-50"
-                    >
-                        {cancelText}
-                    </button>
+                    {showCancel && (
+                        <button
+                            onClick={onClose}
+                            disabled={isLoading}
+                            className="flex-1 px-4 py-2.5 text-slate-600 font-bold hover:bg-slate-200 hover:text-slate-800 rounded-xl transition-colors disabled:opacity-50"
+                        >
+                            {cancelText}
+                        </button>
+                    )}
                     <button
                         onClick={onConfirm}
                         disabled={isLoading}

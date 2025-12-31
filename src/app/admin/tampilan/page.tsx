@@ -19,7 +19,8 @@ import {
     useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Eye, EyeOff } from 'lucide-react';
+import { GripVertical, Eye, EyeOff, Save } from 'lucide-react';
+import ConfirmationModal from '@/components/admin/ConfirmationModal';
 
 const WIDGET_LABELS: Record<string, string> = {
     'SidebarMenuWidget': 'Menu Sidebar',
@@ -79,6 +80,23 @@ export default function AdminTampilanPage() {
         hidden: [],
         hidden_mobile: []
     });
+
+    // Alert Modal State
+    const [alertConfig, setAlertConfig] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        type: 'danger' | 'warning' | 'info';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'info'
+    });
+
+    const showAlert = (title: string, message: string, type: 'danger' | 'warning' | 'info' = 'info') => {
+        setAlertConfig({ isOpen: true, title, message, type });
+    };
     const [loading, setLoading] = useState(true);
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
@@ -301,7 +319,7 @@ export default function AdminTampilanPage() {
             body: JSON.stringify(menuItems)
         });
 
-        alert('Tampilan dan Menu berhasil disimpan!');
+        showAlert('Pesan', 'Tampilan dan Menu berhasil disimpan!', 'info');
     };
 
     const [activeTab, setActiveTab] = useState<'desktop' | 'mobile'>('desktop');
@@ -453,6 +471,17 @@ export default function AdminTampilanPage() {
                     </DndContext>
                 </div>
             </div>
+
+            <ConfirmationModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmText="OK"
+                showCancel={false}
+                type={alertConfig.type}
+            />
         </div>
     );
 }

@@ -1,0 +1,131 @@
+
+> jadwal-kajian-app@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.1 (Turbopack)
+- Environments: .env.local
+
+ΓÜá The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 4.0s
+  Running TypeScript ...
+  Collecting page data using 15 workers ...
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒæÑ sync secrets across teammates & machines: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒöä add secrets lifecycle management: https://dotenvx.com/ops
+≡ƒôí Database: Remote Turso/LibSQL
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: Γ£à audit secrets and track compliance: https://dotenvx.com/ops
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒæÑ sync secrets across teammates & machines: https://dotenvx.com/ops
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ΓÜÖ∩╕Å  specify custom .env file path with { path: '/custom/path/.env' }
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒöÉ encrypt with Dotenvx: https://dotenvx.com
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒùé∩╕Å backup and recover secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒôí add observability to secrets: https://dotenvx.com/ops
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ΓÜÖ∩╕Å  suppress all logs with { quiet: true }
+≡ƒôí Database: Remote Turso/LibSQL
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ΓÜÖ∩╕Å  specify custom .env file path with { path: '/custom/path/.env' }
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒöÉ prevent building .env in docker: https://dotenvx.com/prebuild
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ΓÜÖ∩╕Å  override existing env vars with { override: true }
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒ¢á∩╕Å  run anywhere with `dotenvx run -- yourcommand`
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒöæ add access controls to secrets: https://dotenvx.com/ops
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ΓÜÖ∩╕Å  enable debug logging with { debug: true }
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒöæ add access controls to secrets: https://dotenvx.com/ops
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒùé∩╕Å backup and recover secrets: https://dotenvx.com/ops
+≡ƒôí Database: Remote Turso/LibSQL
+  Generating static pages using 15 workers (0/56) ...
+  Generating static pages using 15 workers (14/56) 
+  Generating static pages using 15 workers (28/56) 
+  Generating static pages using 15 workers (42/56) 
+Γ£ô Generating static pages using 15 workers (56/56) in 476.2ms
+  Finalizing page optimization ...
+
+Route (app)
+Γöî Γùï /
+Γö£ Γùï /_not-found
+Γö£ ╞Æ /admin
+Γö£ ╞Æ /admin/admins
+Γö£ ╞Æ /admin/analytics
+Γö£ ╞Æ /admin/batch-input
+Γö£ ╞Æ /admin/input
+Γö£ ╞Æ /admin/manage
+Γö£ ╞Æ /admin/map
+Γö£ ╞Æ /admin/masjid
+Γö£ ╞Æ /admin/sekolah
+Γö£ ╞Æ /admin/tampilan
+Γö£ ╞Æ /admin/ustadz
+Γö£ Γùï /agenda
+Γö£ Γùï /akun
+Γö£ ╞Æ /api/admin/admins
+Γö£ ╞Æ /api/admin/admins/[id]
+Γö£ ╞Æ /api/admin/check-duplicate
+Γö£ ╞Æ /api/admin/check-duplicate-entry
+Γö£ ╞Æ /api/admin/check-session
+Γö£ ╞Æ /api/admin/debug-urls
+Γö£ ╞Æ /api/admin/detect-duplicates
+Γö£ ╞Æ /api/admin/extract-coordinates
+Γö£ ╞Æ /api/admin/masjid
+Γö£ ╞Æ /api/admin/masjid/[id]
+Γö£ ╞Æ /api/admin/masjid/merge
+Γö£ ╞Æ /api/admin/normalize
+Γö£ ╞Æ /api/admin/register
+Γö£ ╞Æ /api/admin/sekolah
+Γö£ ╞Æ /api/admin/sekolah/[id]
+Γö£ ╞Æ /api/admin/suggestions
+Γö£ ╞Æ /api/admin/tools/fix-friday-images
+Γö£ ╞Æ /api/admin/ustadz
+Γö£ ╞Æ /api/admin/ustadz/[id]
+Γö£ ╞Æ /api/admin/ustadz/merge
+Γö£ ╞Æ /api/ai-process
+Γö£ ╞Æ /api/analytics/stats
+Γö£ ╞Æ /api/analytics/track
+Γö£ ╞Æ /api/cities
+Γö£ ╞Æ /api/kajian
+Γö£ ╞Æ /api/kajian/[id]
+Γö£ ╞Æ /api/kajian/[id]/attend
+Γö£ ╞Æ /api/kajian/batch
+Γö£ ╞Æ /api/login
+Γö£ ╞Æ /api/sekolah
+Γö£ ╞Æ /api/sekolah/[slug]
+Γö£ ╞Æ /api/settings/layout
+Γö£ ╞Æ /api/settings/quick-menu
+Γö£ ╞Æ /api/tools/extract-gmaps
+Γö£ ╞Æ /api/upload
+Γö£ Γùï /catatan-kajian
+Γö£ Γùï /dzikir
+Γö£ Γùï /dzikir-pagi
+Γö£ Γùï /dzikir-petang
+Γö£ Γùï /dzikir/harian
+Γö£ Γùï /dzikir/perjalanan
+Γö£ Γùï /dzikir/sehabis-sholat
+Γö£ Γùï /favorit
+Γö£ Γùï /hubungi-kami
+Γö£ Γùï /jadwal-sholat
+Γö£ Γùï /kajian
+Γö£ ╞Æ /kajian/[id]
+Γö£ Γùï /kalender-puasa
+Γö£ Γùï /kota
+Γö£ Γùï /login
+Γö£ Γùï /masjid
+Γö£ Γùï /notifikasi
+Γö£ Γùï /register
+Γö£ Γùï /sekolah-sunnah
+Γöö ╞Æ /sekolah-sunnah/[slug]
+
+
+╞Æ Proxy (Middleware)
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+

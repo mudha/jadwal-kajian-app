@@ -45,6 +45,23 @@ export default function AdminSekolahPage() {
 
     const [isCleanupModalOpen, setIsCleanupModalOpen] = useState(false);
 
+    // Alert Modal State
+    const [alertConfig, setAlertConfig] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        type: 'danger' | 'warning' | 'info';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'info'
+    });
+
+    const showAlert = (title: string, message: string, type: 'danger' | 'warning' | 'info' = 'info') => {
+        setAlertConfig({ isOpen: true, title, message, type });
+    };
+
     // Initial load
     useEffect(() => {
         fetchData();
@@ -76,7 +93,7 @@ export default function AdminSekolahPage() {
             setIsDeleteModalOpen(false);
             setItemToDelete(null);
         } catch (e) {
-            alert('Gagal menghapus');
+            showAlert('Gagal', 'Gagal menghapus data sekolah', 'danger');
         } finally {
             setIsDeleting(false);
         }
@@ -142,11 +159,11 @@ export default function AdminSekolahPage() {
                     correctedCount++;
                 }
             }
-            alert(`Selesai! ${correctedCount} data berhasil diperbaiki.`);
+            showAlert('Selesai', `${correctedCount} data berhasil diperbaiki.`, 'info');
             fetchData();
         } catch (e) {
             console.error(e);
-            alert('Terjadi kesalahan saat perbaikan data.');
+            showAlert('Kesalahan', 'Terjadi kesalahan saat perbaikan data.', 'danger');
         } finally {
             setIsCleaning(false);
         }
@@ -351,6 +368,17 @@ export default function AdminSekolahPage() {
                 cancelText="Batal"
                 type="info"
                 isLoading={isCleaning}
+            />
+
+            <ConfirmationModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmText="OK"
+                showCancel={false}
+                type={alertConfig.type}
             />
         </div>
     );

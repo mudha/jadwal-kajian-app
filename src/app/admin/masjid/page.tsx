@@ -41,6 +41,23 @@ export default function MasjidManagementPage() {
     const [masjidToDelete, setMasjidToDelete] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // Alert Modal State
+    const [alertConfig, setAlertConfig] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        type: 'danger' | 'warning' | 'info';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'info'
+    });
+
+    const showAlert = (title: string, message: string, type: 'danger' | 'warning' | 'info' = 'info') => {
+        setAlertConfig({ isOpen: true, title, message, type });
+    };
+
     // List Modal States
     const [isMasjidListModalOpen, setIsMasjidListModalOpen] = useState(false);
     const [isCityListModalOpen, setIsCityListModalOpen] = useState(false);
@@ -52,6 +69,13 @@ export default function MasjidManagementPage() {
     const [isKajianDeleteModalOpen, setIsKajianDeleteModalOpen] = useState(false);
     const [kajianToDelete, setKajianToDelete] = useState<any>(null);
     const [isDeletingKajian, setIsDeletingKajian] = useState(false);
+
+    // Bulk Extract Modal State
+    const [isBulkExtractModalOpen, setIsBulkExtractModalOpen] = useState(false);
+    const [bulkExtractToProcess, setBulkExtractToProcess] = useState<Masjid[]>([]);
+    const [bulkExtractMode, setBulkExtractMode] = useState<'all' | 'coords'>('all');
+    const [isFinalConfirmOpen, setIsFinalConfirmOpen] = useState(false);
+    const [bulkExtractStats, setBulkExtractStats] = useState<{ success: number, fail: number } | null>(null);
 
     useEffect(() => {
         fetchMasjid();
@@ -115,11 +139,11 @@ export default function MasjidManagementPage() {
                 setIsDeleteModalOpen(false);
                 setMasjidToDelete(null);
             } else {
-                alert('Gagal menghapus masjid');
+                showAlert('Gagal', 'Gagal menghapus masjid', 'danger');
             }
         } catch (error) {
             console.error('Error deleting masjid:', error);
-            alert('Terjadi kesalahan saat menghapus data');
+            showAlert('Kesalahan', 'Terjadi kesalahan saat menghapus data', 'danger');
         } finally {
             setIsDeleting(false);
         }
@@ -212,12 +236,12 @@ export default function MasjidManagementPage() {
                     // alert(`Koordinat ditemukan: ${data.lat}, ${data.lng}`); // Removing this alert as per request, maybe just fill fields
                 }
             } else {
-                alert('Gagal mengekstrak koordinat dari URL tersebut.'); // Keep error alert for now or replace with modal later
+                showAlert('Gagal', 'Gagal mengekstrak koordinat dari URL tersebut.', 'danger');
             }
         } catch (error) {
             console.error(error);
             setLoading(false);
-            alert('Terjadi kesalahan saat mengekstrak koordinat.');
+            showAlert('Kesalahan', 'Terjadi kesalahan saat mengekstrak koordinat.', 'danger');
         }
     };
 
@@ -278,12 +302,12 @@ export default function MasjidManagementPage() {
 
     const handleMerge = async () => {
         if (selectedForMerge.size < 2) {
-            alert('Pilih minimal 2 masjid untuk digabung');
+            showAlert('Perhatian', 'Pilih minimal 2 masjid untuk digabung', 'warning');
             return;
         }
 
         if (!mergeTarget) {
-            alert('Pilih nama target untuk penggabungan');
+            showAlert('Perhatian', 'Pilih nama target untuk penggabungan', 'warning');
             return;
         }
 
@@ -292,7 +316,7 @@ export default function MasjidManagementPage() {
         const targetMasjid = masjidList.find(m => m.id === mergeTarget);
 
         if (!targetMasjid) {
-            alert('Masjid target tidak ditemukan');
+            showAlert('Error', 'Masjid target tidak ditemukan', 'danger');
             return;
         }
 
@@ -301,7 +325,7 @@ export default function MasjidManagementPage() {
             .map(m => m.name);
 
         if (sourceNames.length === 0) {
-            alert('Nama target tidak boleh sama dengan semua nama yang dipilih');
+            showAlert('Perhatian', 'Nama target tidak boleh sama dengan semua nama yang dipilih', 'warning');
             return;
         }
 
@@ -313,37 +337,45 @@ export default function MasjidManagementPage() {
             });
 
             if (response.ok) {
-                alert(`Berhasil menggabungkan ${sourceNames.length} masjid`);
+                showAlert('Berhasil', `Berhasil menggabungkan ${sourceNames.length} masjid`, 'info');
                 setSelectedForMerge(new Set());
                 setMergeTarget('');
                 setIsMergeModalOpen(false);
                 fetchMasjid();
             } else {
                 const errorData = await response.json();
-                alert(`Gagal menggabungkan masjid: ${errorData.error || 'Unknown error'}`);
+                showAlert('Gagal', `Gagal menggabungkan masjid: ${errorData.error || 'Unknown error'}`, 'danger');
             }
         } catch (error) {
             console.error('Error merging masjid:', error);
-            alert('Terjadi kesalahan saat menggabungkan');
+            showAlert('Kesalahan', 'Terjadi kesalahan saat menggabungkan', 'danger');
         }
     };
 
-    const handleBulkExtract = async () => {
+    const handleBulkExtract = () => {
         const toExtract = masjidList.filter(m => m.gmapsUrl);
         if (toExtract.length === 0) {
-            alert('Tidak ada masjid yang memiliki URL Maps.');
+            showAlert('Pesan', 'Tidak ada masjid yang memiliki URL Maps.', 'info');
             return;
         }
 
-        const mode = confirm(`Update massal untuk ${toExtract.length} masjid melalui Google Maps?\n\n- Klik OK untuk update Koordinat DAN Nama Masjid sesuai Google Maps.\n- Klik Cancel jika hanya ingin update Koordinat saja.`) ? 'all' : 'coords';
+        setBulkExtractToProcess(toExtract);
+        setIsBulkExtractModalOpen(true);
+    };
 
-        if (!confirm(`Mulai proses update untuk ${toExtract.length} masjid?`)) return;
+    const proceedToFinalConfirm = (mode: 'all' | 'coords') => {
+        setBulkExtractMode(mode);
+        setIsBulkExtractModalOpen(false);
+        setIsFinalConfirmOpen(true);
+    };
 
+    const startBulkExtract = async () => {
+        setIsFinalConfirmOpen(false);
         setLoading(true);
         let successCount = 0;
         let failCount = 0;
 
-        for (const masjid of toExtract) {
+        for (const masjid of bulkExtractToProcess) {
             try {
                 const res = await fetch('/api/tools/extract-gmaps', {
                     method: 'POST',
@@ -354,7 +386,7 @@ export default function MasjidManagementPage() {
 
                 if (data.success) {
                     const updateData = {
-                        name: (mode === 'all' && data.placeName) ? data.placeName : masjid.name,
+                        name: (bulkExtractMode === 'all' && data.placeName) ? data.placeName : masjid.name,
                         city: masjid.city,
                         address: masjid.address,
                         gmapsUrl: data.expandedUrl || masjid.gmapsUrl,
@@ -377,9 +409,9 @@ export default function MasjidManagementPage() {
             }
         }
 
-        alert(`Proses selesai!\nBerhasil: ${successCount}\nGagal: ${failCount}`);
+        setLoading(false);
+        setBulkExtractStats({ success: successCount, fail: failCount });
         fetchMasjid();
-        setLoading(false); // Make sure to reset loading
     };
 
     const handleSingleSync = async (masjid: Masjid) => {
@@ -400,7 +432,7 @@ export default function MasjidManagementPage() {
                 setSyncType('list');
                 setIsSyncConfirmOpen(true);
             } else {
-                alert('Gagal mengambil data dari Google Maps.');
+                showAlert('Gagal', 'Gagal mengambil data dari Google Maps.', 'danger');
             }
         } catch (error) {
             console.error(error);
@@ -1271,6 +1303,79 @@ export default function MasjidManagementPage() {
                     isLoading={isDeletingKajian}
                 />
             )}
+
+            {/* Bulk Extract Sequence Modals */}
+            {isBulkExtractModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl relative overflow-hidden">
+                        <div className="p-6 bg-blue-50 border-b border-blue-100 flex items-center gap-4">
+                            <div className="p-3 bg-blue-100 rounded-full">
+                                <MapPin className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <h3 className="font-bold text-slate-900 text-lg">Pilih Mode Update</h3>
+                            <button onClick={() => setIsBulkExtractModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <p className="text-slate-600 mb-6">Anda akan memproses <b>{bulkExtractToProcess.length}</b> masjid. Pilih informasi apa yang ingin diupdate dari Google Maps:</p>
+                            <div className="grid grid-cols-1 gap-3">
+                                <button
+                                    onClick={() => proceedToFinalConfirm('all')}
+                                    className="p-4 border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50 rounded-2xl text-left transition-all group"
+                                >
+                                    <div className="font-bold text-slate-900 group-hover:text-blue-700">🛒 Nama & Koordinat</div>
+                                    <div className="text-xs text-slate-500">Update koordinat GPS sekaligus menyesuaikan nama masjid sesuai Google Maps.</div>
+                                </button>
+                                <button
+                                    onClick={() => proceedToFinalConfirm('coords')}
+                                    className="p-4 border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50 rounded-2xl text-left transition-all group"
+                                >
+                                    <div className="font-bold text-slate-900 group-hover:text-blue-700">📍 Koordinat Saja</div>
+                                    <div className="text-xs text-slate-500">Hanya update koordinat GPS (Lat/Lng) tanpa mengubah nama masjid yang sudah ada.</div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isFinalConfirmOpen && (
+                <ConfirmationModal
+                    isOpen={isFinalConfirmOpen}
+                    onClose={() => setIsFinalConfirmOpen(false)}
+                    onConfirm={startBulkExtract}
+                    title="Mulai Update Massal?"
+                    message={`Sistem akan memproses ${bulkExtractToProcess.length} masjid dengan mode "${bulkExtractMode === 'all' ? 'Nama & Koordinat' : 'Koordinat Saja'}". Proses ini mungkin memakan waktu beberapa saat.`}
+                    confirmText="Ya, Mulai Sekarang"
+                    cancelText="Batal"
+                    type="warning"
+                />
+            )}
+
+            {bulkExtractStats && (
+                <ConfirmationModal
+                    isOpen={!!bulkExtractStats}
+                    onClose={() => setBulkExtractStats(null)}
+                    onConfirm={() => setBulkExtractStats(null)}
+                    title="Selesai!"
+                    message={`Proses update massal telah selesai.\n\n✅ Berhasil: ${bulkExtractStats.success}\n❌ Gagal: ${bulkExtractStats.fail}`}
+                    confirmText="Tutup"
+                    showCancel={false}
+                    type="info"
+                />
+            )}
+
+            <ConfirmationModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmText="OK"
+                showCancel={false}
+                type={alertConfig.type}
+            />
         </div>
     );
 }

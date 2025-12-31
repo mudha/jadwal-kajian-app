@@ -1,24 +1,58 @@
-
-> jadwal-kajian-app@0.1.0 build
-> next build
-
 Γû▓ Next.js 16.1.1 (Turbopack)
 - Environments: .env.local
 
 ΓÜá The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
   Creating an optimized production build ...
-Γ£ô Compiled successfully in 3.5s
+Γ£ô Compiled successfully in 20.8s
   Running TypeScript ...
-Failed to compile.
-
-./src/components/KajianCard.tsx:96:22
-Type error: Cannot find name 'isOnline'.
-
-  94 |                         </div>
-  95 |                     )}
-> 96 |                     {isOnline && (
-     |                      ^
-  97 |                         <div className="px-2 py-1 bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-blue-200/50">
-  98 |                             ≡ƒÄÑ Online
-  99 |                         </div>
-Next.js build worker exited with code: 1 and signal: null
+  Collecting page data using 15 workers ...
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒöæ add access controls to secrets: https://dotenvx.com/ops
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ΓÜÖ∩╕Å  load multiple .env files with { path: ['.env.local', '.env'] }
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒöä add secrets lifecycle management: https://dotenvx.com/ops
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒùé∩╕Å backup and recover secrets: https://dotenvx.com/ops
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒöæ add access controls to secrets: https://dotenvx.com/ops
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒ¢á∩╕Å  run anywhere with `dotenvx run -- yourcommand`
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ΓÜÖ∩╕Å  write to custom object with { processEnv: myObject }
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ΓÜÖ∩╕Å  specify custom .env file path with { path: '/custom/path/.env' }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ΓÜÖ∩╕Å  write to custom object with { processEnv: myObject }
+≡ƒôí Database: Remote Turso/LibSQL
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒöÉ encrypt with Dotenvx: https://dotenvx.com
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ΓÜÖ∩╕Å  suppress all logs with { quiet: true }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ΓÜÖ∩╕Å  write to custom object with { processEnv: myObject }
+≡ƒôí Database: Remote Turso/LibSQL
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ΓÜÖ∩╕Å  override existing env vars with { override: true }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒöÉ encrypt with Dotenvx: https://dotenvx.com
+≡ƒôí Database: Remote Turso/LibSQL
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ΓÜÖ∩╕Å  specify custom .env file path with { path: '/custom/path/.env' }
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ΓÜÖ∩╕Å  write to custom object with { processEnv: myObject }
+≡ƒôí Database: Remote Turso/LibSQL
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ≡ƒöä add secrets lifecycle management: https://dotenvx.com/ops
+≡ƒôí Database: Remote Turso/LibSQL
+  Generating static pages using 15 workers (0/56) ...
+  Generating static pages using 15 workers (14/56) 
+Γ¿» useSearchParams() should be wrapped in a suspense boundary at page "/favorit". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+    at Q (C:\Users\armud\.gemini\antigravity\scratch\jadwal-kajian-app\.next\server\chunks\ssr\node_modules_next_f2865b38._.js:2:2111)
+    at o (C:\Users\armud\.gemini\antigravity\scratch\jadwal-kajian-app\.next\server\chunks\ssr\node_modules_next_f2865b38._.js:4:5284)
+    at i (C:\Users\armud\.gemini\antigravity\scratch\jadwal-kajian-app\.next\server\chunks\ssr\[root-of-the-server]__4e9b3051._.js:1:7025)
+    at an (C:\Users\armud\.gemini\antigravity\scratch\jadwal-kajian-app\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.prod.js:2:84360)
+    at ai (C:\Users\armud\.gemini\antigravity\scratch\jadwal-kajian-app\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.prod.js:2:86179)
+    at al (C:\Users\armud\.gemini\antigravity\scratch\jadwal-kajian-app\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.prod.js:2:107953)
+    at as (C:\Users\armud\.gemini\antigravity\scratch\jadwal-kajian-app\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.prod.js:2:105368)
+    at am (C:\Users\armud\.gemini\antigravity\scratch\jadwal-kajian-app\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.prod.js:2:112882)
+    at au (C:\Users\armud\.gemini\antigravity\scratch\jadwal-kajian-app\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.prod.js:2:109985)
+    at al (C:\Users\armud\.gemini\antigravity\scratch\jadwal-kajian-app\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.prod.js:2:108231)
+Error occurred prerendering page "/favorit". Read more: https://nextjs.org/docs/messages/prerender-error
+Export encountered an error on /favorit/page: /favorit, exiting the build.
+Γ¿» Next.js build worker exited with code: 1 and signal: null

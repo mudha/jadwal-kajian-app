@@ -14,6 +14,7 @@ import AIInputSection from '@/components/admin/AIInputSection';
 import KajianCard from '@/components/KajianCard';
 import './batch-input.css';
 import ImageUpload from '@/components/ImageUpload';
+import ConfirmationModal from '@/components/admin/ConfirmationModal';
 
 function BatchInputPageContent() {
     const router = useRouter();
@@ -41,6 +42,23 @@ function BatchInputPageContent() {
     const [duplicateEntries, setDuplicateEntries] = useState<any[]>([]);
     const [pendingSaveEntries, setPendingSaveEntries] = useState<KajianEntry[]>([]);
     const [isSaving, setIsSaving] = useState(false);
+
+    // Alert Modal State
+    const [alertConfig, setAlertConfig] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        type: 'danger' | 'warning' | 'info';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'info'
+    });
+
+    const showAlert = (title: string, message: string, type: 'danger' | 'warning' | 'info' = 'info') => {
+        setAlertConfig({ isOpen: true, title, message, type });
+    };
 
     // Common waktu suggestions for kajian
     const waktuSuggestions = [
@@ -978,7 +996,7 @@ function BatchInputPageContent() {
 
                                                                         <button
                                                                             onClick={async () => {
-                                                                                if (!entry.gmapsUrl) return alert('Masukkan URL Maps terlebih dahulu');
+                                                                                if (!entry.gmapsUrl) return showAlert('Peringatan', 'Masukkan URL Maps terlebih dahulu', 'warning');
                                                                                 setIsGeocoding(true);
                                                                                 try {
                                                                                     const res = await fetch('/api/tools/extract-gmaps', {
@@ -991,12 +1009,12 @@ function BatchInputPageContent() {
                                                                                         updateEntry(idx, 'lat', data.lat);
                                                                                         updateEntry(idx, 'lng', data.lng);
                                                                                         updateEntry(idx, 'gmapsUrl', data.expandedUrl);
-                                                                                        alert(`Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`);
+                                                                                        showAlert('Berhasil', `Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`, 'info');
                                                                                     } else {
-                                                                                        alert('Gagal mengekstrak: ' + data.error);
+                                                                                        showAlert('Gagal', 'Gagal mengekstrak: ' + data.error, 'danger');
                                                                                     }
                                                                                 } catch (e) {
-                                                                                    alert('Terjadi kesalahan sistem');
+                                                                                    showAlert('Kesalahan', 'Terjadi kesalahan sistem', 'danger');
                                                                                 } finally {
                                                                                     setIsGeocoding(false);
                                                                                 }
@@ -1484,6 +1502,17 @@ function BatchInputPageContent() {
                     </div>
                 </div>
             )}
+
+            <ConfirmationModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmText="OK"
+                showCancel={false}
+                type={alertConfig.type}
+            />
         </div>
     );
 }

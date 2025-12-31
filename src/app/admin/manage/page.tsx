@@ -70,6 +70,9 @@ function ManageKajianList() {
     const [duplicateToDelete, setDuplicateToDelete] = useState<Kajian | null>(null);
     const [isDeletingDuplicate, setIsDeletingDuplicate] = useState(false);
 
+    // Extract Confirmation State
+    const [isExtractConfirmOpen, setIsExtractConfirmOpen] = useState(false);
+
     // Notification Toast State
     const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
 
@@ -326,11 +329,12 @@ function ManageKajianList() {
 
     // ... (rest of code)
 
-    const handleExtractCoordinates = async () => {
-        if (!confirm('Ekstrak koordinat dari semua Google Maps URL?\n\nIni akan mengupdate kajian yang punya gmapsUrl tapi belum punya koordinat lat/lng.')) {
-            return;
-        }
+    const handleExtractCoordinates = () => {
+        setIsExtractConfirmOpen(true);
+    };
 
+    const confirmExtractCoordinates = async () => {
+        setIsExtractConfirmOpen(false);
         setIsExtracting(true);
         try {
             const res = await fetch('/api/admin/extract-coordinates', { method: 'POST' });
@@ -1401,6 +1405,20 @@ function ManageKajianList() {
                         </button>
                     </div>
                 </div>
+            )}
+
+            {isExtractConfirmOpen && (
+                <ConfirmationModal
+                    isOpen={isExtractConfirmOpen}
+                    onClose={() => setIsExtractConfirmOpen(false)}
+                    onConfirm={confirmExtractCoordinates}
+                    title="Ekstrak Koordinat Sekaligus?"
+                    message="Tindakan ini akan mencoba mengambil koordinat GPS (Lat/Lng) dari semua link Google Maps yang tersedia di database. Data yang sudah memiliki koordinat tidak akan diubah."
+                    confirmText="Mulai Ekstrak"
+                    cancelText="Batal"
+                    type="info"
+                    isLoading={isExtracting}
+                />
             )}
         </div>
     );

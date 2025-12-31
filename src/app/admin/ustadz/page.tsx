@@ -28,6 +28,23 @@ export default function UstadzManagementPage() {
     const [ustadzToDelete, setUstadzToDelete] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // Alert Modal State
+    const [alertConfig, setAlertConfig] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        type: 'danger' | 'warning' | 'info';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'info'
+    });
+
+    const showAlert = (title: string, message: string, type: 'danger' | 'warning' | 'info' = 'info') => {
+        setAlertConfig({ isOpen: true, title, message, type });
+    };
+
     useEffect(() => {
         fetchUstadz();
     }, []);
@@ -87,11 +104,11 @@ export default function UstadzManagementPage() {
                 setIsDeleteModalOpen(false);
                 setUstadzToDelete(null);
             } else {
-                alert('Gagal menghapus ustadz');
+                showAlert('Gagal', 'Gagal menghapus ustadz', 'danger');
             }
         } catch (error) {
             console.error('Error deleting ustadz:', error);
-            alert('Terjadi kesalahan saat menghapus data');
+            showAlert('Kesalahan', 'Terjadi kesalahan saat menghapus data', 'danger');
         } finally {
             setIsDeleting(false);
         }
@@ -125,19 +142,19 @@ export default function UstadzManagementPage() {
 
     const handleMerge = async () => {
         if (selectedForMerge.size < 2) {
-            alert('Pilih minimal 2 ustadz untuk digabung');
+            showAlert('Perhatian', 'Pilih minimal 2 ustadz untuk digabung', 'warning');
             return;
         }
 
         if (!mergeTarget) {
-            alert('Pilih nama target untuk penggabungan');
+            showAlert('Perhatian', 'Pilih nama target untuk penggabungan', 'warning');
             return;
         }
 
         const sourceNames = Array.from(selectedForMerge).filter(name => name !== mergeTarget);
 
         if (sourceNames.length === 0) {
-            alert('Nama target tidak boleh sama dengan semua nama yang dipilih');
+            showAlert('Perhatian', 'Nama target tidak boleh sama dengan semua nama yang dipilih', 'warning');
             return;
         }
 
@@ -149,17 +166,17 @@ export default function UstadzManagementPage() {
             });
 
             if (response.ok) {
-                alert(`Berhasil menggabungkan ${sourceNames.length} nama ustadz`);
+                showAlert('Berhasil', `Berhasil menggabungkan ${sourceNames.length} nama ustadz`, 'info');
                 setSelectedForMerge(new Set());
                 setMergeTarget('');
                 setIsMergeModalOpen(false);
                 fetchUstadz();
             } else {
-                alert('Gagal menggabungkan ustadz');
+                showAlert('Gagal', 'Gagal menggabungkan ustadz', 'danger');
             }
         } catch (error) {
             console.error('Error merging ustadz:', error);
-            alert('Terjadi kesalahan saat menggabungkan');
+            showAlert('Kesalahan', 'Terjadi kesalahan saat menggabungkan', 'danger');
         }
     };
 
@@ -583,6 +600,17 @@ export default function UstadzManagementPage() {
                 cancelText="Batal"
                 type="danger"
                 isLoading={isDeleting}
+            />
+
+            <ConfirmationModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmText="OK"
+                showCancel={false}
+                type={alertConfig.type}
             />
         </div>
     );
