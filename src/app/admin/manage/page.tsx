@@ -534,11 +534,11 @@ export default function AdminManagePage() {
                                         {currentItems.map((item) => (
                                             <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
                                                 <td className="pl-4 pr-2 py-4 align-top truncate"> {/* align-top for consistency */}
-                                                    <div className="flex items-center gap-2 text-slate-900 font-bold truncate">
+                                                    <div className="flex items-center gap-2 text-slate-900 font-bold">
                                                         <Calendar className="w-4 h-4 text-blue-500 shrink-0" />
-                                                        <span className="truncate">{item.date}</span>
+                                                        <span className="">{item.date}</span>
                                                     </div>
-                                                    <p className="pl-6 text-sm text-slate-600 font-medium truncate">{item.waktu}</p>
+                                                    <p className="pl-6 text-sm text-slate-600 font-medium">{item.waktu}</p>
                                                 </td>
                                                 <td className="px-2 py-4 align-top">
                                                     {item.imageUrl ? (
@@ -551,23 +551,23 @@ export default function AdminManagePage() {
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td className="px-4 py-4 align-top">
-                                                    <div className="flex items-center gap-2 truncate">
-                                                        <div className="font-bold text-slate-900 truncate" title={item.masjid}>{item.masjid}</div>
+                                                <td className="px-4 py-4 align-top whitespace-normal">
+                                                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                        <div className="font-bold text-slate-900 break-words w-full" title={item.masjid}>{item.masjid}</div>
                                                         {item.lat && item.lng && (
                                                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-teal-50 text-teal-600 rounded-md text-[9px] font-black uppercase tracking-tighter border border-teal-100 shrink-0">
                                                                 <MapPin className="w-2 h-2 fill-teal-600" /> GPS
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <div className="flex items-center gap-1 text-sm text-slate-600 mt-1 font-medium truncate">
-                                                        <MapPin className="w-3 h-3 shrink-0" />
-                                                        <span className="truncate" title={item.city}>{item.city}</span>
+                                                    <div className="flex items-start gap-1 text-sm text-slate-600 font-medium">
+                                                        <MapPin className="w-3 h-3 shrink-0 mt-1" />
+                                                        <span className="break-words" title={item.city}>{item.city}</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-4 align-top">
-                                                    <div className="font-bold text-slate-900 truncate" title={item.pemateri}>{item.pemateri}</div>
-                                                    <p className="text-sm text-slate-600 font-medium line-clamp-2 leading-snug" title={item.tema}>{item.tema}</p>
+                                                <td className="px-4 py-4 align-top whitespace-normal">
+                                                    <div className="font-bold text-slate-900 break-words mb-1" title={item.pemateri}>{item.pemateri}</div>
+                                                    <p className="text-sm text-slate-600 font-medium leading-snug break-words" title={item.tema}>{item.tema}</p>
                                                 </td>
                                                 <td className="px-4 py-4 text-center">
                                                     <span className="inline-flex items-center justify-center px-3 py-1 bg-green-100 text-green-700 rounded-full font-bold text-xs">
