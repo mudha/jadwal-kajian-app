@@ -1,10 +1,18 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { Home, BookOpen, Star } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function BottomNav() {
     const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    // Safely check for client-side rendering if needed, but useSearchParams is better
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     const navItems = [
         { href: '/', icon: Home, label: 'Beranda' },
@@ -22,24 +30,37 @@ export default function BottomNav() {
             <div className="max-w-md mx-auto px-4">
                 <div className="flex items-center justify-around h-16">
                     {navItems.map(({ href, icon: Icon, label }) => {
-                        // Check if active (handle query params for nearby)
-                        const isActive = pathname === href.split('?')[0] && (href.includes('?') ? window.location.search.includes('mode=nearby') : true);
+                        const baseUrl = href.split('?')[0];
+                        const isBasePathMatch = pathname === baseUrl || (baseUrl === '/' && pathname === '/');
 
-                        // For basic matching if query param check is too complex for SSR/hydration safety, 
-                        // we can mostly rely on pathname match for simplicity or accept rough matching.
-                        // Better approach for formatting 'Kajian Terdekat' to stack:
+                        // Check query param if it exists in the nav item
+                        let isActive = isBasePathMatch;
+                        if (href.includes('?')) {
+                            const neededMode = new URLSearchParams(href.split('?')[1]).get('mode');
+                            const currentMode = searchParams?.get('mode');
+                            isActive = isBasePathMatch && currentMode === neededMode;
+                        }
+
+                        // Just highlighting if path starts with it is usually enough for simple navs, 
+                        // but let's stick to the styling logic we had:
+                        // Highlighting logic:
+                        // 1. If exact match (including query if present)
+                        // 2. Or if it's the active section
+
+                        const isSectionActive = pathname.startsWith(baseUrl) && baseUrl !== '/';
+
                         const isMultiLine = label.includes(' ');
 
                         return (
                             <Link
                                 key={href}
                                 href={href}
-                                className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-lg transition-colors ${pathname.startsWith(href.split('?')[0])
+                                className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-lg transition-colors ${isSectionActive || (pathname === '/' && baseUrl === '/')
                                     ? 'text-teal-600'
                                     : 'text-slate-400 hover:text-slate-600'
                                     }`}
                             >
-                                <Icon className={`w-6 h-6 ${pathname.startsWith(href.split('?')[0]) ? 'fill-teal-600' : ''}`} />
+                                <Icon className={`w-6 h-6 ${isSectionActive || (pathname === '/' && baseUrl === '/') ? 'fill-teal-600' : ''}`} />
                                 <span className={`text-[10px] font-bold text-center leading-none ${isMultiLine ? 'w-16' : ''}`}>
                                     {label}
                                 </span>
