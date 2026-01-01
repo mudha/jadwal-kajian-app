@@ -137,7 +137,7 @@ export default function BerandaPage() {
     }
   };
 
-  const [quickMenuItems, setQuickMenuItems] = useState(null);
+  const [quickMenuItems, setQuickMenuItems] = useState<any[] | null>(null);
 
   useEffect(() => {
     fetchData();
