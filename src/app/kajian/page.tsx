@@ -861,26 +861,21 @@ function KajianListContent() {
                     >
                         <button
                             onClick={() => setSelectedImage(null)}
-                            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all"
+                            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all z-[101]"
                         >
                             <X className="w-8 h-8" />
                         </button>
+
                         <div
-                            className="absolute top-20 left-10 bg-white p-2 rounded text-xs z-[110]"
+                            className="relative max-w-[90vw] max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden p-1"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            DEBUG: {selectedImage}
+                            <img
+                                src={selectedImage}
+                                alt="Preview Kajian"
+                                className="w-auto h-auto max-w-full max-h-[calc(90vh-2rem)] object-contain mx-auto"
+                            />
                         </div>
-                        <img
-                            src={selectedImage}
-                            alt="Preview Kajian"
-                            className="max-w-[90vw] max-h-[90vh] rounded-2xl shadow-2xl bg-white"
-                            onClick={(e) => e.stopPropagation()}
-                            onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                alert('Gagal memuat gambar: ' + selectedImage);
-                            }}
-                        />
                     </div>
                 )
             }
