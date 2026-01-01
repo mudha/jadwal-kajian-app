@@ -59,7 +59,7 @@ export default async function AdminDashboardPage() {
                     value={stats.jadwalHariIni}
                     icon={Radio}
                     theme="emerald"
-                    trend="+12% dari kemarin"
+                    trend={stats.jadwalTrend}
                 />
                 <StatCard
                     title="Total Jadwal"
