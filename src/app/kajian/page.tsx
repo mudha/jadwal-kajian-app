@@ -867,7 +867,8 @@ function KajianListContent() {
                         </button>
                         <img
                             src={selectedImage}
-                            className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300"
+                            alt="Preview Kajian"
+                            className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl duration-300"
                             onClick={(e) => e.stopPropagation()}
                         />
                     </div>
