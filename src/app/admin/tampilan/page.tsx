@@ -262,7 +262,8 @@ export default function AdminTampilanPage() {
                 console.error('Failed to fetch layout:', err);
                 setLayout({
                     ...DEFAULT_DESKTOP_LAYOUT,
-                    ...DEFAULT_MOBILE_LAYOUT
+                    ...DEFAULT_MOBILE_LAYOUT,
+                    hidden_menu: []
                 });
                 setLoading(false);
             });
