@@ -20,7 +20,7 @@ export default function KajianListWidget({ data }: WidgetProps) {
     const hasDistanceData = rawKajian.some((k: any) => typeof k.distance === 'number');
 
     // Default max distance can be 20km initially
-    const [maxDistance, setMaxDistance] = useState(20);
+    const [maxDistance, setMaxDistance] = useState(11);
     const [filteredKajian, setFilteredKajian] = useState(rawKajian);
 
     useEffect(() => {
@@ -60,7 +60,7 @@ export default function KajianListWidget({ data }: WidgetProps) {
                         <input
                             type="range"
                             min="1"
-                            max="50"
+                            max="100"
                             value={maxDistance}
                             onChange={(e) => setMaxDistance(parseInt(e.target.value))}
                             className="w-32 md:w-24 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600 hover:accent-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"

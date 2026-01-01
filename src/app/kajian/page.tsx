@@ -525,7 +525,7 @@ function KajianListContent() {
                                 <input
                                     type="range"
                                     min="1"
-                                    max="50"
+                                    max="100"
                                     value={radius}
                                     onChange={async (e) => {
                                         const newRadius = parseInt(e.target.value);
@@ -542,13 +542,13 @@ function KajianListContent() {
                                     }}
                                     className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                                     style={{
-                                        background: `linear-gradient(to right, rgb(37 99 235) 0%, rgb(37 99 235) ${(radius / 50) * 100}%, rgb(226 232 240) ${(radius / 50) * 100}%, rgb(226 232 240) 100%)`
+                                        background: `linear-gradient(to right, rgb(37 99 235) 0%, rgb(37 99 235) ${(radius / 100) * 100}%, rgb(226 232 240) ${(radius / 100) * 100}%, rgb(226 232 240) 100%)`
                                     }}
                                 />
                                 <div className="flex justify-between text-[10px] text-slate-400 font-bold mt-2">
                                     <span>1 km</span>
-                                    <span>25 km</span>
                                     <span>50 km</span>
+                                    <span>100 km</span>
                                 </div>
                             </div>
                         )}
@@ -568,7 +568,7 @@ function KajianListContent() {
                                             onClick={() => {
                                                 setSearchTerm('');
                                                 setActiveTab('upcoming');
-                                                setRadius(50);
+                                                setRadius(11);
                                             }}
                                             className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-sm transition-colors"
                                         >

@@ -19,7 +19,7 @@ interface AppSettings {
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
-    radius: 15,
+    radius: 11,
     userLocation: null,
     notifications: {
         adzan: true,
