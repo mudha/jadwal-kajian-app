@@ -856,7 +856,7 @@ function KajianListContent() {
             {
                 selectedImage && (
                     <div
-                        className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+                        className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
                         onClick={() => setSelectedImage(null)}
                     >
                         <button
@@ -868,7 +868,7 @@ function KajianListContent() {
                         <img
                             src={selectedImage}
                             alt="Preview Kajian"
-                            className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl duration-300"
+                            className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl bg-white"
                             onClick={(e) => e.stopPropagation()}
                         />
                     </div>
