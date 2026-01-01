@@ -1,4 +1,4 @@
-import { getAdminStats, AdminStats } from '@/lib/db-stats';
+import { getAdminStats, DashboardStats } from '@/lib/db-stats';
 import { formatIndoDate } from '@/lib/date-utils';
 import Link from 'next/link';
 import {
@@ -19,7 +19,7 @@ import {
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboardPage() {
-    const stats: AdminStats = await getAdminStats();
+    const stats: DashboardStats = await getAdminStats();
 
     return (
         <div className="space-y-8">
