@@ -4,6 +4,7 @@ import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import Navbar from "@/components/Navbar";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import Footer from "@/components/Footer";
 import { Suspense } from 'react';
 
 const geistSans = Geist({
@@ -112,6 +113,7 @@ export default function RootLayout({
             <GlobalPullToRefresh>
               {children}
             </GlobalPullToRefresh>
+            <Footer />
           </main>
           <Suspense fallback={null}>
             <BottomNav />
