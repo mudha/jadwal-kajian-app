@@ -856,24 +856,23 @@ function KajianListContent() {
             {
                 selectedImage && (
                     <div
-                        className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
+                        className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
                         onClick={() => setSelectedImage(null)}
                     >
                         <button
                             onClick={() => setSelectedImage(null)}
-                            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all z-[101]"
+                            className="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all z-10"
                         >
-                            <X className="w-8 h-8" />
+                            <X className="w-6 h-6" />
                         </button>
-
                         <div
-                            className="relative max-w-[90vw] max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden p-1"
-                            onClick={(e) => e.stopPropagation()}
+                            className="relative max-w-5xl w-full max-h-[90vh] animate-in zoom-in-95 duration-200 pointer-events-none"
                         >
                             <img
                                 src={selectedImage}
                                 alt="Preview Kajian"
-                                className="w-auto h-auto max-w-full max-h-[calc(90vh-2rem)] object-contain mx-auto"
+                                className="w-full h-full object-contain rounded-2xl shadow-2xl pointer-events-auto"
+                                onClick={(e) => e.stopPropagation()}
                             />
                         </div>
                     </div>
