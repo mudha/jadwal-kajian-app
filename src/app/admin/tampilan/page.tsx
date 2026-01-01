@@ -241,25 +241,31 @@ export default function AdminTampilanPage() {
     ];
 
     useEffect(() => {
-        // Fetch Layout
-        fetch('/api/settings/layout')
-            .then(res => res.json())
-            .then(data => {
-                if (data && (data.sidebar || data.main)) {
-                    const mobile = data.mobile || DEFAULT_MOBILE_LAYOUT.mobile;
-                    const hidden_mobile = data.hidden_mobile || DEFAULT_MOBILE_LAYOUT.hidden_mobile;
-                    const hidden_menu = data.hidden_menu || [];
+        setLoading(true);
+        Promise.all([
+            fetch('/api/settings/layout').then(res => res.json()),
+            fetch('/api/settings/quick-menu').then(res => res.json())
+        ])
+            .then(([layoutData, menuData]) => {
+                // 1. Handle Layout Data
+                let currentHiddenMenu: string[] = [];
 
-                    let sidebar = data.sidebar || DEFAULT_DESKTOP_LAYOUT.sidebar;
-                    const main = data.main || DEFAULT_DESKTOP_LAYOUT.main;
-                    const hidden = data.hidden || DEFAULT_DESKTOP_LAYOUT.hidden;
+                if (layoutData && (layoutData.sidebar || layoutData.main)) {
+                    const mobile = layoutData.mobile || DEFAULT_MOBILE_LAYOUT.mobile;
+                    const hidden_mobile = layoutData.hidden_mobile || DEFAULT_MOBILE_LAYOUT.hidden_mobile;
+                    const hidden_menu = layoutData.hidden_menu || [];
+                    currentHiddenMenu = hidden_menu;
+
+                    let sidebar = layoutData.sidebar || DEFAULT_DESKTOP_LAYOUT.sidebar;
+                    const main = layoutData.main || DEFAULT_DESKTOP_LAYOUT.main;
+                    const hidden = layoutData.hidden || DEFAULT_DESKTOP_LAYOUT.hidden;
 
                     // Ensure SidebarBrandWidget is present in Admin too
                     if (Array.isArray(sidebar) && !sidebar.includes('SidebarBrandWidget')) {
                         sidebar = ['SidebarBrandWidget', ...sidebar];
                     }
 
-                    setLayout({ ...data, sidebar, main, hidden, mobile, hidden_mobile, hidden_menu });
+                    setLayout({ ...layoutData, sidebar, main, hidden, mobile, hidden_mobile, hidden_menu });
                 } else {
                     setLayout({
                         ...DEFAULT_DESKTOP_LAYOUT,
@@ -267,30 +273,39 @@ export default function AdminTampilanPage() {
                         hidden_menu: []
                     });
                 }
-                setLoading(false);
+
+                // 2. Handle Quick Menu Data
+                if (menuData && Array.isArray(menuData) && menuData.length > 0) {
+                    // Merge logic: Add default items that are missing from saved data AND not in hidden list
+                    const savedIds = new Set(menuData.map((item: any) => item.id));
+                    const hiddenIds = new Set(currentHiddenMenu);
+
+                    const missingDefaults = DEFAULT_MENU_ITEMS.filter(item =>
+                        !savedIds.has(item.id) && !hiddenIds.has(item.id)
+                    );
+
+                    setMenuItems([...menuData, ...missingDefaults]);
+                } else {
+                    // If no saved menu data, use default but exclude hidden if any (though usually hidden implies saved layout)
+                    if (currentHiddenMenu.length > 0) {
+                        const visibleDefaults = DEFAULT_MENU_ITEMS.filter(item => !currentHiddenMenu.includes(item.id));
+                        setMenuItems(visibleDefaults);
+                    } else {
+                        setMenuItems(DEFAULT_MENU_ITEMS);
+                    }
+                }
             })
             .catch(err => {
-                console.error('Failed to fetch layout:', err);
+                console.error('Failed to fetch settings:', err);
+                // Fallback
                 setLayout({
                     ...DEFAULT_DESKTOP_LAYOUT,
                     ...DEFAULT_MOBILE_LAYOUT,
                     hidden_menu: []
                 });
-                setLoading(false);
-            });
-
-        // Fetch Quick Menu
-        fetch('/api/settings/quick-menu')
-            .then(res => res.json())
-            .then(data => {
-                if (data && Array.isArray(data) && data.length > 0) {
-                    // Merge logic: Add default items that are missing from saved data
-                    const savedIds = new Set(data.map((item: any) => item.id));
-                    const missingDefaults = DEFAULT_MENU_ITEMS.filter(item => !savedIds.has(item.id));
-                    setMenuItems([...data, ...missingDefaults]);
-                } else {
-                    setMenuItems(DEFAULT_MENU_ITEMS);
-                }
+                setMenuItems(DEFAULT_MENU_ITEMS);
+            })
+            .finally(() => {
                 setLoading(false);
             });
     }, []);
