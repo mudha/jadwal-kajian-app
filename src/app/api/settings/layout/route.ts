@@ -2,9 +2,11 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 
 const DEFAULT_LAYOUT = {
-    sidebar: ['MenuWidget', 'PrayerTimesWidget', 'ContactWidget'],
+    sidebar: ['SidebarBrandWidget', 'SidebarMenuWidget', 'PrayerTimesWidget', 'ContactWidget'],
     main: ['HeroWidget', 'QuickMenuWidget', 'OngoingWidget', 'LatestKajianWidget', 'KajianListWidget'],
-    hidden: []
+    mobile: ['HeroWidget:mobile', 'QuickMenuWidget:mobile', 'OngoingWidget:mobile', 'LatestKajianWidget:mobile', 'KajianListWidget:mobile'],
+    hidden: [],
+    hidden_mobile: ['SidebarMenuWidget:mobile', 'PrayerTimesWidget:mobile', 'ContactWidget:mobile']
 };
 
 export async function GET() {
