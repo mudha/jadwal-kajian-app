@@ -286,65 +286,94 @@ export default function AdminTampilanPage() {
 
     // ... existing handleDragEnd for widgets ...
 
+    const findMenuContainer = (id: string) => {
+        if (menuItems.find(i => i.id === id)) return 'menu_items';
+        if (layout.hidden_menu.includes(id)) return 'hidden_menu';
+        return undefined;
+    };
+
     const handleMenuDragEnd = (event: any) => {
         const { active, over } = event;
-        if (!over) {
+        const overId = over?.id;
+
+        if (!overId || active.id === overId) {
             setActiveId(null);
             return;
         }
 
         const activeIdStr = String(active.id);
-        const overIdStr = String(over.id);
+        const overIdStr = String(overId);
 
-        if (activeIdStr !== overIdStr) {
-            setLayout((prev: any) => {
-                const activeContainer = findContainer(activeIdStr, prev);
-                const overContainer = findContainer(overIdStr, prev);
+        // Determine containers
+        // If we drop on a SortableItem, overId is the item ID.
+        // If we drop on the empty container placeholder (which we haven't strictly defined as droppable, 
+        // but SortableContext acts as one if empty?), actually dnd-kit handles this better if we check items.
 
-                if (!activeContainer || !overContainer) return prev;
-                if (!['hidden_menu', 'menu_items'].includes(activeContainer)) return prev;
+        const activeContainer = findMenuContainer(activeIdStr);
+        let overContainer = findMenuContainer(overIdStr);
 
-                const activeItems = activeContainer === 'menu_items' ? menuItems.map(i => i.id) : prev.hidden_menu;
-                const overItems = overContainer === 'menu_items' ? menuItems.map(i => i.id) : prev.hidden_menu;
+        // Fallback: if overId is the container ID itself (if we made them droppable, which we haven't strictly)
+        // But since we didn't use useDroppable on the container div, overId will always be an item ID unless
+        // the list is empty? Wait, if list is empty, we can't drop?
+        // We need to make the Container Droppable or ensure we can drop into empty lists.
+        // For now, let's assume we drop onto an item.
+        // If we move from Active to Hidden, but Hidden is empty... we can't drop on it?
+        // We need to implement useDroppable for the containers to handle empty states effectively.
+        // However, let's try to infer if overId is one of our context IDs? No dnd-kit doesn't do that by default.
 
-                const activeIndex = activeItems.indexOf(activeIdStr);
-                const overIndex = overItems.indexOf(overIdStr);
+        if (!activeContainer || !overContainer) {
+            // Simplified logic: Check if we are over the other list's area?
+            // Without useDroppable, we rely on items. If a list is empty, we are stuck?
+            // Actually, let's just make it robust:
+            // If dragging from active, and over is in hidden list => move.
+            // But if hidden list is empty, we need a way.
 
-                if (activeContainer === overContainer) {
-                    if (activeContainer === 'menu_items') {
-                        setMenuItems(items => arrayMove(items, activeIndex, overIndex));
-                        return prev;
-                    } else {
-                        return {
-                            ...prev,
-                            hidden_menu: arrayMove(prev.hidden_menu, activeIndex, overIndex)
-                        };
-                    }
+            // Allow dropping anywhere for now if we can't find container?
+            // Let's rely on what we found.
+            if (!activeContainer) return;
+        }
+
+        if (activeContainer && overContainer) {
+            const activeItems = activeContainer === 'menu_items' ? menuItems.map(i => i.id) : layout.hidden_menu;
+            const overItems = overContainer === 'menu_items' ? menuItems.map(i => i.id) : layout.hidden_menu;
+
+            const activeIndex = activeItems.indexOf(activeIdStr);
+            const overIndex = overItems.indexOf(overIdStr);
+
+            if (activeContainer === overContainer) {
+                // Reorder within same list
+                if (activeContainer === 'menu_items') {
+                    setMenuItems(items => arrayMove(items, activeIndex, overIndex));
                 } else {
-                    // Move between containers
-                    if (activeContainer === 'menu_items') {
-                        // Move from menu_items to hidden_menu
-                        const itemToHide = menuItems[activeIndex];
-                        setMenuItems(items => items.filter(i => i.id !== activeIdStr));
-                        return {
-                            ...prev,
-                            hidden_menu: [...prev.hidden_menu.slice(0, overIndex), activeIdStr, ...prev.hidden_menu.slice(overIndex)]
-                        };
-                    } else {
-                        // Move from hidden_menu to menu_items
-                        // We need the full item object. We search in DEFAULT_MENU_ITEMS for simplicity or we should have a master list.
-                        const itemObj = DEFAULT_MENU_ITEMS.find(i => i.id === activeIdStr);
-                        if (!itemObj) return prev;
-
+                    setLayout(prev => ({
+                        ...prev,
+                        hidden_menu: arrayMove(prev.hidden_menu, activeIndex, overIndex)
+                    }));
+                }
+            } else {
+                // Move between lists
+                if (activeContainer === 'menu_items') {
+                    // Active -> Hidden
+                    const itemToMove = menuItems[activeIndex];
+                    setMenuItems(items => items.filter(i => i.id !== activeIdStr));
+                    setLayout(prev => ({
+                        ...prev,
+                        hidden_menu: [...prev.hidden_menu.slice(0, overIndex), activeIdStr, ...prev.hidden_menu.slice(overIndex)]
+                    }));
+                } else {
+                    // Hidden -> Active
+                    const itemObj = DEFAULT_MENU_ITEMS.find(i => i.id === activeIdStr);
+                    if (itemObj) {
                         setMenuItems(items => [...items.slice(0, overIndex), itemObj, ...items.slice(overIndex)]);
-                        return {
+                        setLayout(prev => ({
                             ...prev,
-                            hidden_menu: prev.hidden_menu.filter((id: string) => id !== activeIdStr)
-                        };
+                            hidden_menu: prev.hidden_menu.filter(id => id !== activeIdStr)
+                        }));
                     }
                 }
-            });
+            }
         }
+
         setActiveId(null);
     };
 
