@@ -865,11 +865,21 @@ function KajianListContent() {
                         >
                             <X className="w-8 h-8" />
                         </button>
+                        <div
+                            className="absolute top-20 left-10 bg-white p-2 rounded text-xs z-[110]"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            DEBUG: {selectedImage}
+                        </div>
                         <img
                             src={selectedImage}
                             alt="Preview Kajian"
-                            className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl bg-white"
+                            className="max-w-[90vw] max-h-[90vh] rounded-2xl shadow-2xl bg-white"
                             onClick={(e) => e.stopPropagation()}
+                            onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                alert('Gagal memuat gambar: ' + selectedImage);
+                            }}
                         />
                     </div>
                 )
