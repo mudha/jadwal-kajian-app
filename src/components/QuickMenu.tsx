@@ -139,7 +139,7 @@ export default function QuickMenu({ customItems }: { customItems?: any[] }) {
 
     return (
         <div className="mb-6">
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-3 md:gap-4">
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-3 md:gap-4 min-h-[320px] md:min-h-[280px]">
                 {items.map((item) => {
                     const Icon = ICON_MAP[item.iconName] || Home;
                     return (
