@@ -15,6 +15,7 @@ import KajianCard from '@/components/KajianCard';
 import './batch-input.css';
 import ImageUpload from '@/components/ImageUpload';
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
+import ProgressModal from '@/components/admin/ProgressModal';
 
 function BatchInputPageContent() {
     const router = useRouter();
@@ -54,6 +55,16 @@ function BatchInputPageContent() {
         title: '',
         message: '',
         type: 'info'
+    });
+
+    // Progress Modal State
+    const [progressModal, setProgressModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        progress: 0,
+        currentStep: 0,
+        totalSteps: 0
     });
 
     const showAlert = (title: string, message: string, type: 'danger' | 'warning' | 'info' = 'info') => {
@@ -180,7 +191,14 @@ function BatchInputPageContent() {
         try {
             // Use Regex pattern matching for extraction
             setIsGeocoding(true);
-            setMessage('Sedang mengekstrak data dengan Regex...');
+            setProgressModal({
+                isOpen: true,
+                title: 'Proses Ekstraksi',
+                message: 'Sedang mengekstrak data dengan Regex...',
+                progress: 10,
+                currentStep: 0,
+                totalSteps: 0
+            });
 
             const parsed = parseKajianBroadcast(inputText);
             const enrichedEntries = parsed.map(entry => {
@@ -200,13 +218,28 @@ function BatchInputPageContent() {
             });
             setEntries(enrichedEntries);
             setSelectedIndices(new Set(enrichedEntries.map((_, i) => i)));
-            setMessage(`Berhasil mengekstrak ${parsed.length} jadwal. Memulai pencarian koordinat lokasi...`);
+            setProgressModal({
+                isOpen: true,
+                title: 'Proses Ekstraksi',
+                message: `Berhasil mengekstrak ${enrichedEntries.length} jadwal. Memulai pencarian koordinat lokasi...`,
+                progress: 20,
+                currentStep: 0,
+                totalSteps: enrichedEntries.length
+            });
 
             const withCoords = [...enrichedEntries];
 
             // 1. Geocoding
             for (let i = 0; i < withCoords.length; i++) {
                 const entry = withCoords[i];
+                const progress = 20 + ((i / withCoords.length) * 40);
+                setProgressModal(prev => ({
+                    ...prev,
+                    progress,
+                    currentStep: i + 1,
+                    message: `Mencari koordinat lokasi... (${i + 1}/${withCoords.length})`
+                }));
+
                 const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
                 if (coords) {
                     // Generate Google Maps URL from coordinates
@@ -217,11 +250,25 @@ function BatchInputPageContent() {
             }
 
             // 2. Normalization (Matching AI settings)
-            setMessage('Menormalisasi nama ustadz dan masjid...');
+            setProgressModal({
+                isOpen: true,
+                title: 'Proses Ekstraksi',
+                message: 'Menormalisasi nama ustadz dan masjid...',
+                progress: 60,
+                currentStep: 0,
+                totalSteps: withCoords.length
+            });
             const normalized = [...withCoords];
 
             for (let i = 0; i < normalized.length; i++) {
                 const entry = normalized[i];
+                const progress = 60 + ((i / normalized.length) * 35);
+                setProgressModal(prev => ({
+                    ...prev,
+                    progress,
+                    currentStep: i + 1,
+                    message: `Menormalisasi nama... (${i + 1}/${normalized.length})`
+                }));
 
                 // Normalize ustadz name
                 try {
@@ -279,8 +326,24 @@ function BatchInputPageContent() {
             }
 
             setLastImageUrl(null); // Reset after processing
+
+            // Completion
+            setProgressModal({
+                isOpen: true,
+                title: 'Ekstraksi Selesai!',
+                message: `Alhamdulillah! ${normalized.length} jadwal berhasil diekstrak dan siap disimpan.`,
+                progress: 100,
+                currentStep: normalized.length,
+                totalSteps: normalized.length
+            });
             setMessage(`Ekstraksi selesai. Data telah diproses dan dinormalisasi.`);
+
+            // Auto-close modal after 3 seconds
+            setTimeout(() => {
+                setProgressModal(prev => ({ ...prev, isOpen: false }));
+            }, 3000);
         } catch (e: any) {
+            setProgressModal(prev => ({ ...prev, isOpen: false }));
             setMessage(`Gagal memproses: ${e.message || 'Kesalahan'}. Pastikan format sesuai.`);
             console.error(e);
         } finally {
@@ -480,65 +543,115 @@ function BatchInputPageContent() {
     };
 
     const handleConfirmSave = async (action: 'all' | 'skip') => {
-        setIsSaving(true);
-        setShowDuplicateModal(false);
-
-        let finalEntries = [...pendingSaveEntries];
-
-        if (action === 'skip') {
-            // Filter out duplicates using new format
-            const duplicateSignatures = new Set(duplicateEntries.map(d =>
-                `${d.new.masjid}|${d.new.date}|${d.new.waktu}`
-            ));
-
-            finalEntries = pendingSaveEntries.filter(e =>
-                !duplicateSignatures.has(`${e.masjid}|${e.date}|${e.waktu}`)
-            );
-        }
-
-        if (finalEntries.length === 0) {
-            setMessage('Tidak ada data baru untuk disimpan (semua dilewati).');
-            setIsSaving(false);
-            return;
-        }
-
         try {
-            const response = await fetch('/api/kajian', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(finalEntries),
-            });
+            setIsSaving(true);
+            setShowDuplicateModal(false);
+            console.log('handleConfirmSave called with action:', action);
 
-            const data = await response.json();
+            let finalEntries = [...pendingSaveEntries];
 
-            if (!response.ok) {
-                setMessage(`Gagal menyimpan: ${data.error || 'Server error'}`);
+            if (action === 'skip') {
+                // Filter out duplicates using new format
+                const duplicateSignatures = new Set(duplicateEntries.map(d =>
+                    `${d.new.masjid}|${d.new.date}|${d.new.waktu}`
+                ));
+
+                finalEntries = pendingSaveEntries.filter(e =>
+                    !duplicateSignatures.has(`${e.masjid}|${e.date}|${e.waktu}`)
+                );
+                console.log('Filtered entries (skip mode):', finalEntries.length);
+            }
+
+            if (finalEntries.length === 0) {
+                setMessage('Tidak ada data baru untuk disimpan (semua dilewati).');
                 setIsSaving(false);
                 return;
             }
 
-            setMessage(`Alhamdulillah, ${finalEntries.length} jadwal berhasil disimpan!`);
-            fetchStats();
+            try {
+                console.log('Saving', finalEntries.length, 'entries...');
+                const response = await fetch('/api/kajian', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(finalEntries),
+                });
 
-            // Remove saved entries from list but handle indices carefully
-            // It's safer to just remove the saved objects from the entries array
-            const savedObjects = new Set(finalEntries);
-            const remainingEntries = entries.filter(e => !savedObjects.has(e));
+                const data = await response.json();
 
-            setEntries(remainingEntries);
-            setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
+                if (!response.ok) {
+                    console.error('API error:', data);
+                    setMessage(`Gagal menyimpan: ${data.error || 'Server error'}`);
+                    setIsSaving(false);
+                    return;
+                }
 
-            if (remainingEntries.length === 0) {
-                setInputText('');
+                console.log('Save successful');
+                setMessage(`Alhamdulillah, ${finalEntries.length} jadwal berhasil disimpan!`);
+                fetchStats();
+
+                // Remove saved entries from list but handle indices carefully
+                // It's safer to just remove the saved objects from the entries array
+                const savedObjects = new Set(finalEntries);
+                const remainingEntries = entries.filter(e => !savedObjects.has(e));
+
+                setEntries(remainingEntries);
+                setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
+
+                if (remainingEntries.length === 0) {
+                    setInputText('');
+                }
+
+            } catch (e) {
+                console.error('Save error:', e);
+                setMessage('Gagal menyimpan data.');
+            } finally {
+                setIsSaving(false);
+                setDuplicateEntries([]);
+                setPendingSaveEntries([]);
+            }
+        } catch (error) {
+            console.error('Outer handleConfirmSave error:', error);
+            setMessage(`Error: ${error.message || 'Kesalahan tidak diketahui'}`);
+            setIsSaving(false);
+        }
+    };
+
+
+    const handleDeleteExisting = async (existingId: number, duplicateIndex: number) => {
+        if (!confirm('Yakin ingin menghapus kajian yang sudah ada di database? Tindakan ini tidak dapat dibatalkan.')) {
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            console.log('Deleting existing kajian ID:', existingId);
+
+            const response = await fetch(`/api/kajian/${existingId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to delete');
             }
 
-        } catch (e) {
-            setMessage('Gagal menyimpan data.');
-            console.error(e);
+            // Remove from duplicateEntries
+            const updatedDuplicates = duplicateEntries.filter((_, i) => i !== duplicateIndex);
+            setDuplicateEntries(updatedDuplicates);
+
+            setMessage(`Kajian ID ${existingId} berhasil dihapus dari database.`);
+
+            // If no more duplicates, close modal and save remaining
+            if (updatedDuplicates.length === 0) {
+                setShowDuplicateModal(false);
+                // Automatically save the entries now that duplicates are resolved
+                await handleConfirmSave('all');
+            }
+        } catch (error) {
+            console.error('Delete error:', error);
+            setMessage(`Gagal menghapus: ${error.message || 'Kesalahan tidak diketahui'}`);
         } finally {
             setIsSaving(false);
-            setDuplicateEntries([]);
-            setPendingSaveEntries([]);
         }
     };
 
@@ -1473,6 +1586,26 @@ function BatchInputPageContent() {
                                                 <p>📅 {d.existing.date} • ⏰ {d.existing.waktu}</p>
                                             </div>
                                         </div>
+
+                                        {/* Action Buttons */}
+                                        <div className="flex gap-2 mt-3">
+                                            <button
+                                                onClick={() => router.push(`/admin/manage?edit=${d.existing.id}`)}
+                                                disabled={isSaving}
+                                                className={`flex-1 px-3 py-2 bg-amber-100 text-amber-700 text-xs font-bold rounded-lg hover:bg-amber-200 transition-colors flex items-center justify-center gap-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                title="Edit kajian yang sudah ada"
+                                            >
+                                                ✏️ Edit Yang Ada
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteExisting(d.existing.id, i)}
+                                                disabled={isSaving}
+                                                className={`flex-1 px-3 py-2 bg-red-100 text-red-700 text-xs font-bold rounded-lg hover:bg-red-200 transition-colors flex items-center justify-center gap-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                title="Hapus kajian yang sudah ada dari database"
+                                            >
+                                                🗑️ Hapus Yang Ada
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -1490,21 +1623,24 @@ function BatchInputPageContent() {
                                     setDuplicateEntries([]);
                                     setMessage('Penyimpanan dibatalkan.');
                                 }}
-                                className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors flex-1"
+                                disabled={isSaving}
+                                className={`px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors flex-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 Batal
                             </button>
                             <button
                                 onClick={() => handleConfirmSave('skip')}
-                                className="px-4 py-2 bg-white border-2 border-amber-500 text-amber-600 font-bold hover:bg-amber-50 rounded-xl transition-colors flex-1"
+                                disabled={isSaving}
+                                className={`px-4 py-2 bg-white border-2 border-amber-500 text-amber-600 font-bold hover:bg-amber-50 rounded-xl transition-colors flex-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                Lewati Duplikat
+                                {isSaving ? '⏳ Memproses...' : 'Lewati Duplikat'}
                             </button>
                             <button
                                 onClick={() => handleConfirmSave('all')}
-                                className="px-4 py-2 bg-blue-600 text-white font-bold hover:bg-blue-700 rounded-xl transition-colors flex-1"
+                                disabled={isSaving}
+                                className={`px-4 py-2 bg-blue-600 text-white font-bold hover:bg-blue-700 rounded-xl transition-colors flex-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                Simpan Semua
+                                {isSaving ? '⏳ Menyimpan...' : 'Simpan Semua'}
                             </button>
                         </div>
                     </div>
@@ -1554,6 +1690,17 @@ function BatchInputPageContent() {
                 confirmText="OK"
                 showCancel={false}
                 type={alertConfig.type}
+            />
+
+            <ProgressModal
+                isOpen={progressModal.isOpen}
+                title={progressModal.title}
+                message={progressModal.message}
+                progress={progressModal.progress}
+                currentStep={progressModal.currentStep}
+                totalSteps={progressModal.totalSteps}
+                onClose={() => setProgressModal(prev => ({ ...prev, isOpen: false }))}
+                showCloseButton={progressModal.progress === 100}
             />
         </div>
     );
