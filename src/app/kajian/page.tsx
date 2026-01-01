@@ -853,10 +853,11 @@ function KajianListContent() {
 
 
             {/* Image Modal (Lightbox) */}
+            {/* Image Modal (Lightbox) */}
             {
                 selectedImage && (
                     <div
-                        className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+                        className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
                         onClick={() => setSelectedImage(null)}
                     >
                         <button
@@ -865,16 +866,12 @@ function KajianListContent() {
                         >
                             <X className="w-6 h-6" />
                         </button>
-                        <div
-                            className="relative max-w-5xl w-full max-h-[90vh] animate-in zoom-in-95 duration-200 pointer-events-none"
-                        >
-                            <img
-                                src={selectedImage}
-                                alt="Preview Kajian"
-                                className="w-full h-full object-contain rounded-2xl shadow-2xl pointer-events-auto"
-                                onClick={(e) => e.stopPropagation()}
-                            />
-                        </div>
+                        <img
+                            src={selectedImage}
+                            alt="Preview Kajian"
+                            className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl bg-white"
+                            onClick={(e) => e.stopPropagation()}
+                        />
                     </div>
                 )
             }
