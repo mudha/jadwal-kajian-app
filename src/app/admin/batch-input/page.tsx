@@ -242,7 +242,7 @@ function BatchInputPageContent() {
                     console.error('Error normalizing ustadz:', e);
                 }
 
-                // Normalize masjid name
+                // Normalize masjid name and auto-fill location data
                 try {
                     const masjidResponse = await fetch('/api/admin/normalize', {
                         method: 'POST',
@@ -255,7 +255,21 @@ function BatchInputPageContent() {
                         const bestMatch = masjidData.hasExactMatch
                             ? masjidData.canonicalName
                             : masjidData.suggestions[0].name;
-                        normalized[i] = { ...normalized[i], masjid: bestMatch };
+
+                        // Auto-fill location data if available
+                        const updates: any = { masjid: bestMatch };
+                        if (masjidData.locationData) {
+                            if (masjidData.locationData.address) updates.address = masjidData.locationData.address;
+                            if (masjidData.locationData.city) updates.city = masjidData.locationData.city;
+                            if (masjidData.locationData.gmapsUrl) updates.gmapsUrl = masjidData.locationData.gmapsUrl;
+                            if (masjidData.locationData.lat !== undefined && masjidData.locationData.lat !== null) {
+                                updates.lat = masjidData.locationData.lat;
+                            }
+                            if (masjidData.locationData.lng !== undefined && masjidData.locationData.lng !== null) {
+                                updates.lng = masjidData.locationData.lng;
+                            }
+                        }
+                        normalized[i] = { ...normalized[i], ...updates };
                     }
                 } catch (e) {
                     console.error('Error normalizing masjid:', e);
@@ -339,7 +353,7 @@ function BatchInputPageContent() {
                     console.error('Error normalizing ustadz:', e);
                 }
 
-                // Normalize masjid name
+                // Normalize masjid name and auto-fill location data
                 try {
                     const masjidResponse = await fetch('/api/admin/normalize', {
                         method: 'POST',
@@ -352,7 +366,21 @@ function BatchInputPageContent() {
                         const bestMatch = masjidData.hasExactMatch
                             ? masjidData.canonicalName
                             : masjidData.suggestions[0].name;
-                        normalized[i] = { ...normalized[i], masjid: bestMatch };
+
+                        // Auto-fill location data if available
+                        const updates: any = { masjid: bestMatch };
+                        if (masjidData.locationData) {
+                            if (masjidData.locationData.address) updates.address = masjidData.locationData.address;
+                            if (masjidData.locationData.city) updates.city = masjidData.locationData.city;
+                            if (masjidData.locationData.gmapsUrl) updates.gmapsUrl = masjidData.locationData.gmapsUrl;
+                            if (masjidData.locationData.lat !== undefined && masjidData.locationData.lat !== null) {
+                                updates.lat = masjidData.locationData.lat;
+                            }
+                            if (masjidData.locationData.lng !== undefined && masjidData.locationData.lng !== null) {
+                                updates.lng = masjidData.locationData.lng;
+                            }
+                        }
+                        normalized[i] = { ...normalized[i], ...updates };
                     }
                 } catch (e) {
                     console.error('Error normalizing masjid:', e);

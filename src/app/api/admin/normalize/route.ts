@@ -91,11 +91,48 @@ export async function POST(request: Request) {
             (row: any) => row.name.toLowerCase().trim() === normalizedInput
         );
 
+        const canonicalMasjidName = exactMatch
+            ? (exactMatch as any).name
+            : (suggestions.length > 0 ? suggestions[0].name : name);
+
+        // For masjid type, fetch location data from most recent kajian entry
+        let locationData = null;
+        if (type === 'masjid' && (exactMatch || suggestions.length > 0)) {
+            try {
+                const locationResult = await db.execute({
+                    sql: `
+                        SELECT address, gmapsUrl, lat, lng, city
+                        FROM kajian 
+                        WHERE masjid = ? 
+                          AND (address IS NOT NULL OR gmapsUrl IS NOT NULL OR lat IS NOT NULL)
+                        ORDER BY id DESC 
+                        LIMIT 1
+                    `,
+                    args: [canonicalMasjidName]
+                });
+
+                if (locationResult.rows.length > 0) {
+                    const loc = locationResult.rows[0] as any;
+                    locationData = {
+                        address: loc.address || null,
+                        gmapsUrl: loc.gmapsUrl || null,
+                        lat: loc.lat || null,
+                        lng: loc.lng || null,
+                        city: loc.city || null
+                    };
+                }
+            } catch (error) {
+                console.error('Error fetching location data:', error);
+                // Continue without location data if query fails
+            }
+        }
+
         return NextResponse.json({
             originalName: name,
             canonicalName: exactMatch ? (exactMatch as any).name : name,
             suggestions: suggestions.slice(0, 5), // Top 5 suggestions
             hasExactMatch: !!exactMatch,
+            locationData: locationData
         });
     } catch (error) {
         console.error('Error normalizing name:', error);
