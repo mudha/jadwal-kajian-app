@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Loader2, CheckCircle2 } from 'lucide-react';
 import {
     DndContext,
     closestCenter,
@@ -101,6 +102,9 @@ export default function AdminTampilanPage() {
         setAlertConfig({ isOpen: true, title, message, type });
     };
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const isFirstRender = useRef(true);
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
     const DEFAULT_MOBILE_LAYOUT = {
@@ -422,35 +426,42 @@ export default function AdminTampilanPage() {
         // But dnd-kit-sortable handleDragEnd is usually enough for simple cases.
     };
 
-    const saveLayout = async () => {
-        // Save Layout
-        await fetch('/api/settings/layout', {
-            method: 'POST',
-            body: JSON.stringify(layout)
-        });
+    // Auto-save logic
+    useEffect(() => {
+        if (loading) return;
 
-        // Save Menu
-        // We need to ensure we save the full object structure expected by frontend
-        // Currently menuItems in state only has minimal props? 
-        // Wait, if we pull from default, we might miss properties if we used a simplified DEFAULT list in Admin.
-        // I used simplified DEFAULT_MENU_ITEMS above. 
-        // IMPORTANT: The admin needs the FULL object to save back, otherwise we lose icons/hrefs.
-        // I should update DEFAULT_MENU_ITEMS in Admin to match `QuickMenu.tsx` defaults fully or at least fetch the full object structure.
-        // Actually, easiest way: 
-        // 1. Initial load gets full object.
-        // 2. If default, use full default object.
-        // 3. Save sends back whatever is in state.
+        // Skip the first render (fetching initial data)
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
 
-        // Let's ensure my DEFAULT_MENU_ITEMS here has all fields needed.
-        // See updated replacement block below for full fields.
+        const timeoutId = setTimeout(async () => {
+            setSaving(true);
+            try {
+                // Save Layout
+                await fetch('/api/settings/layout', {
+                    method: 'POST',
+                    body: JSON.stringify(layout)
+                });
 
-        await fetch('/api/settings/quick-menu', {
-            method: 'POST',
-            body: JSON.stringify(menuItems)
-        });
+                // Save Menu
+                await fetch('/api/settings/quick-menu', {
+                    method: 'POST',
+                    body: JSON.stringify(menuItems)
+                });
 
-        showAlert('Pesan', 'Tampilan dan Menu berhasil disimpan!', 'info');
-    };
+                setLastSaved(new Date());
+            } catch (error) {
+                console.error('Failed to auto-save:', error);
+                // Optionally show error toast here
+            } finally {
+                setSaving(false);
+            }
+        }, 1000); // 1 second debounce
+
+        return () => clearTimeout(timeoutId);
+    }, [layout, menuItems, loading]);
 
     const [activeTab, setActiveTab] = useState<'desktop' | 'mobile'>('desktop');
 
@@ -469,9 +480,19 @@ export default function AdminTampilanPage() {
                     <h1 className="text-2xl font-bold text-slate-900">Kelola Tampilan Depan</h1>
                     <p className="text-slate-500">Atur posisi dan visibilitas widget di halaman depan.</p>
                 </div>
-                <button onClick={saveLayout} className="bg-teal-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-teal-700">
-                    Simpan Perubahan
-                </button>
+                <div className="flex items-center gap-3">
+                    {saving ? (
+                        <div className="flex items-center gap-2 text-slate-500 bg-slate-100 px-4 py-2 rounded-xl">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span className="text-sm font-medium">Menyimpan...</span>
+                        </div>
+                    ) : lastSaved ? (
+                        <div className="flex items-center gap-2 text-teal-600 bg-teal-50 px-4 py-2 rounded-xl border border-teal-100">
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span className="text-sm font-medium">Tersimpan otomatis</span>
+                        </div>
+                    ) : null}
+                </div>
             </div>
 
             {/* Tabs */}
