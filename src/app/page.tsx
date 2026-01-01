@@ -146,9 +146,16 @@ export default function BerandaPage() {
 
   const fetchLayout = async () => {
     try {
-      // Fetch Layout
-      const layoutRes = await fetch('/api/settings/layout');
+      // Fetch both settings concurrently
+      const [layoutRes, quickMenuRes] = await Promise.all([
+        fetch('/api/settings/layout'),
+        fetch('/api/settings/quick-menu')
+      ]);
+
       const layoutData = await layoutRes.json();
+      const quickMenuData = await quickMenuRes.json();
+
+      // Process layout data
       if (layoutData && (layoutData.sidebar || layoutData.main)) {
         const mobile = layoutData.mobile || DEFAULT_LAYOUT.mobile;
         const hidden_mobile = layoutData.hidden_mobile || DEFAULT_LAYOUT.hidden_mobile;
@@ -160,17 +167,27 @@ export default function BerandaPage() {
         }
 
         setLayout({ ...layoutData, sidebar, mobile, hidden_mobile });
+
+        // Filter quick menu items - exclude hidden ones
+        if (quickMenuData && Array.isArray(quickMenuData)) {
+          const hiddenMenuIds = layoutData.hidden_menu || [];
+          const visibleMenuItems = quickMenuData.filter(
+            (item: any) => !hiddenMenuIds.includes(item.id)
+          );
+          setQuickMenuItems(visibleMenuItems.length > 0 ? visibleMenuItems : null);
+        } else {
+          setQuickMenuItems(null);
+        }
       } else {
         // Force update default if no data found
         setLayout(DEFAULT_LAYOUT);
+        // If no layout, show all menu items
+        if (quickMenuData && Array.isArray(quickMenuData)) {
+          setQuickMenuItems(quickMenuData);
+        }
       }
+
       setLayoutLoading(false);
-
-      // Fetch Quick Menu Settings
-      const quickMenuRes = await fetch('/api/settings/quick-menu');
-      const quickMenuData = await quickMenuRes.json();
-      if (quickMenuData) setQuickMenuItems(quickMenuData);
-
     } catch (err) {
       console.error("Failed to load settings", err);
       setLayoutLoading(false);
