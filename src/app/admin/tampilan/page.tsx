@@ -71,12 +71,14 @@ export default function AdminTampilanPage() {
         sidebar: string[];
         main: string[];
         mobile: string[];
+        hidden_menu: string[];
         hidden: string[];
         hidden_mobile: string[];
     }>({
         sidebar: [],
         main: [],
         mobile: [],
+        hidden_menu: [],
         hidden: [],
         hidden_mobile: []
     });
@@ -235,6 +237,7 @@ export default function AdminTampilanPage() {
                 if (data && (data.sidebar || data.main)) {
                     const mobile = data.mobile || DEFAULT_MOBILE_LAYOUT.mobile;
                     const hidden_mobile = data.hidden_mobile || DEFAULT_MOBILE_LAYOUT.hidden_mobile;
+                    const hidden_menu = data.hidden_menu || [];
 
                     let sidebar = data.sidebar || DEFAULT_DESKTOP_LAYOUT.sidebar;
                     const main = data.main || DEFAULT_DESKTOP_LAYOUT.main;
@@ -245,11 +248,12 @@ export default function AdminTampilanPage() {
                         sidebar = ['SidebarBrandWidget', ...sidebar];
                     }
 
-                    setLayout({ ...data, sidebar, main, hidden, mobile, hidden_mobile });
+                    setLayout({ ...data, sidebar, main, hidden, mobile, hidden_mobile, hidden_menu });
                 } else {
                     setLayout({
                         ...DEFAULT_DESKTOP_LAYOUT,
-                        ...DEFAULT_MOBILE_LAYOUT
+                        ...DEFAULT_MOBILE_LAYOUT,
+                        hidden_menu: []
                     });
                 }
                 setLoading(false);
@@ -283,13 +287,80 @@ export default function AdminTampilanPage() {
 
     const handleMenuDragEnd = (event: any) => {
         const { active, over } = event;
-        if (active.id !== over.id) {
-            setMenuItems((items) => {
-                const oldIndex = items.findIndex(i => i.id === active.id);
-                const newIndex = items.findIndex(i => i.id === over.id);
-                return arrayMove(items, oldIndex, newIndex);
+        if (!over) {
+            setActiveId(null);
+            return;
+        }
+
+        const activeIdStr = String(active.id);
+        const overIdStr = String(over.id);
+
+        if (activeIdStr !== overIdStr) {
+            setLayout((prev: any) => {
+                const activeContainer = findContainer(activeIdStr, prev);
+                const overContainer = findContainer(overIdStr, prev);
+
+                if (!activeContainer || !overContainer) return prev;
+                if (!['hidden_menu', 'menu_items'].includes(activeContainer)) return prev;
+
+                const activeItems = activeContainer === 'menu_items' ? menuItems.map(i => i.id) : prev.hidden_menu;
+                const overItems = overContainer === 'menu_items' ? menuItems.map(i => i.id) : prev.hidden_menu;
+
+                const activeIndex = activeItems.indexOf(activeIdStr);
+                const overIndex = overItems.indexOf(overIdStr);
+
+                if (activeContainer === overContainer) {
+                    if (activeContainer === 'menu_items') {
+                        setMenuItems(items => arrayMove(items, activeIndex, overIndex));
+                        return prev;
+                    } else {
+                        return {
+                            ...prev,
+                            hidden_menu: arrayMove(prev.hidden_menu, activeIndex, overIndex)
+                        };
+                    }
+                } else {
+                    // Move between containers
+                    if (activeContainer === 'menu_items') {
+                        // Move from menu_items to hidden_menu
+                        const itemToHide = menuItems[activeIndex];
+                        setMenuItems(items => items.filter(i => i.id !== activeIdStr));
+                        return {
+                            ...prev,
+                            hidden_menu: [...prev.hidden_menu.slice(0, overIndex), activeIdStr, ...prev.hidden_menu.slice(overIndex)]
+                        };
+                    } else {
+                        // Move from hidden_menu to menu_items
+                        // We need the full item object. We search in DEFAULT_MENU_ITEMS for simplicity or we should have a master list.
+                        const itemObj = DEFAULT_MENU_ITEMS.find(i => i.id === activeIdStr);
+                        if (!itemObj) return prev;
+
+                        setMenuItems(items => [...items.slice(0, overIndex), itemObj, ...items.slice(overIndex)]);
+                        return {
+                            ...prev,
+                            hidden_menu: prev.hidden_menu.filter((id: string) => id !== activeIdStr)
+                        };
+                    }
+                }
             });
         }
+        setActiveId(null);
+    };
+
+    const handleMenuDragOver = (event: any) => {
+        const { active, over } = event;
+        if (!over) return;
+
+        const activeIdStr = String(active.id);
+        const overIdStr = String(over.id);
+
+        const activeContainer = findContainer(activeIdStr, layout);
+        const overContainer = findContainer(overIdStr, layout);
+
+        if (!activeContainer || !overContainer || activeContainer === overContainer) return;
+
+        // If they are between menu_items and hidden_menu, we can allow the visual swap if we want
+        // But dnd-kit-sortable handleDragEnd is usually enough for simple cases.
     };
 
     const saveLayout = async () => {
@@ -454,17 +525,48 @@ export default function AdminTampilanPage() {
                         onDragStart={(e) => setActiveId(e.active.id)}
                         onDragEnd={handleMenuDragEnd}
                     >
-                        <SortableContext items={menuItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {menuItems.map((item) => (
-                                    <SortableMenuItem key={item.id} item={item} />
-                                ))}
-                            </div>
-                        </SortableContext>
+                        <div className="mb-8">
+                            <h3 className="text-sm font-bold text-slate-400 mb-4 uppercase tracking-widest">Menu Aktif</h3>
+                            <SortableContext items={menuItems.map(i => i.id)} strategy={verticalListSortingStrategy} id="menu_items">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 min-h-[100px] p-4 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+                                    {menuItems.map((item) => (
+                                        <SortableMenuItem key={item.id} item={item} />
+                                    ))}
+                                    {menuItems.length === 0 && <div className="col-span-full text-center text-slate-400 py-4">Tidak ada menu aktif. Geser ke sini untuk mengaktifkan.</div>}
+                                </div>
+                            </SortableContext>
+                        </div>
+
+                        <div className="mt-8 bg-red-50 p-6 rounded-2xl border border-red-100">
+                            <h3 className="text-sm font-bold text-red-800 mb-4 uppercase tracking-widest">Menu Disembunyikan</h3>
+                            <SortableContext items={layout.hidden_menu || []} strategy={verticalListSortingStrategy} id="hidden_menu">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 min-h-[100px] p-4 bg-white/50 rounded-xl border-2 border-dashed border-red-200">
+                                    {layout.hidden_menu.map((id) => {
+                                        const item = DEFAULT_MENU_ITEMS.find(i => i.id === id);
+                                        if (!item) return null;
+                                        return <SortableMenuItem key={id} item={item} hidden />;
+                                    })}
+                                    {layout.hidden_menu.length === 0 && <div className="col-span-full text-center text-red-300 py-4 text-sm">Geser item ke sini untuk menyembunyikan.</div>}
+                                </div>
+                            </SortableContext>
+                        </div>
+
                         <DragOverlay>
-                            {activeId && menuItems.find(i => i.id === activeId) ? (
-                                <div className="p-3 bg-white border-2 border-teal-500 rounded-lg shadow-xl font-bold text-slate-800">
-                                    {menuItems.find(i => i.id === activeId)?.label}
+                            {activeId ? (
+                                <div className="p-3 bg-white border-2 border-teal-500 rounded-lg shadow-xl font-bold text-slate-800 flex items-center gap-3">
+                                    {(() => {
+                                        const item = menuItems.find(i => i.id === activeId) || DEFAULT_MENU_ITEMS.find(i => i.id === activeId);
+                                        return (
+                                            <>
+                                                <div className={`w-6 h-6 rounded flex items-center justify-center ${item?.iconBg || 'bg-slate-100'}`}>
+                                                    <span className={`text-[10px] ${item?.iconColor || 'text-slate-500'}`}>
+                                                        {item?.label.substring(0, 2).toUpperCase()}
+                                                    </span>
+                                                </div>
+                                                {item?.label}
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             ) : null}
                         </DragOverlay>
@@ -487,7 +589,7 @@ export default function AdminTampilanPage() {
 }
 
 // Helper Component for Menu Item
-function SortableMenuItem({ item }: { item: any }) {
+function SortableMenuItem({ item, hidden }: { item: any, hidden?: boolean }) {
     const {
         attributes,
         listeners,
@@ -509,7 +611,7 @@ function SortableMenuItem({ item }: { item: any }) {
             style={style}
             {...attributes}
             {...listeners}
-            className={`p-4 rounded-xl border flex items-center gap-3 cursor-grab hover:bg-slate-50 transition-colors ${isDragging ? 'border-teal-500 bg-teal-50' : 'border-slate-200 bg-white'}`}
+            className={`p-4 rounded-xl border flex items-center gap-3 cursor-grab hover:bg-slate-50 transition-colors ${isDragging ? 'border-teal-500 bg-teal-50' : hidden ? 'border-red-100 bg-white/80 opacity-70' : 'border-slate-200 bg-white'}`}
         >
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.iconBg || 'bg-slate-100'}`}>
                 <span className={`text-xs font-bold ${item.iconColor || 'text-slate-500'}`}>
