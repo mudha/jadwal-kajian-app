@@ -17,9 +17,46 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PortalKajian.online - Info Kajian Sunnah Indonesia",
+  metadataBase: new URL('https://portalkajian.online'),
+  title: {
+    default: "PortalKajian.online - Info Kajian Sunnah Indonesia",
+    template: "%s | PortalKajian.online"
+  },
   description: "Portal lengkap jadwal kajian islami se-Indonesia. Cari kajian di sekitarmu dengan mudah melalui PortalKajian.online, lengkap dengan peta lokasi dan kontak admin.",
-  keywords: ["kajian sunnah", "jadwal kajian", "kajian indonesia", "islam", "ustadz", "masjid"],
+  keywords: ["kajian sunnah", "jadwal kajian", "kajian indonesia", "islam", "ustadz", "masjid", "kajian terdekat", "dakwah sunnah"],
+  authors: [{ name: "PortalKajian Team" }],
+  creator: "PortalKajian",
+  publisher: "PortalKajian",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: "website",
+    locale: "id_ID",
+    url: "https://portalkajian.online",
+    siteName: "PortalKajian.online",
+    title: "PortalKajian.online - Info Kajian Sunnah Indonesia",
+    description: "Portal lengkap jadwal kajian islami se-Indonesia. Cari kajian di sekitarmu dengan mudah melalui PortalKajian.online.",
+    images: [
+      {
+        url: "/icon-512.png",
+        width: 512,
+        height: 512,
+        alt: "PortalKajian.online Logo",
+      }
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PortalKajian.online - Info Kajian Sunnah Indonesia",
+    description: "Portal lengkap jadwal kajian islami se-Indonesia. Cari kajian di sekitarmu.",
+    images: ["/icon-512.png"],
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -45,11 +82,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="id">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-50`}
         suppressHydrationWarning
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "PortalKajian.online",
+              "url": "https://portalkajian.online",
+              "logo": "https://portalkajian.online/icon-512.png",
+              "description": "Portal lengkap jadwal kajian islami se-Indonesia.",
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "customer support",
+                "url": "https://portalkajian.online/hubungi-kami"
+              }
+            })
+          }}
+        />
         <AnalyticsTracker />
         <Navbar />
         <div className="mx-auto min-h-screen bg-white md:bg-transparent shadow-xl md:shadow-none max-w-md md:max-w-7xl md:px-0">
