@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import { KajianEntry } from '@/lib/parser';
 import { Calendar, MapPin, User, Clock, Search, Trash2, ArrowLeft, History, ListFilter, MessageCircle, Edit, X, Save, Map as MapIcon, Share2, ExternalLink, ImageIcon, Bell, BookOpen } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
@@ -855,7 +856,7 @@ function KajianListContent() {
             {/* Image Modal (Lightbox) */}
             {/* Image Modal (Lightbox) */}
             {
-                selectedImage && (
+                selectedImage && typeof document !== 'undefined' && createPortal(
                     <div
                         className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
                         onClick={() => setSelectedImage(null)}
@@ -872,7 +873,8 @@ function KajianListContent() {
                             className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl bg-white"
                             onClick={(e) => e.stopPropagation()}
                         />
-                    </div>
+                    </div>,
+                    document.body
                 )
             }
             {/* Confirmation Modal */}
