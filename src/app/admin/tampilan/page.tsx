@@ -276,15 +276,19 @@ export default function AdminTampilanPage() {
 
                 // 2. Handle Quick Menu Data
                 if (menuData && Array.isArray(menuData) && menuData.length > 0) {
-                    // Merge logic: Add default items that are missing from saved data AND not in hidden list
-                    const savedIds = new Set(menuData.map((item: any) => item.id));
                     const hiddenIds = new Set(currentHiddenMenu);
+
+                    // Filter out items from saved menu that are actually in hidden list
+                    const visibleSavedMenu = menuData.filter((item: any) => !hiddenIds.has(item.id));
+
+                    // Merge logic: Add default items that are missing from saved data AND not in hidden list
+                    const savedIds = new Set(visibleSavedMenu.map((item: any) => item.id));
 
                     const missingDefaults = DEFAULT_MENU_ITEMS.filter(item =>
                         !savedIds.has(item.id) && !hiddenIds.has(item.id)
                     );
 
-                    setMenuItems([...menuData, ...missingDefaults]);
+                    setMenuItems([...visibleSavedMenu, ...missingDefaults]);
                 } else {
                     // If no saved menu data, use default but exclude hidden if any (though usually hidden implies saved layout)
                     if (currentHiddenMenu.length > 0) {
