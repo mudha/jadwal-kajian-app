@@ -609,7 +609,7 @@ function BatchInputPageContent() {
                 setDuplicateEntries([]);
                 setPendingSaveEntries([]);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Outer handleConfirmSave error:', error);
             setMessage(`Error: ${error.message || 'Kesalahan tidak diketahui'}`);
             setIsSaving(false);
@@ -647,7 +647,7 @@ function BatchInputPageContent() {
                 // Automatically save the entries now that duplicates are resolved
                 await handleConfirmSave('all');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Delete error:', error);
             setMessage(`Gagal menghapus: ${error.message || 'Kesalahan tidak diketahui'}`);
         } finally {
