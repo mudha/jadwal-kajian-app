@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { getKajianStatus, parseIndoDate } from '@/lib/date-utils';
 import WidgetRenderer from '@/components/WidgetRenderer';
 import SidebarMenuWidget from '@/components/widgets/SidebarMenuWidget';
+import MobileHeader from '@/components/MobileHeader';
 
 interface KajianWithId {
   id: number;
@@ -230,25 +231,7 @@ export default function BerandaPage() {
 
 
       {/* Header (Mobile Only) */}
-      <header className="bg-teal-600 text-white px-6 py-4 flex items-center justify-between md:hidden sticky top-0 z-40 shadow-md">
-        <div className="flex items-center gap-4">
-          <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
-          </button>
-          <div>
-            <h1 className="font-bold text-lg leading-tight">PortalKajian.online</h1>
-            <p className="text-[10px] text-teal-100 uppercase tracking-widest font-medium">Jadwal Kajian Sunnah</p>
-          </div>
-        </div>
-        <Link href="/notifikasi" className="p-2 relative hover:bg-white/10 rounded-full transition-colors">
-          <div className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-teal-600"></div>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-          </svg>
-        </Link>
-      </header>
+      <MobileHeader onOpenSidebar={() => setIsSidebarOpen(true)} />
       <PullToRefresh onRefresh={handleRefresh}>
         {/* Quick Menu - Mobile Only */}
 
