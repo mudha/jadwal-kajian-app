@@ -58,7 +58,7 @@ function KajianListContent() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [kajianList, setKajianList] = useState<KajianWithId[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeTab, setActiveTab] = useState<'all' | 'today' | 'upcoming' | 'past'>('today');
+    const [activeTab, setActiveTab] = useState<'all' | 'today' | 'upcoming' | 'past'>('all');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingKajian, setEditingKajian] = useState<KajianWithId | null>(null);
     const [showMap, setShowMap] = useState(false);
@@ -567,7 +567,7 @@ function KajianListContent() {
                                         <button
                                             onClick={() => {
                                                 setSearchTerm('');
-                                                setActiveTab('upcoming');
+                                                setActiveTab('all');
                                                 setRadius(11);
                                             }}
                                             className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-sm transition-colors"
