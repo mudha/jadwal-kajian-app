@@ -16,6 +16,7 @@ import {
     List,
     Merge,
     School,
+    Bell,
 } from 'lucide-react';
 import LogoutButton from '@/components/LogoutButton';
 import { useEffect } from 'react';
@@ -46,6 +47,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
         { href: '/admin/masjid', icon: Calendar, label: 'Kelola Masjid' },
         { href: '/admin/sekolah', icon: School, label: 'Kelola Sekolah' },
         { href: '/admin/tampilan', icon: LayoutDashboard, label: 'Kelola Tampilan' },
+        { href: '/admin/notifications', icon: Bell, label: 'Broadcast Notifikasi' },
     ];
 
     // Add admin management only for Super Admin

@@ -158,6 +158,18 @@ const initDb = async () => {
     )
   `);
 
+  // Notifications table
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL, -- info, reminder, recommendation
+      title TEXT NOT NULL,
+      message TEXT NOT NULL,
+      target_audience TEXT DEFAULT 'all',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Settings table for dynamic configuration (JSON values)
   await db.execute(`
     CREATE TABLE IF NOT EXISTS settings (
