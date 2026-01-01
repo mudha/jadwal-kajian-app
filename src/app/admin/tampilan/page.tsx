@@ -10,6 +10,7 @@ import {
     useSensors,
     DragOverlay,
     UniqueIdentifier,
+    useDroppable,
 } from '@dnd-kit/core';
 import {
     arrayMove,
@@ -138,25 +139,29 @@ export default function AdminTampilanPage() {
 
                 if (activeContainer === overContainer) {
                     const oldIndex = prev[activeContainer].indexOf(active.id);
+                    // If over.id is the container layout, we might be dropping on the container itself 
+                    // which usually means move to end, but since it's the same container, it might just be a small shift or no-op if reordering logic isn't precise.
+                    // But usually over.id is an item id when reordering.
+                    // If over.id IS the container ID, we shouldn't use indexOf(over.id).
+
+                    if (over.id === overContainer) {
+                        // Dropped on itself (the container background).
+                        // If it's the same container, we probably don't need to do anything or move to end?
+                        // Let's just return prev to avoid weird jumps.
+                        return prev;
+                    }
+
                     const newIndex = prev[overContainer].indexOf(over.id);
                     return {
                         ...prev,
                         [activeContainer]: arrayMove(prev[activeContainer], oldIndex, newIndex)
                     };
                 } else {
-                    // Moving between containers logic (simplified for now to just reordering within same list)
-                    // For simplicity, we might only allow reordering within the same section for MVP
-                    // Or we implement full drag between lists.
-                    // Let's implement full drag between lists.
-                    const activeItems = prev[activeContainer];
-                    const overItems = prev[overContainer];
-                    const activeIndex = activeItems.indexOf(active.id);
-                    const overIndex = overItems.indexOf(over.id);
-
+                    // Moving between containers
                     let newIndex;
-                    if (over.id in prev) {
-                        // We're over a container
-                        newIndex = overItems.length + 1;
+                    if (over.id === overContainer) {
+                        // We're over a container directly (e.g. empty container or background)
+                        newIndex = prev[overContainer].length + 1;
                     } else {
                         const isBelowOverItem =
                             over &&
@@ -165,7 +170,8 @@ export default function AdminTampilanPage() {
                             over.rect.top + over.rect.height;
 
                         const modifier = isBelowOverItem ? 1 : 0;
-
+                        const overItems = prev[overContainer];
+                        const overIndex = overItems.indexOf(over.id);
                         newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length + 1;
                     }
 
@@ -187,8 +193,9 @@ export default function AdminTampilanPage() {
     };
 
     const findContainer = (id: string, currentLayout: any) => {
+        if (['sidebar', 'main', 'hidden', 'mobile', 'hidden_mobile'].includes(id)) return id;
         if (id in currentLayout) return id;
-        return Object.keys(currentLayout).find(key => currentLayout[key].includes(id));
+        return Object.keys(currentLayout).find(key => Array.isArray(currentLayout[key]) && currentLayout[key].includes(id));
     };
 
     // Custom logic to handle strict separation? 
@@ -287,6 +294,8 @@ export default function AdminTampilanPage() {
     // ... existing handleDragEnd for widgets ...
 
     const findMenuContainer = (id: string) => {
+        if (id === 'menu_items') return 'menu_items';
+        if (id === 'hidden_menu') return 'hidden_menu';
         if (menuItems.find(i => i.id === id)) return 'menu_items';
         if (layout.hidden_menu.includes(id)) return 'hidden_menu';
         return undefined;
@@ -342,6 +351,8 @@ export default function AdminTampilanPage() {
 
             if (activeContainer === overContainer) {
                 // Reorder within same list
+                if (overIdStr === overContainer) return; // Dropped on background of same container
+
                 if (activeContainer === 'menu_items') {
                     setMenuItems(items => arrayMove(items, activeIndex, overIndex));
                 } else {
@@ -352,19 +363,37 @@ export default function AdminTampilanPage() {
                 }
             } else {
                 // Move between lists
+                // Calculate target index if dropped on item, else end of list
+                let targetIndex = overItems.length;
+                if (overIdStr !== overContainer) {
+                    targetIndex = overIndex;
+                    // Logic for insert before/after could be added here similar to widgets, 
+                    // but simple index usage is usually fine for grid items.
+                }
+
                 if (activeContainer === 'menu_items') {
                     // Active -> Hidden
-                    const itemToMove = menuItems[activeIndex];
+                    const itemToMove = activeItems[activeIndex]; // ID string
                     setMenuItems(items => items.filter(i => i.id !== activeIdStr));
+
+                    const newHidden = [...layout.hidden_menu];
+                    // Insert at targetIndex
+                    newHidden.splice(targetIndex, 0, activeIdStr);
+
                     setLayout(prev => ({
                         ...prev,
-                        hidden_menu: [...prev.hidden_menu.slice(0, overIndex), activeIdStr, ...prev.hidden_menu.slice(overIndex)]
+                        hidden_menu: newHidden
                     }));
                 } else {
                     // Hidden -> Active
                     const itemObj = DEFAULT_MENU_ITEMS.find(i => i.id === activeIdStr);
                     if (itemObj) {
-                        setMenuItems(items => [...items.slice(0, overIndex), itemObj, ...items.slice(overIndex)]);
+                        const newActive = [...menuItems];
+                        // Insert at targetIndex
+                        // Wait, menuItems is array of objects.
+                        newActive.splice(targetIndex, 0, itemObj);
+
+                        setMenuItems(newActive);
                         setLayout(prev => ({
                             ...prev,
                             hidden_menu: prev.hidden_menu.filter(id => id !== activeIdStr)
@@ -475,11 +504,16 @@ export default function AdminTampilanPage() {
                                 Sidebar (Kiri)
                                 <span className="text-xs bg-slate-200 px-2 py-1 rounded-md text-slate-600">30%</span>
                             </h3>
-                            <SortableContext items={layout.sidebar || []} strategy={verticalListSortingStrategy}>
-                                {layout.sidebar?.map((id: string) => (
-                                    <SortableItem key={id} id={id} />
-                                ))}
-                            </SortableContext>
+                            <DroppableContainer id="sidebar">
+                                <SortableContext items={layout.sidebar || []} strategy={verticalListSortingStrategy}>
+                                    {layout.sidebar?.map((id: string) => (
+                                        <SortableItem key={id} id={id} />
+                                    ))}
+                                    {(!layout.sidebar || layout.sidebar.length === 0) && (
+                                        <div className="text-center py-4 text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">Kosong</div>
+                                    )}
+                                </SortableContext>
+                            </DroppableContainer>
                         </div>
 
                         {/* Main Content Column */}
@@ -488,21 +522,31 @@ export default function AdminTampilanPage() {
                                 Konten Utama
                                 <span className="text-xs bg-slate-200 px-2 py-1 rounded-md text-slate-600">70%</span>
                             </h3>
-                            <SortableContext items={layout.main || []} strategy={verticalListSortingStrategy}>
-                                {layout.main?.map((id: string) => (
-                                    <SortableItem key={id} id={id} />
-                                ))}
-                            </SortableContext>
+                            <DroppableContainer id="main">
+                                <SortableContext items={layout.main || []} strategy={verticalListSortingStrategy}>
+                                    {layout.main?.map((id: string) => (
+                                        <SortableItem key={id} id={id} />
+                                    ))}
+                                    {(!layout.main || layout.main.length === 0) && (
+                                        <div className="text-center py-4 text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">Kosong</div>
+                                    )}
+                                </SortableContext>
+                            </DroppableContainer>
                         </div>
 
                         {/* Hidden / Disabled */}
                         <div className="md:col-span-3 bg-red-50 p-6 rounded-2xl border border-red-100 mt-4">
                             <h3 className="font-bold mb-4 text-red-800">Widget Disembunyikan (Desktop)</h3>
-                            <SortableContext items={layout.hidden || []} strategy={verticalListSortingStrategy}>
-                                {layout.hidden?.map((id: string) => (
-                                    <SortableItem key={id} id={id} hidden />
-                                ))}
-                            </SortableContext>
+                            <DroppableContainer id="hidden">
+                                <SortableContext items={layout.hidden || []} strategy={verticalListSortingStrategy}>
+                                    {layout.hidden?.map((id: string) => (
+                                        <SortableItem key={id} id={id} hidden />
+                                    ))}
+                                    {(!layout.hidden || layout.hidden.length === 0) && (
+                                        <div className="text-center py-4 text-red-300 border-2 border-dashed border-red-200 rounded-xl">Geser widget ke sini untuk menyembunyikan</div>
+                                    )}
+                                </SortableContext>
+                            </DroppableContainer>
                         </div>
                     </div>
                 ) : (
@@ -516,17 +560,27 @@ export default function AdminTampilanPage() {
                                 <h3 className="text-center font-bold mb-6 text-slate-400 text-sm uppercase tracking-widest">Mobile View</h3>
 
                                 <SortableContext items={layout.mobile || []} strategy={verticalListSortingStrategy}>
-                                    {layout.mobile?.map((id: string) => (
-                                        <SortableItem key={id} id={id} />
-                                    ))}
+                                    <DroppableContainer id="mobile">
+                                        {layout.mobile?.map((id: string) => (
+                                            <SortableItem key={id} id={id} />
+                                        ))}
+                                        {(!layout.mobile || layout.mobile.length === 0) && (
+                                            <div className="text-center py-4 text-slate-400 border-2 border-dashed border-slate-200 rounded-xl my-2">Kosong</div>
+                                        )}
+                                    </DroppableContainer>
                                 </SortableContext>
 
                                 <div className="mt-8 pt-8 border-t border-dashed border-slate-200">
                                     <h3 className="text-center font-bold mb-4 text-slate-400 text-xs uppercase">Widget Disembunyikan</h3>
                                     <SortableContext items={layout.hidden_mobile || []} strategy={verticalListSortingStrategy}>
-                                        {layout.hidden_mobile?.map((id: string) => (
-                                            <SortableItem key={id} id={id} hidden />
-                                        ))}
+                                        <DroppableContainer id="hidden_mobile">
+                                            {layout.hidden_mobile?.map((id: string) => (
+                                                <SortableItem key={id} id={id} hidden />
+                                            ))}
+                                            {(!layout.hidden_mobile || layout.hidden_mobile.length === 0) && (
+                                                <div className="text-center py-4 text-slate-400 border-2 border-dashed border-slate-200 rounded-xl my-2">Kosong</div>
+                                            )}
+                                        </DroppableContainer>
                                     </SortableContext>
                                 </div>
                             </div>
@@ -557,28 +611,32 @@ export default function AdminTampilanPage() {
                     >
                         <div className="mb-8">
                             <h3 className="text-sm font-bold text-slate-400 mb-4 uppercase tracking-widest">Menu Aktif</h3>
-                            <SortableContext items={menuItems.map(i => i.id)} strategy={verticalListSortingStrategy} id="menu_items">
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 min-h-[100px] p-4 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
-                                    {menuItems.map((item) => (
-                                        <SortableMenuItem key={item.id} item={item} />
-                                    ))}
-                                    {menuItems.length === 0 && <div className="col-span-full text-center text-slate-400 py-4">Tidak ada menu aktif. Geser ke sini untuk mengaktifkan.</div>}
-                                </div>
-                            </SortableContext>
+                            <DroppableContainer id="menu_items">
+                                <SortableContext items={menuItems.map(i => i.id)} strategy={verticalListSortingStrategy} id="menu_items">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 min-h-[100px] p-4 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+                                        {menuItems.map((item) => (
+                                            <SortableMenuItem key={item.id} item={item} />
+                                        ))}
+                                        {menuItems.length === 0 && <div className="col-span-full text-center text-slate-400 py-4">Tidak ada menu aktif. Geser ke sini untuk mengaktifkan.</div>}
+                                    </div>
+                                </SortableContext>
+                            </DroppableContainer>
                         </div>
 
                         <div className="mt-8 bg-red-50 p-6 rounded-2xl border border-red-100">
                             <h3 className="text-sm font-bold text-red-800 mb-4 uppercase tracking-widest">Menu Disembunyikan</h3>
-                            <SortableContext items={layout.hidden_menu || []} strategy={verticalListSortingStrategy} id="hidden_menu">
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 min-h-[100px] p-4 bg-white/50 rounded-xl border-2 border-dashed border-red-200">
-                                    {layout.hidden_menu.map((id) => {
-                                        const item = DEFAULT_MENU_ITEMS.find(i => i.id === id);
-                                        if (!item) return null;
-                                        return <SortableMenuItem key={id} item={item} hidden />;
-                                    })}
-                                    {layout.hidden_menu.length === 0 && <div className="col-span-full text-center text-red-300 py-4 text-sm">Geser item ke sini untuk menyembunyikan.</div>}
-                                </div>
-                            </SortableContext>
+                            <DroppableContainer id="hidden_menu">
+                                <SortableContext items={layout.hidden_menu || []} strategy={verticalListSortingStrategy} id="hidden_menu">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 min-h-[100px] p-4 bg-white/50 rounded-xl border-2 border-dashed border-red-200">
+                                        {layout.hidden_menu.map((id) => {
+                                            const item = DEFAULT_MENU_ITEMS.find(i => i.id === id);
+                                            if (!item) return null;
+                                            return <SortableMenuItem key={id} item={item} hidden />;
+                                        })}
+                                        {layout.hidden_menu.length === 0 && <div className="col-span-full text-center text-red-300 py-4 text-sm">Geser item ke sini untuk menyembunyikan.</div>}
+                                    </div>
+                                </SortableContext>
+                            </DroppableContainer>
                         </div>
 
                         <DragOverlay>
@@ -649,6 +707,15 @@ function SortableMenuItem({ item, hidden }: { item: any, hidden?: boolean }) {
                 </span>
             </div>
             <span className="font-medium text-slate-700 text-sm">{item.label}</span>
+        </div>
+    );
+}
+
+function DroppableContainer({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
+    const { setNodeRef } = useDroppable({ id });
+    return (
+        <div ref={setNodeRef} className={className}>
+            {children}
         </div>
     );
 }
