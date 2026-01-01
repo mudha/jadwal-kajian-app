@@ -260,8 +260,8 @@ export default function AdminTampilanPage() {
                     const main = layoutData.main || DEFAULT_DESKTOP_LAYOUT.main;
                     const hidden = layoutData.hidden || DEFAULT_DESKTOP_LAYOUT.hidden;
 
-                    // Ensure SidebarBrandWidget is present in Admin too
-                    if (Array.isArray(sidebar) && !sidebar.includes('SidebarBrandWidget')) {
+                    // Ensure SidebarBrandWidget is present in Admin too (only if not hidden)
+                    if (Array.isArray(sidebar) && !sidebar.includes('SidebarBrandWidget') && !hidden.includes('SidebarBrandWidget')) {
                         sidebar = ['SidebarBrandWidget', ...sidebar];
                     }
 

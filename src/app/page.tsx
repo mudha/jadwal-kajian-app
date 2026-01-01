@@ -161,9 +161,10 @@ export default function BerandaPage() {
         const mobile = layoutData.mobile || DEFAULT_LAYOUT.mobile;
         const hidden_mobile = layoutData.hidden_mobile || DEFAULT_LAYOUT.hidden_mobile;
 
-        // Ensure SidebarBrandWidget is present
+        // Ensure SidebarBrandWidget is present, but only if not explicitly hidden
         let sidebar = layoutData.sidebar || DEFAULT_LAYOUT.sidebar;
-        if (Array.isArray(sidebar) && !sidebar.includes('SidebarBrandWidget')) {
+        const hidden = layoutData.hidden || [];
+        if (Array.isArray(sidebar) && !sidebar.includes('SidebarBrandWidget') && !hidden.includes('SidebarBrandWidget')) {
           sidebar = ['SidebarBrandWidget', ...sidebar];
         }
 
