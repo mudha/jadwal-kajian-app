@@ -20,7 +20,7 @@ export default function JadwalSholatPage() {
     const { timings, locationName, loading, error, nextPrayer } = usePrayerTimes();
     const [dateString, setDateString] = useState('');
 
-    const [dateString, setDateString] = useState('');
+
 
     // Layout Settings State
     const [layout, setLayout] = useState(DEFAULT_LAYOUT);

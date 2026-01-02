@@ -37,7 +37,7 @@ interface KajianDetail {
 import { Info } from 'lucide-react';
 
 import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
-import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
+
 // Removed hardcoded LeftSidebar
 // Removed hardcoded OngoingKajianWidget
 import WidgetRenderer from '@/components/WidgetRenderer';

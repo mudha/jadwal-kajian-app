@@ -9,15 +9,12 @@ import Link from 'next/link';
 import { getKajianStatus } from '@/lib/date-utils';
 import dynamic from 'next/dynamic';
 import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
-import dynamic from 'next/dynamic';
-import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
 // Removed hardcoded LeftSidebar
 import MenuGrid from '@/components/MenuGrid';
 // Removed hardcoded OngoingKajianWidget
 import { shareToWhatsApp } from '@/lib/whatsapp-share';
 import WidgetRenderer from '@/components/WidgetRenderer';
 import SidebarMenuWidget from '@/components/widgets/SidebarMenuWidget';
-import { shareToWhatsApp } from '@/lib/whatsapp-share';
 import { useSettings } from '@/hooks/useSettings';
 import { useAdmin } from '@/hooks/useAdmin';
 import EditKajianModal, { KajianDetail } from '@/components/EditKajianModal';
@@ -48,9 +45,7 @@ function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
     return d;
 }
 
-const d = R * c; // Distance in km
-return d;
-}
+
 
 const DEFAULT_LAYOUT = {
     sidebar: ['SidebarBrandWidget', 'SidebarMenuWidget', 'PrayerTimesWidget', 'ContactWidget'],
