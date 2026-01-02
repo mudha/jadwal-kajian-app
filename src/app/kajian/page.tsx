@@ -9,9 +9,14 @@ import Link from 'next/link';
 import { getKajianStatus } from '@/lib/date-utils';
 import dynamic from 'next/dynamic';
 import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
-import LeftSidebar from '@/components/LeftSidebar';
+import dynamic from 'next/dynamic';
+import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
+// Removed hardcoded LeftSidebar
 import MenuGrid from '@/components/MenuGrid';
-import OngoingKajianWidget from '@/components/OngoingKajianWidget';
+// Removed hardcoded OngoingKajianWidget
+import { shareToWhatsApp } from '@/lib/whatsapp-share';
+import WidgetRenderer from '@/components/WidgetRenderer';
+import SidebarMenuWidget from '@/components/widgets/SidebarMenuWidget';
 import { shareToWhatsApp } from '@/lib/whatsapp-share';
 import { useSettings } from '@/hooks/useSettings';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -43,6 +48,18 @@ function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
     return d;
 }
 
+const d = R * c; // Distance in km
+return d;
+}
+
+const DEFAULT_LAYOUT = {
+    sidebar: ['SidebarBrandWidget', 'SidebarMenuWidget', 'PrayerTimesWidget', 'ContactWidget'],
+    main: ['HeroWidget', 'QuickMenuWidget', 'OngoingWidget', 'LatestKajianWidget', 'KajianListWidget'],
+    mobile: ['HeroWidget:mobile', 'QuickMenuWidget:mobile', 'OngoingWidget:mobile', 'LatestKajianWidget:mobile', 'KajianListWidget:mobile'],
+    hidden: [],
+    hidden_mobile: ['SidebarMenuWidget:mobile', 'PrayerTimesWidget:mobile', 'ContactWidget:mobile']
+};
+
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
 
 function KajianListContent() {
@@ -67,6 +84,67 @@ function KajianListContent() {
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [isLocatingUser, setIsLocatingUser] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+
+    // Layout Settings State
+    const [layout, setLayout] = useState(DEFAULT_LAYOUT);
+    const [quickMenuItems, setQuickMenuItems] = useState<any[] | null>(null);
+
+    useEffect(() => {
+        const fetchLayout = async () => {
+            try {
+                // Fetch both settings concurrently
+                const [layoutRes, quickMenuRes] = await Promise.all([
+                    fetch('/api/settings/layout'),
+                    fetch('/api/settings/quick-menu')
+                ]);
+
+                const layoutData = await layoutRes.json();
+                const quickMenuData = await quickMenuRes.json();
+
+                // Process layout data
+                if (layoutData && (layoutData.sidebar || layoutData.main)) {
+                    const mobile = layoutData.mobile || DEFAULT_LAYOUT.mobile;
+                    const hidden_mobile = layoutData.hidden_mobile || DEFAULT_LAYOUT.hidden_mobile;
+
+                    // Ensure SidebarBrandWidget is present
+                    let sidebar = layoutData.sidebar || DEFAULT_LAYOUT.sidebar;
+                    const hidden = layoutData.hidden || [];
+                    if (Array.isArray(sidebar) && !sidebar.includes('SidebarBrandWidget') && !hidden.includes('SidebarBrandWidget')) {
+                        sidebar = ['SidebarBrandWidget', ...sidebar];
+                    }
+
+                    setLayout({ ...layoutData, sidebar, mobile, hidden_mobile });
+
+                    // Filter quick menu items
+                    if (quickMenuData && Array.isArray(quickMenuData)) {
+                        const hiddenMenuIds = layoutData.hidden_menu || [];
+                        const visibleMenuItems = quickMenuData.filter(
+                            (item: any) => !hiddenMenuIds.includes(item.id)
+                        );
+                        setQuickMenuItems(visibleMenuItems.length > 0 ? visibleMenuItems : null);
+                    } else {
+                        setQuickMenuItems(null);
+                    }
+                } else {
+                    setLayout(DEFAULT_LAYOUT);
+                    if (quickMenuData && Array.isArray(quickMenuData)) {
+                        setQuickMenuItems(quickMenuData);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load settings", err);
+            }
+        };
+
+        fetchLayout();
+    }, []);
+
+    const widgetData = {
+        featuredKajian: [], // Not needed for sidebar usually
+        latestKajian: [], // Not needed for sidebar usually
+        sortMode: 'date',
+        quickMenuItems
+    };
     const [radius, setRadius] = useState(settings.radius);
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -402,7 +480,7 @@ function KajianListContent() {
                         <p className="text-teal-100 text-xs text-blue-100">PortalKajian.online</p>
                     </div>
                     <div className="p-4 overflow-y-auto flex-1">
-                        <LeftSidebar />
+                        <SidebarMenuWidget />
                     </div>
                 </div>
             </div>
@@ -460,26 +538,7 @@ function KajianListContent() {
             <div className="md:grid md:grid-cols-12 md:gap-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
                 {/* Left Column (Desktop - Sidebar) */}
                 <div className="md:col-span-4 space-y-6 hidden md:block order-1">
-                    <LeftSidebar />
-                    <OngoingKajianWidget />
-
-                    {/* LIVE / TODAY KAJIAN WIDGET */}
-                    <div className="bg-gradient-to-br from-teal-600 to-teal-800 rounded-3xl p-6 shadow-xl text-white relative overflow-hidden">
-                        {/* Decorative Background Elements */}
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-teal-500/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
-
-                        <div className="flex items-center justify-between mb-5 relative z-10">
-                            <div>
-                                <h3 className="font-bold text-xl text-white">Info Kajian Terbaru</h3>
-                                <p className="text-teal-100 text-xs opacity-80">Baru saja diupdate admin</p>
-                            </div>
-                            <span className="relative flex h-3 w-3">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-teal-700"></span>
-                            </span>
-                        </div>
-                    </div>
+                    <WidgetRenderer widgetIds={layout.sidebar} data={widgetData} />
                 </div>
 
                 {/* Right Column (Desktop - Content) */}

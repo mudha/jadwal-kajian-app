@@ -3,7 +3,16 @@ import { useState, useEffect } from 'react';
 import { Search, GraduationCap, MapPin, Phone, DollarSign, Filter, X, ArrowLeft, BookOpen, School, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import LeftSidebar from '@/components/LeftSidebar';
+// Removed hardcoded LeftSidebar
+import WidgetRenderer from '@/components/WidgetRenderer';
+
+const DEFAULT_LAYOUT = {
+    sidebar: ['SidebarBrandWidget', 'SidebarMenuWidget', 'PrayerTimesWidget', 'ContactWidget'],
+    main: ['HeroWidget', 'QuickMenuWidget', 'OngoingWidget', 'LatestKajianWidget', 'KajianListWidget'],
+    mobile: ['HeroWidget:mobile', 'QuickMenuWidget:mobile', 'OngoingWidget:mobile', 'LatestKajianWidget:mobile', 'KajianListWidget:mobile'],
+    hidden: [],
+    hidden_mobile: ['SidebarMenuWidget:mobile', 'PrayerTimesWidget:mobile', 'ContactWidget:mobile']
+};
 
 interface Sekolah {
     id: number;
@@ -57,9 +66,68 @@ export default function SekolahSunnahPage() {
     const [kota, setKota] = useState('');
     const [total, setTotal] = useState(0);
 
+    // Layout Settings State
+    const [layout, setLayout] = useState(DEFAULT_LAYOUT);
+    const [quickMenuItems, setQuickMenuItems] = useState<any[] | null>(null);
+
     useEffect(() => {
         fetchSekolah();
+
+        const fetchLayout = async () => {
+            try {
+                // Fetch both settings concurrently
+                const [layoutRes, quickMenuRes] = await Promise.all([
+                    fetch('/api/settings/layout'),
+                    fetch('/api/settings/quick-menu')
+                ]);
+
+                const layoutData = await layoutRes.json();
+                const quickMenuData = await quickMenuRes.json();
+
+                // Process layout data
+                if (layoutData && (layoutData.sidebar || layoutData.main)) {
+                    const mobile = layoutData.mobile || DEFAULT_LAYOUT.mobile;
+                    const hidden_mobile = layoutData.hidden_mobile || DEFAULT_LAYOUT.hidden_mobile;
+
+                    // Ensure SidebarBrandWidget is present
+                    let sidebar = layoutData.sidebar || DEFAULT_LAYOUT.sidebar;
+                    const hidden = layoutData.hidden || [];
+                    if (Array.isArray(sidebar) && !sidebar.includes('SidebarBrandWidget') && !hidden.includes('SidebarBrandWidget')) {
+                        sidebar = ['SidebarBrandWidget', ...sidebar];
+                    }
+
+                    setLayout({ ...layoutData, sidebar, mobile, hidden_mobile });
+
+                    // Filter quick menu items
+                    if (quickMenuData && Array.isArray(quickMenuData)) {
+                        const hiddenMenuIds = layoutData.hidden_menu || [];
+                        const visibleMenuItems = quickMenuData.filter(
+                            (item: any) => !hiddenMenuIds.includes(item.id)
+                        );
+                        setQuickMenuItems(visibleMenuItems.length > 0 ? visibleMenuItems : null);
+                    } else {
+                        setQuickMenuItems(null);
+                    }
+                } else {
+                    setLayout(DEFAULT_LAYOUT);
+                    if (quickMenuData && Array.isArray(quickMenuData)) {
+                        setQuickMenuItems(quickMenuData);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load settings", err);
+            }
+        };
+
+        fetchLayout();
     }, [jenjang, kota, search]);
+
+    const widgetData = {
+        featuredKajian: [],
+        latestKajian: [],
+        sortMode: 'date',
+        quickMenuItems
+    };
 
     const fetchSekolah = async () => {
         setLoading(true);
@@ -156,7 +224,7 @@ export default function SekolahSunnahPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-8">
                     {/* Left Sidebar - Desktop Only */}
                     <div className="hidden lg:block">
-                        <LeftSidebar />
+                        <WidgetRenderer widgetIds={layout.sidebar} data={widgetData} />
                     </div>
 
                     {/* Main Content */}

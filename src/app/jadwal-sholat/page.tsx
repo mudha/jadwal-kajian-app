@@ -5,15 +5,85 @@ import { ArrowLeft, Calendar, MapPin, Loader2, Sunrise, Sun, Sunset, Moon, Cloud
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
-import LeftSidebar from '@/components/LeftSidebar';
+// Removed hardcoded LeftSidebar
+import WidgetRenderer from '@/components/WidgetRenderer';
+
+const DEFAULT_LAYOUT = {
+    sidebar: ['SidebarBrandWidget', 'SidebarMenuWidget', 'PrayerTimesWidget', 'ContactWidget'],
+    main: ['HeroWidget', 'QuickMenuWidget', 'OngoingWidget', 'LatestKajianWidget', 'KajianListWidget'],
+    mobile: ['HeroWidget:mobile', 'QuickMenuWidget:mobile', 'OngoingWidget:mobile', 'LatestKajianWidget:mobile', 'KajianListWidget:mobile'],
+    hidden: [],
+    hidden_mobile: ['SidebarMenuWidget:mobile', 'PrayerTimesWidget:mobile', 'ContactWidget:mobile']
+};
 
 export default function JadwalSholatPage() {
     const { timings, locationName, loading, error, nextPrayer } = usePrayerTimes();
     const [dateString, setDateString] = useState('');
 
+    const [dateString, setDateString] = useState('');
+
+    // Layout Settings State
+    const [layout, setLayout] = useState(DEFAULT_LAYOUT);
+    const [quickMenuItems, setQuickMenuItems] = useState<any[] | null>(null);
+
     useEffect(() => {
         setDateString(new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
+
+        const fetchLayout = async () => {
+            try {
+                // Fetch both settings concurrently
+                const [layoutRes, quickMenuRes] = await Promise.all([
+                    fetch('/api/settings/layout'),
+                    fetch('/api/settings/quick-menu')
+                ]);
+
+                const layoutData = await layoutRes.json();
+                const quickMenuData = await quickMenuRes.json();
+
+                // Process layout data
+                if (layoutData && (layoutData.sidebar || layoutData.main)) {
+                    const mobile = layoutData.mobile || DEFAULT_LAYOUT.mobile;
+                    const hidden_mobile = layoutData.hidden_mobile || DEFAULT_LAYOUT.hidden_mobile;
+
+                    // Ensure SidebarBrandWidget is present
+                    let sidebar = layoutData.sidebar || DEFAULT_LAYOUT.sidebar;
+                    const hidden = layoutData.hidden || [];
+                    if (Array.isArray(sidebar) && !sidebar.includes('SidebarBrandWidget') && !hidden.includes('SidebarBrandWidget')) {
+                        sidebar = ['SidebarBrandWidget', ...sidebar];
+                    }
+
+                    setLayout({ ...layoutData, sidebar, mobile, hidden_mobile });
+
+                    // Filter quick menu items
+                    if (quickMenuData && Array.isArray(quickMenuData)) {
+                        const hiddenMenuIds = layoutData.hidden_menu || [];
+                        const visibleMenuItems = quickMenuData.filter(
+                            (item: any) => !hiddenMenuIds.includes(item.id)
+                        );
+                        setQuickMenuItems(visibleMenuItems.length > 0 ? visibleMenuItems : null);
+                    } else {
+                        setQuickMenuItems(null);
+                    }
+                } else {
+                    setLayout(DEFAULT_LAYOUT);
+                    if (quickMenuData && Array.isArray(quickMenuData)) {
+                        setQuickMenuItems(quickMenuData);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load settings", err);
+            }
+        };
+
+        fetchLayout();
     }, []);
+
+    const widgetData = {
+        featuredKajian: [],
+        latestKajian: [],
+        sortMode: 'date',
+        quickMenuItems
+    };
 
     const schedule = timings ? [
         { name: 'Subuh', time: timings.Fajr, icon: Sunrise, desc: 'Fajar Shadiq' },
@@ -41,7 +111,7 @@ export default function JadwalSholatPage() {
                 <div className="md:grid md:grid-cols-12 md:gap-8">
                     {/* Left Column (Desktop Sidebar) */}
                     <aside className="md:col-span-4 space-y-6 hidden md:block order-1">
-                        <LeftSidebar />
+                        <WidgetRenderer widgetIds={layout.sidebar} data={widgetData} />
                     </aside>
 
                     {/* Main Content (Right on Desktop) */}
