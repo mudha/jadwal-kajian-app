@@ -18,7 +18,7 @@ export default function Navbar() {
         { href: '/agenda', icon: Calendar, label: 'Agenda' },
         { href: '/favorit', icon: Star, label: 'Favorit' },
         { href: '/notifikasi', icon: Bell, label: 'Notifikasi' },
-        { href: '/akun', icon: User, label: 'Akun' },
+        // { href: '/akun', icon: User, label: 'Akun' },
     ];
 
     return (
