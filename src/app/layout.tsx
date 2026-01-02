@@ -77,15 +77,17 @@ import GlobalPullToRefresh from "@/components/GlobalPullToRefresh";
 
 // ... existing imports ...
 
+import { ThemeProvider } from "@/components/ThemeProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-50`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-50 dark:bg-slate-950`}
         suppressHydrationWarning
       >
         <script
@@ -106,19 +108,21 @@ export default function RootLayout({
             })
           }}
         />
-        <AnalyticsTracker />
-        <Navbar />
-        <div className="mx-auto min-h-screen bg-white md:bg-transparent shadow-xl md:shadow-none max-w-md md:max-w-7xl md:px-0">
-          <main className="md:container md:mx-auto">
-            <GlobalPullToRefresh>
-              {children}
-            </GlobalPullToRefresh>
-            <Footer />
-          </main>
-          <Suspense fallback={null}>
-            <BottomNav />
-          </Suspense>
-        </div>
+        <ThemeProvider>
+          <AnalyticsTracker />
+          <Navbar />
+          <div className="mx-auto min-h-screen bg-white dark:bg-slate-900 md:bg-transparent shadow-xl md:shadow-none max-w-md md:max-w-7xl md:px-0">
+            <main className="md:container md:mx-auto">
+              <GlobalPullToRefresh>
+                {children}
+              </GlobalPullToRefresh>
+              <Footer />
+            </main>
+            <Suspense fallback={null}>
+              <BottomNav />
+            </Suspense>
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );
