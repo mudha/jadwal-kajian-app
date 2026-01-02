@@ -59,7 +59,7 @@ export default function ConfirmationModal({
     const colors = getColors();
 
     return (
-        <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-all duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-all duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"

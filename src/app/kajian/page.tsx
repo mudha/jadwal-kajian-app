@@ -843,13 +843,14 @@ function KajianListContent() {
                     </main>
                 </div>
             </div>
-            {isEditModalOpen && editingKajian && (
+            {isEditModalOpen && editingKajian && typeof document !== 'undefined' && createPortal(
                 <EditKajianModal
                     isOpen={isEditModalOpen}
                     onClose={() => setIsEditModalOpen(false)}
                     kajian={editingKajian as KajianDetail}
                     onSave={handleUpdate}
-                />
+                />,
+                document.body
             )}
 
 
@@ -878,16 +879,19 @@ function KajianListContent() {
                 )
             }
             {/* Confirmation Modal */}
-            <ConfirmationModal
-                isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
-                onConfirm={confirmDelete}
-                title="Hapus Jadwal Kajian?"
-                message="Jadwal kajian yang dihapus tidak dapat dikembalikan."
-                confirmText="Hapus"
-                cancelText="Batal"
-                type="danger"
-            />
+            {typeof document !== 'undefined' && createPortal(
+                <ConfirmationModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => setIsDeleteModalOpen(false)}
+                    onConfirm={confirmDelete}
+                    title="Hapus Jadwal Kajian?"
+                    message="Jadwal kajian yang dihapus tidak dapat dikembalikan."
+                    confirmText="Hapus"
+                    cancelText="Batal"
+                    type="danger"
+                />,
+                document.body
+            )}
         </div >
     );
 }
