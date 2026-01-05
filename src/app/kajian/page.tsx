@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { KajianEntry } from '@/lib/parser';
 import { Calendar, MapPin, User, Clock, Search, Trash2, ArrowLeft, History, ListFilter, MessageCircle, Edit, X, Save, Map as MapIcon, Share2, ExternalLink, ImageIcon, Bell, BookOpen } from 'lucide-react';
@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { getKajianStatus } from '@/lib/date-utils';
 import dynamic from 'next/dynamic';
 import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
+import CityCarousel from '@/components/CityCarousel';
 // Removed hardcoded LeftSidebar
 import MenuGrid from '@/components/MenuGrid';
 // Removed hardcoded OngoingKajianWidget
@@ -145,7 +146,24 @@ function KajianListContent() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<number | null>(null);
 
-    // Sync from settings
+
+    // City Selection State
+    const [selectedCity, setSelectedCity] = useState<string | null>(null);
+
+    // Calculate City Lists
+    const cityList = useMemo(() => {
+        const counts: { [key: string]: number } = {};
+        kajianList.forEach(k => {
+            const city = k.city || 'Lainnya';
+            counts[city] = (counts[city] || 0) + 1;
+        });
+
+        return Object.entries(counts).map(([name, count]) => ({
+            name,
+            count
+        })).sort((a, b) => b.count - a.count);
+    }, [kajianList]);
+
     useEffect(() => {
         if (settings.userLocation) {
             setUserLocation(settings.userLocation);
@@ -217,8 +235,14 @@ function KajianListContent() {
 
     const filteredKajian = processedKajian.filter(k => {
         // City Filtering (Priority)
+        // City Filtering (Priority)
         if (filterCity) {
             if (k.city.toLowerCase() !== filterCity.toLowerCase()) return false;
+        }
+
+        // Carousel City Filter
+        if (selectedCity) {
+            if (k.city !== selectedCity) return false;
         }
 
         // Mode Filtering
@@ -541,6 +565,18 @@ function KajianListContent() {
                     <main className="px-4 py-4 pb-24 md:px-0 md:py-0">
 
 
+                        {/* City Carousel */}
+                        <CityCarousel
+                            cities={cityList}
+                            selectedCity={selectedCity}
+                            onSelectCity={(city) => {
+                                setSelectedCity(city);
+                                // Reset other filters if needed, but usually users might want to combine filters
+                                // For now, let's keep search term but maybe reset radius if it conflicts?
+                                // Let's keep it simple.
+                            }}
+                        />
+
                         {/* Tabs Filter */}
                         <div className="flex flex-wrap gap-1.5 mb-8 bg-white/50 p-1 rounded-2xl border border-slate-200 w-fit">
                             {[
@@ -563,6 +599,7 @@ function KajianListContent() {
                                 </button>
                             ))}
                         </div>
+
 
                         {/* Radius Slider for Nearby Mode */}
                         {(filterMode === 'nearby' || filterNearby) && (

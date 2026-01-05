@@ -49,3 +49,31 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Failed to fetch batch data' }, { status: 500 });
     }
 }
+
+export async function DELETE(request: Request) {
+    try {
+        const { ids } = await request.json();
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return NextResponse.json({ error: 'No IDs provided' }, { status: 400 });
+        }
+
+        const validIds = ids.filter(id => typeof id === 'number' || !isNaN(Number(id)));
+
+        if (validIds.length === 0) {
+            return NextResponse.json({ error: 'No valid IDs provided' }, { status: 400 });
+        }
+
+        const placeholders = validIds.map(() => '?').join(',');
+
+        await db.execute({
+            sql: `DELETE FROM kajian WHERE id IN (${placeholders})`,
+            args: validIds
+        });
+
+        return NextResponse.json({ success: true, count: validIds.length });
+    } catch (error) {
+        console.error('Batch Delete Error:', error);
+        return NextResponse.json({ error: 'Failed to delete batch data' }, { status: 500 });
+    }
+}

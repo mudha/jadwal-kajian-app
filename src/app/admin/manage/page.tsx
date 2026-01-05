@@ -76,6 +76,11 @@ function ManageKajianList() {
     // Notification Toast State
     const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
 
+    // Bulk selection state
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+    const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
     // City Autocomplete State
     const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
     const [cityFilter, setCityFilter] = useState('');
@@ -229,6 +234,52 @@ function ManageKajianList() {
             setNotification({ message: 'Gagal menghapus data', type: 'error' });
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    const toggleSelect = (id: number) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
+    const toggleSelectAll = (items: Kajian[]) => {
+        if (selectedIds.size === items.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(items.map(item => item.id)));
+        }
+    };
+
+    const confirmBulkDelete = async () => {
+        if (selectedIds.size === 0) return;
+        setIsBulkDeleting(true);
+        try {
+            const idsToDelete = Array.from(selectedIds);
+            const res = await fetch('/api/kajian/batch', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: idsToDelete })
+            });
+
+            if (res.ok) {
+                setKajianList(prev => prev.filter(k => !selectedIds.has(k.id)));
+                setSelectedIds(new Set());
+                setIsBulkDeleteModalOpen(false);
+                setNotification({ message: `${idsToDelete.length} kajian berhasil dihapus`, type: 'success' });
+            } else {
+                setNotification({ message: 'Gagal menghapus kajian secara massal', type: 'error' });
+            }
+        } catch (e) {
+            setNotification({ message: 'Terjadi kesalahan saat menghapus massal', type: 'error' });
+        } finally {
+            setIsBulkDeleting(false);
         }
     };
 
@@ -429,6 +480,16 @@ function ManageKajianList() {
                     <p className="text-slate-600">Update, edit, atau hapus jadwal kajian yang terdaftar.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                    {selectedIds.size > 0 && (
+                        <button
+                            onClick={() => setIsBulkDeleteModalOpen(true)}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-sm transition-all animate-in zoom-in duration-200"
+                            title={`Hapus ${selectedIds.size} kajian yang dipilih`}
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            Hapus ({selectedIds.size})
+                        </button>
+                    )}
                     <button
                         onClick={scanDuplicates}
                         disabled={isScanning}
@@ -509,7 +570,15 @@ function ManageKajianList() {
                                 <table className="w-max text-left table-fixed">
                                     <thead className="bg-slate-50 border-b border-slate-200">
                                         <tr>
-                                            <th className="relative z-50 select-none pl-4 pr-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.waktu }}>
+                                            <th className="px-4 py-4 w-12 text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.size === currentItems.length && currentItems.length > 0}
+                                                    onChange={() => toggleSelectAll(currentItems)}
+                                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                />
+                                            </th>
+                                            <th className="relative z-50 select-none px-2 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600" style={{ width: columnWidths.waktu }}>
                                                 Waktu & Tanggal
                                                 <ResizeHandle col="waktu" />
                                             </th>
@@ -536,8 +605,16 @@ function ManageKajianList() {
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
                                         {currentItems.map((item) => (
-                                            <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                                <td className="pl-4 pr-2 py-4 align-top truncate"> {/* align-top for consistency */}
+                                            <tr key={item.id} className={`hover:bg-slate-50/50 transition-colors ${selectedIds.has(item.id) ? 'bg-blue-50/30' : ''}`}>
+                                                <td className="px-4 py-4 text-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedIds.has(item.id)}
+                                                        onChange={() => toggleSelect(item.id)}
+                                                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                    />
+                                                </td>
+                                                <td className="px-2 py-4 align-top truncate"> {/* align-top for consistency */}
                                                     <div className="flex items-center gap-2 text-slate-900 font-bold">
                                                         <Calendar className="w-4 h-4 text-blue-500 shrink-0" />
                                                         <span className="">{item.date}</span>
@@ -628,9 +705,17 @@ function ManageKajianList() {
                                 <div key={item.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                                     {/* Header: Date & Actions */}
                                     <div className="flex items-start justify-between">
-                                        <div className="flex items-center gap-2 text-slate-900 font-bold text-sm bg-slate-50 px-3 py-1.5 rounded-lg">
-                                            <Calendar className="w-4 h-4 text-blue-500" />
-                                            {item.date}
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds.has(item.id)}
+                                                onChange={() => toggleSelect(item.id)}
+                                                className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                            />
+                                            <div className="flex items-center gap-2 text-slate-900 font-bold text-sm bg-slate-50 px-3 py-1.5 rounded-lg">
+                                                <Calendar className="w-4 h-4 text-blue-500" />
+                                                {item.date}
+                                            </div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Link
@@ -1390,6 +1475,21 @@ function ManageKajianList() {
                     cancelText="Batal"
                     type="danger"
                     isLoading={isDeletingDuplicate}
+                />
+            )}
+
+            {/* Bulk Delete Confirmation Modal */}
+            {isBulkDeleteModalOpen && (
+                <ConfirmationModal
+                    isOpen={isBulkDeleteModalOpen}
+                    onClose={() => setIsBulkDeleteModalOpen(false)}
+                    onConfirm={confirmBulkDelete}
+                    title="Hapus Kajian Terpilih?"
+                    message={`Apakah Anda yakin ingin menghapus ${selectedIds.size} kajian yang dipilih? Data yang dihapus tidak dapat dikembalikan.`}
+                    confirmText={`Hapus ${selectedIds.size} Kajian`}
+                    cancelText="Batal"
+                    type="danger"
+                    isLoading={isBulkDeleting}
                 />
             )}
 
