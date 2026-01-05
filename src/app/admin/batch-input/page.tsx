@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { KajianEntry, parseKajianBroadcast, splitPemateri, splitWaktu } from '@/lib/parser';
 import { parseWithGemini } from '@/lib/ai-parser';
 import { Clipboard, Save, Play, CheckCircle, AlertCircle, FileText, Calendar, Clock, MapPin, LogOut, LayoutDashboard, ExternalLink, Database, PlusCircle, History, Info, Trash2, Image as ImageIcon, Loader2, Upload, X, Sparkles, Eye } from 'lucide-react';
@@ -66,6 +66,8 @@ function BatchInputPageContent() {
         currentStep: 0,
         totalSteps: 0
     });
+
+    const stopSignal = useRef(false);
 
     const showAlert = (title: string, message: string, type: 'danger' | 'warning' | 'info' = 'info') => {
         setAlertConfig({ isOpen: true, title, message, type });
@@ -352,6 +354,7 @@ function BatchInputPageContent() {
     };
 
     const handleAiProcess = async () => {
+        stopSignal.current = false;
         try {
             setIsAiLoading(true);
             setProgressModal({
@@ -394,6 +397,7 @@ function BatchInputPageContent() {
 
             // 1. Geocoding Phase
             for (let i = 0; i < withCoords.length; i++) {
+                if (stopSignal.current) break;
                 const entry = withCoords[i];
                 // Progress from 30% to 70%
                 const progress = 30 + Math.round(((i + 1) / withCoords.length) * 40);
@@ -426,6 +430,7 @@ function BatchInputPageContent() {
             const normalized = [...withCoords];
 
             for (let i = 0; i < normalized.length; i++) {
+                if (stopSignal.current) break;
                 const entry = normalized[i];
                 // Progress from 70% to 95%
                 const progress = 70 + Math.round(((i + 1) / normalized.length) * 25);
@@ -493,6 +498,12 @@ function BatchInputPageContent() {
 
             setLastImageUrl(null); // Reset after processing
             setIsGeocoding(false);
+
+            if (stopSignal.current) {
+                setProgressModal(prev => ({ ...prev, isOpen: false }));
+                setMessage("Proses dibatalkan oleh pengguna.");
+                return;
+            }
 
             // Completion
             setProgressModal({
@@ -1757,6 +1768,7 @@ function BatchInputPageContent() {
                 totalSteps={progressModal.totalSteps}
                 onClose={() => setProgressModal(prev => ({ ...prev, isOpen: false }))}
                 showCloseButton={progressModal.progress === 100}
+                onCancel={progressModal.progress < 100 ? () => stopSignal.current = true : undefined}
             />
         </div>
     );

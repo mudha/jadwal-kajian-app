@@ -12,6 +12,8 @@ interface ProgressModalProps {
     totalSteps?: number;      // e.g., 25
     onClose?: () => void;
     showCloseButton?: boolean;
+    cancelText?: string;
+    onCancel?: () => void;
 }
 
 export default function ProgressModal({
@@ -22,7 +24,9 @@ export default function ProgressModal({
     currentStep,
     totalSteps,
     onClose,
-    showCloseButton = true
+    showCloseButton = true,
+    cancelText,
+    onCancel
 }: ProgressModalProps) {
     // Prevent body scroll when modal is open
     useEffect(() => {
@@ -94,6 +98,18 @@ export default function ProgressModal({
                         <p className="text-sm text-slate-600 text-center font-medium">
                             Progress: <span className="font-bold text-blue-600">{currentStep}/{totalSteps}</span> entries
                         </p>
+                    )}
+
+                    {/* Footer / Cancel Button */}
+                    {onCancel && (
+                        <div className="pt-4 flex justify-center border-t border-slate-100">
+                            <button
+                                onClick={onCancel}
+                                className="px-6 py-2 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                            >
+                                {cancelText || 'Batal'}
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>
