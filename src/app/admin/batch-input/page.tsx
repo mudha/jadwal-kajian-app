@@ -354,9 +354,23 @@ function BatchInputPageContent() {
     const handleAiProcess = async () => {
         try {
             setIsAiLoading(true);
-            setMessage('Sedang meminta bantuan AI Gemini untuk mengekstrak data... (Mohon tunggu sebentar)');
+            setProgressModal({
+                isOpen: true,
+                title: 'AI Gemini Extraction',
+                message: 'Sedang meminta bantuan AI Gemini untuk mengekstrak data... (Mohon tunggu sebentar)',
+                progress: 10,
+                currentStep: 1,
+                totalSteps: 100 // Estimate
+            });
 
             const parsed = await parseWithGemini(inputText);
+
+            setProgressModal(prev => ({
+                ...prev,
+                message: `Alhamdulillah! AI berhasil mengekstrak ${parsed.length} jadwal. Memproses data...`,
+                progress: 30
+            }));
+
             const enrichedEntries = parsed.map(entry => {
                 const isFriday = entry.waktu?.toLowerCase().includes('jumat') || entry.waktu?.toLowerCase().includes("jum'at") || entry.tema?.toLowerCase().includes('jumat') || entry.tema === '';
                 const defaultImg = isFriday ? '/images/khutbah-jumat-cover.png' : undefined;
@@ -374,13 +388,24 @@ function BatchInputPageContent() {
             });
             setEntries(enrichedEntries);
             setSelectedIndices(new Set(enrichedEntries.map((_, i) => i)));
-            setMessage(`Alhamdulillah! AI berhasil mengekstrak ${parsed.length} jadwal. Memulai pencarian koordinat lokasi...`);
 
             setIsGeocoding(true);
             const withCoords = [...enrichedEntries];
 
+            // 1. Geocoding Phase
             for (let i = 0; i < withCoords.length; i++) {
                 const entry = withCoords[i];
+                // Progress from 30% to 70%
+                const progress = 30 + Math.round(((i + 1) / withCoords.length) * 40);
+
+                setProgressModal(prev => ({
+                    ...prev,
+                    progress,
+                    message: `Mencari koordinat lokasi... (${i + 1}/${withCoords.length})\n${entry.masjid}`,
+                    currentStep: i + 1,
+                    totalSteps: withCoords.length
+                }));
+
                 const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
                 if (coords) {
                     // Generate Google Maps URL from coordinates
@@ -390,12 +415,26 @@ function BatchInputPageContent() {
                 }
             }
 
-            // Auto-normalize names
-            setMessage('Menormalisasi nama ustadz dan masjid...');
+            // 2. Normalization Phase
+            setProgressModal(prev => ({
+                ...prev,
+                title: 'Normalisasi Data',
+                message: 'Menormalisasi nama ustadz dan masjid...',
+                progress: 70
+            }));
+
             const normalized = [...withCoords];
 
             for (let i = 0; i < normalized.length; i++) {
                 const entry = normalized[i];
+                // Progress from 70% to 95%
+                const progress = 70 + Math.round(((i + 1) / normalized.length) * 25);
+
+                setProgressModal(prev => ({
+                    ...prev,
+                    progress,
+                    message: `Menormalisasi nama... (${i + 1}/${normalized.length})`
+                }));
 
                 // Normalize ustadz name
                 try {
@@ -454,8 +493,25 @@ function BatchInputPageContent() {
 
             setLastImageUrl(null); // Reset after processing
             setIsGeocoding(false);
-            setMessage(`Ekstraksi AI selesai. Nama ustadz dan masjid telah dinormalisasi.`);
+
+            // Completion
+            setProgressModal({
+                isOpen: true,
+                title: 'Selesai!',
+                message: `Alhamdulillah! ${normalized.length} jadwal berhasil diekstrak dan siap disimpan.`,
+                progress: 100,
+                currentStep: normalized.length,
+                totalSteps: normalized.length
+            });
+            setMessage(`Ekstraksi AI selesai. Data telah diproses.`);
+
+            // Auto-close modal after 2 seconds
+            setTimeout(() => {
+                setProgressModal(prev => ({ ...prev, isOpen: false }));
+            }, 2000);
+
         } catch (e: any) {
+            setProgressModal(prev => ({ ...prev, isOpen: false }));
             setMessage(`Gagal memproses dengan AI: ${e.message || 'Kesalahan tidak diketahui'}`);
             setIsGeocoding(false);
             console.error(e);
