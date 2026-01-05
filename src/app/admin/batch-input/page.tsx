@@ -367,6 +367,7 @@ function BatchInputPageContent() {
             });
 
             const parsed = await parseWithGemini(inputText);
+            if (stopSignal.current) return;
 
             setProgressModal(prev => ({
                 ...prev,
@@ -402,6 +403,7 @@ function BatchInputPageContent() {
                 // Progress from 30% to 70%
                 const progress = 30 + Math.round(((i + 1) / withCoords.length) * 40);
 
+                if (stopSignal.current) break;
                 setProgressModal(prev => ({
                     ...prev,
                     progress,
@@ -411,6 +413,7 @@ function BatchInputPageContent() {
                 }));
 
                 const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
+                if (stopSignal.current) break;
                 if (coords) {
                     // Generate Google Maps URL from coordinates
                     const gmapsUrl = `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
@@ -418,6 +421,7 @@ function BatchInputPageContent() {
                     setEntries([...withCoords]); // Live update UI
                 }
             }
+            if (stopSignal.current) return;
 
             // 2. Normalization Phase
             setProgressModal(prev => ({
@@ -435,6 +439,7 @@ function BatchInputPageContent() {
                 // Progress from 70% to 95%
                 const progress = 70 + Math.round(((i + 1) / normalized.length) * 25);
 
+                if (stopSignal.current) break;
                 setProgressModal(prev => ({
                     ...prev,
                     progress,
@@ -442,6 +447,7 @@ function BatchInputPageContent() {
                 }));
 
                 // Normalize ustadz name
+                if (stopSignal.current) break;
                 try {
                     const ustadzResponse = await fetch('/api/admin/normalize', {
                         method: 'POST',
@@ -461,6 +467,7 @@ function BatchInputPageContent() {
                 }
 
                 // Normalize masjid name and auto-fill location data
+                if (stopSignal.current) break;
                 try {
                     const masjidResponse = await fetch('/api/admin/normalize', {
                         method: 'POST',
@@ -1768,7 +1775,11 @@ function BatchInputPageContent() {
                 totalSteps={progressModal.totalSteps}
                 onClose={() => setProgressModal(prev => ({ ...prev, isOpen: false }))}
                 showCloseButton={progressModal.progress === 100}
-                onCancel={progressModal.progress < 100 ? () => stopSignal.current = true : undefined}
+                onCancel={progressModal.progress < 100 ? () => {
+                    stopSignal.current = true;
+                    setProgressModal(prev => ({ ...prev, isOpen: false }));
+                    setMessage("Proses ekstraksi dibatalkan.");
+                } : undefined}
             />
         </div>
     );
