@@ -123,7 +123,15 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
                                 return { ...k, distance };
                             });
 
-                            withDistance.sort((a: any, b: any) => a.distance - b.distance);
+                            withDistance.sort((a: any, b: any) => {
+                                // 1. Sort by Day primarily
+                                const dateA = new Date(a._parsedDate).setHours(0, 0, 0, 0);
+                                const dateB = new Date(b._parsedDate).setHours(0, 0, 0, 0);
+                                if (dateA !== dateB) return dateA - dateB;
+
+                                // 2. Within same day, sort by distance
+                                return a.distance - b.distance;
+                            });
                             setFeaturedKajian(withDistance);
                             setSortMode('distance');
                         },
