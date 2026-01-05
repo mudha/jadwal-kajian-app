@@ -33,7 +33,7 @@ export function parseKajianBroadcast(text: string): KajianEntry[] {
 
     // Detection logic
     const isRekapan = /○●.+●○/.test(cleanText) || (cleanText.match(/】/g) || []).length > 5;
-    const isDauroh = /DAURO?H/i.test(cleanText) || /[📅🗓📍🎙📚]/.test(cleanText);
+    const isDauroh = /DAURO?H/i.test(cleanText) || /[📅🗓📍🎙📚📝]/.test(cleanText);
 
     if (isRekapan && !isDauroh) return parseRekapanFormat(lines);
     if (isDauroh) return parseDaurohFormat(lines);
@@ -332,28 +332,52 @@ function parseDaurohFormat(lines: string[]): KajianEntry[] {
         const line = lines[i];
         if (!line || line.trim() === '') continue;
 
-        // 🗓 or 📅 - Global Date
-        if (/[🗓📅]/u.test(line)) {
+        // 🗓 or 📅 or 📝 (Header Date check)
+        // Match: "🗓️ *Senin Ke-1, 5 Januari 2025*" or "📝 *JADWAL...*"
+        if (/[🗓📅]/.test(line)) {
             const val = line.replace(/[🗓📅]/gu, '').replace(/^\s*[:,-]\s*\*/, '').replace(/\*$/, '').trim();
-            if (val) commonDate = val;
+            // Clean "Senin Ke-1, " from "Senin Ke-1, 5 Januari 2025" if needed, 
+            // but keeping it is fine as parseIndoDate usually handles it or we can clean it.
+            // Let's try to extract just the date part if it looks like the specific format
+            const datePart = val.match(/\d{1,2}\s+[A-Za-z]+\s+\d{4}/);
+            if (datePart) {
+                commonDate = datePart[0];
+            } else {
+                commonDate = val;
+            }
             continue;
         }
 
         // ⏰ or 🕙 - Primary New Entry Trigger (Time)
-        if (/[⏰🕙]/u.test(line)) {
-            if (current.waktu) pushCurrent();
+        if (/[⏰🕙]/.test(line)) {
+            // ALWAYS start new entry on Time marker in this format
+            pushCurrent();
             current.waktu = line.replace(/[⏰🕙]/gu, '').replace(/^\s*[:,-]\s*/, '').trim();
         }
-        // 📍 or 🕌 - Primary New Entry Trigger (Location)
-        else if (/[📍🕌]/u.test(line)) {
-            // In some formats, Location comes before Pemateri. 
-            // In multi-session posts, if we already have a Masjid, it's a new entry.
-            if (current.masjid) pushCurrent();
-            current.masjid = line.replace(/[📍🕌]/gu, '').replace(/^\s*[:,-]\s*/, '').trim();
+        // 📍 or 🕌 - Location
+        else if (/[📍🕌]/.test(line)) {
+            // For this format, Location usually comes LAST in the block, so we don't trigger new entry here
+            // UNLESS we already have a location in current, implying a missed delimiter? 
+            // actually in standard dauroh format sometimes loc starts. 
+            // But for the user's specific format ("⏰" starts), we trust ⏰ more.
+            // If current already has masjid, but NO waktu, maybe it's a new entry starting with masjid?
+            // But let's stick to just filling the field.
 
+            const raw = line.replace(/[📍🕌]/gu, '').replace(/^\s*[:,-]\s*/, '').trim();
+            // Split if address is same line "Masjid X - Jl. Y"
+            const parts = raw.split(/\s+-\s+|\s*,\s*/);
+            current.masjid = parts[0];
+            if (parts.length > 1) {
+                current.address = raw.substring(parts[0].length).replace(/^[\s\-,]+/, '');
+            } else {
+                // Look ahead for address lines?
+                // The loop below handles Look ahead
+            }
+
+            // Address lookahead logic similar to before
             let j = i + 1;
-            let addr = '';
-            while (j < lines.length && lines[j] && !markers.test(lines[j]) && !lines[j].startsWith('_')) {
+            let addr = current.address || '';
+            while (j < lines.length && lines[j] && !markers.test(lines[j]) && !lines[j].startsWith('_') && !lines[j].startsWith('http')) {
                 addr += (addr ? ', ' : '') + lines[j].trim();
                 j++;
             }
@@ -362,27 +386,27 @@ function parseDaurohFormat(lines: string[]): KajianEntry[] {
                 i = j - 1;
             }
         }
-        // 👤 or 🎙 or 🗣 or 1️⃣... - Pemateri (Append if exists)
-        else if (/[👤🎙🗣]|^[1-9]️⃣/u.test(line) || line.includes('Pemateri')) {
-            const val = line.replace(/[👤🎙🗣]|(?:\d️⃣)/gu, '').replace(/Pemateri\s*[:\-]*/gi, '').trim();
+        // 👤 or 🎙 or 🗣 - Pemateri
+        else if (/[👤🎙🗣]/.test(line) || line.includes('Pemateri')) {
+            const val = line.replace(/[👤🎙🗣]/gu, '').replace(/Pemateri\s*[:\-]*/gi, '').trim();
             if (current.pemateri) {
                 current.pemateri += ' & ' + val;
             } else {
                 current.pemateri = val;
             }
-            // Check for theme in next line if it's italicized _..._
-            if (i + 1 < lines.length && lines[i + 1].startsWith('_') && lines[i + 1].includes('_')) {
-                const nextTheme = lines[i + 1].replace(/_/g, '').trim();
-                if (current.tema) {
-                    current.tema += ' / ' + nextTheme;
-                } else {
-                    current.tema = nextTheme;
-                }
-                i++;
-            }
+            // Check for theme in next line if it's italicized _..._ AND we don't have a theme yet or next line isn't another marker
+            // Actually in user format: 📚 Theme comes BEFORE 👤 Pemateri.
+            // But just in case order varies.
         }
-        // 📚 or 📝 or 📒 or 🍭 - Theme (Append if exists)
-        else if (/[📚📝📒🍭]/u.test(line) || line.includes('Tema')) {
+        // 📚 or 📝 or 📒 - Theme
+        else if (/[📚📝📒🍭]/.test(line) || line.includes('Tema')) {
+            // In user format: 📝 matches Header. But 📚 matches Theme.
+            // We need to be careful if 📝 is used for header.
+            if (line.includes('JADWAL KAJIAN')) {
+                // Ignore header title
+                continue;
+            }
+
             const val = line.replace(/[📚📝📒🍭]/gu, '').replace(/Tema\s*[:\-]*/gi, '').trim();
             if (current.tema) {
                 current.tema += ' / ' + val;
@@ -391,7 +415,7 @@ function parseDaurohFormat(lines: string[]): KajianEntry[] {
             }
         }
         // 🔗 or 🌏 - Maps or Links
-        else if (/[🔗🌏]/u.test(line) || line.includes('maps.app.goo.gl')) {
+        else if (/[🔗🌏]/.test(line) || line.includes('maps.app.goo.gl')) {
             const urlMatch = line.match(/https?:\/\/[^\s]+/);
             if (urlMatch) {
                 if (urlMatch[0].includes('maps')) {
@@ -401,12 +425,25 @@ function parseDaurohFormat(lines: string[]): KajianEntry[] {
                 }
             }
         }
-        // 📞 or 📱 or 📲 - CP
-        else if (/[📞📱📲]/u.test(line)) {
+        // 📞 or 📱 or 📲 - CP or INFO
+        else if (/[📞📱📲]/.test(line)) {
+            // Note: User format has "📲 Share info..." which is garbage text for us.
+            if (line.toLowerCase().includes('share info')) continue;
+
             const val = line.replace(/[📞📱📲]/gu, '').replace(/Link Pendaftaran\s*:/i, '').trim();
-            if (val.length > 5 || val.startsWith('http')) {
-                if (current.cp) current.cp += ', ' + val;
-                else current.cp = val;
+            // Only keep if it looks like contact info
+            if (val.length > 5 && (/\d/.test(val) || val.startsWith('http'))) {
+                // Check if it's just the "Informasi... hubungi" line
+                if (val.toLowerCase().includes('hubungi') || val.toLowerCase().includes('whatsapp')) {
+                    // Extract number
+                    const phones = val.match(/(?:08|\+62)\d+/g);
+                    if (phones) {
+                        current.cp = phones.join(', ');
+                    }
+                } else {
+                    if (current.cp) current.cp += ', ' + val;
+                    else current.cp = val;
+                }
             }
         }
     }

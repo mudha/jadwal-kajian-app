@@ -84,7 +84,19 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
     12. Output HANYA JSON text murni tanpa markdown formatting (tanpa \`\`\`json).
     13. JANGAN PERNAH MENGGUNAKAN NILAI 'undefined' dalam JSON. Jika field kosong/tidak ada, gunakan NULL atau string kosong "". JSON tidak valid jika ada 'undefined'.
     14. Pastikan struktur JSON valid sepenuhnya.
-        TEKS BROADCAST:
+    15. **CONTOH FORMAT KHUSUS (SURABAYA MENGAJI)**:
+        Jika formatnya seperti ini:
+        "📝 *JADWAL KAJIAN SURABAYA & SEKITARNYA* 
+        🗓️ *Senin Ke-1, 5 Januari 2025*"
+        Maka:
+        - Ambil tanggal "5 Januari 2025" dari header tersebut untuk semua item dibawahnya.
+        - Abaikan teks intro seperti "Disusun oleh...", "Share info ini...".
+        - ⏰ = Waktu
+        - 📚 = Tema/Kitab
+        - 👤 = Pemateri
+        - 📍 = Masjid/Lokasi
+
+    TEKS BROADCAST:
             ${originalText}
     `;
 
