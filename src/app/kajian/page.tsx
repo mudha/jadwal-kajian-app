@@ -566,16 +566,18 @@ function KajianListContent() {
 
 
                         {/* City Carousel */}
-                        <CityCarousel
-                            cities={cityList}
-                            selectedCity={selectedCity}
-                            onSelectCity={(city) => {
-                                setSelectedCity(city);
-                                // Reset other filters if needed, but usually users might want to combine filters
-                                // For now, let's keep search term but maybe reset radius if it conflicts?
-                                // Let's keep it simple.
-                            }}
-                        />
+                        {!filterMode && !filterCity && !filterOnline && !filterMuslimah && !filterNearby && !filterOngoing && (
+                            <CityCarousel
+                                cities={cityList}
+                                selectedCity={selectedCity}
+                                onSelectCity={(city) => {
+                                    setSelectedCity(city);
+                                    // Reset other filters if needed, but usually users might want to combine filters
+                                    // For now, let's keep search term but maybe reset radius if it conflicts?
+                                    // Let's keep it simple.
+                                }}
+                            />
+                        )}
 
                         {/* Tabs Filter */}
                         <div className="flex flex-wrap gap-1.5 mb-8 bg-white/50 p-1 rounded-2xl border border-slate-200 w-fit">
