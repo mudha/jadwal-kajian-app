@@ -98,8 +98,14 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
                             d.setHours(18, 15);
                         } else if (k.waktu.toLowerCase().includes('isya')) {
                             d.setHours(19, 30);
+                        } else if (k.waktu.toLowerCase().includes('ashar') || k.waktu.toLowerCase().includes('asar')) {
+                            d.setHours(15, 45);
+                        } else if (k.waktu.toLowerCase().includes('dhuhur') || k.waktu.toLowerCase().includes('dzuhur') || k.waktu.toLowerCase().includes('zuhur')) {
+                            d.setHours(12, 15);
                         } else if (k.waktu.toLowerCase().includes('subuh') || k.waktu.toLowerCase().includes('shubuh')) {
                             d.setHours(4, 45);
+                        } else if (k.waktu.toLowerCase().includes('jumat') || k.waktu.toLowerCase().includes("jum'at") || k.waktu.toLowerCase().includes('khutbah')) {
+                            d.setHours(12, 0);
                         }
                     }
                     return {
@@ -125,19 +131,28 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
 
                             withDistance.sort((a: any, b: any) => {
                                 // 1. Sort by Day primarily
-                                const dateA = new Date(a._parsedDate).setHours(0, 0, 0, 0);
-                                const dateB = new Date(b._parsedDate).setHours(0, 0, 0, 0);
-                                if (dateA !== dateB) return dateA - dateB;
+                                const dayA = new Date(a._parsedDate).setHours(0, 0, 0, 0);
+                                const dayB = new Date(b._parsedDate).setHours(0, 0, 0, 0);
+                                if (dayA !== dayB) return dayA - dayB;
 
-                                // 2. Within same day, sort by distance
+                                // 2. Within same day, sort by Full Time (hours/minutes)
+                                const timeA = new Date(a._parsedDate).getTime();
+                                const timeB = new Date(b._parsedDate).getTime();
+                                if (timeA !== timeB) return timeA - timeB;
+
+                                // 3. If same time, sort by distance
                                 return a.distance - b.distance;
                             });
                             setFeaturedKajian(withDistance);
                             setSortMode('distance');
                         },
                         (error) => {
-                            // Create fallback sort by date
-                            upcoming.sort((a: any, b: any) => (a._parsedDate?.getTime() || 0) - (b._parsedDate?.getTime() || 0));
+                            // Create fallback sort by date + time
+                            upcoming.sort((a: any, b: any) => {
+                                const timeA = a._parsedDate?.getTime() || 0;
+                                const timeB = b._parsedDate?.getTime() || 0;
+                                return timeA - timeB;
+                            });
                             setFeaturedKajian(upcoming);
                         }
                     );
