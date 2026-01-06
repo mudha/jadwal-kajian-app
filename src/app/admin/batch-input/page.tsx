@@ -3,7 +3,7 @@ import { useState, useEffect, Suspense, useRef } from 'react';
 import { KajianEntry, parseKajianBroadcast, splitPemateri, splitWaktu } from '@/lib/parser';
 import { parseWithGemini } from '@/lib/ai-parser';
 import { Clipboard, Save, Play, CheckCircle, AlertCircle, FileText, Calendar, Clock, MapPin, LogOut, LayoutDashboard, ExternalLink, Database, PlusCircle, History, Info, Trash2, Image as ImageIcon, Loader2, Upload, X, Sparkles, Eye } from 'lucide-react';
-import { geocodeAddress } from '@/lib/geocoding';
+import { geocodeAddress, extractCoordsFromUrl } from '@/lib/geocoding';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Tesseract from 'tesseract.js';
@@ -412,22 +412,56 @@ function BatchInputPageContent() {
                     totalSteps: withCoords.length
                 }));
 
+                if (urlCoords) {
+                    // console.log(`Got coords from URL for ${entry.masjid}:`, urlCoords);
+                    withCoords[i] = { ...entry, lat: urlCoords.lat, lng: urlCoords.lng };
+                    setEntries([...withCoords]); // Live update UI
+                    continue; // Skip geocoding if we got precise coords from URL
+                }
+
+                // If URL exists but is short (bit.ly, goo.gl, etc), try to resolve it first
+                if (entry.gmapsUrl && !entry.gmapsUrl.includes('google.com/maps') && !entry.gmapsUrl.includes('google.co.id/maps')) {
+                    try {
+                        const resolveRes = await fetch('/api/admin/resolve-url', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: entry.gmapsUrl })
+                        });
+                        const resolveData = await resolveRes.json();
+                        if (resolveData.resolvedUrl) {
+                            const resolvedCoords = extractCoordsFromUrl(resolveData.resolvedUrl);
+                            if (resolvedCoords) {
+                                withCoords[i] = {
+                                    ...entry,
+                                    lat: resolvedCoords.lat,
+                                    lng: resolvedCoords.lng,
+                                    gmapsUrl: resolveData.resolvedUrl // Update to full URL
+                                };
+                                setEntries([...withCoords]);
+                                continue;
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error resolving URL:', e);
+                    }
+                }
+
                 const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
                 if (stopSignal.current) break;
                 if (coords) {
-                    // Generate Google Maps URL from coordinates
-                    const gmapsUrl = `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
+                    // Generate Google Maps URL from coordinates ONLY IF we don't have one
+                    const gmapsUrl = entry.gmapsUrl || `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
                     withCoords[i] = { ...entry, lat: coords.lat, lng: coords.lng, gmapsUrl };
                     setEntries([...withCoords]); // Live update UI
                 }
             }
             if (stopSignal.current) return;
 
-            // 2. Normalization Phase
+            // 2. Normalization Phase (DISABLED FOR MASJID AS REQUESTED)
             setProgressModal(prev => ({
                 ...prev,
                 title: 'Normalisasi Data',
-                message: 'Menormalisasi nama ustadz dan masjid...',
+                message: 'Menormalisasi nama ustadz...', // Only Ustadz now
                 progress: 70
             }));
 
@@ -467,6 +501,8 @@ function BatchInputPageContent() {
                 }
 
                 // Normalize masjid name and auto-fill location data
+                // DISABLED as per user request: "gak usah dinormalisasi aja yg mesjid"
+                /* 
                 if (stopSignal.current) break;
                 try {
                     const masjidResponse = await fetch('/api/admin/normalize', {
@@ -474,32 +510,12 @@ function BatchInputPageContent() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ name: entry.masjid, type: 'masjid', threshold: 0.8 }),
                     });
-                    const masjidData = await masjidResponse.json();
-
-                    if (masjidData.hasExactMatch || (masjidData.suggestions && masjidData.suggestions.length > 0)) {
-                        const bestMatch = masjidData.hasExactMatch
-                            ? masjidData.canonicalName
-                            : masjidData.suggestions[0].name;
-
-                        // Auto-fill location data if available
-                        const updates: any = { masjid: bestMatch };
-                        if (masjidData.locationData) {
-                            if (masjidData.locationData.address) updates.address = masjidData.locationData.address;
-                            if (masjidData.locationData.city) updates.city = masjidData.locationData.city;
-                            if (masjidData.locationData.gmapsUrl) updates.gmapsUrl = masjidData.locationData.gmapsUrl;
-                            if (masjidData.locationData.lat !== undefined && masjidData.locationData.lat !== null) {
-                                updates.lat = masjidData.locationData.lat;
-                            }
-                            if (masjidData.locationData.lng !== undefined && masjidData.locationData.lng !== null) {
-                                updates.lng = masjidData.locationData.lng;
-                            }
-                        }
-                        normalized[i] = { ...normalized[i], ...updates };
-                    }
+                     // ... existing logic ...
                 } catch (e) {
                     console.error('Error normalizing masjid:', e);
                 }
-
+                */
+                // We still update the entry to ensure changes flow through
                 setEntries([...normalized]); // Live update UI
             }
 
