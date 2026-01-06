@@ -83,9 +83,9 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
     11. **GMAPS**: Ambil link gmaps jika ada. Kosongkan (null) jika Online.
     12. **MASJID & ALAMAT (SANGAT PENTING!)**: Ekstrak nama masjid dan alamat APA ADANYA sesuai teks. JANGAN mencoba menormalisasi atau mengubah nama masjid ke versi "resmi" jika di teks berbeda.
     13. Output HANYA JSON text murni tanpa markdown formatting (tanpa \`\`\`json).
-    13. JANGAN PERNAH MENGGUNAKAN NILAI 'undefined' dalam JSON. Jika field kosong/tidak ada, gunakan NULL atau string kosong "". JSON tidak valid jika ada 'undefined'.
-    14. Pastikan struktur JSON valid sepenuhnya.
-    15. **CONTOH FORMAT KHUSUS (SURABAYA MENGAJI)**:
+    14. JANGAN PERNAH MENGGUNAKAN NILAI 'undefined' dalam JSON. Jika field kosong/tidak ada, gunakan NULL atau string kosong "". JSON tidak valid jika ada 'undefined'.
+    15. Pastikan struktur JSON valid sepenuhnya.
+    16. **CONTOH FORMAT KHUSUS (SURABAYA MENGAJI)**:
         Jika formatnya seperti ini:
         "📝 *JADWAL KAJIAN SURABAYA & SEKITARNYA* 
         🗓️ *Senin Ke-1, 5 Januari 2025*"
@@ -116,7 +116,32 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
     `;
 
     try {
-        const result = await model.generateContent(prompt);
+        let result;
+        let retries = 3;
+        let delay = 2000;
+
+        while (retries > 0) {
+            try {
+                result = await model.generateContent(prompt);
+                break; // Sukses, keluar dari loop
+            } catch (err: any) {
+                const isOverloaded = err.message?.includes('503') ||
+                    err.message?.includes('overloaded') ||
+                    err.message?.includes('504');
+
+                if (isOverloaded && retries > 1) {
+                    retries--;
+                    console.warn(`Gemini sibuk (503), mencoba lagi dalam ${delay / 1000} detik... (Sisa percobaan: ${retries})`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2; // Exponential backoff
+                    continue;
+                }
+                throw err;
+            }
+        }
+
+        if (!result) throw new Error("Gagal mendapatkan respon dari AI setelah beberapa kali mencoba.");
+
         const response = await result.response;
         const text = response.text();
 
