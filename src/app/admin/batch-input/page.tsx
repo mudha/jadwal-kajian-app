@@ -448,6 +448,7 @@ function BatchInputPageContent() {
                     totalSteps: withCoords.length
                 }));
 
+                const urlCoords = extractCoordsFromUrl(entry.gmapsUrl);
                 if (urlCoords) {
                     // console.log(`Got coords from URL for ${entry.masjid}:`, urlCoords);
                     withCoords[i] = { ...entry, lat: urlCoords.lat, lng: urlCoords.lng };
