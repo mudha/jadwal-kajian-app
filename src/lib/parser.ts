@@ -320,6 +320,7 @@ function parseDaurohFormat(lines: string[]): KajianEntry[] {
     const markers = /[🗓📅⏰🕙👤🎙🗣📚📝📒📍🕌📞📱📲🔗🌏]/u;
     let current: Partial<KajianEntry> = {};
     const entriesData: Partial<KajianEntry>[] = [];
+    let commonCityFromHeader = '';
 
     const pushCurrent = () => {
         if (current.masjid || current.pemateri || current.tema || current.waktu) {
@@ -332,57 +333,84 @@ function parseDaurohFormat(lines: string[]): KajianEntry[] {
         const line = lines[i];
         if (!line || line.trim() === '') continue;
 
+        // Header City Detection
+        // "🔰 Jadwal Kajian Kota Palembang 🔰"
+        if (/Kota Palembang/i.test(line)) {
+            commonCityFromHeader = 'Palembang';
+            continue;
+        }
+
         // 🗓 or 📅 or 📝 (Header Date check)
-        // Match: "🗓️ *Senin Ke-1, 5 Januari 2025*" or "📝 *JADWAL...*"
-        if (/[🗓📅]/.test(line)) {
-            const val = line.replace(/[🗓📅]/gu, '').replace(/^\s*[:,-]\s*\*/, '').replace(/\*$/, '').trim();
-            // Clean "Senin Ke-1, " from "Senin Ke-1, 5 Januari 2025" if needed, 
-            // but keeping it is fine as parseIndoDate usually handles it or we can clean it.
-            // Let's try to extract just the date part if it looks like the specific format
-            const datePart = val.match(/\d{1,2}\s+[A-Za-z]+\s+\d{4}/);
-            if (datePart) {
-                commonDate = datePart[0];
+        // Match: "🗓️ *Senin Ke-1, 5 Januari 2025*" or "📝 *JADWAL...*" or "📆 Selasa, 17 Syakban 1447 H / 6 Januari 2026 M"
+        if (/[🗓📅📆]/.test(line)) {
+            const val = line.replace(/[🗓📅📆]/gu, '').replace(/^\s*[:,-]\s*\*/, '').replace(/\*$/, '').trim();
+            // Try to extract AD Date "6 Januari 2026"
+            const adDateMatch = val.match(/\d{1,2}\s+[A-Za-z]+\s+\d{4}/g);
+            if (adDateMatch && adDateMatch.length > 0) {
+                // Use the last one if multiple (e.g. Hijri dates might look similar or if format is H / M)
+                // But typically Masehi is the standard format we want.
+                // If "6 Januari 2026 M", extract "6 Januari 2026"
+                const masehi = val.match(/(\d{1,2}\s+[A-Za-z]+\s+\d{4})\s*M?/i);
+                if (masehi) commonDate = masehi[1];
+                else commonDate = adDateMatch[0];
             } else {
                 commonDate = val;
             }
             continue;
         }
 
+        // 🕌 - Start new entry for Palembang format
+        if (line.includes('🕌')) {
+            // If we have previous data, push it.
+            // But be careful: in standard dauroh, 🕌 is just location line.
+            // In Palembang format, 🕌 is the START of an entry.
+            // Heuristic: If we already have a masjid in 'current', then seeing another 🕌 means NEW entry.
+            if (current.masjid) {
+                pushCurrent();
+            }
+        }
+
         // ⏰ or 🕙 - Primary New Entry Trigger (Time)
         if (/[⏰🕙]/.test(line)) {
-            // ALWAYS start new entry on Time marker in this format
-            pushCurrent();
+            // ONLY start new entry if we don't have a masjid yet (standard format)
+            // OR if we already have a time (collision)
+            if (current.waktu) {
+                pushCurrent();
+            }
             current.waktu = line.replace(/[⏰🕙]/gu, '').replace(/^\s*[:,-]\s*/, '').trim();
         }
         // 📍 or 🕌 - Location
         else if (/[📍🕌]/.test(line)) {
-            // For this format, Location usually comes LAST in the block, so we don't trigger new entry here
-            // UNLESS we already have a location in current, implying a missed delimiter? 
-            // actually in standard dauroh format sometimes loc starts. 
-            // But for the user's specific format ("⏰" starts), we trust ⏰ more.
-            // If current already has masjid, but NO waktu, maybe it's a new entry starting with masjid?
-            // But let's stick to just filling the field.
-
+            // Palembang format: "🕌 Ma’had Zaadul Ma’ad, Jl. Padat Karya..."
             const raw = line.replace(/[📍🕌]/gu, '').replace(/^\s*[:,-]\s*/, '').trim();
-            // Split if address is same line "Masjid X - Jl. Y"
+            // Split if address is same line
             const parts = raw.split(/\s+-\s+|\s*,\s*/);
+
+            // If line starts with 🕌, and we assumed it's start of entry, current.masjid might be empty.
+            // If it's not empty (from previous logic?), we already pushed.
             current.masjid = parts[0];
+
             if (parts.length > 1) {
+                // Reconstruct address from remaining parts
                 current.address = raw.substring(parts[0].length).replace(/^[\s\-,]+/, '');
             } else {
-                // Look ahead for address lines?
-                // The loop below handles Look ahead
-            }
-
-            // Address lookahead logic similar to before
-            let j = i + 1;
-            let addr = current.address || '';
-            while (j < lines.length && lines[j] && !markers.test(lines[j]) && !lines[j].startsWith('_') && !lines[j].startsWith('http')) {
-                addr += (addr ? ', ' : '') + lines[j].trim();
-                j++;
-            }
-            if (addr) {
-                current.address = addr;
+                // Look ahead for address or maps link
+                let j = i + 1;
+                let addr = current.address || '';
+                // consume lines until next emoji marker
+                while (j < lines.length && lines[j] && !markers.test(lines[j]) && !lines[j].startsWith('_')) {
+                    // Check if it's a link (maps)
+                    if (lines[j].startsWith('http')) {
+                        current.gmapsUrl = lines[j].trim();
+                    } else {
+                        addr += (addr ? ', ' : '') + lines[j].trim();
+                    }
+                    j++;
+                }
+                if (addr) current.address = addr;
+                // Don't skip index 'i' here because the loop will continue naturally, but we processed lines[j].
+                // Wait, we need to skip the lines we consumed as address/link.
+                // Correct logic:
                 i = j - 1;
             }
         }
@@ -394,16 +422,11 @@ function parseDaurohFormat(lines: string[]): KajianEntry[] {
             } else {
                 current.pemateri = val;
             }
-            // Check for theme in next line if it's italicized _..._ AND we don't have a theme yet or next line isn't another marker
-            // Actually in user format: 📚 Theme comes BEFORE 👤 Pemateri.
-            // But just in case order varies.
         }
         // 📚 or 📝 or 📒 - Theme
         else if (/[📚📝📒🍭]/.test(line) || line.includes('Tema')) {
-            // In user format: 📝 matches Header. But 📚 matches Theme.
-            // We need to be careful if 📝 is used for header.
             if (line.includes('JADWAL KAJIAN')) {
-                // Ignore header title
+                if (/Kota Palembang/i.test(line)) commonCityFromHeader = 'Palembang';
                 continue;
             }
 
@@ -415,35 +438,38 @@ function parseDaurohFormat(lines: string[]): KajianEntry[] {
             }
         }
         // 🔗 or 🌏 - Maps or Links
-        else if (/[🔗🌏]/.test(line) || line.includes('maps.app.goo.gl')) {
+        else if (/[🔗🌏]/.test(line) || line.includes('maps.app.goo.gl') || line.startsWith('http')) {
+            // Palembang format has standalone link lines
             const urlMatch = line.match(/https?:\/\/[^\s]+/);
             if (urlMatch) {
-                if (urlMatch[0].includes('maps')) {
+                if (urlMatch[0].includes('maps') || urlMatch[0].includes('goo.gl')) {
                     current.gmapsUrl = urlMatch[0];
-                } else if (!current.cp) {
-                    current.cp = urlMatch[0];
+                } else if (!current.cp && !current.gmapsUrl) {
+                    // Assume it might be maps if we don't have one, or CP/Info if we do
+                    // Actually Palembang format uses bit.ly for maps sometimes
+                    // "https://bit.ly/3tyL3KQ" -> likely maps
+                    current.gmapsUrl = urlMatch[0];
                 }
             }
         }
         // 📞 or 📱 or 📲 - CP or INFO
         else if (/[📞📱📲]/.test(line)) {
-            // Note: User format has "📲 Share info..." which is garbage text for us.
             if (line.toLowerCase().includes('share info')) continue;
-
             const val = line.replace(/[📞📱📲]/gu, '').replace(/Link Pendaftaran\s*:/i, '').trim();
-            // Only keep if it looks like contact info
             if (val.length > 5 && (/\d/.test(val) || val.startsWith('http'))) {
-                // Check if it's just the "Informasi... hubungi" line
                 if (val.toLowerCase().includes('hubungi') || val.toLowerCase().includes('whatsapp')) {
-                    // Extract number
                     const phones = val.match(/(?:08|\+62)\d+/g);
-                    if (phones) {
-                        current.cp = phones.join(', ');
-                    }
+                    if (phones) current.cp = phones.join(', ');
                 } else {
                     if (current.cp) current.cp += ', ' + val;
                     else current.cp = val;
                 }
+            }
+        }
+        // 👥 Target (Ikhwan/Akhwat)
+        else if (/[👥]/.test(line)) {
+            if (line.toLowerCase().includes('akhwat') && !line.toLowerCase().includes('ikhwan')) {
+                current.khususAkhwat = true;
             }
         }
     }
@@ -455,9 +481,18 @@ function parseDaurohFormat(lines: string[]): KajianEntry[] {
         const address = e.address || commonAddress || masjid;
         const searchQuery = safeEncode(`${masjid} ${address}`);
 
+        // Use detected header city if specific city not found in address
+        let city = address.split(',').pop()?.trim() || commonAddress.split(',').pop()?.trim() || 'Jawa Timur';
+        // Normalize common ambiguous cities
+        if (city.match(/Jl\.|Jalan|Lrg\.|Lorong|Komplek|Perumahan/i)) {
+            // If the "city" part looks like address, use the Header city
+            if (commonCityFromHeader) city = commonCityFromHeader;
+        }
+        if (commonCityFromHeader && !city) city = commonCityFromHeader;
+
         return {
             region: 'INDONESIA',
-            city: address.split(',').pop()?.trim() || commonAddress.split(',').pop()?.trim() || 'Jawa Timur',
+            city: city,
             masjid,
             address,
             gmapsUrl: e.gmapsUrl || `https://www.google.com/maps/search/?api=1&query=${searchQuery}`,
@@ -465,7 +500,8 @@ function parseDaurohFormat(lines: string[]): KajianEntry[] {
             tema: e.tema || 'Kajian',
             waktu: normalizeWaktu(e.waktu || 'TBD'),
             ...splitCP(e.cp || commonCP || ''),
-            date: e.date || commonDate || 'TBD'
+            date: e.date || commonDate || 'TBD',
+            khususAkhwat: e.khususAkhwat
         };
     });
 }

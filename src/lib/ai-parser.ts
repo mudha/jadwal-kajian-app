@@ -96,6 +96,20 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
         - 👤 = Pemateri
         - 📍 = Masjid/Lokasi
 
+    16. **CONTOH FORMAT KHUSUS (PALEMBANG)**:
+        Jika format header seperti: "🔰 Jadwal Kajian Kota Palembang 🔰"
+        Dan tanggal: "📆 Selasa, 17 Syakban 1447 H / 6 Januari 2026 M"
+        Maka:
+        - Tanggal Global: Ambil tanggal Masehi "6 Januari 2026". Gunakan untuk SEMUA item di bawahnya.
+        - Kota Default: "Palembang". Jika nama masjid disebut (misal "Masjid At-Tauhid"), dan tidak ada kota lain disebut, ASUMSIKAN di "Palembang".
+        - Emojis:
+          - 🕌 = Masjid & Alamat & Link Maps (Link di baris bawahnya)
+          - ⏰ = Waktu
+          - 👤 = Pemateri
+          - 📚 = Tema
+          - 👥 = Target (Abaikan field ini, tapi set khususAkhwat=true jika cuma "Akhwat")
+        - Pemisahan Item: Tiap item biasanya diawali dengan emoji 🕌 (Masjid).
+
     TEKS BROADCAST:
             ${originalText}
     `;
