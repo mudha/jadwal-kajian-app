@@ -81,7 +81,8 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
     9. **KHUSUS AKHWAT**: Set true jika ada indikator khusus wanita ATAU pematerinya Ustadzah.
     10. **LINK INFO**: Ambil link pendaftaran > link Zoom > streaming > WAG.
     11. **GMAPS**: Ambil link gmaps jika ada. Kosongkan (null) jika Online.
-    12. Output HANYA JSON text murni tanpa markdown formatting (tanpa \`\`\`json).
+    12. **MASJID & ALAMAT (SANGAT PENTING!)**: Ekstrak nama masjid dan alamat APA ADANYA sesuai teks. JANGAN mencoba menormalisasi atau mengubah nama masjid ke versi "resmi" jika di teks berbeda.
+    13. Output HANYA JSON text murni tanpa markdown formatting (tanpa \`\`\`json).
     13. JANGAN PERNAH MENGGUNAKAN NILAI 'undefined' dalam JSON. Jika field kosong/tidak ada, gunakan NULL atau string kosong "". JSON tidak valid jika ada 'undefined'.
     14. Pastikan struktur JSON valid sepenuhnya.
     15. **CONTOH FORMAT KHUSUS (SURABAYA MENGAJI)**:

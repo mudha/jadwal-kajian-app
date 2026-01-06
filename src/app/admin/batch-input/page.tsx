@@ -242,10 +242,45 @@ function BatchInputPageContent() {
                     message: `Mencari koordinat lokasi... (${i + 1}/${withCoords.length})`
                 }));
 
+                // Prioritize Extraction from URL
+                const urlCoords = extractCoordsFromUrl(entry.gmapsUrl);
+                if (urlCoords) {
+                    withCoords[i] = { ...entry, lat: urlCoords.lat, lng: urlCoords.lng };
+                    setEntries([...withCoords]); // Live update UI
+                    continue; // Skip geocoding
+                }
+
+                // If URL is short, resolve it
+                if (entry.gmapsUrl && !entry.gmapsUrl.includes('google.com/maps') && !entry.gmapsUrl.includes('google.co.id/maps')) {
+                    try {
+                        const resolveRes = await fetch('/api/admin/resolve-url', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: entry.gmapsUrl })
+                        });
+                        const resolveData = await resolveRes.json();
+                        if (resolveData.resolvedUrl) {
+                            const resolvedCoords = extractCoordsFromUrl(resolveData.resolvedUrl);
+                            if (resolvedCoords) {
+                                withCoords[i] = {
+                                    ...entry,
+                                    lat: resolvedCoords.lat,
+                                    lng: resolvedCoords.lng,
+                                    gmapsUrl: resolveData.resolvedUrl // Update to full URL
+                                };
+                                setEntries([...withCoords]);
+                                continue;
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error resolving URL:', e);
+                    }
+                }
+
                 const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
                 if (coords) {
-                    // Generate Google Maps URL from coordinates
-                    const gmapsUrl = `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
+                    // Generate Google Maps URL from coordinates ONLY if we don't have one
+                    const gmapsUrl = entry.gmapsUrl || `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
                     withCoords[i] = { ...entry, lat: coords.lat, lng: coords.lng, gmapsUrl };
                     setEntries([...withCoords]); // Live update UI
                 }
@@ -255,7 +290,7 @@ function BatchInputPageContent() {
             setProgressModal({
                 isOpen: true,
                 title: 'Proses Ekstraksi',
-                message: 'Menormalisasi nama ustadz dan masjid...',
+                message: 'Menormalisasi nama ustadz...',
                 progress: 60,
                 currentStep: 0,
                 totalSteps: withCoords.length
@@ -292,6 +327,8 @@ function BatchInputPageContent() {
                 }
 
                 // Normalize masjid name and auto-fill location data
+                // DISABLED as requested: "gak usah dinormalisasi aja yg mesjid"
+                /*
                 try {
                     const masjidResponse = await fetch('/api/admin/normalize', {
                         method: 'POST',
@@ -299,7 +336,6 @@ function BatchInputPageContent() {
                         body: JSON.stringify({ name: entry.masjid, type: 'masjid', threshold: 0.8 }),
                     });
                     const masjidData = await masjidResponse.json();
-
                     if (masjidData.hasExactMatch || (masjidData.suggestions && masjidData.suggestions.length > 0)) {
                         const bestMatch = masjidData.hasExactMatch
                             ? masjidData.canonicalName
@@ -323,7 +359,7 @@ function BatchInputPageContent() {
                 } catch (e) {
                     console.error('Error normalizing masjid:', e);
                 }
-
+                */
                 setEntries([...normalized]); // Live update UI
             }
 
