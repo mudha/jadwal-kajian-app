@@ -16,10 +16,9 @@ import Link from 'next/link';
 
 interface KajianMapProps {
     items: (KajianEntry & { id: number })[];
-    isAdmin?: boolean;
 }
 
-export default function KajianMap({ items, isAdmin }: KajianMapProps) {
+export default function KajianMap({ items }: KajianMapProps) {
     // Center on Indonesia by default
     const defaultCenter: [number, number] = [-6.200000, 106.816666]; // Jakarta
 
@@ -48,16 +47,12 @@ export default function KajianMap({ items, isAdmin }: KajianMapProps) {
                             <div className="p-1 font-sans">
                                 <p className="font-black text-slate-900 m-0">{kajian.masjid}</p>
                                 <p className="text-xs text-slate-500 m-0 mb-1">{kajian.pemateri}</p>
-                                {isAdmin ? (
-                                    <Link
-                                        href={`/admin/manage?edit=${kajian.id}`}
-                                        className="text-[10px] font-bold text-blue-600 m-0 uppercase tracking-tighter hover:underline block"
-                                    >
-                                        {kajian.tema}
-                                    </Link>
-                                ) : (
-                                    <p className="text-[10px] font-bold text-blue-600 m-0 uppercase tracking-tighter">{kajian.tema}</p>
-                                )}
+                                <Link
+                                    href={`/kajian/${kajian.id}`}
+                                    className="text-[10px] font-bold text-blue-600 m-0 uppercase tracking-tighter hover:underline block"
+                                >
+                                    {kajian.tema}
+                                </Link>
                                 <a
                                     href={kajian.gmapsUrl}
                                     target="_blank"

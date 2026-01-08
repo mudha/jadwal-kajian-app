@@ -169,7 +169,7 @@ export default async function AdminDashboardPage() {
                                         #{k.id}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <Link href={`/admin/manage?edit=${k.id}`}>
+                                        <Link href={`/kajian/${k.id}`}>
                                             <h4 className="font-bold text-slate-900 text-base mb-1 truncate group-hover:text-blue-600 transition-colors hover:underline cursor-pointer">{k.tema}</h4>
                                         </Link>
                                         <div className="flex items-center gap-3 text-sm text-slate-500">
