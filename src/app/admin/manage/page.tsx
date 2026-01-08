@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Search, Edit, Trash2, Plus, Calendar, MapPin, X, Save, AlertTriangle, ChevronDown, User, Clock, CheckCircle, Info, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -45,6 +46,7 @@ import ConfirmationModal from '@/components/admin/ConfirmationModal';
 function ManageKajianList() {
     const [kajianList, setKajianList] = useState<Kajian[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const searchParams = useSearchParams();
 
     const [isLoading, setIsLoading] = useState(true);
 
@@ -202,6 +204,27 @@ function ManageKajianList() {
     useEffect(() => {
         fetchData();
     }, []);
+
+    // Handle direct edit from URL
+    useEffect(() => {
+        const editId = searchParams.get('edit');
+        if (editId && kajianList.length > 0) {
+            const id = parseInt(editId);
+            const item = kajianList.find(k => k.id === id);
+            if (item) {
+                // Auto-split waktu and pemateri when editing
+                const waktuSplit = splitWaktu(item.waktu);
+                const pemateriSplit = splitPemateri(item.pemateri);
+
+                setEditingKajian({
+                    ...item,
+                    ...waktuSplit,
+                    ...pemateriSplit
+                });
+                setIsEditModalOpen(true);
+            }
+        }
+    }, [searchParams, kajianList]);
 
     // Auto-dismiss notification after 5 seconds
     useEffect(() => {

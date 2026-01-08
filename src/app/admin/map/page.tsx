@@ -98,7 +98,7 @@ export default function AdminMapPage() {
                             <p className="text-slate-400 font-bold">Memuat data...</p>
                         </div>
                     ) : (
-                        <KajianMap items={kajianList} />
+                        <KajianMap items={kajianList} isAdmin={true} />
                     )}
                 </div>
             </div>
