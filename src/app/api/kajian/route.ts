@@ -39,11 +39,12 @@ export async function POST(request: Request) {
 
         // Check for duplicates
         const duplicates: any[] = [];
-        const existingKajian = await db.execute('SELECT id, masjid, date, waktu, tema, pemateri FROM kajian');
+        const existingKajian = await db.execute('SELECT id, masjid, city, date, waktu, tema, pemateri FROM kajian');
 
         for (const entry of entries) {
             const duplicate = existingKajian.rows.find((existing: any) =>
                 existing.masjid === formatMasjidName(entry.masjid) &&
+                String(existing.city).toLowerCase() === String(entry.city || '').toLowerCase() &&
                 existing.date === entry.date &&
                 existing.waktu === entry.waktu
             );
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
                 duplicates.push({
                     new: {
                         masjid: formatMasjidName(entry.masjid),
+                        city: entry.city,
                         date: entry.date,
                         waktu: entry.waktu,
                         tema: entry.tema,
@@ -60,6 +62,7 @@ export async function POST(request: Request) {
                     existing: {
                         id: duplicate.id,
                         masjid: duplicate.masjid,
+                        city: duplicate.city,
                         date: duplicate.date,
                         waktu: duplicate.waktu,
                         tema: duplicate.tema,
@@ -73,7 +76,7 @@ export async function POST(request: Request) {
         if (duplicates.length > 0) {
             return NextResponse.json({
                 duplicates,
-                message: 'Ditemukan kajian duplikat. Masjid, tanggal, dan waktu yang sama sudah ada di database.'
+                message: 'Ditemukan kajian duplikat. Masjid, kota, tanggal, dan waktu yang sama sudah ada di database.'
             }, { status: 409 });
         }
 

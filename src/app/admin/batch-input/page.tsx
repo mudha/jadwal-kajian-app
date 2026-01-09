@@ -680,11 +680,11 @@ function BatchInputPageContent() {
             if (action === 'skip') {
                 // Filter out duplicates using new format
                 const duplicateSignatures = new Set(duplicateEntries.map(d =>
-                    `${d.new.masjid}|${d.new.date}|${d.new.waktu}`
+                    `${d.new.masjid}|${d.new.city}|${d.new.date}|${d.new.waktu}`
                 ));
 
                 finalEntries = pendingSaveEntries.filter(e =>
-                    !duplicateSignatures.has(`${e.masjid}|${e.date}|${e.waktu}`)
+                    !duplicateSignatures.has(`${e.masjid}|${e.city}|${e.date}|${e.waktu}`)
                 );
                 console.log('Filtered entries (skip mode):', finalEntries.length);
             }
@@ -1688,7 +1688,7 @@ function BatchInputPageContent() {
                                             </div>
                                             <div className="flex-1">
                                                 <h4 className="font-bold text-amber-700 text-sm mb-1">Duplikat #{i + 1}</h4>
-                                                <p className="text-xs text-slate-500">Masjid, tanggal, dan waktu yang sama sudah ada</p>
+                                                <p className="text-xs text-slate-500">Masjid, kota, tanggal, dan waktu yang sama sudah ada</p>
                                             </div>
                                         </div>
 
@@ -1698,7 +1698,7 @@ function BatchInputPageContent() {
                                             <div className="text-xs text-slate-700 space-y-1">
                                                 <p className="font-bold">{d.new.tema}</p>
                                                 <p>👤 {d.new.pemateri}</p>
-                                                <p>🕌 {d.new.masjid}</p>
+                                                <p>🕌 {d.new.masjid} {d.new.city && `• 📍 ${d.new.city}`}</p>
                                                 <p>📅 {d.new.date} • ⏰ {d.new.waktu}</p>
                                             </div>
                                         </div>
@@ -1709,7 +1709,7 @@ function BatchInputPageContent() {
                                             <div className="text-xs text-slate-700 space-y-1">
                                                 <p className="font-bold">{d.existing.tema}</p>
                                                 <p>👤 {d.existing.pemateri}</p>
-                                                <p>🕌 {d.existing.masjid}</p>
+                                                <p>🕌 {d.existing.masjid} {d.existing.city && `• 📍 ${d.existing.city}`}</p>
                                                 <p>📅 {d.existing.date} • ⏰ {d.existing.waktu}</p>
                                             </div>
                                         </div>
@@ -1737,7 +1737,7 @@ function BatchInputPageContent() {
                                 ))}
                             </div>
                             <p className="mt-6 text-sm text-center text-slate-600 bg-white p-3 rounded-lg border border-slate-200">
-                                <strong>Perhatian:</strong> Kajian dengan masjid, tanggal, dan waktu yang sama terdeteksi sebagai duplikat.
+                                <strong>Perhatian:</strong> Kajian dengan masjid, kota, tanggal, dan waktu yang sama terdeteksi sebagai duplikat.
                                 <br />Pilih tindakan yang sesuai di bawah ini.
                             </p>
                         </div>
