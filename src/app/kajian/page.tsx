@@ -109,7 +109,7 @@ function KajianListContent() {
                         sidebar = ['SidebarBrandWidget', ...sidebar];
                     }
 
-                    setLayout({ ...layoutData, sidebar, mobile, hidden_mobile });
+                    setLayout({ ...DEFAULT_LAYOUT, ...layoutData, sidebar, mobile, hidden_mobile });
 
                     // Filter quick menu items
                     if (quickMenuData && Array.isArray(quickMenuData)) {

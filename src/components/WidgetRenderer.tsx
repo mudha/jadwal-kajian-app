@@ -28,7 +28,7 @@ interface WidgetRendererProps {
     data?: any;
 }
 
-export default function WidgetRenderer({ widgetIds, data }: WidgetRendererProps) {
+export default function WidgetRenderer({ widgetIds = [], data }: WidgetRendererProps) {
     return (
         <>
             {widgetIds.map((id) => {

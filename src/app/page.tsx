@@ -29,8 +29,8 @@ export default async function BerandaPage() {
       if (Array.isArray(sidebar) && !sidebar.includes('SidebarBrandWidget') && !hidden.includes('SidebarBrandWidget')) {
         sidebar = ['SidebarBrandWidget', ...sidebar];
       }
-      // Merge defaults for safety
-      layout = { ...fetchedLayout, sidebar, mobile, hidden_mobile };
+      // Merge defaults for safety (ensure all keys like 'main' exist)
+      layout = { ...DEFAULT_LAYOUT, ...fetchedLayout, sidebar, mobile, hidden_mobile };
     }
   } catch (e) {
     console.error("Failed to fetch layout on server", e);
