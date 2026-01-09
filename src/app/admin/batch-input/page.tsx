@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Tesseract from 'tesseract.js';
 import { indonesianCities } from '@/data/cities';
-import { parseIndoDate, formatIndoDate, formatYYYYMMDD } from '@/lib/date-utils';
+import { parseIndoDate, formatIndoDate, formatYYYYMMDD, formatMasjidName } from '@/lib/date-utils';
 import AutosuggestInput from '@/components/admin/AutosuggestInput';
 import AIInputSection from '@/components/admin/AIInputSection';
 import KajianCard from '@/components/KajianCard';
@@ -684,14 +684,23 @@ function BatchInputPageContent() {
                 ));
 
                 finalEntries = pendingSaveEntries.filter(e =>
-                    !duplicateSignatures.has(`${e.masjid}|${e.city}|${e.date}|${e.waktu}`)
+                    !duplicateSignatures.has(`${formatMasjidName(e.masjid)}|${e.city}|${e.date}|${e.waktu}`)
                 );
                 console.log('Filtered entries (skip mode):', finalEntries.length);
             }
 
             if (finalEntries.length === 0) {
-                setMessage('Tidak ada data baru untuk disimpan (semua dilewati).');
+                // Even if all are skipped, we clear them from the list
+                const processedObjects = new Set(pendingSaveEntries);
+                const remainingEntries = entries.filter(e => !processedObjects.has(e));
+                setEntries(remainingEntries);
+                setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
+                if (remainingEntries.length === 0) setInputText('');
+
+                setMessage('Tidak ada data baru untuk disimpan (semua duplikat dilewati).');
                 setIsSaving(false);
+                setDuplicateEntries([]);
+                setPendingSaveEntries([]);
                 return;
             }
 
@@ -712,14 +721,20 @@ function BatchInputPageContent() {
                     return;
                 }
 
-                console.log('Save successful');
-                setMessage(`Alhamdulillah, ${finalEntries.length} jadwal berhasil disimpan!`);
+                const savedCount = finalEntries.length;
+                const skippedCount = pendingSaveEntries.length - finalEntries.length;
+
+                if (action === 'skip' && skippedCount > 0) {
+                    setMessage(`Alhamdulillah, ${savedCount} jadwal baru berhasil disimpan! (${skippedCount} duplikat dilewati)`);
+                } else {
+                    setMessage(`Alhamdulillah, ${savedCount} jadwal berhasil disimpan!`);
+                }
+
                 fetchStats();
 
-                // Remove saved entries from list but handle indices carefully
-                // It's safer to just remove the saved objects from the entries array
-                const savedObjects = new Set(finalEntries);
-                const remainingEntries = entries.filter(e => !savedObjects.has(e));
+                // Remove PROCESSED entries from list (both saved and skipped)
+                const processedObjects = new Set(pendingSaveEntries);
+                const remainingEntries = entries.filter(e => !processedObjects.has(e));
 
                 setEntries(remainingEntries);
                 setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
