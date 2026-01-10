@@ -131,7 +131,7 @@ export function getKajianStatus(dateStr: string, waktuStr?: string): 'PAST' | 'T
 }
 
 export function formatIndoDate(date: Date): string {
-    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const days = ['Ahad', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     const dayName = days[date.getDay()];
     const day = date.getDate();
     const month = monthsIndo[date.getMonth()];
