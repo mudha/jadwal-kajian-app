@@ -1526,6 +1526,7 @@ function BatchInputPageContent() {
 
                                             {/* Geolocation Section (Mobile Only) */}
                                             <div className="space-y-4">
+                                                {/* Mobile Maps Inputs */}
                                                 <div>
                                                     <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Link Google Maps</label>
                                                     <div className="flex gap-2">
