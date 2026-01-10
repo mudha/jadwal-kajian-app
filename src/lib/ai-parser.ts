@@ -79,12 +79,12 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
     10. **LINK INFO**: Ambil link pendaftaran > link Zoom > streaming > WAG.
     11. **GMAPS**: Ambil link gmaps jika ada. Kosongkan (null) jika Online.
     12. **MASJID & ALAMAT (SANGAT PENTING!)**: Ekstrak nama masjid dan alamat APA ADANYA sesuai teks. JANGAN mencoba menormalisasi atau mengubah nama masjid ke versi "resmi" jika di teks berbeda.
-    13. Output HANYA JSON text murni tanpa markdown formatting (tanpa ```json).
+    13. Output HANYA JSON text murni tanpa markdown formatting (tanpa \`\`\`json).
     14. JANGAN PERNAH MENGGUNAKAN NILAI 'undefined' dalam JSON.Jika field kosong / tidak ada, gunakan NULL atau string kosong "".JSON tidak valid jika ada 'undefined'.
     15. Pastikan struktur JSON valid sepenuhnya.
 
     TEKS BROADCAST:
-            ${ originalText }
+            ${originalText}
     `;
 
     let currentModelName = "gemini-1.5-flash";
@@ -92,7 +92,7 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
 
     try {
         let result;
-        let retries = 5; 
+        let retries = 5;
         let delay = 3000;
 
         while (retries > 0) {
@@ -101,8 +101,8 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
                 break; // Sukses
             } catch (err: any) {
                 const message = err.message || "";
-                console.error(`Gemini Error[${ currentModelName }]: `, message);
-                
+                console.error(`Gemini Error[${currentModelName}]: `, message);
+
                 const isNotFoundError = message.includes('404') || message.toLowerCase().includes('not found');
                 const isQuotaError = message.includes('429') || message.toLowerCase().includes('quota');
                 const isOverloaded = message.includes('503') || message.includes('overloaded') || message.includes('504');
@@ -117,17 +117,17 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
                     } else {
                         throw err; // No more models
                     }
-                    
-                    console.warn(`Model not found, falling back to ${ currentModelName }...`);
+
+                    console.warn(`Model not found, falling back to ${currentModelName}...`);
                     model = genAI.getGenerativeModel({ model: currentModelName });
                     retries--;
-                    continue; 
+                    continue;
                 }
 
                 if ((isQuotaError || isOverloaded) && retries > 1) {
                     retries--;
-                    const waitTime = isQuotaError ? 15000 : delay; 
-                    console.warn(`Gemini Busy / Quota, retrying in ${ waitTime / 1000 }s... (Retries left: ${ retries })`);
+                    const waitTime = isQuotaError ? 15000 : delay;
+                    console.warn(`Gemini Busy / Quota, retrying in ${waitTime / 1000}s... (Retries left: ${retries})`);
                     await new Promise(resolve => setTimeout(resolve, waitTime));
                     delay *= 2;
                     continue;
@@ -143,13 +143,13 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
         if (!text) throw new Error("AI tidak mengembalikan teks");
 
         // Cleanup markdown and potential hallucinations
-        let cleanJson = text.replace(/```json / g, '').replace(/```/g, '').trim();
-    cleanJson = cleanJson.replace(/:\s*undefined/g, ': null');
+        let cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        cleanJson = cleanJson.replace(/:\s*undefined/g, ': null');
 
-    return JSON.parse(cleanJson) as KajianEntry[];
-} catch (error: any) {
-    console.error("Error parsing with Gemini:", error);
-    const errorMessage = error.message || "Kesalahan tidak diketahui";
-    throw new Error(`Gagal mengekstrak data menggunakan AI: ${errorMessage}`);
-}
+        return JSON.parse(cleanJson) as KajianEntry[];
+    } catch (error: any) {
+        console.error("Error parsing with Gemini:", error);
+        const errorMessage = error.message || "Kesalahan tidak diketahui";
+        throw new Error(`Gagal mengekstrak data menggunakan AI: ${errorMessage}`);
+    }
 }
