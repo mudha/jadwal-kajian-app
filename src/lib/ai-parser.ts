@@ -11,7 +11,8 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
     }
 
     // Gunakan Gemini 1.5 Flash sebagai standar utama (Quota lebih lega)
-    let model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    let currentModelName = "gemini-1.5-flash";
+    let model = genAI.getGenerativeModel({ model: currentModelName });
 
     const prompt = `
     Saya memiliki teks broadcast WhatsApp berisi informasi kajian sunnah ATAU rekapan Sholat Jumat.
@@ -105,9 +106,10 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
                 const isOverloaded = message.includes('503') || message.includes('overloaded') || message.includes('504');
                 const isNotFoundError = message.includes('404') || message.includes('not found');
 
-                if (isNotFoundError && model.modelName === "gemini-1.5-flash") {
+                if (isNotFoundError && currentModelName === "gemini-1.5-flash") {
                     console.warn("Model 1.5 Flash tidak ditemukan, mencoba gemini-pro...");
-                    model = genAI.getGenerativeModel({ model: "gemini-pro" });
+                    currentModelName = "gemini-pro";
+                    model = genAI.getGenerativeModel({ model: currentModelName });
                     continue; // Coba lagi langsung dengan model baru
                 }
 
