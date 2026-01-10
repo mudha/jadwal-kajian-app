@@ -48,7 +48,7 @@ export default function LatestKajianWidget({ data }: WidgetProps) {
                                 <p className="text-xs font-bold text-white leading-tight line-clamp-2 group-hover:text-teal-200 transition-colors mb-0.5">{k.tema}</p>
                                 <p className="text-[9px] text-teal-100/70 truncate mb-1">Oleh: {k.pemateri}</p>
                                 <p className="text-[9px] text-white/50 flex items-center gap-1">
-                                    <Clock className="w-2.5 h-2.5" /> {k.date}
+                                    <Clock className="w-2.5 h-2.5" /> {k.date.replace(/Minggu/i, 'Ahad')}
                                 </p>
                             </div>
                         </div>

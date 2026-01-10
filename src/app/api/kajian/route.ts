@@ -14,6 +14,7 @@ export async function GET() {
         // Convert integer booleans from SQLite back to actual booleans for JSON
         const rows = result.rows.map(row => ({
             ...row,
+            date: (row.date as string)?.replace(/Minggu/gi, 'Ahad'),
             khususAkhwat: !!row.khususAkhwat,
             isOnline: !!row.isOnline,
             isKidsFriendly: !!row.isKidsFriendly
@@ -108,7 +109,7 @@ export async function POST(request: Request) {
                 item.cp,
                 item.cp2 || null,
                 item.cp3 || null,
-                item.date,
+                item.date?.replace(/Minggu/gi, 'Ahad'),
                 item.khususAkhwat ? 1 : 0,
                 item.linkInfo || null,
                 item.imageUrl || null,

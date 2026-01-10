@@ -242,10 +242,10 @@ function parseRekapanFormat(lines: string[]): KajianEntry[] {
             // Check for explicit date format: Day, DD Month YYYY (allow missing comma)
             const robustDateMatch = line.match(/(?:Senin|Selasa|Rabu|Kamis|Jumat|Jum'at|Sabtu|Ahad|Minggu)\s*[,]?\s*\d{1,2}\s+[a-zA-Z]+\s+\d{4}/i);
             if (robustDateMatch) {
-                currentDate = cleanValue(robustDateMatch[0]);
+                currentDate = cleanValue(robustDateMatch[0]).replace(/Minggu/i, 'Ahad');
             } else if (dayPattern.test(cleanValue(line))) {
                 // Fallback for just starting with day name
-                currentDate = cleanValue(line);
+                currentDate = cleanValue(line).replace(/Minggu/i, 'Ahad');
             }
         }
 

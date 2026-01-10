@@ -31,7 +31,7 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
         waktu: string; // Jam kajian. PENTING: Normalisasi waktu ke format yang rapi!
         waktu_mulai?: string; // Waktu mulai spesifik (jika bisa dideteksi)
         waktu_selesai?: string; // Waktu selesai spesifik (jika ada, default: "Selesai")
-        date: string; // Tanggal kajian (Misal: Senin, 23 Desember 2025). Cari di header global jika tidak ada di entri.
+        date: string; // Tanggal kajian (Contoh: Ahad, 23 Desember 2025). Gunakan "Ahad", jangan gunakan "Minggu". Cari di header global jika tidak ada di entri.
         cp: string; // Contact Person (hanya nomor HP/nama, jangan link WA channel)
         khususAkhwat: boolean; // True jika ada kata "khusus akhwat", "akhwat only", "khusus wanita", ATAU jika pematerinya adalah seorang "Ustadzah". False jika untuk umum atau ikhwan-akhwat.
         linkInfo: string; // Link pendaftaran, streaming, atau WAG (Ambil link yang paling penting untuk user)

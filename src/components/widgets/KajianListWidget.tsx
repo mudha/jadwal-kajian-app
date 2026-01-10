@@ -108,7 +108,7 @@ export default function KajianListWidget({ data }: WidgetProps) {
                         </div>
                         <div>
                             <div className="flex items-center gap-2 mb-1">
-                                <p className="text-[10px] font-bold text-teal-600 uppercase tracking-wide">{kajian.date}</p>
+                                <p className="text-[10px] font-bold text-teal-600 uppercase tracking-wide">{kajian.date.replace(/Minggu/i, 'Ahad')}</p>
                                 {kajian.waktu && (
                                     <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md flex items-center gap-1">
                                         <Clock className="w-2.5 h-2.5" />

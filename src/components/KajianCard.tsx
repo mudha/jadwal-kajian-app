@@ -118,7 +118,7 @@ export default function KajianCard({ id, date, location, title, ustadz, ustadz2,
             </div>
             <div className="p-5">
                 <div className="flex flex-wrap items-center gap-2 mb-3">
-                    <p className="text-[10px] font-black tracking-widest text-teal-600 uppercase bg-teal-50 px-2 py-1 rounded-lg inline-block shrink-0">{date}</p>
+                    <p className="text-[10px] font-black tracking-widest text-teal-600 uppercase bg-teal-50 px-2 py-1 rounded-lg inline-block shrink-0">{date.replace(/Minggu/i, 'Ahad')}</p>
                     {waktu && (
                         <div className="flex items-center gap-1 text-[10px] font-black tracking-widest text-blue-600 uppercase bg-blue-50 px-2 py-1 rounded-lg shrink-0">
                             <Clock className="w-3 h-3" />

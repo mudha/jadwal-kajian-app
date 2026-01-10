@@ -16,6 +16,7 @@ export async function GET(
         const row = result.rows[0];
         return NextResponse.json({
             ...row,
+            date: (row.date as string)?.replace(/Minggu/gi, 'Ahad'),
             khususAkhwat: !!row.khususAkhwat,
             isOnline: !!row.isOnline
         });
@@ -91,7 +92,7 @@ export async function PATCH(
                 body.waktu,
                 body.waktu_mulai || null,
                 body.waktu_selesai || null,
-                body.date,
+                body.date?.replace(/Minggu/gi, 'Ahad'),
                 body.city,
                 body.region || 'INDONESIA',
                 body.cp,

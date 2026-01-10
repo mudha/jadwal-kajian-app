@@ -456,7 +456,7 @@ export default function KajianDetailPage() {
                                         </div>
                                         <div>
                                             <p className="text-xs text-slate-400 font-bold uppercase mb-0.5">Waktu</p>
-                                            <p className="font-bold text-slate-800">{kajian.date}</p>
+                                            <p className="font-bold text-slate-800">{kajian.date.replace(/Minggu/i, 'Ahad')}</p>
                                             <p className="text-[10px] text-teal-600 font-medium">
                                                 {(() => {
                                                     const d = parseIndoDate(kajian.date);
@@ -629,7 +629,7 @@ export default function KajianDetailPage() {
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex items-center gap-2 mb-1">
                                                                 <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-lg uppercase tracking-wider">
-                                                                    {rk.date.split(',')[0]}
+                                                                    {rk.date.replace(/Minggu/i, 'Ahad').split(',')[0]}
                                                                 </span>
                                                                 <span className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase truncate">
                                                                     <Clock className="w-3 h-3 text-slate-300" />
@@ -686,7 +686,7 @@ export default function KajianDetailPage() {
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex items-center gap-2 mb-1">
                                                                 <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-lg uppercase tracking-wider">
-                                                                    {rk.date.split(',')[0]}
+                                                                    {rk.date.replace(/Minggu/i, 'Ahad').split(',')[0]}
                                                                 </span>
                                                                 <span className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase truncate">
                                                                     <Clock className="w-3 h-3 text-slate-300" />

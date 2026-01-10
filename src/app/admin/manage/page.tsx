@@ -737,7 +737,7 @@ function ManageKajianList() {
                                             />
                                             <div className="flex items-center gap-2 text-slate-900 font-bold text-sm bg-slate-50 px-3 py-1.5 rounded-lg">
                                                 <Calendar className="w-4 h-4 text-blue-500" />
-                                                {item.date}
+                                                {item.date.replace(/Minggu/i, 'Ahad')}
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -1425,7 +1425,7 @@ function ManageKajianList() {
                                                                     <p>👤 {item.pemateri}</p>
                                                                     <p>🏙️ {item.city}</p>
                                                                     <p>🕌 {item.masjid}</p>
-                                                                    <p>📅 {item.date} • ⏰ {item.waktu}</p>
+                                                                    <p>📅 {item.date.replace(/Minggu/i, 'Ahad')} • ⏰ {item.waktu}</p>
                                                                 </div>
                                                             </div>
                                                             <div className="flex gap-1">

@@ -177,7 +177,7 @@ export default async function AdminDashboardPage() {
                                                 <Users className="w-3 h-3" /> {k.pemateri}
                                             </span>
                                             <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                                            <span>{k.date}</span>
+                                            <span>{k.date.replace(/Minggu/i, 'Ahad')}</span>
                                         </div>
                                     </div>
                                     <div className="hidden sm:block text-right">
