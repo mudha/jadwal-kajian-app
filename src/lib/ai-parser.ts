@@ -10,8 +10,8 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
         throw new Error("API Key Gemini belum disetting di .env.local");
     }
 
-    // Menggunakan Gemini 1.5 Flash (Stable Standard)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Menggunakan Gemini 2.0 Flash (Latest & Fast)
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `
     Saya memiliki teks broadcast WhatsApp berisi informasi kajian sunnah ATAU rekapan Sholat Jumat.
