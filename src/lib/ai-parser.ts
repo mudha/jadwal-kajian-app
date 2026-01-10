@@ -10,8 +10,8 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
         throw new Error("API Key Gemini belum disetting di .env.local");
     }
 
-    // Menggunakan Gemini 2.0 Flash (Latest & Fast)
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    // Gunakan Gemini 1.5 Flash sebagai standar utama (Quota lebih lega)
+    let model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
     Saya memiliki teks broadcast WhatsApp berisi informasi kajian sunnah ATAU rekapan Sholat Jumat.
@@ -76,7 +76,7 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
        - Field 'tema' jika isinya "-" atau strip, kosongkan saja.
     8. **KAJIAN ONLINE**: Jika acara diselenggarakan secara Online (Zoom, YouTube, dll):
        - Field 'isOnline' set ke true.
-       - Field 'city', 'masjid', dan 'address' otomatis diisi "Online".
+       - Field 'city', 'masjid', and 'address' otomatis diisi "Online".
        - Simpan link Zoom, Meeting ID, atau detail lainnya di 'linkInfo' atau 'address' agar user tahu cara aksesnya.
     9. **KHUSUS AKHWAT**: Set true jika ada indikator khusus wanita ATAU pematerinya Ustadzah.
     10. **LINK INFO**: Ambil link pendaftaran > link Zoom > streaming > WAG.
@@ -85,31 +85,6 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
     13. Output HANYA JSON text murni tanpa markdown formatting (tanpa \`\`\`json).
     14. JANGAN PERNAH MENGGUNAKAN NILAI 'undefined' dalam JSON. Jika field kosong/tidak ada, gunakan NULL atau string kosong "". JSON tidak valid jika ada 'undefined'.
     15. Pastikan struktur JSON valid sepenuhnya.
-    16. **CONTOH FORMAT KHUSUS (SURABAYA MENGAJI)**:
-        Jika formatnya seperti ini:
-        "📝 *JADWAL KAJIAN SURABAYA & SEKITARNYA* 
-        🗓️ *Senin Ke-1, 5 Januari 2025*"
-        Maka:
-        - Ambil tanggal "5 Januari 2025" dari header tersebut untuk semua item dibawahnya.
-        - Abaikan teks intro seperti "Disusun oleh...", "Share info ini...".
-        - ⏰ = Waktu
-        - 📚 = Tema/Kitab
-        - 👤 = Pemateri
-        - 📍 = Masjid/Lokasi
-
-    16. **CONTOH FORMAT KHUSUS (PALEMBANG)**:
-        Jika format header seperti: "🔰 Jadwal Kajian Kota Palembang 🔰"
-        Dan tanggal: "📆 Selasa, 17 Syakban 1447 H / 6 Januari 2026 M"
-        Maka:
-        - Tanggal Global: Ambil tanggal Masehi "6 Januari 2026". Gunakan untuk SEMUA item di bawahnya.
-        - Kota Default: "Palembang". Jika nama masjid disebut (misal "Masjid At-Tauhid"), dan tidak ada kota lain disebut, ASUMSIKAN di "Palembang".
-        - Emojis:
-          - 🕌 = Masjid & Alamat & Link Maps (Link di baris bawahnya)
-          - ⏰ = Waktu
-          - 👤 = Pemateri
-          - 📚 = Tema
-          - 👥 = Target (Abaikan field ini, tapi set khususAkhwat=true jika cuma "Akhwat")
-        - Pemisahan Item: Tiap item biasanya diawali dengan emoji 🕌 (Masjid).
 
     TEKS BROADCAST:
             ${originalText}
@@ -118,23 +93,30 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
     try {
         let result;
         let retries = 3;
-        let delay = 2000;
+        let delay = 3000;
 
         while (retries > 0) {
             try {
                 result = await model.generateContent(prompt);
-                break; // Sukses, keluar dari loop
+                break; // Sukses
             } catch (err: any) {
-                const isOverloaded = err.message?.includes('503') ||
-                    err.message?.includes('overloaded') ||
-                    err.message?.includes('504') ||
-                    err.message?.includes('429');
+                const message = err.message?.toLowerCase() || "";
+                const isQuotaError = message.includes('429') || message.includes('quota');
+                const isOverloaded = message.includes('503') || message.includes('overloaded') || message.includes('504');
+                const isNotFoundError = message.includes('404') || message.includes('not found');
 
-                if (isOverloaded && retries > 1) {
+                if (isNotFoundError && model.modelName === "gemini-1.5-flash") {
+                    console.warn("Model 1.5 Flash tidak ditemukan, mencoba gemini-pro...");
+                    model = genAI.getGenerativeModel({ model: "gemini-pro" });
+                    continue; // Coba lagi langsung dengan model baru
+                }
+
+                if ((isQuotaError || isOverloaded) && retries > 1) {
                     retries--;
-                    console.warn(`Gemini sibuk (503), mencoba lagi dalam ${delay / 1000} detik... (Sisa percobaan: ${retries})`);
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2; // Exponential backoff
+                    const waitTime = isQuotaError ? 10000 : delay; // Tunggu lebih lama jika quota
+                    console.warn(`Gemini Error (${isQuotaError ? '429' : 'Busy'}), mencoba lagi dalam ${waitTime / 1000} detik... (Sisa: ${retries})`);
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                    delay *= 2;
                     continue;
                 }
                 throw err;

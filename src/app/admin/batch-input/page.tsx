@@ -1260,7 +1260,42 @@ function BatchInputPageContent() {
                                                                         )}
                                                                     </div>
                                                                     <div className="flex-1 flex flex-col md:flex-row gap-2">
-                                                                        <input type="text" placeholder="Google Maps URL" value={entry.gmapsUrl || ''} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="flex-[2] bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-blue-700 text-sm placeholder:text-slate-400" />
+                                                                        <div className="flex-[2] space-y-2">
+                                                                            <input type="text" placeholder="Google Maps URL" value={entry.gmapsUrl || ''} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-blue-700 text-sm placeholder:text-slate-400" />
+
+                                                                            <div className="grid grid-cols-2 gap-2">
+                                                                                <div className="relative">
+                                                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400 uppercase">Lat</span>
+                                                                                    <input
+                                                                                        type="number"
+                                                                                        step="any"
+                                                                                        placeholder="Latitude"
+                                                                                        value={entry.lat || ''}
+                                                                                        onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
+                                                                                        className="w-full pl-10 pr-2 py-1.5 bg-white border border-slate-100 rounded-lg text-xs font-mono"
+                                                                                    />
+                                                                                </div>
+                                                                                <div className="relative">
+                                                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400 uppercase">Lng</span>
+                                                                                    <input
+                                                                                        type="number"
+                                                                                        step="any"
+                                                                                        placeholder="Longitude"
+                                                                                        value={entry.lng || ''}
+                                                                                        onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
+                                                                                        className="w-full pl-10 pr-2 py-1.5 bg-white border border-slate-100 rounded-lg text-xs font-mono"
+                                                                                    />
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <input
+                                                                                type="text"
+                                                                                placeholder="Link Pendaftaran / Info Utama"
+                                                                                value={entry.linkInfo || ''}
+                                                                                onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)}
+                                                                                className="w-full bg-slate-50 border border-slate-100 rounded-lg px-3 py-1.5 text-xs font-bold text-purple-600 outline-none"
+                                                                            />
+                                                                        </div>
 
                                                                         {/* New Checkboxes */}
                                                                         <div className="flex items-center gap-4 px-2">

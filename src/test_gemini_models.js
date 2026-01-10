@@ -23,11 +23,10 @@ async function testModels() {
     const genAI = new GoogleGenerativeAI(apiKey);
 
     const candidates = [
-        "models/gemini-1.5-flash",
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-exp",
         "gemini-1.5-flash",
-        "models/gemini-1.5-flash-latest",
-        "gemini-1.5-flash-latest",
-        "models/gemini-pro",
+        "gemini-1.5-flash-8b",
         "gemini-pro"
     ];
 
@@ -40,7 +39,7 @@ async function testModels() {
             console.log(`✅ SUCCESS with ${modelName}:`, response.text().substring(0, 20));
             return; // Exit
         } catch (error) {
-            console.log(`❌ FAILED ${modelName}:`, error.message.split(']')[1] || error.message);
+            console.log(`❌ FAILED ${modelName}:`, error.message);
         }
     }
 }
