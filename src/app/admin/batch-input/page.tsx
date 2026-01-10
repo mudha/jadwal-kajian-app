@@ -1524,6 +1524,90 @@ function BatchInputPageContent() {
 
                                             <div className="h-px bg-slate-100" />
 
+                                            {/* Geolocation Section (Mobile Only) */}
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Link Google Maps</label>
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="https://maps.app.goo.gl/..."
+                                                            value={entry.gmapsUrl || ''}
+                                                            onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)}
+                                                            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-blue-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-400"
+                                                        />
+                                                        <button
+                                                            onClick={async () => {
+                                                                if (!entry.gmapsUrl) return showAlert('Peringatan', 'Masukkan URL Maps terlebih dahulu', 'warning');
+                                                                setIsGeocoding(true);
+                                                                try {
+                                                                    const res = await fetch('/api/tools/extract-gmaps', {
+                                                                        method: 'POST',
+                                                                        body: JSON.stringify({ url: entry.gmapsUrl }),
+                                                                        headers: { 'Content-Type': 'application/json' }
+                                                                    });
+                                                                    const data = await res.json();
+                                                                    if (data.success) {
+                                                                        updateEntry(idx, 'lat', data.lat);
+                                                                        updateEntry(idx, 'lng', data.lng);
+                                                                        updateEntry(idx, 'gmapsUrl', data.expandedUrl);
+                                                                        showAlert('Berhasil', `Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`, 'info');
+                                                                    } else {
+                                                                        showAlert('Gagal', 'Gagal mengekstrak: ' + data.error, 'danger');
+                                                                    }
+                                                                } catch (e) {
+                                                                    showAlert('Kesalahan', 'Terjadi kesalahan sistem', 'danger');
+                                                                } finally {
+                                                                    setIsGeocoding(false);
+                                                                }
+                                                            }}
+                                                            className="p-3 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-colors flex items-center justify-center shrink-0"
+                                                            title="Ekstrak Koordinat"
+                                                        >
+                                                            <MapPin className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Latitude</label>
+                                                        <input
+                                                            type="number"
+                                                            step="any"
+                                                            value={entry.lat || ''}
+                                                            onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
+                                                            placeholder="-6.123"
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono font-bold text-slate-700 outline-none transition-all"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Longitude</label>
+                                                        <input
+                                                            type="number"
+                                                            step="any"
+                                                            value={entry.lng || ''}
+                                                            onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
+                                                            placeholder="106.123"
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono font-bold text-slate-700 outline-none transition-all"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Link Pendaftaran / Info Utama</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Link pendaftaran (https://...)"
+                                                        value={entry.linkInfo || ''}
+                                                        onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)}
+                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-purple-700 focus:ring-2 focus:ring-purple-500 outline-none transition-all placeholder:text-slate-400"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="h-px bg-slate-100" />
+
                                             {/* Details & Options */}
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="col-span-2 space-y-2">
