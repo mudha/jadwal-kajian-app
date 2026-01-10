@@ -1525,10 +1525,14 @@ function BatchInputPageContent() {
                                             <div className="h-px bg-slate-100" />
 
                                             {/* Geolocation Section (Mobile Only) */}
-                                            <div className="space-y-4">
-                                                {/* Mobile Maps Inputs */}
+                                            <div className="space-y-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <MapPin className="w-4 h-4 text-blue-500" />
+                                                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Detail Lokasi & Maps</span>
+                                                </div>
+
                                                 <div>
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Link Google Maps</label>
+                                                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Link Google Maps</label>
                                                     <div className="flex gap-2">
                                                         <input
                                                             type="text"
