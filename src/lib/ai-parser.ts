@@ -10,10 +10,6 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
         throw new Error("API Key Gemini belum disetting di .env.local");
     }
 
-    // Gunakan Gemini 1.5 Flash sebagai standar utama (Quota lebih lega)
-    let currentModelName = "gemini-1.5-flash";
-    let model = genAI.getGenerativeModel({ model: currentModelName });
-
     const prompt = `
     Saya memiliki teks broadcast WhatsApp berisi informasi kajian sunnah ATAU rekapan Sholat Jumat.
     Tolong ekstrak data di dalamnya menjadi array JSON dengan format typescript berikut:
@@ -63,7 +59,7 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
        - Jika bisa detect waktu mulai dan selesai yang berbeda, isi field waktu_mulai dan waktu_selesai juga
     5. **MULTIPLE PEMATERI (PENTING!)**: Jika ada LEBIH DARI SATU pemateri dalam SATU acara (sama tanggal, sama masjid):
        - Jangan buat entry terpisah!
-       - Pisahkan pemateri ke field pemateri, pemateri2, dan pemateri3
+       - Pisahkan pemateri ke field pemateri, pemateri2, and pemateri3
        - Deteksi separator seperti: "&", "dan", "," (koma)
        - Contoh: "Ust. Ahmad & Ust. Budi" -> pemateri: "Ust. Ahmad", pemateri2: "Ust. Budi"
        - Contoh: "Ust. A, Ust. B, Ust. C" -> pemateri: "Ust. A", pemateri2: "Ust. B", pemateri3: "Ust. C"
@@ -83,17 +79,20 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
     10. **LINK INFO**: Ambil link pendaftaran > link Zoom > streaming > WAG.
     11. **GMAPS**: Ambil link gmaps jika ada. Kosongkan (null) jika Online.
     12. **MASJID & ALAMAT (SANGAT PENTING!)**: Ekstrak nama masjid dan alamat APA ADANYA sesuai teks. JANGAN mencoba menormalisasi atau mengubah nama masjid ke versi "resmi" jika di teks berbeda.
-    13. Output HANYA JSON text murni tanpa markdown formatting (tanpa \`\`\`json).
-    14. JANGAN PERNAH MENGGUNAKAN NILAI 'undefined' dalam JSON. Jika field kosong/tidak ada, gunakan NULL atau string kosong "". JSON tidak valid jika ada 'undefined'.
+    13. Output HANYA JSON text murni tanpa markdown formatting (tanpa ```json).
+    14. JANGAN PERNAH MENGGUNAKAN NILAI 'undefined' dalam JSON.Jika field kosong / tidak ada, gunakan NULL atau string kosong "".JSON tidak valid jika ada 'undefined'.
     15. Pastikan struktur JSON valid sepenuhnya.
 
     TEKS BROADCAST:
-            ${originalText}
+            ${ originalText }
     `;
+
+    let currentModelName = "gemini-1.5-flash";
+    let model = genAI.getGenerativeModel({ model: currentModelName });
 
     try {
         let result;
-        let retries = 3;
+        let retries = 5; 
         let delay = 3000;
 
         while (retries > 0) {
@@ -101,22 +100,34 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
                 result = await model.generateContent(prompt);
                 break; // Sukses
             } catch (err: any) {
-                const message = err.message?.toLowerCase() || "";
-                const isQuotaError = message.includes('429') || message.includes('quota');
+                const message = err.message || "";
+                console.error(`Gemini Error[${ currentModelName }]: `, message);
+                
+                const isNotFoundError = message.includes('404') || message.toLowerCase().includes('not found');
+                const isQuotaError = message.includes('429') || message.toLowerCase().includes('quota');
                 const isOverloaded = message.includes('503') || message.includes('overloaded') || message.includes('504');
-                const isNotFoundError = message.includes('404') || message.includes('not found');
 
-                if (isNotFoundError && currentModelName === "gemini-1.5-flash") {
-                    console.warn("Model 1.5 Flash tidak ditemukan, mencoba gemini-pro...");
-                    currentModelName = "gemini-pro";
+                if (isNotFoundError) {
+                    if (currentModelName === "gemini-1.5-flash") {
+                        currentModelName = "gemini-1.5-flash-latest";
+                    } else if (currentModelName === "gemini-1.5-flash-latest") {
+                        currentModelName = "gemini-1.5-pro";
+                    } else if (currentModelName === "gemini-1.5-pro") {
+                        currentModelName = "gemini-1.0-pro";
+                    } else {
+                        throw err; // No more models
+                    }
+                    
+                    console.warn(`Model not found, falling back to ${ currentModelName }...`);
                     model = genAI.getGenerativeModel({ model: currentModelName });
-                    continue; // Coba lagi langsung dengan model baru
+                    retries--;
+                    continue; 
                 }
 
                 if ((isQuotaError || isOverloaded) && retries > 1) {
                     retries--;
-                    const waitTime = isQuotaError ? 10000 : delay; // Tunggu lebih lama jika quota
-                    console.warn(`Gemini Error (${isQuotaError ? '429' : 'Busy'}), mencoba lagi dalam ${waitTime / 1000} detik... (Sisa: ${retries})`);
+                    const waitTime = isQuotaError ? 15000 : delay; 
+                    console.warn(`Gemini Busy / Quota, retrying in ${ waitTime / 1000 }s... (Retries left: ${ retries })`);
                     await new Promise(resolve => setTimeout(resolve, waitTime));
                     delay *= 2;
                     continue;
@@ -129,17 +140,16 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
 
         const response = await result.response;
         const text = response.text();
+        if (!text) throw new Error("AI tidak mengembalikan teks");
 
-        // Clean markdown code blocks if present
-        let cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        // Cleanup markdown and potential hallucinations
+        let cleanJson = text.replace(/```json / g, '').replace(/```/g, '').trim();
+    cleanJson = cleanJson.replace(/:\s*undefined/g, ': null');
 
-        // SANITIZE: Replace invalid 'undefined' values with 'null' because Gemini sometimes hallucinates undefined in JSON
-        cleanJson = cleanJson.replace(/:\s*undefined/g, ': null');
-
-        return JSON.parse(cleanJson) as KajianEntry[];
-    } catch (error: any) {
-        console.error("Error parsing with Gemini:", error);
-        const errorMessage = error.message || "Kesalahan tidak diketahui";
-        throw new Error(`Gagal mengekstrak data menggunakan AI: ${errorMessage}`);
-    }
+    return JSON.parse(cleanJson) as KajianEntry[];
+} catch (error: any) {
+    console.error("Error parsing with Gemini:", error);
+    const errorMessage = error.message || "Kesalahan tidak diketahui";
+    throw new Error(`Gagal mengekstrak data menggunakan AI: ${errorMessage}`);
+}
 }
