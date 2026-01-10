@@ -87,7 +87,7 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
             ${originalText}
     `;
 
-    let currentModelName = "gemini-1.5-flash-002";
+    let currentModelName = "gemini-1.5-flash";
     let model = genAI.getGenerativeModel({ model: currentModelName });
 
     try {
@@ -101,16 +101,16 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
                 break; // Sukses
             } catch (err: any) {
                 const message = err.message || "";
-                console.error(`Gemini Error[${currentModelName}]: `, message);
+                console.error(`Gemini Error[${currentModelName}]:`, message);
 
                 const isNotFoundError = message.includes('404') || message.toLowerCase().includes('not found');
                 const isQuotaError = message.includes('429') || message.toLowerCase().includes('quota');
                 const isOverloaded = message.includes('503') || message.includes('overloaded') || message.includes('504');
 
                 if (isNotFoundError) {
-                    // Fallback ke model experimental jika model stabil tidak tersedia
-                    if (currentModelName === "gemini-1.5-flash-002") {
-                        currentModelName = "gemini-2.0-flash-exp";
+                    // Fallback ke model Pro jika Flash tidak tersedia
+                    if (currentModelName === "gemini-1.5-flash") {
+                        currentModelName = "gemini-1.5-pro";
                     } else {
                         throw err; // No more models to try
                     }
