@@ -10,8 +10,8 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
         throw new Error("API Key Gemini belum disetting di .env.local");
     }
 
-    // Menggunakan Gemini 2.5 Flash (terbaru dan lebih canggih!)
-    const model = genAI.getGenerativeModel({ model: "models/gemini-2.5-flash" });
+    // Menggunakan Gemini 1.5 Flash (Specific Version)
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
 
     const prompt = `
     Saya memiliki teks broadcast WhatsApp berisi informasi kajian sunnah ATAU rekapan Sholat Jumat.
@@ -127,7 +127,8 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
             } catch (err: any) {
                 const isOverloaded = err.message?.includes('503') ||
                     err.message?.includes('overloaded') ||
-                    err.message?.includes('504');
+                    err.message?.includes('504') ||
+                    err.message?.includes('429');
 
                 if (isOverloaded && retries > 1) {
                     retries--;
