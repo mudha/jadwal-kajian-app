@@ -1309,13 +1309,48 @@ function BatchInputPageContent() {
                                                                 <div className="space-y-2">
                                                                     <div>
                                                                         <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Google Maps URL</label>
-                                                                        <input
-                                                                            type="text"
-                                                                            placeholder="https://maps.google.com/..."
-                                                                            value={entry.gmapsUrl || ''}
-                                                                            onChange={(e) => handleGmapsUrlChange(idx, e.target.value)}
-                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-amber-500 rounded-xl px-4 py-2.5 outline-none font-bold text-blue-700 text-sm"
-                                                                        />
+                                                                        <div className="flex gap-2">
+                                                                            <input
+                                                                                type="text"
+                                                                                placeholder="https://maps.google.com/..."
+                                                                                value={entry.gmapsUrl || ''}
+                                                                                onChange={(e) => handleGmapsUrlChange(idx, e.target.value)}
+                                                                                className="flex-1 bg-white border-2 border-slate-200 focus:border-amber-500 rounded-xl px-4 py-2.5 outline-none font-bold text-blue-700 text-sm"
+                                                                            />
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={async () => {
+                                                                                    if (!entry.gmapsUrl) return showAlert('Peringatan', 'Masukkan URL Maps terlebih dahulu', 'warning');
+                                                                                    setIsGeocoding(true);
+                                                                                    try {
+                                                                                        const res = await fetch('/api/tools/extract-gmaps', {
+                                                                                            method: 'POST',
+                                                                                            body: JSON.stringify({ url: entry.gmapsUrl }),
+                                                                                            headers: { 'Content-Type': 'application/json' }
+                                                                                        });
+                                                                                        const data = await res.json();
+                                                                                        if (data.success) {
+                                                                                            updateEntry(idx, 'lat', data.lat);
+                                                                                            updateEntry(idx, 'lng', data.lng);
+                                                                                            updateEntry(idx, 'gmapsUrl', data.expandedUrl);
+                                                                                            showAlert('Berhasil', `Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`, 'info');
+                                                                                        } else {
+                                                                                            showAlert('Gagal', 'Gagal mengekstrak: ' + data.error, 'danger');
+                                                                                        }
+                                                                                    } catch (e) {
+                                                                                        showAlert('Kesalahan', 'Terjadi kesalahan sistem', 'danger');
+                                                                                    } finally {
+                                                                                        setIsGeocoding(false);
+                                                                                    }
+                                                                                }}
+                                                                                disabled={isGeocoding}
+                                                                                className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-bold text-xs whitespace-nowrap"
+                                                                                title="Ekstrak Koordinat dari Link"
+                                                                            >
+                                                                                <MapPin className="w-4 h-4" />
+                                                                                {isGeocoding ? 'Memproses...' : 'Ekstrak'}
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
                                                                     <div className="grid grid-cols-2 gap-2">
                                                                         <div>
