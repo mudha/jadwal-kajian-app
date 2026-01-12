@@ -87,7 +87,8 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
             ${originalText}
     `;
 
-    let currentModelName = "gemini-1.5-flash";
+    // Gunakan Gemini 2.5 Flash (model terbaru dan paling stabil per Januari 2026)
+    let currentModelName = "gemini-2.5-flash";
     let model = genAI.getGenerativeModel({ model: currentModelName });
 
     try {
@@ -108,9 +109,11 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
                 const isOverloaded = message.includes('503') || message.includes('overloaded') || message.includes('504');
 
                 if (isNotFoundError) {
-                    // Fallback ke model Pro jika Flash tidak tersedia
-                    if (currentModelName === "gemini-1.5-flash") {
-                        currentModelName = "gemini-1.5-pro";
+                    // Fallback chain: 2.5 Flash -> 2.5 Pro -> 2.0 Flash
+                    if (currentModelName === "gemini-2.5-flash") {
+                        currentModelName = "gemini-2.5-pro";
+                    } else if (currentModelName === "gemini-2.5-pro") {
+                        currentModelName = "gemini-2.0-flash";
                     } else {
                         throw err; // No more models to try
                     }
