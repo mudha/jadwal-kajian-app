@@ -43,6 +43,7 @@ function BatchInputPageContent() {
     const [duplicateEntries, setDuplicateEntries] = useState<any[]>([]);
     const [pendingSaveEntries, setPendingSaveEntries] = useState<KajianEntry[]>([]);
     const [isSaving, setIsSaving] = useState(false);
+    const [processingDuplicates, setProcessingDuplicates] = useState<Set<number>>(new Set());
 
     // Alert Modal State
     const [alertConfig, setAlertConfig] = useState<{
