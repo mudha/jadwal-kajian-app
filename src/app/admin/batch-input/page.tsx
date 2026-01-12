@@ -2055,12 +2055,21 @@ function BatchInputPageContent() {
                                                             setIsSaving(false);
                                                         }
                                                     }}
-                                                    disabled={isSaving}
-                                                    className={`px-3 py-2.5 bg-red-500 text-white text-xs font-bold rounded-xl hover:bg-red-600 transition-colors flex items-center justify-center gap-1.5 border-2 border-red-600 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                    disabled={processingDuplicates.has(i) || isSaving}
+                                                    className={`px-3 py-2.5 bg-red-500 text-white text-xs font-bold rounded-xl hover:bg-red-600 transition-colors flex items-center justify-center gap-1.5 border-2 border-red-600 ${(processingDuplicates.has(i) || isSaving) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                     title="Hapus data lama dari database, data baru akan disimpan"
                                                 >
-                                                    <span>🗑️</span>
-                                                    <span className="hidden sm:inline">Hapus</span>
+                                                    {processingDuplicates.has(i) ? (
+                                                        <>
+                                                            <span className="animate-spin">⏳</span>
+                                                            <span className="hidden sm:inline">Proses...</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span>🗑️</span>
+                                                            <span className="hidden sm:inline">Hapus</span>
+                                                        </>
+                                                    )}
                                                 </button>
                                             </div>
                                         </div>
