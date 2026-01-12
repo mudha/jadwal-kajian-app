@@ -1956,8 +1956,16 @@ function BatchInputPageContent() {
                                             <div className="grid grid-cols-3 gap-2">
                                                 <button
                                                     onClick={() => {
-                                                        // Mark as skip - will be handled by bottom action
-                                                        console.log(`Skipping duplicate #${i}`);
+                                                        // Skip this duplicate - remove from list
+                                                        const updatedDuplicates = duplicateEntries.filter((_, idx) => idx !== i);
+                                                        setDuplicateEntries(updatedDuplicates);
+
+                                                        if (updatedDuplicates.length === 0) {
+                                                            setShowDuplicateModal(false);
+                                                            setMessage('Semua duplikat dilewati. Data lama di database dipertahankan.');
+                                                        } else {
+                                                            setMessage(`Duplikat dilewati. Masih ada ${updatedDuplicates.length} duplikat lagi.`);
+                                                        }
                                                     }}
                                                     disabled={isSaving}
                                                     className={`px-3 py-2.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-1.5 border-2 border-slate-200 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -2007,7 +2015,45 @@ function BatchInputPageContent() {
                                                     <span className="hidden sm:inline">Timpa</span>
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDeleteExisting(d.existing.id, i)}
+                                                    onClick={async () => {
+                                                        if (isSaving) return;
+
+                                                        // Confirm deletion
+                                                        if (!window.confirm('Yakin ingin menghapus kajian yang sudah ada di database? Data baru akan disimpan sebagai gantinya.')) {
+                                                            return;
+                                                        }
+
+                                                        setIsSaving(true);
+                                                        try {
+                                                            const response = await fetch(`/api/kajian/${d.existing.id}`, {
+                                                                method: 'DELETE'
+                                                            });
+
+                                                            if (!response.ok) {
+                                                                const data = await response.json();
+                                                                throw new Error(data.error || 'Gagal menghapus');
+                                                            }
+
+                                                            // Remove from duplicateEntries
+                                                            const updatedDuplicates = duplicateEntries.filter((_, idx) => idx !== i);
+                                                            setDuplicateEntries(updatedDuplicates);
+
+                                                            if (updatedDuplicates.length === 0) {
+                                                                setShowDuplicateModal(false);
+                                                                // Save the new data automatically
+                                                                await handleConfirmSave('all');
+                                                                setMessage(`Kajian ID ${d.existing.id} berhasil dihapus dan data baru disimpan.`);
+                                                            } else {
+                                                                setMessage(`Kajian ID ${d.existing.id} berhasil dihapus. Masih ada ${updatedDuplicates.length} duplikat lagi.`);
+                                                                fetchStats();
+                                                            }
+                                                        } catch (error: any) {
+                                                            console.error('Delete error:', error);
+                                                            showAlert('Gagal', `Gagal menghapus: ${error.message}`, 'danger');
+                                                        } finally {
+                                                            setIsSaving(false);
+                                                        }
+                                                    }}
                                                     disabled={isSaving}
                                                     className={`px-3 py-2.5 bg-red-500 text-white text-xs font-bold rounded-xl hover:bg-red-600 transition-colors flex items-center justify-center gap-1.5 border-2 border-red-600 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                     title="Hapus data lama dari database, data baru akan disimpan"
