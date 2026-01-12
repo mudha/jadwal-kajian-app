@@ -1397,6 +1397,13 @@ function BatchInputPageContent() {
                                                                 <Info className="w-4 h-4" /> Informasi Tambahan
                                                             </h3>
                                                             <div className="space-y-3">
+                                                                {/* Image Upload */}
+                                                                <ImageUpload
+                                                                    value={entry.imageUrl || ''}
+                                                                    onChange={(url) => updateEntry(idx, 'imageUrl', url)}
+                                                                    label="Gambar / Poster"
+                                                                />
+
                                                                 <div>
                                                                     <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Catatan</label>
                                                                     <textarea
