@@ -805,6 +805,60 @@ function BatchInputPageContent() {
         });
     };
 
+    // Auto-extract coordinates when Google Maps URL is entered
+    const autoExtractCoordinates = async (idx: number, url: string) => {
+        // Only proceed if URL looks like a Google Maps link
+        if (!url || (!url.includes('maps.google') && !url.includes('maps.app.goo.gl') && !url.includes('goo.gl') && !url.includes('maps'))) {
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/tools/extract-gmaps', {
+                method: 'POST',
+                body: JSON.stringify({ url }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await res.json();
+
+            if (data.success && data.lat && data.lng) {
+                // Auto-fill the coordinates
+                setEntries(prev => {
+                    const updated = [...prev];
+                    updated[idx] = {
+                        ...updated[idx],
+                        lat: data.lat,
+                        lng: data.lng,
+                        gmapsUrl: data.expandedUrl || url // Use expanded URL if available
+                    };
+                    return updated;
+                });
+            }
+        } catch (e) {
+            console.error('Auto-extract failed:', e);
+            // Silently fail - user can still use manual extract button
+        }
+    };
+
+    // Debounced version to avoid too many API calls
+    const debouncedAutoExtract = useRef<NodeJS.Timeout | null>(null);
+
+    const handleGmapsUrlChange = (idx: number, url: string) => {
+        // Update the URL immediately
+        updateEntry(idx, 'gmapsUrl', url);
+
+        // Clear previous timeout
+        if (debouncedAutoExtract.current) {
+            clearTimeout(debouncedAutoExtract.current);
+        }
+
+        // Set new timeout for auto-extract (1 second after user stops typing)
+        if (url && url.trim().length > 10) { // Only try if URL looks substantial
+            debouncedAutoExtract.current = setTimeout(() => {
+                autoExtractCoordinates(idx, url);
+            }, 1000);
+        }
+    };
+
     const handleAddManual = () => {
         const newEntry: KajianEntry = {
             region: 'INDONESIA',
@@ -1259,7 +1313,7 @@ function BatchInputPageContent() {
                                                                             type="text"
                                                                             placeholder="https://maps.google.com/..."
                                                                             value={entry.gmapsUrl || ''}
-                                                                            onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)}
+                                                                            onChange={(e) => handleGmapsUrlChange(idx, e.target.value)}
                                                                             className="w-full bg-white border-2 border-slate-200 focus:border-amber-500 rounded-xl px-4 py-2.5 outline-none font-bold text-blue-700 text-sm"
                                                                         />
                                                                     </div>
