@@ -236,6 +236,78 @@ function ManageKajianList() {
         }
     }, [notification]);
 
+    // Global paste handler for image uploads
+    useEffect(() => {
+        const handleGlobalPaste = async (e: ClipboardEvent) => {
+            // Only handle if editing a kajian
+            if (!editingKajian || !isEditModalOpen) return;
+
+            // Check if clipboard contains image
+            const items = e.clipboardData?.items;
+            if (!items) return;
+
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    e.preventDefault();
+                    const file = items[i].getAsFile();
+                    if (!file) continue;
+
+                    try {
+                        setNotification({ message: 'Mengupload gambar dari clipboard...', type: 'info' });
+
+                        const formData = new FormData();
+                        formData.append('file', file);
+
+                        // Try Cloudinary first
+                        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+                        const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+                        let url = '';
+                        if (cloudName && uploadPreset) {
+                            formData.append('upload_preset', uploadPreset);
+                            formData.append('folder', 'jadwal-kajian');
+
+                            const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const data = await res.json();
+                            if (data.secure_url) {
+                                url = data.secure_url;
+                            }
+                        } else {
+                            // Fallback to local API
+                            const res = await fetch('/api/upload', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const data = await res.json();
+                            if (data.url) {
+                                url = data.url;
+                            }
+                        }
+
+                        if (url) {
+                            setEditingKajian({ ...editingKajian, imageUrl: url });
+                            setNotification({ message: '✅ Gambar berhasil diupload!', type: 'success' });
+                        } else {
+                            throw new Error('Upload gagal');
+                        }
+                    } catch (error) {
+                        console.error('Global paste upload error:', error);
+                        setNotification({ message: 'Gagal mengupload gambar dari clipboard', type: 'error' });
+                    }
+
+                    break;
+                }
+            }
+        };
+
+        document.addEventListener('paste', handleGlobalPaste);
+        return () => document.removeEventListener('paste', handleGlobalPaste);
+    }, [editingKajian, isEditModalOpen]);
+
+
     const handleDelete = (id: number) => {
         setItemToDelete(id);
         setIsDeleteModalOpen(true);
