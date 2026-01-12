@@ -340,7 +340,29 @@ export default function KajianDetailPage() {
         }
     };
 
-    const contactPersons = kajian ? [kajian.cp, kajian.cp2, kajian.cp3].filter((p): p is string => !!p) : [];
+    // Helper function to parse multiple phone numbers from a single string
+    const parseContactNumbers = (cpString: string | undefined): string[] => {
+        if (!cpString) return [];
+
+        // Split by common delimiters: /, >, |, or comma
+        // Also handle cases with "atau" or "or"
+        const numbers = cpString
+            .split(/[/\\>|,]|\\batau\\b|\\bor\\b/i)
+            .map(n => n.trim())
+            .filter(n => n.length >= 8); // Filter out empty or too short strings
+
+        return numbers;
+    };
+
+    // Collect all contact numbers from all CP fields
+    const contactPersons = kajian
+        ? [
+            ...parseContactNumbers(kajian.cp),
+            ...parseContactNumbers(kajian.cp2),
+            ...parseContactNumbers(kajian.cp3)
+        ]
+        : [];
+
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20 relative overflow-x-hidden">
