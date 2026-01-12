@@ -105,6 +105,81 @@ function BatchInputPageContent() {
         }
     }, [isManualMode]);
 
+    // Global paste handler for images
+    useEffect(() => {
+        const handleGlobalPaste = async (e: ClipboardEvent) => {
+            // Only handle if there are entries
+            if (entries.length === 0) return;
+
+            // Check if clipboard contains image
+            const items = e.clipboardData?.items;
+            if (!items) return;
+
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    e.preventDefault();
+                    const file = items[i].getAsFile();
+                    if (!file) continue;
+
+                    // Upload to the last/active entry
+                    const targetIndex = entries.length - 1;
+
+                    try {
+                        // Show loading toast
+                        setMessage('Mengupload gambar dari clipboard...');
+
+                        const formData = new FormData();
+                        formData.append('file', file);
+
+                        // Try Cloudinary first
+                        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+                        const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+                        let url = '';
+                        if (cloudName && uploadPreset) {
+                            formData.append('upload_preset', uploadPreset);
+                            formData.append('folder', 'jadwal-kajian');
+
+                            const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const data = await res.json();
+                            if (data.secure_url) {
+                                url = data.secure_url;
+                            }
+                        } else {
+                            // Fallback to local API
+                            const res = await fetch('/api/upload', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const data = await res.json();
+                            if (data.url) {
+                                url = data.url;
+                            }
+                        }
+
+                        if (url) {
+                            updateEntry(targetIndex, 'imageUrl', url);
+                            setMessage('✅ Gambar berhasil diupload!');
+                        } else {
+                            throw new Error('Upload gagal');
+                        }
+                    } catch (error) {
+                        console.error('Global paste upload error:', error);
+                        showAlert('Gagal', 'Gagal mengupload gambar dari clipboard', 'danger');
+                    }
+
+                    break;
+                }
+            }
+        };
+
+        document.addEventListener('paste', handleGlobalPaste);
+        return () => document.removeEventListener('paste', handleGlobalPaste);
+    }, [entries]);
+
     const fetchStats = async () => {
         try {
             const res = await fetch('/api/kajian');
