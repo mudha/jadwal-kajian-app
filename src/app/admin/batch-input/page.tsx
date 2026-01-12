@@ -938,190 +938,183 @@ function BatchInputPageContent() {
                                                             </div>
                                                         </div>
                                                     )}
-                                                    <div className="flex-1 space-y-6">
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                            <div className="col-span-1 md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1 mb-2">
-                                                                    Masjid / Lokasi
-                                                                    {entry.lat && entry.lng && <span className="flex items-center gap-1 ml-2 bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[9px] font-bold border border-blue-200"><MapPin className="w-3 h-3" /> {(typeof entry.lat === 'number' ? entry.lat : parseFloat(entry.lat)).toFixed(4)}, {(typeof entry.lng === 'number' ? entry.lng : parseFloat(entry.lng)).toFixed(4)}</span>}
-                                                                    {entry.khususAkhwat && <span className="ml-2 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[9px] font-black border border-pink-200">🌸 KHUSUS AKHWAT</span>}
-                                                                </label>
-                                                                <AutosuggestInput
-                                                                    type="masjid"
-                                                                    value={entry.masjid}
-                                                                    onChange={(val) => updateEntry(idx, 'masjid', val)}
-                                                                    onSelect={(item) => {
-                                                                        if (item.address) updateEntry(idx, 'address', item.address);
-                                                                        if (item.city) updateEntry(idx, 'city', item.city);
-                                                                        if (item.gmapsUrl || item.gmapsurl) updateEntry(idx, 'gmapsUrl', item.gmapsUrl || item.gmapsurl);
-                                                                        if (item.lat !== undefined) updateEntry(idx, 'lat', item.lat);
-                                                                        if (item.lng !== undefined) updateEntry(idx, 'lng', item.lng);
-                                                                    }}
-                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all text-base placeholder:text-slate-400"
-                                                                />
+                                                    <div className="flex-1 space-y-4">
+                                                        {/* SECTION 1: Masjid & Location */}
+                                                        <div className="bg-gradient-to-br from-blue-50/50 to-transparent p-5 rounded-2xl border border-blue-100/50">
+                                                            <h3 className="text-xs font-black text-blue-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                                                <MapPin className="w-4 h-4" /> Masjid & Lokasi
+                                                            </h3>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div className="md:col-span-2">
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Nama Masjid</label>
+                                                                    <AutosuggestInput
+                                                                        type="masjid"
+                                                                        value={entry.masjid}
+                                                                        onChange={(val) => updateEntry(idx, 'masjid', val)}
+                                                                        onSelect={(item) => {
+                                                                            if (item.address) updateEntry(idx, 'address', item.address);
+                                                                            if (item.city) updateEntry(idx, 'city', item.city);
+                                                                            if (item.gmapsUrl || item.gmapsurl) updateEntry(idx, 'gmapsUrl', item.gmapsUrl || item.gmapsurl);
+                                                                            if (item.lat !== undefined) updateEntry(idx, 'lat', item.lat);
+                                                                            if (item.lng !== undefined) updateEntry(idx, 'lng', item.lng);
+                                                                        }}
+                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900 transition-all"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Kota</label>
+                                                                    <div className="relative">
+                                                                        <input
+                                                                            type="text"
+                                                                            value={entry.city}
+                                                                            onChange={(e) => {
+                                                                                updateEntry(idx, 'city', e.target.value);
+                                                                                setActiveCityDropdownIndex(idx);
+                                                                                setCityFilter(e.target.value);
+                                                                            }}
+                                                                            onFocus={() => setActiveCityDropdownIndex(idx)}
+                                                                            onBlur={() => setTimeout(() => setActiveCityDropdownIndex(null), 200)}
+                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                        />
+                                                                        {activeCityDropdownIndex === idx && cityFilter && (
+                                                                            <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border-2 border-slate-200 rounded-xl shadow-xl">
+                                                                                {indonesianCities
+                                                                                    .filter(c => c.toLowerCase().includes(cityFilter.toLowerCase()))
+                                                                                    .slice(0, 10)
+                                                                                    .map(city => (
+                                                                                        <button
+                                                                                            key={city}
+                                                                                            type="button"
+                                                                                            className="w-full text-left px-4 py-2 hover:bg-blue-50 font-medium text-sm"
+                                                                                            onClick={() => {
+                                                                                                updateEntry(idx, 'city', city);
+                                                                                                setActiveCityDropdownIndex(null);
+                                                                                            }}
+                                                                                        >
+                                                                                            {city}
+                                                                                        </button>
+                                                                                    ))
+                                                                                }
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="md:col-span-2">
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Alamat</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={entry.address}
+                                                                        onChange={(e) => updateEntry(idx, 'address', e.target.value)}
+                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                    />
+                                                                </div>
                                                             </div>
-                                                            <div className="col-span-1 md:col-span-2">
-                                                                <div className="space-y-3">
-                                                                    <div className="flex items-center justify-between">
-                                                                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">Pemateri / Ustadz</label>
+                                                        </div>
+
+                                                        {/* SECTION 2: Kajian Details */}
+                                                        <div className="bg-gradient-to-br from-emerald-50/50 to-transparent p-5 rounded-2xl border border-emerald-100/50">
+                                                            <h3 className="text-xs font-black text-emerald-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                                                <FileText className="w-4 h-4" /> Detail Kajian
+                                                            </h3>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div className="md:col-span-2">
+                                                                    <div className="flex items-center justify-between mb-2">
+                                                                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Pemateri / Ustadz</label>
                                                                         {!entry.pemateri2 && (
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => updateEntry(idx, 'pemateri2', '')}
-                                                                                className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                                                                                className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
                                                                             >
                                                                                 <PlusCircle className="w-3 h-3" /> Tambah
                                                                             </button>
                                                                         )}
                                                                     </div>
-                                                                    <AutosuggestInput
-                                                                        type="pemateri"
-                                                                        value={entry.pemateri}
-                                                                        onChange={(val) => updateEntry(idx, 'pemateri', val)}
-                                                                        className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
-                                                                        placeholder="Pemateri utama..."
-                                                                    />
-
-                                                                    {entry.pemateri2 !== undefined && (
-                                                                        <div className="relative">
-                                                                            <AutosuggestInput
-                                                                                type="pemateri"
-                                                                                value={entry.pemateri2 || ''}
-                                                                                onChange={(val) => updateEntry(idx, 'pemateri2', val)}
-                                                                                className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
-                                                                                placeholder="Pemateri kedua..."
-                                                                            />
+                                                                    <div className="space-y-2">
+                                                                        <AutosuggestInput
+                                                                            type="pemateri"
+                                                                            value={entry.pemateri}
+                                                                            onChange={(val) => updateEntry(idx, 'pemateri', val)}
+                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                            placeholder="Pemateri utama..."
+                                                                        />
+                                                                        {entry.pemateri2 !== undefined && (
+                                                                            <div className="relative">
+                                                                                <AutosuggestInput
+                                                                                    type="pemateri"
+                                                                                    value={entry.pemateri2 || ''}
+                                                                                    onChange={(val) => updateEntry(idx, 'pemateri2', val)}
+                                                                                    className="w-full bg-white border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-2.5 pr-10 outline-none font-bold text-slate-900"
+                                                                                    placeholder="Pemateri kedua..."
+                                                                                />
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        const { pemateri2, ...rest } = entries[idx];
+                                                                                        const newEntries = [...entries];
+                                                                                        newEntries[idx] = rest as any;
+                                                                                        setEntries(newEntries);
+                                                                                    }}
+                                                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
+                                                                                >
+                                                                                    <X className="w-4 h-4" />
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                        {entry.pemateri2 && !entry.pemateri3 && (
                                                                             <button
                                                                                 type="button"
-                                                                                onClick={() => {
-                                                                                    const newEntries = [...entries];
-                                                                                    const { pemateri2, ...rest } = newEntries[idx];
-                                                                                    newEntries[idx] = rest as any;
-                                                                                    setEntries(newEntries);
-                                                                                }}
-                                                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
+                                                                                onClick={() => updateEntry(idx, 'pemateri3', '')}
+                                                                                className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
                                                                             >
-                                                                                <X className="w-4 h-4" />
+                                                                                <PlusCircle className="w-3 h-3" /> Tambah Ketiga
                                                                             </button>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {entry.pemateri2 && !entry.pemateri3 && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => updateEntry(idx, 'pemateri3', '')}
-                                                                            className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                                                                        >
-                                                                            <PlusCircle className="w-3 h-3" /> Tambah Ketiga
-                                                                        </button>
-                                                                    )}
-
-                                                                    {entry.pemateri3 !== undefined && (
-                                                                        <div className="relative">
-                                                                            <AutosuggestInput
-                                                                                type="pemateri"
-                                                                                value={entry.pemateri3 || ''}
-                                                                                onChange={(val) => updateEntry(idx, 'pemateri3', val)}
-                                                                                className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
-                                                                                placeholder="Pemateri ketiga..."
-                                                                            />
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => {
-                                                                                    const newEntries = [...entries];
-                                                                                    const { pemateri3, ...rest } = newEntries[idx];
-                                                                                    newEntries[idx] = rest as any;
-                                                                                    setEntries(newEntries);
-                                                                                }}
-                                                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
-                                                                            >
-                                                                                <X className="w-4 h-4" />
-                                                                            </button>
-                                                                        </div>
-                                                                    )}
+                                                                        )}
+                                                                        {entry.pemateri3 !== undefined && (
+                                                                            <div className="relative">
+                                                                                <AutosuggestInput
+                                                                                    type="pemateri"
+                                                                                    value={entry.pemateri3 || ''}
+                                                                                    onChange={(val) => updateEntry(idx, 'pemateri3', val)}
+                                                                                    className="w-full bg-white border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-2.5 pr-10 outline-none font-bold text-slate-900"
+                                                                                    placeholder="Pemateri ketiga..."
+                                                                                />
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        const { pemateri3, ...rest } = entries[idx];
+                                                                                        const newEntries = [...entries];
+                                                                                        newEntries[idx] = rest as any;
+                                                                                        setEntries(newEntries);
+                                                                                    }}
+                                                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
+                                                                                >
+                                                                                    <X className="w-4 h-4" />
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                            <div className="col-span-1 relative">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Kota</label>
-                                                                <div className="relative">
+                                                                <div className="md:col-span-2">
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Tema/Judul Kajian</label>
                                                                     <input
                                                                         type="text"
-                                                                        value={entry.city}
-                                                                        onChange={(e) => {
-                                                                            updateEntry(idx, 'city', e.target.value);
-                                                                            setCityFilter(e.target.value);
-                                                                            setActiveCityDropdownIndex(idx);
-                                                                        }}
-                                                                        onFocus={() => {
-                                                                            setCityFilter(entry.city);
-                                                                            setActiveCityDropdownIndex(idx);
-                                                                        }}
-                                                                        onBlur={() => setTimeout(() => setActiveCityDropdownIndex(null), 200)}
-                                                                        className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-blue-700 transition-all placeholder:text-slate-400"
+                                                                        value={entry.tema}
+                                                                        onChange={(e) => updateEntry(idx, 'tema', e.target.value)}
+                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
                                                                     />
-                                                                    {activeCityDropdownIndex === idx && (
-                                                                        <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-xl shadow-xl">
-                                                                            {indonesianCities
-                                                                                .filter(c => c.toLowerCase().includes(cityFilter.toLowerCase()))
-                                                                                .map(city => (
-                                                                                    <button
-                                                                                        key={city}
-                                                                                        type="button"
-                                                                                        className="w-full text-left px-4 py-2 hover:bg-slate-50 font-medium text-slate-700 text-sm"
-                                                                                        onClick={() => {
-                                                                                            updateEntry(idx, 'city', city);
-                                                                                            setActiveCityDropdownIndex(null);
-                                                                                        }}
-                                                                                    >
-                                                                                        {city}
-                                                                                    </button>
-                                                                                ))
-                                                                            }
-                                                                            {indonesianCities.filter(c => c.toLowerCase().includes(cityFilter.toLowerCase())).length === 0 && (
-                                                                                <div className="px-4 py-3 text-slate-400 text-xs text-center italic">Kota tidak ditemukan</div>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
                                                                 </div>
                                                             </div>
-                                                            <div className="col-span-1 md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Tema</label>
-                                                                <textarea
-                                                                    rows={2}
-                                                                    value={entry.tema}
-                                                                    onChange={(e) => updateEntry(idx, 'tema', e.target.value)}
-                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400 resize-none"
-                                                                />
-                                                            </div>
-                                                            <div className="col-span-1 md:col-span-2">
-                                                                <div className="flex gap-4 items-end">
-                                                                    <div className="flex-1">
-                                                                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Catatan dari Panitia</label>
-                                                                        <textarea
-                                                                            rows={2}
-                                                                            value={entry.catatan || ''}
-                                                                            onChange={(e) => updateEntry(idx, 'catatan', e.target.value)}
-                                                                            className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none text-slate-900 transition-all placeholder:text-slate-400 resize-y"
-                                                                            placeholder="Misal: Membawa makanan untuk berbuka, Khusus ikhwan, dll"
-                                                                        />
-                                                                    </div>
-                                                                    <label className={`flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border transition-all h-[42px] mb-[1px] ${entry.isKidsFriendly ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-orange-200 hover:text-orange-500'}`}>
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            checked={entry.isKidsFriendly || false}
-                                                                            onChange={(e) => updateEntry(idx, 'isKidsFriendly', e.target.checked)}
-                                                                            className="hidden"
-                                                                        />
-                                                                        <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${entry.isKidsFriendly ? 'border-orange-500 bg-orange-500 text-white' : 'border-slate-300 bg-white'}`}>
-                                                                            {entry.isKidsFriendly && <CheckCircle className="w-3 h-3" />}
-                                                                        </div>
-                                                                        <span className="text-[10px] font-black uppercase tracking-wider whitespace-nowrap">🎈 Kajian Anak</span>
-                                                                    </label>
-                                                                </div>
-                                                            </div>
-                                                            <div className="col-span-1">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Tanggal</label>
-                                                                <div className="relative group">
+                                                        </div>
+
+                                                        {/* SECTION 3: Schedule */}
+                                                        <div className="bg-gradient-to-br from-purple-50/50 to-transparent p-5 rounded-2xl border border-purple-100/50">
+                                                            <h3 className="text-xs font-black text-purple-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                                                <Calendar className="w-4 h-4" /> Jadwal
+                                                            </h3>
+                                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                                <div>
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Tanggal</label>
                                                                     <input
                                                                         type="date"
                                                                         value={(() => {
@@ -1130,97 +1123,96 @@ function BatchInputPageContent() {
                                                                         })()}
                                                                         onChange={(e) => {
                                                                             const val = e.target.valueAsDate;
-                                                                            if (val) {
-                                                                                updateEntry(idx, 'date', formatIndoDate(val));
-                                                                            }
+                                                                            if (val) updateEntry(idx, 'date', formatIndoDate(val));
                                                                         }}
-                                                                        className="w-full pl-10 pr-4 py-2 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl outline-none font-bold text-slate-900 transition-all"
+                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-purple-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
                                                                     />
-                                                                    <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none group-focus-within:text-blue-500" />
                                                                 </div>
-                                                            </div>
-                                                            <div className="col-span-1 relative">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Waktu Mulai</label>
-                                                                <div className="relative">
+                                                                <div>
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Waktu Mulai</label>
+                                                                    <div className="relative">
+                                                                        <input
+                                                                            type="text"
+                                                                            value={entry.waktu_mulai || ''}
+                                                                            onChange={(e) => {
+                                                                                updateEntry(idx, 'waktu_mulai', e.target.value);
+                                                                                setActiveWaktuDropdownIndex(idx);
+                                                                            }}
+                                                                            onFocus={() => setActiveWaktuDropdownIndex(idx)}
+                                                                            onBlur={() => setTimeout(() => setActiveWaktuDropdownIndex(null), 200)}
+                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-purple-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                            placeholder="Ba'da Maghrib / 19.00"
+                                                                        />
+                                                                        {activeWaktuDropdownIndex === idx && (
+                                                                            <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border-2 border-slate-200 rounded-xl shadow-xl">
+                                                                                {['Ba\'da Shubuh', 'Ba\'da Dhuhur', 'Ba\'da Ashar', 'Ba\'da Maghrib', 'Ba\'da Isya', 'Shubuh', 'Dhuhur', 'Ashar', 'Maghrib', 'Isya', 'Sholat Jumat']
+                                                                                    .filter(w => w.toLowerCase().includes((entry.waktu_mulai || '').toLowerCase()))
+                                                                                    .map(waktu => (
+                                                                                        <button
+                                                                                            key={waktu}
+                                                                                            type="button"
+                                                                                            className="w-full text-left px-4 py-2 hover:bg-purple-50 font-medium text-sm"
+                                                                                            onClick={() => {
+                                                                                                updateEntry(idx, 'waktu_mulai', waktu);
+                                                                                                setActiveWaktuDropdownIndex(null);
+                                                                                            }}
+                                                                                        >
+                                                                                            {waktu}
+                                                                                        </button>
+                                                                                    ))
+                                                                                }
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Waktu Selesai</label>
                                                                     <input
                                                                         type="text"
-                                                                        value={entry.waktu_mulai || ''}
-                                                                        onChange={(e) => {
-                                                                            updateEntry(idx, 'waktu_mulai', e.target.value);
-                                                                            setActiveWaktuDropdownIndex(idx);
-                                                                        }}
-                                                                        onFocus={() => setActiveWaktuDropdownIndex(idx)}
-                                                                        onBlur={() => setTimeout(() => setActiveWaktuDropdownIndex(null), 200)}
-                                                                        className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
-                                                                        placeholder="Ba'da Maghrib / 19.00"
+                                                                        value={entry.waktu_selesai || 'Selesai'}
+                                                                        onChange={(e) => updateEntry(idx, 'waktu_selesai', e.target.value)}
+                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-purple-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                        placeholder="Selesai / 20.00"
                                                                     />
-                                                                    {activeWaktuDropdownIndex === idx && (
-                                                                        <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-xl shadow-xl">
-                                                                            {['Ba\'da Shubuh', 'Ba\'da Dhuhur', 'Ba\'da Ashar', 'Ba\'da Maghrib', 'Ba\'da Isya', 'Shubuh', 'Dhuhur', 'Ashar', 'Maghrib', 'Isya', 'Sholat Jumat']
-                                                                                .filter(w => w.toLowerCase().includes((entry.waktu_mulai || '').toLowerCase()))
-                                                                                .map(waktu => (
-                                                                                    <button
-                                                                                        key={waktu}
-                                                                                        type="button"
-                                                                                        className="w-full text-left px-4 py-2 hover:bg-slate-50 font-medium text-slate-700 text-sm"
-                                                                                        onClick={() => {
-                                                                                            updateEntry(idx, 'waktu_mulai', waktu);
-                                                                                            setActiveWaktuDropdownIndex(null);
-                                                                                        }}
-                                                                                    >
-                                                                                        {waktu}
-                                                                                    </button>
-                                                                                ))
-                                                                            }
-                                                                        </div>
-                                                                    )}
                                                                 </div>
                                                             </div>
-                                                            <div className="col-span-1">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Waktu Selesai</label>
-                                                                <input
-                                                                    type="text"
-                                                                    value={entry.waktu_selesai || 'Selesai'}
-                                                                    onChange={(e) => updateEntry(idx, 'waktu_selesai', e.target.value)}
-                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
-                                                                    placeholder="Selesai / 20.00"
-                                                                />
-                                                            </div>
-                                                            <div className="col-span-1 md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Alamat</label>
-                                                                <input type="text" value={entry.address} onChange={(e) => updateEntry(idx, 'address', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400" />
-                                                            </div>
-                                                            <div className="col-span-1 md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">CP / Maps / Koordinat</label>
-                                                                <div className="flex flex-col md:flex-row gap-4">
-                                                                    <div className="w-full md:w-1/3 space-y-2">
-                                                                        <div className="flex items-center justify-between">
-                                                                            <span className="text-[10px] font-bold text-slate-400">Narahubung</span>
-                                                                            {entry.cp2 === undefined && (
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() => updateEntry(idx, 'cp2', '')}
-                                                                                    className="text-[10px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                                                                                >
-                                                                                    <PlusCircle className="w-3 h-3" /> Tambah
-                                                                                </button>
-                                                                            )}
-                                                                        </div>
+                                                        </div>
+
+                                                        {/* SECTION 4: Contact & Maps */}
+                                                        <div className="bg-gradient-to-br from-amber-50/50 to-transparent p-5 rounded-2xl border border-amber-100/50">
+                                                            <h3 className="text-xs font-black text-amber-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                                                <MapPin className="w-4 h-4" /> Kontak & Lokasi Digital
+                                                            </h3>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div>
+                                                                    <div className="flex items-center justify-between mb-2">
+                                                                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Contact Person</label>
+                                                                        {entry.cp2 === undefined && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => updateEntry(idx, 'cp2', '')}
+                                                                                className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1"
+                                                                            >
+                                                                                <PlusCircle className="w-3 h-3" /> Tambah
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="space-y-2">
                                                                         <input
                                                                             type="text"
                                                                             placeholder="CP (Contact Person)"
                                                                             value={entry.cp || ''}
                                                                             onChange={(e) => updateEntry(idx, 'cp', e.target.value)}
-                                                                            className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-emerald-700 placeholder:text-slate-400"
+                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-amber-500 rounded-xl px-4 py-2.5 outline-none font-bold text-emerald-700"
                                                                         />
                                                                         {entry.cp2 !== undefined && (
-                                                                            <div className="relative animate-in slide-in-from-top-1">
+                                                                            <div className="relative">
                                                                                 <input
                                                                                     type="text"
                                                                                     placeholder="CP 2..."
                                                                                     value={entry.cp2}
                                                                                     onChange={(e) => updateEntry(idx, 'cp2', e.target.value)}
-                                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-emerald-700 placeholder:text-slate-400"
+                                                                                    className="w-full bg-white border-2 border-slate-200 focus:border-amber-500 rounded-xl px-4 py-2.5 pr-10 outline-none font-bold text-emerald-700"
                                                                                 />
                                                                                 <button
                                                                                     type="button"
@@ -1232,13 +1224,13 @@ function BatchInputPageContent() {
                                                                             </div>
                                                                         )}
                                                                         {entry.cp3 !== undefined && (
-                                                                            <div className="relative animate-in slide-in-from-top-1">
+                                                                            <div className="relative">
                                                                                 <input
                                                                                     type="text"
                                                                                     placeholder="CP 3..."
                                                                                     value={entry.cp3}
                                                                                     onChange={(e) => updateEntry(idx, 'cp3', e.target.value)}
-                                                                                    className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-emerald-700 placeholder:text-slate-400"
+                                                                                    className="w-full bg-white border-2 border-slate-200 focus:border-amber-500 rounded-xl px-4 py-2.5 pr-10 outline-none font-bold text-emerald-700"
                                                                                 />
                                                                                 <button
                                                                                     type="button"
@@ -1253,139 +1245,116 @@ function BatchInputPageContent() {
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => updateEntry(idx, 'cp3', '')}
-                                                                                className="text-[10px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 ml-auto"
+                                                                                className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1"
                                                                             >
                                                                                 <PlusCircle className="w-3 h-3" /> Tambah CP 3
                                                                             </button>
                                                                         )}
                                                                     </div>
-                                                                    <div className="flex-1 flex flex-col md:flex-row gap-2">
-                                                                        <div className="flex-[2] space-y-2">
-                                                                            <input type="text" placeholder="Google Maps URL" value={entry.gmapsUrl || ''} onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)} className="w-full bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-4 py-2 outline-none font-bold text-blue-700 text-sm placeholder:text-slate-400" />
-
-                                                                            <div className="grid grid-cols-2 gap-2">
-                                                                                <div className="relative">
-                                                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400 uppercase">Lat</span>
-                                                                                    <input
-                                                                                        type="number"
-                                                                                        step="any"
-                                                                                        placeholder="Latitude"
-                                                                                        value={entry.lat || ''}
-                                                                                        onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
-                                                                                        className="w-full pl-10 pr-2 py-1.5 bg-white border border-slate-100 rounded-lg text-xs font-mono"
-                                                                                    />
-                                                                                </div>
-                                                                                <div className="relative">
-                                                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400 uppercase">Lng</span>
-                                                                                    <input
-                                                                                        type="number"
-                                                                                        step="any"
-                                                                                        placeholder="Longitude"
-                                                                                        value={entry.lng || ''}
-                                                                                        onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
-                                                                                        className="w-full pl-10 pr-2 py-1.5 bg-white border border-slate-100 rounded-lg text-xs font-mono"
-                                                                                    />
-                                                                                </div>
-                                                                            </div>
-
+                                                                </div>
+                                                                <div className="space-y-2">
+                                                                    <div>
+                                                                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Google Maps URL</label>
+                                                                        <input
+                                                                            type="text"
+                                                                            placeholder="https://maps.google.com/..."
+                                                                            value={entry.gmapsUrl || ''}
+                                                                            onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)}
+                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-amber-500 rounded-xl px-4 py-2.5 outline-none font-bold text-blue-700 text-sm"
+                                                                        />
+                                                                    </div>
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <div>
+                                                                            <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Latitude</label>
                                                                             <input
-                                                                                type="text"
-                                                                                placeholder="Link Pendaftaran / Info Utama"
-                                                                                value={entry.linkInfo || ''}
-                                                                                onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)}
-                                                                                className="w-full bg-slate-50 border border-slate-100 rounded-lg px-3 py-1.5 text-xs font-bold text-purple-600 outline-none"
+                                                                                type="number"
+                                                                                step="any"
+                                                                                placeholder="Latitude"
+                                                                                value={entry.lat || ''}
+                                                                                onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
+                                                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono"
                                                                             />
                                                                         </div>
-
-                                                                        {/* New Checkboxes */}
-                                                                        <div className="flex items-center gap-4 px-2">
-                                                                            <label className="flex items-center gap-2 cursor-pointer group">
-                                                                                <input
-                                                                                    type="checkbox"
-                                                                                    checked={entry.khususAkhwat}
-                                                                                    onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
-                                                                                    className="w-4 h-4 rounded text-pink-500 border-slate-300 focus:ring-pink-500"
-                                                                                />
-                                                                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter group-hover:text-pink-600 transition-colors">Akhwat</span>
-                                                                            </label>
-                                                                            <label className="flex items-center gap-2 cursor-pointer group">
-                                                                                <input
-                                                                                    type="checkbox"
-                                                                                    checked={entry.isOnline}
-                                                                                    onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
-                                                                                    className="w-4 h-4 rounded text-blue-500 border-slate-300 focus:ring-blue-500"
-                                                                                />
-                                                                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter group-hover:text-blue-600 transition-colors">Online</span>
-                                                                            </label>
+                                                                        <div>
+                                                                            <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Longitude</label>
+                                                                            <input
+                                                                                type="number"
+                                                                                step="any"
+                                                                                placeholder="Longitude"
+                                                                                value={entry.lng || ''}
+                                                                                onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
+                                                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono"
+                                                                            />
                                                                         </div>
-
-                                                                        <button
-                                                                            onClick={async () => {
-                                                                                if (!entry.gmapsUrl) return showAlert('Peringatan', 'Masukkan URL Maps terlebih dahulu', 'warning');
-                                                                                setIsGeocoding(true);
-                                                                                try {
-                                                                                    const res = await fetch('/api/tools/extract-gmaps', {
-                                                                                        method: 'POST',
-                                                                                        body: JSON.stringify({ url: entry.gmapsUrl }),
-                                                                                        headers: { 'Content-Type': 'application/json' }
-                                                                                    });
-                                                                                    const data = await res.json();
-                                                                                    if (data.success) {
-                                                                                        updateEntry(idx, 'lat', data.lat);
-                                                                                        updateEntry(idx, 'lng', data.lng);
-                                                                                        updateEntry(idx, 'gmapsUrl', data.expandedUrl);
-                                                                                        showAlert('Berhasil', `Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`, 'info');
-                                                                                    } else {
-                                                                                        showAlert('Gagal', 'Gagal mengekstrak: ' + data.error, 'danger');
-                                                                                    }
-                                                                                } catch (e) {
-                                                                                    showAlert('Kesalahan', 'Terjadi kesalahan sistem', 'danger');
-                                                                                } finally {
-                                                                                    setIsGeocoding(false);
-                                                                                }
-                                                                            }}
-                                                                            className="px-3 py-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-colors flex items-center gap-1 font-bold text-xs"
-                                                                            title="Ekstrak Koordinat dari Link"
-                                                                        >
-                                                                            <MapPin className="w-4 h-4" />
-                                                                            <span className="hidden md:inline">Ekstrak</span>
-                                                                        </button>
                                                                     </div>
-                                                                </div>
-                                                            </div>
-                                                            <div className="col-span-1 md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block px-1">Link Pendaftaran & Info Lokasi (Lat/Lng)</label>
-                                                                <div className="flex gap-4">
-                                                                    <input type="text" placeholder="Link info (https://...)" value={entry.linkInfo || ''} onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)} className="flex-1 bg-slate-100/50 border border-slate-100 focus:bg-white focus:border-purple-500 rounded-xl px-4 py-2 outline-none font-bold text-purple-700 text-sm placeholder:text-slate-400" />
-
-                                                                    <div className="flex gap-2 w-40 shrink-0">
+                                                                    <div>
+                                                                        <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Link Info/Pendaftaran</label>
                                                                         <input
-                                                                            type="number"
-                                                                            step="any"
-                                                                            value={entry.lat || ''}
-                                                                            onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
-                                                                            placeholder="Lat"
-                                                                            className="w-1/2 bg-slate-50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-2 py-2 outline-none font-mono text-xs font-bold text-slate-900 text-center placeholder:text-slate-400"
-                                                                            title="Latitude"
-                                                                        />
-                                                                        <input
-                                                                            type="number"
-                                                                            step="any"
-                                                                            value={entry.lng || ''}
-                                                                            onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
-                                                                            placeholder="Lng"
-                                                                            className="w-1/2 bg-slate-50 border border-slate-100 focus:bg-white focus:border-blue-500 rounded-xl px-2 py-2 outline-none font-mono text-xs font-bold text-slate-900 text-center placeholder:text-slate-400"
-                                                                            title="Longitude"
+                                                                            type="text"
+                                                                            placeholder="Link Pendaftaran / Info Utama"
+                                                                            value={entry.linkInfo || ''}
+                                                                            onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)}
+                                                                            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-purple-600"
                                                                         />
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <div className="col-span-1 md:col-span-2">
-                                                                <ImageUpload
-                                                                    label="Gambar Kajian"
-                                                                    value={entry.imageUrl || ''}
-                                                                    onChange={(url) => updateEntry(idx, 'imageUrl', url)}
-                                                                />
+                                                        </div>
+
+                                                        {/* SECTION 5: Additional Options */}
+                                                        <div className="bg-gradient-to-br from-slate-50 to-transparent p-5 rounded-2xl border border-slate-200">
+                                                            <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                                                <Info className="w-4 h-4" /> Informasi Tambahan
+                                                            </h3>
+                                                            <div className="space-y-3">
+                                                                <div>
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Catatan</label>
+                                                                    <textarea
+                                                                        rows={2}
+                                                                        value={entry.catatan || ''}
+                                                                        onChange={(e) => updateEntry(idx, 'catatan', e.target.value)}
+                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-slate-400 rounded-xl px-4 py-2.5 outline-none text-slate-900 resize-y"
+                                                                        placeholder="Misal: Membawa makanan untuk berbuka, Khusus ikhwan, dll"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${entry.khususAkhwat ? 'bg-pink-50 border-pink-300 text-pink-700' : 'bg-white border-slate-200 text-slate-500 hover:border-pink-200'}`}>
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={entry.khususAkhwat || false}
+                                                                            onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
+                                                                            className="hidden"
+                                                                        />
+                                                                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${entry.khususAkhwat ? 'border-pink-500 bg-pink-500' : 'border-slate-300 bg-white'}`}>
+                                                                            {entry.khususAkhwat && <CheckCircle className="w-3 h-3 text-white" />}
+                                                                        </div>
+                                                                        <span className="text-xs font-black uppercase">🌸 Khusus Akhwat</span>
+                                                                    </label>
+                                                                    <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${entry.isOnline ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-slate-200 text-slate-500 hover:border-blue-200'}`}>
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={entry.isOnline || false}
+                                                                            onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
+                                                                            className="hidden"
+                                                                        />
+                                                                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${entry.isOnline ? 'border-blue-500 bg-blue-500' : 'border-slate-300 bg-white'}`}>
+                                                                            {entry.isOnline && <CheckCircle className="w-3 h-3 text-white" />}
+                                                                        </div>
+                                                                        <span className="text-xs font-black uppercase">💻 Online</span>
+                                                                    </label>
+                                                                    <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${entry.isKidsFriendly ? 'bg-orange-50 border-orange-300 text-orange-700' : 'bg-white border-slate-200 text-slate-500 hover:border-orange-200'}`}>
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={entry.isKidsFriendly || false}
+                                                                            onChange={(e) => updateEntry(idx, 'isKidsFriendly', e.target.checked)}
+                                                                            className="hidden"
+                                                                        />
+                                                                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${entry.isKidsFriendly ? 'border-orange-500 bg-orange-500' : 'border-slate-300 bg-white'}`}>
+                                                                            {entry.isKidsFriendly && <CheckCircle className="w-3 h-3 text-white" />}
+                                                                        </div>
+                                                                        <span className="text-xs font-black uppercase">🎈 Kajian Anak</span>
+                                                                    </label>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1403,383 +1372,385 @@ function BatchInputPageContent() {
                                             </tr>
                                         ))}
                                     </tbody>
-                                </table>
-                            </div>
+                                </table >
+                            </div >
 
                             {/* Mobile View: Stacked Cards */}
-                            <div className="md:hidden divide-y divide-slate-100">
-                                {entries.map((entry, idx) => (
-                                    <div key={idx} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden relative group transition-all hover:shadow-md mb-4 last:mb-0">
-                                        {/* Header Bar */}
-                                        <div className="bg-slate-50/50 p-3 border-b border-slate-100 flex items-start justify-between gap-3">
-                                            <div className="flex gap-3 items-center flex-1">
-                                                <button
-                                                    onClick={() => toggleSelection(idx)}
-                                                    className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${selectedIndices.has(idx) ? 'bg-blue-500 border-blue-500 text-white' : 'border-slate-300 text-transparent hover:border-blue-400'}`}
-                                                >
-                                                    <CheckCircle className="w-3.5 h-3.5" strokeWidth={3} />
-                                                </button>
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Jadwal Kajian</span>
-                                                    <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                                                        <Calendar className="w-3 h-3 text-slate-400" />
-                                                        <span>{entry.date && parseIndoDate(entry.date) ? formatIndoDate(parseIndoDate(entry.date)!) : '-'}</span>
-                                                        <span className="text-slate-300">|</span>
-                                                        <Clock className="w-3 h-3 text-slate-400" />
-                                                        <span>{entry.waktu}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex gap-1">
-                                                <button onClick={() => setPreviewIndex(idx)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Preview">
-                                                    <Eye className="w-4 h-4" />
-                                                </button>
-                                                <button onClick={() => handleDiscard(idx)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
-                                                    <X className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-4 space-y-6">
-                                            {/* Main Info */}
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Tema Kajian</label>
-                                                    <textarea
-                                                        rows={2}
-                                                        value={entry.tema}
-                                                        onChange={(e) => updateEntry(idx, 'tema', e.target.value)}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400 resize-none"
-                                                        placeholder="Judul atau Tema Kajian..."
-                                                    />
-                                                    <div className="flex justify-end mt-2">
-                                                        <label className={`inline-flex items-center gap-2 cursor-pointer px-3 py-2 rounded-xl border transition-all ${entry.isKidsFriendly ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-orange-200 hover:text-orange-500'}`}>
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={entry.isKidsFriendly || false}
-                                                                onChange={(e) => updateEntry(idx, 'isKidsFriendly', e.target.checked)}
-                                                                className="hidden"
-                                                            />
-                                                            <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${entry.isKidsFriendly ? 'border-orange-500 bg-orange-500 text-white' : 'border-slate-300 bg-white'}`}>
-                                                                {entry.isKidsFriendly && <CheckCircle className="w-3 h-3" />}
-                                                            </div>
-                                                            <span className="text-[10px] font-black uppercase tracking-wider">🎈 Kajian Anak</span>
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Pemateri</label>
-                                                    <AutosuggestInput
-                                                        type="pemateri"
-                                                        value={entry.pemateri}
-                                                        onChange={(val) => updateEntry(idx, 'pemateri', val)}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
-                                                        placeholder="Nama Ustadz / Pemateri..."
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="h-px bg-slate-100" />
-
-                                            {/* Location Info */}
-                                            <div className="space-y-4">
-                                                <div className="grid grid-cols-1 gap-4">
-                                                    <div>
-                                                        <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">
-                                                            <MapPin className="w-3 h-3" /> Lokasi Masjid
-                                                        </label>
-                                                        <AutosuggestInput
-                                                            type="masjid"
-                                                            value={entry.masjid}
-                                                            onChange={(val) => updateEntry(idx, 'masjid', val)}
-                                                            onSelect={(item) => {
-                                                                if (item.address) updateEntry(idx, 'address', item.address);
-                                                                if (item.city) updateEntry(idx, 'city', item.city);
-                                                                if (item.gmapsUrl || item.gmapsurl) updateEntry(idx, 'gmapsUrl', item.gmapsUrl || item.gmapsurl);
-                                                                if (item.lat !== undefined) updateEntry(idx, 'lat', item.lat);
-                                                                if (item.lng !== undefined) updateEntry(idx, 'lng', item.lng);
-                                                            }}
-                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                                            placeholder="Nama Masjid..."
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Kota / Kabupaten</label>
-                                                        <div className="relative">
-                                                            <input
-                                                                type="text"
-                                                                value={entry.city}
-                                                                onChange={(e) => updateEntry(idx, 'city', e.target.value)} // Fallback
-                                                                onClick={() => {
-                                                                    setActiveCityDropdownIndex(activeCityDropdownIndex === idx ? null : idx);
-                                                                    setCityFilter('');
-                                                                }}
-                                                                readOnly
-                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer hover:bg-slate-100 transition-all"
-                                                                placeholder="Pilih Kota..."
-                                                            />
-                                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                                                <LayoutDashboard className="w-4 h-4 rotate-45" />
-                                                            </div>
-
-                                                            {/* Dropdown Kota Mobile */}
-                                                            {activeCityDropdownIndex === idx && (
-                                                                <div className="absolute z-50 mt-2 w-full bg-white rounded-xl shadow-xl border border-slate-100 max-h-60 overflow-y-auto left-0 animate-in fade-in zoom-in-95 duration-100">
-                                                                    <div className="sticky top-0 bg-white p-2 border-b border-slate-100">
-                                                                        <input
-                                                                            type="text"
-                                                                            value={cityFilter}
-                                                                            onChange={(e) => setCityFilter(e.target.value)}
-                                                                            placeholder="Cari kota..."
-                                                                            className="w-full px-3 py-2 bg-slate-50 rounded-lg text-sm border-none focus:ring-2 focus:ring-blue-500"
-                                                                            autoFocus
-                                                                        />
-                                                                    </div>
-                                                                    {indonesianCities
-                                                                        .filter(c => c.toLowerCase().includes(cityFilter.toLowerCase()))
-                                                                        .map(city => (
-                                                                            <button
-                                                                                key={city}
-                                                                                onClick={() => {
-                                                                                    updateEntry(idx, 'city', city);
-                                                                                    setActiveCityDropdownIndex(null);
-                                                                                }}
-                                                                                className="w-full text-left px-4 py-3 text-sm hover:bg-blue-50 hover:text-blue-600 transition-colors border-b border-slate-50 last:border-none"
-                                                                            >
-                                                                                {city}
-                                                                            </button>
-                                                                        ))}
-                                                                </div>
-                                                            )}
+                            < div className="md:hidden divide-y divide-slate-100" >
+                                {
+                                    entries.map((entry, idx) => (
+                                        <div key={idx} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden relative group transition-all hover:shadow-md mb-4 last:mb-0">
+                                            {/* Header Bar */}
+                                            <div className="bg-slate-50/50 p-3 border-b border-slate-100 flex items-start justify-between gap-3">
+                                                <div className="flex gap-3 items-center flex-1">
+                                                    <button
+                                                        onClick={() => toggleSelection(idx)}
+                                                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${selectedIndices.has(idx) ? 'bg-blue-500 border-blue-500 text-white' : 'border-slate-300 text-transparent hover:border-blue-400'}`}
+                                                    >
+                                                        <CheckCircle className="w-3.5 h-3.5" strokeWidth={3} />
+                                                    </button>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Jadwal Kajian</span>
+                                                        <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                                                            <Calendar className="w-3 h-3 text-slate-400" />
+                                                            <span>{entry.date && parseIndoDate(entry.date) ? formatIndoDate(parseIndoDate(entry.date)!) : '-'}</span>
+                                                            <span className="text-slate-300">|</span>
+                                                            <Clock className="w-3 h-3 text-slate-400" />
+                                                            <span>{entry.waktu}</span>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            <div className="h-px bg-slate-100" />
-
-                                            {/* Geolocation Section (Mobile Only) */}
-                                            <div className="space-y-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <MapPin className="w-4 h-4 text-blue-500" />
-                                                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Detail Lokasi & Maps</span>
-                                                </div>
-
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Link Google Maps</label>
-                                                    <div className="flex gap-2">
-                                                        <input
-                                                            type="text"
-                                                            placeholder="https://maps.app.goo.gl/..."
-                                                            value={entry.gmapsUrl || ''}
-                                                            onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)}
-                                                            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-blue-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-400"
-                                                        />
-                                                        <button
-                                                            onClick={async () => {
-                                                                if (!entry.gmapsUrl) return showAlert('Peringatan', 'Masukkan URL Maps terlebih dahulu', 'warning');
-                                                                setIsGeocoding(true);
-                                                                try {
-                                                                    const res = await fetch('/api/tools/extract-gmaps', {
-                                                                        method: 'POST',
-                                                                        body: JSON.stringify({ url: entry.gmapsUrl }),
-                                                                        headers: { 'Content-Type': 'application/json' }
-                                                                    });
-                                                                    const data = await res.json();
-                                                                    if (data.success) {
-                                                                        updateEntry(idx, 'lat', data.lat);
-                                                                        updateEntry(idx, 'lng', data.lng);
-                                                                        updateEntry(idx, 'gmapsUrl', data.expandedUrl);
-                                                                        showAlert('Berhasil', `Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`, 'info');
-                                                                    } else {
-                                                                        showAlert('Gagal', 'Gagal mengekstrak: ' + data.error, 'danger');
-                                                                    }
-                                                                } catch (e) {
-                                                                    showAlert('Kesalahan', 'Terjadi kesalahan sistem', 'danger');
-                                                                } finally {
-                                                                    setIsGeocoding(false);
-                                                                }
-                                                            }}
-                                                            className="p-3 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-colors flex items-center justify-center shrink-0"
-                                                            title="Ekstrak Koordinat"
-                                                        >
-                                                            <MapPin className="w-5 h-5" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Latitude</label>
-                                                        <input
-                                                            type="number"
-                                                            step="any"
-                                                            value={entry.lat || ''}
-                                                            onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
-                                                            placeholder="-6.123"
-                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono font-bold text-slate-700 outline-none transition-all"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Longitude</label>
-                                                        <input
-                                                            type="number"
-                                                            step="any"
-                                                            value={entry.lng || ''}
-                                                            onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
-                                                            placeholder="106.123"
-                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono font-bold text-slate-700 outline-none transition-all"
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Link Pendaftaran / Info Utama</label>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Link pendaftaran (https://...)"
-                                                        value={entry.linkInfo || ''}
-                                                        onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-purple-700 focus:ring-2 focus:ring-purple-500 outline-none transition-all placeholder:text-slate-400"
-                                                    />
+                                                <div className="flex gap-1">
+                                                    <button onClick={() => setPreviewIndex(idx)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Preview">
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => handleDiscard(idx)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                                                        <X className="w-4 h-4" />
+                                                    </button>
                                                 </div>
                                             </div>
 
-                                            <div className="h-px bg-slate-100" />
-
-                                            {/* Details & Options */}
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="col-span-2 space-y-2">
-                                                    <div className="flex justify-between items-center">
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Narahubung (CP)</label>
-                                                        {entry.cp2 === undefined && (
-                                                            <button
-                                                                onClick={() => updateEntry(idx, 'cp2', '')}
-                                                                className="text-[10px] text-blue-500 font-bold hover:text-blue-600 flex items-center gap-1 transition-colors"
-                                                            >
-                                                                <PlusCircle className="w-3 h-3" /> Tambah
-                                                            </button>
-                                                        )}
+                                            <div className="p-4 space-y-6">
+                                                {/* Main Info */}
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Tema Kajian</label>
+                                                        <textarea
+                                                            rows={2}
+                                                            value={entry.tema}
+                                                            onChange={(e) => updateEntry(idx, 'tema', e.target.value)}
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400 resize-none"
+                                                            placeholder="Judul atau Tema Kajian..."
+                                                        />
+                                                        <div className="flex justify-end mt-2">
+                                                            <label className={`inline-flex items-center gap-2 cursor-pointer px-3 py-2 rounded-xl border transition-all ${entry.isKidsFriendly ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-orange-200 hover:text-orange-500'}`}>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={entry.isKidsFriendly || false}
+                                                                    onChange={(e) => updateEntry(idx, 'isKidsFriendly', e.target.checked)}
+                                                                    className="hidden"
+                                                                />
+                                                                <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${entry.isKidsFriendly ? 'border-orange-500 bg-orange-500 text-white' : 'border-slate-300 bg-white'}`}>
+                                                                    {entry.isKidsFriendly && <CheckCircle className="w-3 h-3" />}
+                                                                </div>
+                                                                <span className="text-[10px] font-black uppercase tracking-wider">🎈 Kajian Anak</span>
+                                                            </label>
+                                                        </div>
                                                     </div>
-                                                    <input
-                                                        type="text"
-                                                        value={entry.cp || ''}
-                                                        onChange={(e) => updateEntry(idx, 'cp', e.target.value)}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                                        placeholder="CP Utama (08...)"
-                                                    />
+                                                    <div>
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Pemateri</label>
+                                                        <AutosuggestInput
+                                                            type="pemateri"
+                                                            value={entry.pemateri}
+                                                            onChange={(val) => updateEntry(idx, 'pemateri', val)}
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
+                                                            placeholder="Nama Ustadz / Pemateri..."
+                                                        />
+                                                    </div>
+                                                </div>
 
-                                                    {entry.cp2 !== undefined && (
-                                                        <div className="flex gap-2 animate-in slide-in-from-top-2 duration-200">
+                                                <div className="h-px bg-slate-100" />
+
+                                                {/* Location Info */}
+                                                <div className="space-y-4">
+                                                    <div className="grid grid-cols-1 gap-4">
+                                                        <div>
+                                                            <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">
+                                                                <MapPin className="w-3 h-3" /> Lokasi Masjid
+                                                            </label>
+                                                            <AutosuggestInput
+                                                                type="masjid"
+                                                                value={entry.masjid}
+                                                                onChange={(val) => updateEntry(idx, 'masjid', val)}
+                                                                onSelect={(item) => {
+                                                                    if (item.address) updateEntry(idx, 'address', item.address);
+                                                                    if (item.city) updateEntry(idx, 'city', item.city);
+                                                                    if (item.gmapsUrl || item.gmapsurl) updateEntry(idx, 'gmapsUrl', item.gmapsUrl || item.gmapsurl);
+                                                                    if (item.lat !== undefined) updateEntry(idx, 'lat', item.lat);
+                                                                    if (item.lng !== undefined) updateEntry(idx, 'lng', item.lng);
+                                                                }}
+                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                                placeholder="Nama Masjid..."
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Kota / Kabupaten</label>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="text"
+                                                                    value={entry.city}
+                                                                    onChange={(e) => updateEntry(idx, 'city', e.target.value)} // Fallback
+                                                                    onClick={() => {
+                                                                        setActiveCityDropdownIndex(activeCityDropdownIndex === idx ? null : idx);
+                                                                        setCityFilter('');
+                                                                    }}
+                                                                    readOnly
+                                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer hover:bg-slate-100 transition-all"
+                                                                    placeholder="Pilih Kota..."
+                                                                />
+                                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                                                    <LayoutDashboard className="w-4 h-4 rotate-45" />
+                                                                </div>
+
+                                                                {/* Dropdown Kota Mobile */}
+                                                                {activeCityDropdownIndex === idx && (
+                                                                    <div className="absolute z-50 mt-2 w-full bg-white rounded-xl shadow-xl border border-slate-100 max-h-60 overflow-y-auto left-0 animate-in fade-in zoom-in-95 duration-100">
+                                                                        <div className="sticky top-0 bg-white p-2 border-b border-slate-100">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={cityFilter}
+                                                                                onChange={(e) => setCityFilter(e.target.value)}
+                                                                                placeholder="Cari kota..."
+                                                                                className="w-full px-3 py-2 bg-slate-50 rounded-lg text-sm border-none focus:ring-2 focus:ring-blue-500"
+                                                                                autoFocus
+                                                                            />
+                                                                        </div>
+                                                                        {indonesianCities
+                                                                            .filter(c => c.toLowerCase().includes(cityFilter.toLowerCase()))
+                                                                            .map(city => (
+                                                                                <button
+                                                                                    key={city}
+                                                                                    onClick={() => {
+                                                                                        updateEntry(idx, 'city', city);
+                                                                                        setActiveCityDropdownIndex(null);
+                                                                                    }}
+                                                                                    className="w-full text-left px-4 py-3 text-sm hover:bg-blue-50 hover:text-blue-600 transition-colors border-b border-slate-50 last:border-none"
+                                                                                >
+                                                                                    {city}
+                                                                                </button>
+                                                                            ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="h-px bg-slate-100" />
+
+                                                {/* Geolocation Section (Mobile Only) */}
+                                                <div className="space-y-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <MapPin className="w-4 h-4 text-blue-500" />
+                                                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Detail Lokasi & Maps</span>
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Link Google Maps</label>
+                                                        <div className="flex gap-2">
                                                             <input
                                                                 type="text"
-                                                                value={entry.cp2}
-                                                                onChange={(e) => updateEntry(idx, 'cp2', e.target.value)}
-                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                                                placeholder="CP Kedua..."
+                                                                placeholder="https://maps.app.goo.gl/..."
+                                                                value={entry.gmapsUrl || ''}
+                                                                onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)}
+                                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-blue-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-400"
                                                             />
                                                             <button
-                                                                onClick={() => {
-                                                                    // Remove cp2 logic: set explicitly to undefined or empty, 
-                                                                    // but here updateEntry handles 'key': undefined fine.
-                                                                    updateEntry(idx, 'cp2', undefined);
-                                                                    if (entry.cp3) {
-                                                                        // Shift cp3 to cp2 if needed? Or just keep cp3?
-                                                                        // Simpler to just delete cp2.
+                                                                onClick={async () => {
+                                                                    if (!entry.gmapsUrl) return showAlert('Peringatan', 'Masukkan URL Maps terlebih dahulu', 'warning');
+                                                                    setIsGeocoding(true);
+                                                                    try {
+                                                                        const res = await fetch('/api/tools/extract-gmaps', {
+                                                                            method: 'POST',
+                                                                            body: JSON.stringify({ url: entry.gmapsUrl }),
+                                                                            headers: { 'Content-Type': 'application/json' }
+                                                                        });
+                                                                        const data = await res.json();
+                                                                        if (data.success) {
+                                                                            updateEntry(idx, 'lat', data.lat);
+                                                                            updateEntry(idx, 'lng', data.lng);
+                                                                            updateEntry(idx, 'gmapsUrl', data.expandedUrl);
+                                                                            showAlert('Berhasil', `Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`, 'info');
+                                                                        } else {
+                                                                            showAlert('Gagal', 'Gagal mengekstrak: ' + data.error, 'danger');
+                                                                        }
+                                                                    } catch (e) {
+                                                                        showAlert('Kesalahan', 'Terjadi kesalahan sistem', 'danger');
+                                                                    } finally {
+                                                                        setIsGeocoding(false);
                                                                     }
                                                                 }}
-                                                                className="p-3 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-xl border border-slate-200 transition-colors"
+                                                                className="p-3 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-colors flex items-center justify-center shrink-0"
+                                                                title="Ekstrak Koordinat"
                                                             >
-                                                                <X className="w-4 h-4" />
+                                                                <MapPin className="w-5 h-5" />
                                                             </button>
-                                                            {entry.cp3 === undefined && (
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Latitude</label>
+                                                            <input
+                                                                type="number"
+                                                                step="any"
+                                                                value={entry.lat || ''}
+                                                                onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
+                                                                placeholder="-6.123"
+                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono font-bold text-slate-700 outline-none transition-all"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Longitude</label>
+                                                            <input
+                                                                type="number"
+                                                                step="any"
+                                                                value={entry.lng || ''}
+                                                                onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
+                                                                placeholder="106.123"
+                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono font-bold text-slate-700 outline-none transition-all"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Link Pendaftaran / Info Utama</label>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Link pendaftaran (https://...)"
+                                                            value={entry.linkInfo || ''}
+                                                            onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)}
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-purple-700 focus:ring-2 focus:ring-purple-500 outline-none transition-all placeholder:text-slate-400"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="h-px bg-slate-100" />
+
+                                                {/* Details & Options */}
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="col-span-2 space-y-2">
+                                                        <div className="flex justify-between items-center">
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Narahubung (CP)</label>
+                                                            {entry.cp2 === undefined && (
                                                                 <button
-                                                                    onClick={() => updateEntry(idx, 'cp3', '')}
-                                                                    className="p-3 text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-colors"
-                                                                    title="Tambah CP 3"
+                                                                    onClick={() => updateEntry(idx, 'cp2', '')}
+                                                                    className="text-[10px] text-blue-500 font-bold hover:text-blue-600 flex items-center gap-1 transition-colors"
                                                                 >
-                                                                    <PlusCircle className="w-4 h-4" />
+                                                                    <PlusCircle className="w-3 h-3" /> Tambah
                                                                 </button>
                                                             )}
                                                         </div>
-                                                    )}
+                                                        <input
+                                                            type="text"
+                                                            value={entry.cp || ''}
+                                                            onChange={(e) => updateEntry(idx, 'cp', e.target.value)}
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                            placeholder="CP Utama (08...)"
+                                                        />
 
-                                                    {entry.cp3 !== undefined && (
-                                                        <div className="flex gap-2 animate-in slide-in-from-top-2 duration-200">
+                                                        {entry.cp2 !== undefined && (
+                                                            <div className="flex gap-2 animate-in slide-in-from-top-2 duration-200">
+                                                                <input
+                                                                    type="text"
+                                                                    value={entry.cp2}
+                                                                    onChange={(e) => updateEntry(idx, 'cp2', e.target.value)}
+                                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                                    placeholder="CP Kedua..."
+                                                                />
+                                                                <button
+                                                                    onClick={() => {
+                                                                        // Remove cp2 logic: set explicitly to undefined or empty, 
+                                                                        // but here updateEntry handles 'key': undefined fine.
+                                                                        updateEntry(idx, 'cp2', undefined);
+                                                                        if (entry.cp3) {
+                                                                            // Shift cp3 to cp2 if needed? Or just keep cp3?
+                                                                            // Simpler to just delete cp2.
+                                                                        }
+                                                                    }}
+                                                                    className="p-3 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-xl border border-slate-200 transition-colors"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                                {entry.cp3 === undefined && (
+                                                                    <button
+                                                                        onClick={() => updateEntry(idx, 'cp3', '')}
+                                                                        className="p-3 text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-colors"
+                                                                        title="Tambah CP 3"
+                                                                    >
+                                                                        <PlusCircle className="w-4 h-4" />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {entry.cp3 !== undefined && (
+                                                            <div className="flex gap-2 animate-in slide-in-from-top-2 duration-200">
+                                                                <input
+                                                                    type="text"
+                                                                    value={entry.cp3}
+                                                                    onChange={(e) => updateEntry(idx, 'cp3', e.target.value)}
+                                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                                    placeholder="CP Ketiga..."
+                                                                />
+                                                                <button
+                                                                    onClick={() => updateEntry(idx, 'cp3', undefined)}
+                                                                    className="p-3 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-xl border border-slate-200 transition-colors"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="col-span-2">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Catatan (Optional)</label>
+                                                        <textarea
+                                                            value={entry.catatan || ''}
+                                                            onChange={(e) => updateEntry(idx, 'catatan', e.target.value)}
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-y min-h-[80px]"
+                                                            placeholder="Info tambahan, pengumuman, dsb..."
+                                                            rows={3}
+                                                        />
+                                                    </div>
+
+                                                    <div className="col-span-2 grid grid-cols-2 gap-3">
+                                                        <label className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.khususAkhwat ? 'bg-pink-50 border-pink-200 text-pink-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
                                                             <input
-                                                                type="text"
-                                                                value={entry.cp3}
-                                                                onChange={(e) => updateEntry(idx, 'cp3', e.target.value)}
-                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                                                placeholder="CP Ketiga..."
+                                                                type="checkbox"
+                                                                checked={entry.khususAkhwat || false}
+                                                                onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
+                                                                className="hidden"
                                                             />
-                                                            <button
-                                                                onClick={() => updateEntry(idx, 'cp3', undefined)}
-                                                                className="p-3 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-xl border border-slate-200 transition-colors"
-                                                            >
-                                                                <X className="w-4 h-4" />
-                                                            </button>
-                                                        </div>
-                                                    )}
+                                                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.khususAkhwat ? 'border-pink-500 bg-pink-500 text-white' : 'border-slate-300'}`}>
+                                                                {entry.khususAkhwat && <CheckCircle className="w-3 h-3" />}
+                                                            </div>
+                                                            <span className="text-xs font-bold uppercase tracking-wide">Akhwat</span>
+                                                        </label>
+
+                                                        <label className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.isOnline ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={entry.isOnline || false}
+                                                                onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
+                                                                className="hidden"
+                                                            />
+                                                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.isOnline ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-300'}`}>
+                                                                {entry.isOnline && <CheckCircle className="w-3 h-3" />}
+                                                            </div>
+                                                            <span className="text-xs font-bold uppercase tracking-wide">Online</span>
+                                                        </label>
+                                                    </div>
                                                 </div>
 
-                                                <div className="col-span-2">
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Catatan (Optional)</label>
-                                                    <textarea
-                                                        value={entry.catatan || ''}
-                                                        onChange={(e) => updateEntry(idx, 'catatan', e.target.value)}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-y min-h-[80px]"
-                                                        placeholder="Info tambahan, pengumuman, dsb..."
-                                                        rows={3}
+                                                <div className="h-px bg-slate-100" />
+
+                                                {/* Media Upload */}
+                                                <div>
+                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Poster Kajian</label>
+                                                    <ImageUpload
+                                                        label=""
+                                                        value={entry.imageUrl || ''}
+                                                        onChange={(url) => updateEntry(idx, 'imageUrl', url)}
+                                                        className="w-full"
                                                     />
                                                 </div>
 
-                                                <div className="col-span-2 grid grid-cols-2 gap-3">
-                                                    <label className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.khususAkhwat ? 'bg-pink-50 border-pink-200 text-pink-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={entry.khususAkhwat || false}
-                                                            onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
-                                                            className="hidden"
-                                                        />
-                                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.khususAkhwat ? 'border-pink-500 bg-pink-500 text-white' : 'border-slate-300'}`}>
-                                                            {entry.khususAkhwat && <CheckCircle className="w-3 h-3" />}
-                                                        </div>
-                                                        <span className="text-xs font-bold uppercase tracking-wide">Akhwat</span>
-                                                    </label>
-
-                                                    <label className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.isOnline ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={entry.isOnline || false}
-                                                            onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
-                                                            className="hidden"
-                                                        />
-                                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.isOnline ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-300'}`}>
-                                                            {entry.isOnline && <CheckCircle className="w-3 h-3" />}
-                                                        </div>
-                                                        <span className="text-xs font-bold uppercase tracking-wide">Online</span>
-                                                    </label>
-                                                </div>
                                             </div>
-
-                                            <div className="h-px bg-slate-100" />
-
-                                            {/* Media Upload */}
-                                            <div>
-                                                <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Poster Kajian</label>
-                                                <ImageUpload
-                                                    label=""
-                                                    value={entry.imageUrl || ''}
-                                                    onChange={(url) => updateEntry(idx, 'imageUrl', url)}
-                                                    className="w-full"
-                                                />
-                                            </div>
-
                                         </div>
-                                    </div>
-                                ))}
+                                    ))
+                                }
                                 <div className="h-40" aria-hidden="true" /> {/* Spacer for keyboard */}
                             </div>
                         </div>
@@ -1791,161 +1762,168 @@ function BatchInputPageContent() {
                             <p className="batch-empty-title">Siap Menunggu Data</p>
                             <p className="batch-empty-text">Belum ada jadwal yang diekstrak. Silakan tempel teks atau scan poster.</p>
                         </div>
-                    )}
+                    )
+                    }
 
-                    {message && (
-                        <div className={`mt-10 batch-message ${message.includes('Gagal') ? 'batch-message-error' : 'batch-message-success'} flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-500`}>
-                            <div className={`p-2 rounded-xl ${message.includes('Gagal') ? 'bg-red-100' : 'bg-blue-100'}`}>
-                                <Info className="w-5 h-5" />
+                    {
+                        message && (
+                            <div className={`mt-10 batch-message ${message.includes('Gagal') ? 'batch-message-error' : 'batch-message-success'} flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-500`}>
+                                <div className={`p-2 rounded-xl ${message.includes('Gagal') ? 'bg-red-100' : 'bg-blue-100'}`}>
+                                    <Info className="w-5 h-5" />
+                                </div>
+                                <span className="font-bold">{message}</span>
                             </div>
-                            <span className="font-bold">{message}</span>
-                        </div>
-                    )}
-                </div>
-            </div>
+                        )
+                    }
+                </div >
+            </div >
             {/* Duplicate Warning Modal */}
-            {showDuplicateModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="p-6 border-b border-slate-100 flex items-center gap-4 bg-amber-50">
-                            <div className="p-3 bg-amber-100 rounded-full text-amber-600">
-                                <AlertCircle className="w-6 h-6" />
+            {
+                showDuplicateModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+                            <div className="p-6 border-b border-slate-100 flex items-center gap-4 bg-amber-50">
+                                <div className="p-3 bg-amber-100 rounded-full text-amber-600">
+                                    <AlertCircle className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-slate-900 text-lg">Peringatan Duplikat</h3>
+                                    <p className="text-sm text-slate-600">Ditemukan {duplicateEntries.length} jadwal yang mungkin sudah ada.</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-bold text-slate-900 text-lg">Peringatan Duplikat</h3>
-                                <p className="text-sm text-slate-600">Ditemukan {duplicateEntries.length} jadwal yang mungkin sudah ada.</p>
+
+                            <div className="p-6 max-h-[60vh] overflow-y-auto bg-slate-50">
+                                <div className="space-y-4">
+                                    {duplicateEntries.map((d, i) => (
+                                        <div key={i} className="bg-white p-4 rounded-xl border-2 border-amber-200 shadow-sm">
+                                            <div className="flex items-start gap-3 mb-3">
+                                                <div className="mt-1">
+                                                    <AlertCircle className="w-5 h-5 text-amber-500" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h4 className="font-bold text-amber-700 text-sm mb-1">Duplikat #{i + 1}</h4>
+                                                    <p className="text-xs text-slate-500">Masjid, kota, tanggal, dan waktu yang sama sudah ada</p>
+                                                </div>
+                                            </div>
+
+                                            {/* New Entry */}
+                                            <div className="bg-blue-50 p-3 rounded-lg mb-2">
+                                                <p className="text-xs font-bold text-blue-700 mb-2">📝 Data Baru (yang akan disimpan):</p>
+                                                <div className="text-xs text-slate-700 space-y-1">
+                                                    <p className="font-bold">{d.new.tema}</p>
+                                                    <p>👤 {d.new.pemateri}</p>
+                                                    <p>🕌 {d.new.masjid} {d.new.city && `• 📍 ${d.new.city}`}</p>
+                                                    <p>📅 {d.new.date} • ⏰ {d.new.waktu}</p>
+                                                </div>
+                                            </div>
+
+                                            {/* Existing Entry */}
+                                            <div className="bg-red-50 p-3 rounded-lg">
+                                                <p className="text-xs font-bold text-red-700 mb-2">⚠️ Data yang Sudah Ada (ID: {d.existing.id}):</p>
+                                                <div className="text-xs text-slate-700 space-y-1">
+                                                    <p className="font-bold">{d.existing.tema}</p>
+                                                    <p>👤 {d.existing.pemateri}</p>
+                                                    <p>🕌 {d.existing.masjid} {d.existing.city && `• 📍 ${d.existing.city}`}</p>
+                                                    <p>📅 {d.existing.date} • ⏰ {d.existing.waktu}</p>
+                                                </div>
+                                            </div>
+
+                                            {/* Action Buttons */}
+                                            <div className="flex gap-2 mt-3">
+                                                <button
+                                                    onClick={() => router.push(`/admin/manage?edit=${d.existing.id}`)}
+                                                    disabled={isSaving}
+                                                    className={`flex-1 px-3 py-2 bg-amber-100 text-amber-700 text-xs font-bold rounded-lg hover:bg-amber-200 transition-colors flex items-center justify-center gap-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                    title="Edit kajian yang sudah ada"
+                                                >
+                                                    ✏️ Edit Yang Ada
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteExisting(d.existing.id, i)}
+                                                    disabled={isSaving}
+                                                    className={`flex-1 px-3 py-2 bg-red-100 text-red-700 text-xs font-bold rounded-lg hover:bg-red-200 transition-colors flex items-center justify-center gap-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                    title="Hapus kajian yang sudah ada dari database"
+                                                >
+                                                    🗑️ Hapus Yang Ada
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="mt-6 text-sm text-center text-slate-600 bg-white p-3 rounded-lg border border-slate-200">
+                                    <strong>Perhatian:</strong> Kajian dengan masjid, kota, tanggal, dan waktu yang sama terdeteksi sebagai duplikat.
+                                    <br />Pilih tindakan yang sesuai di bawah ini.
+                                </p>
                             </div>
-                        </div>
 
-                        <div className="p-6 max-h-[60vh] overflow-y-auto bg-slate-50">
-                            <div className="space-y-4">
-                                {duplicateEntries.map((d, i) => (
-                                    <div key={i} className="bg-white p-4 rounded-xl border-2 border-amber-200 shadow-sm">
-                                        <div className="flex items-start gap-3 mb-3">
-                                            <div className="mt-1">
-                                                <AlertCircle className="w-5 h-5 text-amber-500" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <h4 className="font-bold text-amber-700 text-sm mb-1">Duplikat #{i + 1}</h4>
-                                                <p className="text-xs text-slate-500">Masjid, kota, tanggal, dan waktu yang sama sudah ada</p>
-                                            </div>
-                                        </div>
-
-                                        {/* New Entry */}
-                                        <div className="bg-blue-50 p-3 rounded-lg mb-2">
-                                            <p className="text-xs font-bold text-blue-700 mb-2">📝 Data Baru (yang akan disimpan):</p>
-                                            <div className="text-xs text-slate-700 space-y-1">
-                                                <p className="font-bold">{d.new.tema}</p>
-                                                <p>👤 {d.new.pemateri}</p>
-                                                <p>🕌 {d.new.masjid} {d.new.city && `• 📍 ${d.new.city}`}</p>
-                                                <p>📅 {d.new.date} • ⏰ {d.new.waktu}</p>
-                                            </div>
-                                        </div>
-
-                                        {/* Existing Entry */}
-                                        <div className="bg-red-50 p-3 rounded-lg">
-                                            <p className="text-xs font-bold text-red-700 mb-2">⚠️ Data yang Sudah Ada (ID: {d.existing.id}):</p>
-                                            <div className="text-xs text-slate-700 space-y-1">
-                                                <p className="font-bold">{d.existing.tema}</p>
-                                                <p>👤 {d.existing.pemateri}</p>
-                                                <p>🕌 {d.existing.masjid} {d.existing.city && `• 📍 ${d.existing.city}`}</p>
-                                                <p>📅 {d.existing.date} • ⏰ {d.existing.waktu}</p>
-                                            </div>
-                                        </div>
-
-                                        {/* Action Buttons */}
-                                        <div className="flex gap-2 mt-3">
-                                            <button
-                                                onClick={() => router.push(`/admin/manage?edit=${d.existing.id}`)}
-                                                disabled={isSaving}
-                                                className={`flex-1 px-3 py-2 bg-amber-100 text-amber-700 text-xs font-bold rounded-lg hover:bg-amber-200 transition-colors flex items-center justify-center gap-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                title="Edit kajian yang sudah ada"
-                                            >
-                                                ✏️ Edit Yang Ada
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteExisting(d.existing.id, i)}
-                                                disabled={isSaving}
-                                                className={`flex-1 px-3 py-2 bg-red-100 text-red-700 text-xs font-bold rounded-lg hover:bg-red-200 transition-colors flex items-center justify-center gap-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                title="Hapus kajian yang sudah ada dari database"
-                                            >
-                                                🗑️ Hapus Yang Ada
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                            <div className="p-4 border-t border-slate-100 bg-white flex flex-col-reverse sm:flex-row gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowDuplicateModal(false);
+                                        setPendingSaveEntries([]);
+                                        setDuplicateEntries([]);
+                                        setMessage('Penyimpanan dibatalkan.');
+                                    }}
+                                    disabled={isSaving}
+                                    className={`px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors flex-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={() => handleConfirmSave('skip')}
+                                    disabled={isSaving}
+                                    className={`px-4 py-2 bg-white border-2 border-amber-500 text-amber-600 font-bold hover:bg-amber-50 rounded-xl transition-colors flex-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    {isSaving ? '⏳ Memproses...' : 'Lewati Duplikat'}
+                                </button>
+                                <button
+                                    onClick={() => handleConfirmSave('all')}
+                                    disabled={isSaving}
+                                    className={`px-4 py-2 bg-blue-600 text-white font-bold hover:bg-blue-700 rounded-xl transition-colors flex-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    {isSaving ? '⏳ Menyimpan...' : 'Simpan Semua'}
+                                </button>
                             </div>
-                            <p className="mt-6 text-sm text-center text-slate-600 bg-white p-3 rounded-lg border border-slate-200">
-                                <strong>Perhatian:</strong> Kajian dengan masjid, kota, tanggal, dan waktu yang sama terdeteksi sebagai duplikat.
-                                <br />Pilih tindakan yang sesuai di bawah ini.
-                            </p>
-                        </div>
-
-                        <div className="p-4 border-t border-slate-100 bg-white flex flex-col-reverse sm:flex-row gap-3">
-                            <button
-                                onClick={() => {
-                                    setShowDuplicateModal(false);
-                                    setPendingSaveEntries([]);
-                                    setDuplicateEntries([]);
-                                    setMessage('Penyimpanan dibatalkan.');
-                                }}
-                                disabled={isSaving}
-                                className={`px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors flex-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                                Batal
-                            </button>
-                            <button
-                                onClick={() => handleConfirmSave('skip')}
-                                disabled={isSaving}
-                                className={`px-4 py-2 bg-white border-2 border-amber-500 text-amber-600 font-bold hover:bg-amber-50 rounded-xl transition-colors flex-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                                {isSaving ? '⏳ Memproses...' : 'Lewati Duplikat'}
-                            </button>
-                            <button
-                                onClick={() => handleConfirmSave('all')}
-                                disabled={isSaving}
-                                className={`px-4 py-2 bg-blue-600 text-white font-bold hover:bg-blue-700 rounded-xl transition-colors flex-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                                {isSaving ? '⏳ Menyimpan...' : 'Simpan Semua'}
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Preview Modal */}
-            {previewIndex !== null && entries[previewIndex] && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                            <h3 className="font-bold text-slate-900">Preview Tampilan</h3>
-                            <button
-                                onClick={() => setPreviewIndex(null)}
-                                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-                            >
-                                <X className="w-5 h-5 text-slate-400" />
-                            </button>
-                        </div>
-                        <div className="p-8 flex justify-center bg-slate-50">
-                            <KajianCard
-                                id={0}
-                                title={entries[previewIndex].tema}
-                                ustadz={entries[previewIndex].pemateri}
-                                date={entries[previewIndex].date}
-                                location={entries[previewIndex].masjid}
-                                imageUrl={entries[previewIndex].imageUrl}
-                                khususAkhwat={entries[previewIndex].khususAkhwat}
-                                isOnline={entries[previewIndex].isOnline}
-                                waktu={entries[previewIndex].waktu}
-                                className="w-full max-w-[280px] shadow-xl"
-                            />
-                        </div>
-                        <div className="p-4 bg-white text-center">
-                            <p className="text-[10px] text-slate-400 font-medium">Ini adalah tampilan kartu kajian yang akan muncul di halaman depan.</p>
+            {
+                previewIndex !== null && entries[previewIndex] && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+                            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                                <h3 className="font-bold text-slate-900">Preview Tampilan</h3>
+                                <button
+                                    onClick={() => setPreviewIndex(null)}
+                                    className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                                >
+                                    <X className="w-5 h-5 text-slate-400" />
+                                </button>
+                            </div>
+                            <div className="p-8 flex justify-center bg-slate-50">
+                                <KajianCard
+                                    id={0}
+                                    title={entries[previewIndex].tema}
+                                    ustadz={entries[previewIndex].pemateri}
+                                    date={entries[previewIndex].date}
+                                    location={entries[previewIndex].masjid}
+                                    imageUrl={entries[previewIndex].imageUrl}
+                                    khususAkhwat={entries[previewIndex].khususAkhwat}
+                                    isOnline={entries[previewIndex].isOnline}
+                                    waktu={entries[previewIndex].waktu}
+                                    className="w-full max-w-[280px] shadow-xl"
+                                />
+                            </div>
+                            <div className="p-4 bg-white text-center">
+                                <p className="text-[10px] text-slate-400 font-medium">Ini adalah tampilan kartu kajian yang akan muncul di halaman depan.</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             <ConfirmationModal
                 isOpen={alertConfig.isOpen}
@@ -1973,7 +1951,7 @@ function BatchInputPageContent() {
                     setMessage("Proses ekstraksi dibatalkan.");
                 } : undefined}
             />
-        </div>
+        </div >
     );
 }
 
