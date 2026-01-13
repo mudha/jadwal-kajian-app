@@ -94,6 +94,16 @@ export default function KajianCard({ id, date, location, title, ustadz, ustadz2,
 
                 {/* Badges Overlay */}
                 <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
+                    {getKajianStatus(date, waktu) === 'TODAY' && (
+                        <div className="px-2 py-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-green-200/50 animate-pulse">
+                            📍 HARI INI
+                        </div>
+                    )}
+                    {getKajianStatus(date, waktu) === 'TOMORROW' && (
+                        <div className="px-2 py-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-blue-200/50">
+                            🔔 BESOK
+                        </div>
+                    )}
                     {getKajianStatus(date, waktu) === 'PAST' && (
                         <div className="px-2 py-1 bg-slate-500 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-slate-200/50">
                             ✓ Selesai
