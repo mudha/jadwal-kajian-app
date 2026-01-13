@@ -56,6 +56,7 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
 
     // Initialize with server-provided props to avoid flash
     const [layout, setLayout] = useState(initialLayout);
+    const [stats, setStats] = useState({ todayCount: 0 });
 
     // NOTE: We might not need state for quickMenuItems if it never changes on client without refresh,
     // but keeping it consistent with previous logic.
@@ -143,6 +144,11 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
                                 // 3. If same time, sort by distance
                                 return a.distance - b.distance;
                             });
+
+                            // Calculate Stats
+                            const todayCount = data.filter((k: any) => getKajianStatus(k.date, k.waktu) === 'TODAY').length;
+                            setStats({ todayCount });
+
                             setFeaturedKajian(withDistance);
                             setSortMode('distance');
                         },
@@ -153,11 +159,21 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
                                 const timeB = b._parsedDate?.getTime() || 0;
                                 return timeA - timeB;
                             });
+
+                            // Calculate Stats (Fallback)
+                            const todayCount = data.filter((k: any) => getKajianStatus(k.date, k.waktu) === 'TODAY').length;
+                            setStats({ todayCount });
+
                             setFeaturedKajian(upcoming);
                         }
                     );
                 } else {
                     upcoming.sort((a: any, b: any) => (a._parsedDate?.getTime() || 0) - (b._parsedDate?.getTime() || 0));
+
+                    // Calculate Stats (No Geo)
+                    const todayCount = data.filter((k: any) => getKajianStatus(k.date, k.waktu) === 'TODAY').length;
+                    setStats({ todayCount });
+
                     setFeaturedKajian(upcoming);
                 }
             }
@@ -178,7 +194,8 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
         featuredKajian,
         latestKajian,
         sortMode,
-        quickMenuItems
+        quickMenuItems,
+        stats
     };
 
     return (
