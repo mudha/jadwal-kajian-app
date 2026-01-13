@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, MapPin, Save, Loader2, Calendar, PlusCircle } from 'lucide-react';
 import AutosuggestInput from '@/components/admin/AutosuggestInput';
 import { parseIndoDate, formatYYYYMMDD, formatIndoDate } from '@/lib/date-utils';
+import ImageUpload from '@/components/ImageUpload';
 
 export interface KajianDetail {
     id: number;
@@ -141,6 +142,15 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave }: Edi
 
                 {/* Content */}
                 <div className="p-6 space-y-6 flex-1">
+
+                    {/* Image Upload */}
+                    <div>
+                        <ImageUpload
+                            value={formData.imageUrl}
+                            onChange={(val) => handleChange('imageUrl', val)}
+                            label="Poster Kajian"
+                        />
+                    </div>
 
                     {/* Masjid & Lokasi */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
