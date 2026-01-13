@@ -1058,16 +1058,14 @@ function BatchInputPageContent() {
                                                     />
                                                 </td>
                                                 <td className="p-3 space-y-6 flex gap-6">
-                                                    {entry.imageUrl && (
-                                                        <div className="shrink-0 group/img relative">
-                                                            <img src={entry.imageUrl} className="w-24 h-32 object-cover rounded-2xl border border-slate-200 shadow-sm" />
-                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
-                                                                <button onClick={() => updateEntry(idx, 'imageUrl', '')} className="text-white hover:text-red-400 transition-colors">
-                                                                    <Trash2 className="w-5 h-5" />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    )}
+                                                    <div className="shrink-0 w-32">
+                                                        <ImageUpload
+                                                            value={entry.imageUrl}
+                                                            onChange={(val) => updateEntry(idx, 'imageUrl', val)}
+                                                            label=""
+                                                            className="w-full"
+                                                        />
+                                                    </div>
                                                     <div className="flex-1 space-y-4">
                                                         {/* SECTION 1: Masjid & Location */}
                                                         <div className="bg-gradient-to-br from-blue-50/50 to-transparent p-5 rounded-2xl border border-blue-100/50">
@@ -1165,7 +1163,7 @@ function BatchInputPageContent() {
                                                                             type="pemateri"
                                                                             value={entry.pemateri}
                                                                             onChange={(val) => updateEntry(idx, 'pemateri', val)}
-                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
                                                                             placeholder="Pemateri utama..."
                                                                         />
                                                                         {entry.pemateri2 !== undefined && (
@@ -1255,7 +1253,7 @@ function BatchInputPageContent() {
                                                                             const val = e.target.valueAsDate;
                                                                             if (val) updateEntry(idx, 'date', formatIndoDate(val));
                                                                         }}
-                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-purple-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
                                                                     />
                                                                 </div>
                                                                 <div>
@@ -1270,7 +1268,7 @@ function BatchInputPageContent() {
                                                                             }}
                                                                             onFocus={() => setActiveWaktuDropdownIndex(idx)}
                                                                             onBlur={() => setTimeout(() => setActiveWaktuDropdownIndex(null), 200)}
-                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-purple-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
                                                                             placeholder="Ba'da Maghrib / 19.00"
                                                                         />
                                                                         {activeWaktuDropdownIndex === idx && (
@@ -1301,7 +1299,7 @@ function BatchInputPageContent() {
                                                                         type="text"
                                                                         value={entry.waktu_selesai || 'Selesai'}
                                                                         onChange={(e) => updateEntry(idx, 'waktu_selesai', e.target.value)}
-                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-purple-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
                                                                         placeholder="Selesai / 20.00"
                                                                     />
                                                                 </div>
@@ -1333,7 +1331,7 @@ function BatchInputPageContent() {
                                                                             placeholder="CP (Contact Person)"
                                                                             value={entry.cp || ''}
                                                                             onChange={(e) => updateEntry(idx, 'cp', e.target.value)}
-                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-amber-500 rounded-xl px-4 py-2.5 outline-none font-bold text-emerald-700"
+                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-emerald-700"
                                                                         />
                                                                         {entry.cp2 !== undefined && (
                                                                             <div className="relative">
