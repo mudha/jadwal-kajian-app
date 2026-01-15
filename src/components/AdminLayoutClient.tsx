@@ -50,8 +50,8 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
         { href: '/admin/notifications', icon: Bell, label: 'Broadcast Notifikasi' },
     ];
 
-    // Add admin management only for Super Admin
-    if (session?.role === 'SUPER_ADMIN') {
+    // Add admin management for Super Admin and standard Admin
+    if (session?.role === 'SUPER_ADMIN' || session?.role === 'ADMIN') {
         menuItems.push({ href: '/admin/admins', icon: Users, label: 'Kelola Admin' });
     }
 

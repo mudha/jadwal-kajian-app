@@ -5,9 +5,19 @@ export async function GET() {
     const session = (await cookies()).get('admin_session');
 
     if (session) {
-        // Valid enough for quick UX redirect check
-        return NextResponse.json({ authenticated: true });
+        try {
+            // Parse the session data to get role and username
+            const sessionData = JSON.parse(session.value);
+            return NextResponse.json({
+                isAdmin: true,
+                role: sessionData.role || null,
+                username: sessionData.username || null
+            });
+        } catch (e) {
+            // If parsing fails, return basic authenticated response
+            return NextResponse.json({ isAdmin: true, role: null, username: null });
+        }
     }
 
-    return NextResponse.json({ authenticated: false }, { status: 401 });
+    return NextResponse.json({ isAdmin: false, role: null, username: null }, { status: 401 });
 }
