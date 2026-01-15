@@ -303,8 +303,33 @@ function BatchInputPageContent() {
                 const waktuSplit = splitWaktu(entry.waktu);
                 const pemateriSplit = splitPemateri(entry.pemateri);
 
+                // Sanitize Online Entries
+                let cleanEntry = { ...entry };
+                const masjidRaw = entry.masjid?.toLowerCase() || '';
+                const cityRaw = entry.city?.toLowerCase() || '';
+                const addressRaw = entry.address?.toLowerCase() || '';
+
+                const isOnline = entry.isOnline ||
+                    masjidRaw.includes('online') ||
+                    masjidRaw.includes('zoom') ||
+                    cityRaw.includes('online') ||
+                    addressRaw.includes('online');
+
+                if (isOnline) {
+                    cleanEntry.gmapsUrl = '';
+                    cleanEntry.lat = undefined;
+                    cleanEntry.lng = undefined;
+                    // Force fields to standard "Online" ONLY if they were detected as such
+                    // This prevents overwriting "Masjid Al-Azhar (Online)" with just "Online" if we want to preserve the name
+                    // But for now, to ensure consistency as per request:
+                    cleanEntry.masjid = 'Online';
+                    cleanEntry.city = 'Online';
+                    cleanEntry.address = 'Online';
+                    cleanEntry.isOnline = true;
+                }
+
                 return {
-                    ...entry,
+                    ...cleanEntry,
                     ...waktuSplit,
                     ...pemateriSplit,
                     imageUrl: lastImageUrl || defaultImg
@@ -326,6 +351,18 @@ function BatchInputPageContent() {
             // 1. Geocoding
             for (let i = 0; i < withCoords.length; i++) {
                 const entry = withCoords[i];
+
+                // Skip Geocoding for Online Events
+                if (entry.isOnline ||
+                    entry.masjid?.toLowerCase().includes('online') ||
+                    entry.city?.toLowerCase().includes('online') ||
+                    entry.address?.toLowerCase().includes('online')) {
+
+                    withCoords[i] = { ...entry, gmapsUrl: '', lat: undefined, lng: undefined };
+                    setEntries([...withCoords]);
+                    continue;
+                }
+
                 const progress = 20 + ((i / withCoords.length) * 40);
                 setProgressModal(prev => ({
                     ...prev,
@@ -511,8 +548,30 @@ function BatchInputPageContent() {
                 const waktuSplit = entry.waktu_mulai ? {} : splitWaktu(entry.waktu);
                 const pemateriSplit = entry.pemateri2 ? {} : splitPemateri(entry.pemateri);
 
+                // Sanitize Online Entries
+                let cleanEntry = { ...entry };
+                const masjidRaw = entry.masjid?.toLowerCase() || '';
+                const cityRaw = entry.city?.toLowerCase() || '';
+                const addressRaw = entry.address?.toLowerCase() || '';
+
+                const isOnline = entry.isOnline ||
+                    masjidRaw.includes('online') ||
+                    masjidRaw.includes('zoom') ||
+                    cityRaw.includes('online') ||
+                    addressRaw.includes('online');
+
+                if (isOnline) {
+                    cleanEntry.gmapsUrl = '';
+                    cleanEntry.lat = undefined;
+                    cleanEntry.lng = undefined;
+                    cleanEntry.masjid = 'Online';
+                    cleanEntry.city = 'Online';
+                    cleanEntry.address = 'Online';
+                    cleanEntry.isOnline = true;
+                }
+
                 return {
-                    ...entry,
+                    ...cleanEntry,
                     ...waktuSplit,
                     ...pemateriSplit,
                     imageUrl: lastImageUrl || defaultImg
@@ -528,6 +587,18 @@ function BatchInputPageContent() {
             for (let i = 0; i < withCoords.length; i++) {
                 if (stopSignal.current) break;
                 const entry = withCoords[i];
+
+                // Skip Geocoding for Online Events (AI Mode)
+                if (entry.isOnline ||
+                    entry.masjid?.toLowerCase().includes('online') ||
+                    entry.city?.toLowerCase().includes('online') ||
+                    entry.address?.toLowerCase().includes('online')) {
+
+                    withCoords[i] = { ...entry, lat: undefined, lng: undefined, gmapsUrl: '' };
+                    setEntries([...withCoords]);
+                    continue;
+                }
+
                 // Progress from 30% to 70%
                 const progress = 30 + Math.round(((i + 1) / withCoords.length) * 40);
 

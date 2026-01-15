@@ -658,8 +658,10 @@ function parseNarrativeFormat(text: string): KajianEntry[] {
             entry.address = 'Online';
         }
 
-        const query = encodeURIComponent(`${entry.masjid} ${entry.city}`);
-        entry.gmapsUrl = entry.gmapsUrl || `https://www.google.com/maps/search/?api=1&query=${query}`;
+        if (!entry.isOnline && entry.masjid !== 'Online') {
+            const query = encodeURIComponent(`${entry.masjid} ${entry.city}`);
+            entry.gmapsUrl = entry.gmapsUrl || `https://www.google.com/maps/search/?api=1&query=${query}`;
+        }
 
         return [entry as KajianEntry];
     }
