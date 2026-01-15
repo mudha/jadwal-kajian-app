@@ -50,10 +50,30 @@ export function getKajianStatus(dateStr: string, waktuStr?: string): 'PAST' | 'T
     const dToday = today.getTime();
     const dTomorrow = tomorrow.getTime();
 
+    // Debug logging
+    console.log('[getKajianStatus] Input:', {
+        dateStr,
+        kajianDate: kajianDate.toISOString(),
+        now: now.toISOString(),
+        today: today.toISOString(),
+        tomorrow: tomorrow.toISOString(),
+        targetDate: targetDate.toISOString(),
+        tDate,
+        dToday,
+        dTomorrow,
+        'tDate === dToday': tDate === dToday,
+        'tDate === dTomorrow': tDate === dTomorrow,
+        'tDate < dToday': tDate < dToday,
+        'tDate > dToday': tDate > dToday
+    });
+
     if (tDate < dToday) return 'PAST';
 
     // Check for Tomorrow
-    if (tDate === dTomorrow) return 'TOMORROW';
+    if (tDate === dTomorrow) {
+        console.log('[getKajianStatus] Result: TOMORROW');
+        return 'TOMORROW';
+    }
 
     if (tDate > dToday && tDate !== dTomorrow) return 'UPCOMING';
 
