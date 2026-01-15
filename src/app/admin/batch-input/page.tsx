@@ -183,6 +183,22 @@ function BatchInputPageContent() {
     const fetchStats = async () => {
         try {
             const res = await fetch('/api/kajian');
+
+            // Check if response is OK
+            if (!res.ok) {
+                console.error('[fetchStats] HTTP error:', res.status, res.statusText);
+                return;
+            }
+
+            // Check content-type
+            const contentType = res.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.error('[fetchStats] Not JSON. Content-Type:', contentType);
+                const text = await res.text();
+                console.error('[fetchStats] Response:', text.substring(0, 200));
+                return;
+            }
+
             const data = await res.json();
 
             if (Array.isArray(data)) {
