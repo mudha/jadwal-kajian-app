@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Users, Trash2, Shield, ShieldCheck, Mail, Calendar, AlertCircle } from 'lucide-react';
+import { Users, Trash2, Shield, ShieldCheck, Mail, Calendar, AlertCircle, Plus, X, Loader2, Save } from 'lucide-react';
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
 
 interface Admin {
@@ -16,6 +16,15 @@ export default function AdminList() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
+
+    // Add Admin State
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isAdding, setIsAdding] = useState(false);
+    const [newAdmin, setNewAdmin] = useState({
+        username: '',
+        password: '',
+        role: 'ADMIN' as 'ADMIN' | 'SUPER_ADMIN'
+    });
 
     // Confirmation State
     const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -36,6 +45,36 @@ export default function AdminList() {
             setError('Gagal memuat data admin. Pastikan Anda Super Admin.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleAddAdmin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsAdding(true);
+        setError('');
+
+        try {
+            const res = await fetch('/api/admin/admins', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newAdmin)
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                setMessage('Admin berhasil ditambahkan');
+                setIsAddModalOpen(false);
+                setNewAdmin({ username: '', password: '', role: 'ADMIN' });
+                fetchAdmins();
+                setTimeout(() => setMessage(''), 3000);
+            } else {
+                setError(data.error || 'Gagal menambahkan admin');
+            }
+        } catch (err) {
+            setError('Terjadi kesalahan sistem');
+        } finally {
+            setIsAdding(false);
         }
     };
 
@@ -105,32 +144,42 @@ export default function AdminList() {
 
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-black text-slate-900 tracking-tighter">Kelola Admin</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-2 font-bold">Manajemen hak akses dan privelege administrator</p>
                 </div>
-                <div className="bg-white px-6 py-4 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
-                    <div className="bg-blue-50 p-3 rounded-2xl text-blue-600">
-                        <Users className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Admin</p>
-                        <p className="text-2xl font-black text-slate-900">{admins.length}</p>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="flex items-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-lg shadow-teal-200 hover:shadow-teal-300 transition-all active:scale-95"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Tambah Admin
+                    </button>
+                    <div className="bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 hidden md:flex">
+                        <div className="bg-blue-50 p-2 rounded-xl text-blue-600">
+                            <Users className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Admin</p>
+                            <p className="text-xl font-black text-slate-900">{admins.length}</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {error && (
-                <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-center gap-3 text-red-600 font-bold mb-6">
-                    <AlertCircle className="w-5 h-5" />
+                <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-center gap-3 text-red-600 font-bold animate-in slide-in-from-top-2">
+                    <AlertCircle className="w-5 h-5 shrink-0" />
                     {error}
+                    <button onClick={() => setError('')} className="ml-auto hover:bg-red-100 p-1 rounded-full"><X className="w-4 h-4" /></button>
                 </div>
             )}
 
             {message && (
-                <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex items-center gap-3 text-emerald-600 font-bold mb-6">
-                    <ShieldCheck className="w-5 h-5" />
+                <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex items-center gap-3 text-emerald-600 font-bold animate-in slide-in-from-top-2">
+                    <ShieldCheck className="w-5 h-5 shrink-0" />
                     {message}
                 </div>
             )}
@@ -176,6 +225,7 @@ export default function AdminList() {
                                                 ? 'bg-amber-500 text-white shadow-amber-100 hover:bg-amber-600'
                                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                                 }`}
+                                            title="Klik untuk ubah role"
                                         >
                                             {admin.role}
                                         </button>
@@ -183,7 +233,8 @@ export default function AdminList() {
                                     <td className="p-6 text-right">
                                         <button
                                             onClick={() => handleDelete(admin.id)}
-                                            className="p-3 bg-red-50 text-red-500 rounded-2xl opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                                            className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all shadow-sm"
+                                            title="Hapus Admin"
                                         >
                                             <Trash2 className="w-5 h-5" />
                                         </button>
@@ -194,6 +245,95 @@ export default function AdminList() {
                     </table>
                 </div>
             </div>
+
+            {/* Add Admin Modal */}
+            {isAddModalOpen && (
+                <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                            <h3 className="font-bold text-lg text-slate-900">Tambah Admin Baru</h3>
+                            <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleAddAdmin} className="p-6 space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Username</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 rounded-xl outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
+                                    value={newAdmin.username}
+                                    onChange={e => setNewAdmin({ ...newAdmin, username: e.target.value })}
+                                    placeholder="Username minimal 3 karakter"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Password</label>
+                                <input
+                                    type="password"
+                                    required
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 rounded-xl outline-none font-bold text-slate-900 transition-all placeholder:text-slate-400"
+                                    value={newAdmin.password}
+                                    onChange={e => setNewAdmin({ ...newAdmin, password: e.target.value })}
+                                    placeholder="Password minimal 6 karakter"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Role API Access</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <label className={`cursor-pointer p-3 border rounded-xl flex items-center gap-3 transition-colors ${newAdmin.role === 'ADMIN' ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-200'}`}>
+                                        <input
+                                            type="radio"
+                                            name="role"
+                                            value="ADMIN"
+                                            checked={newAdmin.role === 'ADMIN'}
+                                            onChange={() => setNewAdmin({ ...newAdmin, role: 'ADMIN' })}
+                                            className="hidden"
+                                        />
+                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${newAdmin.role === 'ADMIN' ? 'border-blue-500' : 'border-slate-300'}`}>
+                                            {newAdmin.role === 'ADMIN' && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                                        </div>
+                                        <span className="font-bold text-sm text-slate-700">Admin</span>
+                                    </label>
+                                    <label className={`cursor-pointer p-3 border rounded-xl flex items-center gap-3 transition-colors ${newAdmin.role === 'SUPER_ADMIN' ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-200'}`}>
+                                        <input
+                                            type="radio"
+                                            name="role"
+                                            value="SUPER_ADMIN"
+                                            checked={newAdmin.role === 'SUPER_ADMIN'}
+                                            onChange={() => setNewAdmin({ ...newAdmin, role: 'SUPER_ADMIN' })}
+                                            className="hidden"
+                                        />
+                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${newAdmin.role === 'SUPER_ADMIN' ? 'border-amber-500' : 'border-slate-300'}`}>
+                                            {newAdmin.role === 'SUPER_ADMIN' && <div className="w-2 h-2 rounded-full bg-amber-500" />}
+                                        </div>
+                                        <span className="font-bold text-sm text-slate-700">Super Admin</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="pt-4 flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAddModalOpen(false)}
+                                    className="flex-1 px-4 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-all"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isAdding}
+                                    className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {isAdding ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                    Simpan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Role Update Modal */}
             <ConfirmationModal
@@ -214,7 +354,7 @@ export default function AdminList() {
                 onClose={() => setDeleteId(null)}
                 onConfirm={confirmDelete}
                 title="Hapus Admin?"
-                message="Admin yang dihapus tidak dapat lagi mengakses panel admin."
+                message="Admin yang dihapus tidak dapat lagi mengakses panel admin. Data tidak bisa dikembalikan."
                 confirmText="Hapus Permanen"
                 cancelText="Batal"
                 type="danger"

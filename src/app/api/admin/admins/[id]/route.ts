@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import db from '@/lib/db';
+import bcrypt from 'bcryptjs';
 
 async function getSession() {
     const cookieStore = await cookies();
@@ -13,10 +14,10 @@ async function getSession() {
     }
 }
 
-// PATCH - Update admin role
+// PATCH - Update admin role or password
 export async function PATCH(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    props: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getSession();
@@ -24,17 +25,42 @@ export async function PATCH(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        const { role } = await request.json();
-        const { id } = await params;
+        const params = await props.params;
+        const { id } = params;
+        const body = await request.json();
 
-        if (!['ADMIN', 'SUPER_ADMIN'].includes(role)) {
-            return NextResponse.json({ error: 'Role tidak valid' }, { status: 400 });
+        // Handle Role Update
+        if (body.role) {
+            if (!['ADMIN', 'SUPER_ADMIN'].includes(body.role)) {
+                return NextResponse.json({ error: 'Role tidak valid' }, { status: 400 });
+            }
+
+            // Prevent changing own role
+            const checkSelf = await db.execute({
+                sql: 'SELECT username FROM admins WHERE id = ?',
+                args: [id]
+            });
+            if (checkSelf.rows.length > 0 && checkSelf.rows[0].username === session.username) {
+                return NextResponse.json({ error: 'Tidak bisa mengubah role sendiri' }, { status: 400 });
+            }
+
+            await db.execute({
+                sql: 'UPDATE admins SET role = ? WHERE id = ?',
+                args: [body.role, id],
+            });
         }
 
-        await db.execute({
-            sql: 'UPDATE admins SET role = ? WHERE id = ?',
-            args: [role, id],
-        });
+        // Handle Password Update
+        if (body.password) {
+            if (body.password.length < 6) {
+                return NextResponse.json({ error: 'Password minimal 6 karakter' }, { status: 400 });
+            }
+            const hashedPassword = await bcrypt.hash(body.password, 10);
+            await db.execute({
+                sql: 'UPDATE admins SET password = ? WHERE id = ?',
+                args: [hashedPassword, id]
+            });
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {
@@ -45,7 +71,7 @@ export async function PATCH(
 // DELETE - Remove admin
 export async function DELETE(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    props: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await getSession();
@@ -53,7 +79,8 @@ export async function DELETE(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        const { id } = await params;
+        const params = await props.params;
+        const { id } = params;
 
         // Prevent self-deletion
         const result = await db.execute({
