@@ -242,11 +242,15 @@ export default function AdminTampilanPage() {
 
     useEffect(() => {
         setLoading(true);
+        console.log('[Admin/Tampilan] Fetching initial settings...');
         Promise.all([
             fetch('/api/settings/layout').then(res => res.json()),
             fetch('/api/settings/quick-menu').then(res => res.json())
         ])
             .then(([layoutData, menuData]) => {
+                console.log('[Admin/Tampilan] Fetched layoutData:', JSON.stringify(layoutData, null, 2));
+                console.log('[Admin/Tampilan] Fetched menuData:', menuData);
+
                 // 1. Handle Layout Data
                 let currentHiddenMenu: string[] = [];
 
@@ -265,13 +269,31 @@ export default function AdminTampilanPage() {
                         sidebar = ['SidebarBrandWidget', ...sidebar];
                     }
 
-                    setLayout({ ...layoutData, sidebar, main, hidden, mobile, hidden_mobile, hidden_menu });
+                    // Explicitly set each field to avoid spread issues
+                    const finalLayout = {
+                        sidebar,
+                        main,
+                        hidden,
+                        mobile,
+                        hidden_mobile,
+                        hidden_menu
+                    };
+
+                    console.log('[Admin/Tampilan] Setting layout to:', JSON.stringify(finalLayout, null, 2));
+                    setLayout(finalLayout);
                 } else {
-                    setLayout({
-                        ...DEFAULT_DESKTOP_LAYOUT,
-                        ...DEFAULT_MOBILE_LAYOUT,
+                    // No saved layout, use defaults
+                    const defaultLayout = {
+                        sidebar: DEFAULT_DESKTOP_LAYOUT.sidebar,
+                        main: DEFAULT_DESKTOP_LAYOUT.main,
+                        hidden: DEFAULT_DESKTOP_LAYOUT.hidden,
+                        mobile: DEFAULT_MOBILE_LAYOUT.mobile,
+                        hidden_mobile: DEFAULT_MOBILE_LAYOUT.hidden_mobile,
                         hidden_menu: []
-                    });
+                    };
+
+                    console.log('[Admin/Tampilan] No saved layout, using defaults:', JSON.stringify(defaultLayout, null, 2));
+                    setLayout(defaultLayout);
                 }
 
                 // 2. Handle Quick Menu Data
@@ -300,13 +322,17 @@ export default function AdminTampilanPage() {
                 }
             })
             .catch(err => {
-                console.error('Failed to fetch settings:', err);
+                console.error('[Admin/Tampilan] Failed to fetch settings:', err);
                 // Fallback
-                setLayout({
-                    ...DEFAULT_DESKTOP_LAYOUT,
-                    ...DEFAULT_MOBILE_LAYOUT,
+                const fallbackLayout = {
+                    sidebar: DEFAULT_DESKTOP_LAYOUT.sidebar,
+                    main: DEFAULT_DESKTOP_LAYOUT.main,
+                    hidden: DEFAULT_DESKTOP_LAYOUT.hidden,
+                    mobile: DEFAULT_MOBILE_LAYOUT.mobile,
+                    hidden_mobile: DEFAULT_MOBILE_LAYOUT.hidden_mobile,
                     hidden_menu: []
-                });
+                };
+                setLayout(fallbackLayout);
                 setMenuItems(DEFAULT_MENU_ITEMS);
             })
             .finally(() => {
@@ -457,6 +483,8 @@ export default function AdminTampilanPage() {
 
         const timeoutId = setTimeout(async () => {
             setSaving(true);
+            console.log('[Admin/Tampilan/AutoSave] Saving layout:', JSON.stringify(layout, null, 2));
+            console.log('[Admin/Tampilan/AutoSave] Saving menuItems:', menuItems);
             try {
                 // Save Layout
                 await fetch('/api/settings/layout', {
@@ -470,9 +498,10 @@ export default function AdminTampilanPage() {
                     body: JSON.stringify(menuItems)
                 });
 
+                console.log('[Admin/Tampilan/AutoSave] Save successful');
                 setLastSaved(new Date());
             } catch (error) {
-                console.error('Failed to auto-save:', error);
+                console.error('[Admin/Tampilan/AutoSave] Failed to auto-save:', error);
                 // Optionally show error toast here
             } finally {
                 setSaving(false);
