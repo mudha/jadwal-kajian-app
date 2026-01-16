@@ -274,6 +274,22 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
 
                         {/* Right Column (Main Content) */}
                         <div className="md:col-span-8 space-y-6">
+                            {/* Mobile Only Contributor Banner */}
+                            <Link
+                                href="/register/contributor"
+                                className="block md:hidden bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-4 text-white hover:opacity-95 transition-opacity shadow-lg"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="font-bold text-lg">Jadi Kontributor</p>
+                                        <p className="text-sm text-white/90">Bantu update kajian di daerahmu!</p>
+                                    </div>
+                                    <button className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-bold transition-colors">
+                                        Daftar
+                                    </button>
+                                </div>
+                            </Link>
+
                             <WidgetRenderer widgetIds={layout.main} data={widgetData} />
                         </div>
 
