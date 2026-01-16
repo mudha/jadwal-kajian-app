@@ -38,6 +38,23 @@ const initDb = async () => {
     )
   `);
 
+  // Create contributor_applications table
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS contributor_applications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      fullName TEXT NOT NULL,
+      region TEXT NOT NULL,
+      city TEXT,
+      phoneNumber TEXT,
+      motivation TEXT,
+      status TEXT DEFAULT 'pending', -- pending, approved, rejected
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Create admins table
   await db.execute(`
     CREATE TABLE IF NOT EXISTS admins (
@@ -46,6 +63,8 @@ const initDb = async () => {
       password TEXT NOT NULL,
       email TEXT,
       role TEXT DEFAULT 'ADMIN',
+      assignedRegion TEXT,
+      fullName TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -61,6 +80,8 @@ const initDb = async () => {
   try { await db.execute("ALTER TABLE kajian ADD COLUMN isOnline BOOLEAN DEFAULT 0"); } catch (e) { }
   try { await db.execute("ALTER TABLE kajian ADD COLUMN isKidsFriendly BOOLEAN DEFAULT 0"); } catch (e) { }
   try { await db.execute("ALTER TABLE admins ADD COLUMN role TEXT DEFAULT 'ADMIN'"); } catch (e) { }
+  try { await db.execute("ALTER TABLE admins ADD COLUMN assignedRegion TEXT"); } catch (e) { }
+  try { await db.execute("ALTER TABLE admins ADD COLUMN fullName TEXT"); } catch (e) { }
 
   // New migrations for waktu split and multiple pemateri
   try { await db.execute("ALTER TABLE kajian ADD COLUMN waktu_mulai TEXT"); } catch (e) { }
