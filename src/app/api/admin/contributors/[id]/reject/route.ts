@@ -4,7 +4,7 @@ import db from '@/lib/db';
 
 export async function POST(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         // Check admin session
@@ -18,7 +18,7 @@ export async function POST(
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        const id = params.id;
+        const { id } = await params;
 
         // Update application status to rejected
         const result = await db.execute({
