@@ -37,6 +37,13 @@ export async function POST(
             return NextResponse.json({ error: 'Already approved' }, { status: 400 });
         }
 
+        // Validate required fields
+        if (!app.username || !app.email || !app.password) {
+            return NextResponse.json({
+                error: 'Data pendaftar tidak lengkap (username/email/password kosong)'
+            }, { status: 400 });
+        }
+
         // Check if admin account already exists
         const existingAdminResult = await db.execute({
             sql: 'SELECT * FROM admins WHERE username = ? OR email = ?',
@@ -60,7 +67,7 @@ export async function POST(
             await db.execute({
                 sql: `INSERT INTO admins (username, email, password, role, assignedRegion, fullName) 
                       VALUES (?, ?, ?, 'CONTRIBUTOR', ?, ?)`,
-                args: [app.username.trim(), app.email, app.password, app.region, app.fullName]
+                args: [(app.username as string).trim(), app.email, app.password, app.region, app.fullName]
             });
         }
 
