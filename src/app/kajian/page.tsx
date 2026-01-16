@@ -187,8 +187,8 @@ function KajianListContent() {
         fetchData();
     }, []);
 
-    // Effect for nearby mode - FIXED to work with URL param
-    const shouldFetchLocation = !!(filterMode === 'nearby' || filterNearby);
+    // Effect for nearby, akhwat, and anak modes - FIXED to work with URL param
+    const shouldFetchLocation = !!(filterMode === 'nearby' || filterMode === 'akhwat' || filterMode === 'anak' || filterNearby);
     useEffect(() => {
         if (shouldFetchLocation) {
             setIsLocatingUser(true);
@@ -261,6 +261,11 @@ function KajianListContent() {
                 k.tema.toLowerCase().includes('muslimah') ||
                 k.tema.toLowerCase().includes('akhwat');
             if (!isAkhwat) return false;
+
+            // Distance filtering for akhwat mode
+            if (userLocation && k.distance !== undefined) {
+                if (k.distance > radius) return false;
+            }
         }
 
         if (filterMode === 'anak') {
@@ -272,6 +277,11 @@ function KajianListContent() {
                 (k.pemateri && kidsRegex.test(k.pemateri));
 
             if (!isExplicitlyKids && !matchesKeyword) return false;
+
+            // Distance filtering for anak mode
+            if (userLocation && k.distance !== undefined) {
+                if (k.distance > radius) return false;
+            }
         }
 
         if (filterOngoing) {
@@ -336,16 +346,22 @@ function KajianListContent() {
         return true;
     });
 
-    // Sort by distance if mode is nearby
-    if (filterMode === 'nearby' && userLocation) {
+    // Sort by distance if mode is nearby, akhwat, or anak
+    if ((filterMode === 'nearby' || filterMode === 'akhwat' || filterMode === 'anak') && userLocation) {
         filteredKajian.sort((a, b) => {
+            // Primary: distance
             if (a.distance !== undefined && b.distance !== undefined) {
-                return a.distance - b.distance;
+                if (a.distance !== b.distance) return a.distance - b.distance;
             }
+
             // Put items with distance first
             if (a.distance !== undefined) return -1;
             if (b.distance !== undefined) return 1;
-            return 0;
+
+            // Secondary: date/time for same distance
+            const dateA = parseIndoDate(a.date);
+            const dateB = parseIndoDate(b.date);
+            return (dateA?.getTime() || 0) - (dateB?.getTime() || 0);
         });
     }
 
@@ -604,7 +620,7 @@ function KajianListContent() {
 
 
                         {/* Radius Slider for Nearby Mode */}
-                        {(filterMode === 'nearby' || filterNearby) && (
+                        {(filterMode === 'nearby' || filterNearby) && userLocation && (
                             <div className="bg-white rounded-2xl p-5 mb-8 shadow-sm border border-slate-200">
                                 <div className="flex items-center justify-between mb-3">
                                     <div>
@@ -637,6 +653,70 @@ function KajianListContent() {
                                     className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                                     style={{
                                         background: `linear-gradient(to right, rgb(37 99 235) 0%, rgb(37 99 235) ${(radius / 100) * 100}%, rgb(226 232 240) ${(radius / 100) * 100}%, rgb(226 232 240) 100%)`
+                                    }}
+                                />
+                                <div className="flex justify-between text-[10px] text-slate-400 font-bold mt-2">
+                                    <span>1 km</span>
+                                    <span>50 km</span>
+                                    <span>100 km</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Radius Slider for Muslimah/Akhwat Mode */}
+                        {filterMode === 'akhwat' && userLocation && (
+                            <div className="bg-white rounded-2xl p-5 mb-8 shadow-sm border border-slate-200">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div>
+                                        <h4 className="text-sm font-black text-slate-700">Jarak Maksimal</h4>
+                                        <p className="text-[10px] text-slate-500 font-medium">Tampilkan kajian muslimah dalam radius</p>
+                                    </div>
+                                    <div className="bg-pink-50 px-4 py-2 rounded-xl">
+                                        <span className="text-2xl font-black text-pink-600">{radius}</span>
+                                        <span className="text-sm text-pink-500 font-bold ml-1">km</span>
+                                    </div>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="1"
+                                    max="100"
+                                    value={radius}
+                                    onChange={(e) => setRadius(parseInt(e.target.value))}
+                                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-pink-600"
+                                    style={{
+                                        background: `linear-gradient(to right, rgb(219 39 119) 0%, rgb(219 39 119) ${(radius / 100) * 100}%, rgb(226 232 240) ${(radius / 100) * 100}%, rgb(226 232 240) 100%)`
+                                    }}
+                                />
+                                <div className="flex justify-between text-[10px] text-slate-400 font-bold mt-2">
+                                    <span>1 km</span>
+                                    <span>50 km</span>
+                                    <span>100 km</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Radius Slider for Kids Mode */}
+                        {filterMode === 'anak' && userLocation && (
+                            <div className="bg-white rounded-2xl p-5 mb-8 shadow-sm border border-slate-200">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div>
+                                        <h4 className="text-sm font-black text-slate-700">Jarak Maksimal</h4>
+                                        <p className="text-[10px] text-slate-500 font-medium">Tampilkan kajian anak dalam radius</p>
+                                    </div>
+                                    <div className="bg-orange-50 px-4 py-2 rounded-xl">
+                                        <span className="text-2xl font-black text-orange-600">{radius}</span>
+                                        <span className="text-sm text-orange-500 font-bold ml-1">km</span>
+                                    </div>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="1"
+                                    max="100"
+                                    value={radius}
+                                    onChange={(e) => setRadius(parseInt(e.target.value))}
+                                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-orange-600"
+                                    style={{
+                                        background: `linear-gradient(to right, rgb(249 115 22) 0%, rgb(249 115 22) ${(radius / 100) * 100}%, rgb(226 232 240) ${(radius / 100) * 100}%, rgb(226 232 240) 100%)`
                                     }}
                                 />
                                 <div className="flex justify-between text-[10px] text-slate-400 font-bold mt-2">
