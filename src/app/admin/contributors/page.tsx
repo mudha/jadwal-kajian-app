@@ -51,7 +51,8 @@ export default function ContributorsManagementPage() {
                 setConfirmAction(null);
             } else {
                 const data = await res.json();
-                alert(data.error || 'Gagal menyetujui');
+                alert(data.details ? `Gagal: ${data.details}` : (data.error || 'Gagal menyetujui pendaftar'));
+                return;
             }
         } catch (err) {
             alert('Terjadi kesalahan');

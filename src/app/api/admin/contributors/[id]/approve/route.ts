@@ -57,10 +57,13 @@ export async function POST(
             username: app.username
         });
 
-    } catch (error) {
-        console.error('Approve error:', error);
+    } catch (error: any) {
+        console.error('Approve error details:', error);
         return NextResponse.json(
-            { error: 'Gagal menyetujui pendaftar' },
+            {
+                error: 'Gagal menyetujui pendaftar',
+                details: error.message || 'Unknown error'
+            },
             { status: 500 }
         );
     }
