@@ -26,6 +26,22 @@ export default function Sidebar() {
                 </div>
             </Link>
 
+            {/* Contributor Recruitment Banner */}
+            <Link
+                href="/register/contributor"
+                className="block bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-4 text-white hover:opacity-95 transition-opacity shadow-lg"
+            >
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="font-bold text-lg">Jadi Kontributor</p>
+                        <p className="text-sm text-white/90">Bantu update kajian di daerahmu!</p>
+                    </div>
+                    <button className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-bold transition-colors">
+                        Daftar
+                    </button>
+                </div>
+            </Link>
+
             {/* Menu Grid */}
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
                 <h3 className="font-bold text-slate-900 mb-4">Menu Utama</h3>
