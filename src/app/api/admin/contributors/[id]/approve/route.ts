@@ -46,8 +46,8 @@ export async function POST(
 
         // Update application status
         await db.execute({
-            sql: 'UPDATE contributor_applications SET status = ?, reviewedAt = CURRENT_TIMESTAMP, reviewedBy = ? WHERE id = ?',
-            args: ['approved', sessionData.username, id]
+            sql: 'UPDATE contributor_applications SET status = ? WHERE id = ?',
+            args: ['approved', id]
         });
 
         // TODO: Send email notification to contributor

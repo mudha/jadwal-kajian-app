@@ -22,8 +22,8 @@ export async function POST(
 
         // Update application status to rejected
         const result = await db.execute({
-            sql: 'UPDATE contributor_applications SET status = ?, reviewedAt = CURRENT_TIMESTAMP, reviewedBy = ? WHERE id = ?',
-            args: ['rejected', sessionData.username, id]
+            sql: 'UPDATE contributor_applications SET status = ? WHERE id = ?',
+            args: ['rejected', id]
         });
 
         if (result.rowsAffected === 0) {
