@@ -135,12 +135,26 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
                             const withinRadius = withDistance.filter((k: any) => k.distance <= radius);
 
                             withinRadius.sort((a: any, b: any) => {
-                                // Calculate time difference in hours from now
+                                // Get dates
                                 const now = new Date();
-                                const timeA = new Date(a._parsedDate);
-                                const timeB = new Date(b._parsedDate);
-                                const hoursUntilA = (timeA.getTime() - now.getTime()) / (1000 * 60 * 60);
-                                const hoursUntilB = (timeB.getTime() - now.getTime()) / (1000 * 60 * 60);
+                                const dateA = new Date(a._parsedDate);
+                                const dateB = new Date(b._parsedDate);
+
+                                // Check if kajian is today
+                                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                                const todayEnd = new Date(todayStart);
+                                todayEnd.setDate(todayEnd.getDate() + 1);
+
+                                const isAToday = dateA >= todayStart && dateA < todayEnd;
+                                const isBToday = dateB >= todayStart && dateB < todayEnd;
+
+                                // Prioritize TODAY kajian first
+                                if (isAToday && !isBToday) return -1;
+                                if (!isAToday && isBToday) return 1;
+
+                                // Both today OR both not today - use weighted scoring
+                                const hoursUntilA = (dateA.getTime() - now.getTime()) / (1000 * 60 * 60);
+                                const hoursUntilB = (dateB.getTime() - now.getTime()) / (1000 * 60 * 60);
 
                                 // Normalize distance (0-1 range, assuming max 50km)
                                 const normalizedDistanceA = Math.min(a.distance / 50, 1);
@@ -240,6 +254,22 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
                         {/* Left Column (Desktop Sidebar) */}
                         <aside className="md:col-span-4 space-y-6 hidden md:block">
                             <WidgetRenderer widgetIds={layout.sidebar} data={widgetData} />
+
+                            {/* Contributor Recruitment Banner */}
+                            <Link
+                                href="/register/contributor"
+                                className="block bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-4 text-white hover:opacity-95 transition-opacity shadow-lg"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="font-bold text-lg">Jadi Kontributor</p>
+                                        <p className="text-sm text-white/90">Bantu update kajian di daerahmu!</p>
+                                    </div>
+                                    <button className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-bold transition-colors">
+                                        Daftar
+                                    </button>
+                                </div>
+                            </Link>
                         </aside>
 
                         {/* Right Column (Main Content) */}
