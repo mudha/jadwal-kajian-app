@@ -341,6 +341,11 @@ function KajianListContent() {
         if (filterMuslimah) {
             const isMuslimahKajian = k.khususAkhwat === true || k.pemateri?.toLowerCase().includes('ustadzah');
             if (!isMuslimahKajian) return false;
+
+            // Distance filtering for muslimah parameter
+            if (userLocation && k.distance !== undefined) {
+                if (k.distance > radius) return false;
+            }
         }
 
         if (activeTab === 'all') return true;
