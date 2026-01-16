@@ -130,7 +130,10 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
                                 return { ...k, distance };
                             });
 
-                            withDistance.sort((a: any, b: any) => {
+                            // Filter by radius (only show kajian within radius)
+                            const withinRadius = withDistance.filter((k: any) => k.distance <= radius);
+
+                            withinRadius.sort((a: any, b: any) => {
                                 // Calculate time difference in hours from now
                                 const now = new Date();
                                 const timeA = new Date(a._parsedDate);
@@ -158,7 +161,7 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
                             const todayCount = data.filter((k: any) => getKajianStatus(k.date, k.waktu) === 'TODAY').length;
                             setStats({ todayCount });
 
-                            setFeaturedKajian(withDistance);
+                            setFeaturedKajian(withinRadius);
                             setSortMode('distance');
                         },
                         (error) => {
