@@ -131,20 +131,27 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
                             });
 
                             withDistance.sort((a: any, b: any) => {
-                                // Primary: Sort by distance (nearest first)
-                                if (a.distance !== b.distance) {
-                                    return a.distance - b.distance;
-                                }
+                                // Calculate time difference in hours from now
+                                const now = new Date();
+                                const timeA = new Date(a._parsedDate);
+                                const timeB = new Date(b._parsedDate);
+                                const hoursUntilA = (timeA.getTime() - now.getTime()) / (1000 * 60 * 60);
+                                const hoursUntilB = (timeB.getTime() - now.getTime()) / (1000 * 60 * 60);
 
-                                // Secondary: If same distance (rare), sort by date first
-                                const dayA = new Date(a._parsedDate).setHours(0, 0, 0, 0);
-                                const dayB = new Date(b._parsedDate).setHours(0, 0, 0, 0);
-                                if (dayA !== dayB) return dayA - dayB;
+                                // Normalize distance (0-1 range, assuming max 50km)
+                                const normalizedDistanceA = Math.min(a.distance / 50, 1);
+                                const normalizedDistanceB = Math.min(b.distance / 50, 1);
 
-                                // Tertiary: Within same day and distance, sort by time
-                                const timeA = new Date(a._parsedDate).getTime();
-                                const timeB = new Date(b._parsedDate).getTime();
-                                return timeA - timeB;
+                                // Normalize time (0-1 range, assuming max 168 hours = 7 days)
+                                const normalizedTimeA = Math.min(Math.max(hoursUntilA, 0) / 168, 1);
+                                const normalizedTimeB = Math.min(Math.max(hoursUntilB, 0) / 168, 1);
+
+                                // Weighted score: 60% time + 40% distance
+                                // Lower score = better (sooner + closer)
+                                const scoreA = (normalizedTimeA * 0.6) + (normalizedDistanceA * 0.4);
+                                const scoreB = (normalizedTimeB * 0.6) + (normalizedDistanceB * 0.4);
+
+                                return scoreA - scoreB;
                             });
 
                             // Calculate Stats
