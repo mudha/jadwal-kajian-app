@@ -188,7 +188,14 @@ function KajianListContent() {
     }, []);
 
     // Effect for nearby, akhwat, and anak modes - FIXED to work with URL param
-    const shouldFetchLocation = !!(filterMode === 'nearby' || filterMode === 'akhwat' || filterMode === 'anak' || filterNearby);
+    const shouldFetchLocation = !!(
+        filterMode === 'nearby' ||
+        filterMode === 'akhwat' ||
+        filterMode === 'anak' ||
+        filterNearby ||
+        filterMuslimah ||
+        filterOnline
+    );
     useEffect(() => {
         if (shouldFetchLocation) {
             setIsLocatingUser(true);
@@ -664,7 +671,7 @@ function KajianListContent() {
                         )}
 
                         {/* Radius Slider for Muslimah/Akhwat Mode */}
-                        {filterMode === 'akhwat' && userLocation && (
+                        {(filterMode === 'akhwat' || filterMuslimah) && userLocation && (
                             <div className="bg-white rounded-2xl p-5 mb-8 shadow-sm border border-slate-200">
                                 <div className="flex items-center justify-between mb-3">
                                     <div>
