@@ -37,12 +37,32 @@ export async function POST(
             return NextResponse.json({ error: 'Already approved' }, { status: 400 });
         }
 
-        // Create admin account with CONTRIBUTOR role
-        await db.execute({
-            sql: `INSERT INTO admins (username, email, password, role, assignedRegion, fullName) 
-                  VALUES (?, ?, ?, 'CONTRIBUTOR', ?, ?)`,
-            args: [app.username, app.email, app.password, app.region, app.fullName]
+        // Check if admin account already exists
+        const existingAdminResult = await db.execute({
+            sql: 'SELECT * FROM admins WHERE username = ? OR email = ?',
+            args: [app.username, app.email]
         });
+
+        if (existingAdminResult.rows.length > 0) {
+            const existingAdmin = existingAdminResult.rows[0];
+            // If exists and email matches, likely a retry. Skip insert.
+            if (existingAdmin.email === app.email) {
+                console.log('User already exists in admins, skipping insert (handling retry/zombie state)');
+            } else {
+                // If exists but email mismatch, or username taken by someone else
+                return NextResponse.json(
+                    { error: 'Username atau email sudah digunakan oleh admin lain' },
+                    { status: 409 }
+                );
+            }
+        } else {
+            // Create admin account with CONTRIBUTOR role if not exists
+            await db.execute({
+                sql: `INSERT INTO admins (username, email, password, role, assignedRegion, fullName) 
+                      VALUES (?, ?, ?, 'CONTRIBUTOR', ?, ?)`,
+                args: [app.username.trim(), app.email, app.password, app.region, app.fullName]
+            });
+        }
 
         // Update application status
         await db.execute({
