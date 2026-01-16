@@ -115,7 +115,7 @@ export default function CariMasjidPage() {
                         </Link>
                         <div>
                             <h1 className="font-bold text-2xl md:text-3xl leading-tight">Cari Masjid</h1>
-                            <p className="text-emerald-100 text-sm font-medium mt-1">Temukan masjid terdekat untuk sholat</p>
+                            <p className="text-emerald-100 text-sm font-medium mt-1">Temukan masjid terdekat untuk kajian</p>
                         </div>
                     </div>
                     {filteredMasjids.length > 0 && (
