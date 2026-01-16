@@ -50,10 +50,13 @@ export async function POST(request: Request) {
             status: 'pending'
         }, { status: 201 });
 
-    } catch (error) {
-        console.error('Registration error:', error);
+    } catch (error: any) {
+        console.error('Registration error details:', error);
         return NextResponse.json(
-            { error: 'Terjadi kesalahan saat mendaftar' },
+            {
+                error: 'Terjadi kesalahan sistem saat mendaftar',
+                details: error.message || 'Unknown error'
+            },
             { status: 500 }
         );
     }

@@ -65,7 +65,8 @@ export default function ContributorRegisterPage() {
             const data = await response.json();
 
             if (!response.ok) {
-                setError(data.error || 'Gagal mendaftar');
+                const errorMsg = data.details ? `${data.error}: ${data.details}` : (data.error || 'Gagal mendaftar');
+                setError(errorMsg);
                 setLoading(false);
                 return;
             }
