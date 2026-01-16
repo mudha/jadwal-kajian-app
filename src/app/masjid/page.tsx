@@ -155,8 +155,8 @@ export default function CariMasjidPage() {
 
                 {/* Map */}
                 <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
-                    <KajianMap items={filteredMasjids.map(m => ({
-                        id: 0,
+                    <KajianMap items={filteredMasjids.map((m, i) => ({
+                        id: i + 1,
                         masjid: m.name,
                         address: m.address,
                         lat: m.lat,
