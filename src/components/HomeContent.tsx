@@ -52,6 +52,7 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
     // Use "distance" as default if mostly local app, or "date". 
     // Let's keep "date" as existing default or switch if user wants nearby.
     const [sortMode, setSortMode] = useState<'date' | 'distance'>('date');
+    const [radius, setRadius] = useState(50); // Default radius 50km
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // Initialize with server-provided props to avoid flash
