@@ -376,6 +376,20 @@ function KajianListContent() {
             return (dateA?.getTime() || 0) - (dateB?.getTime() || 0);
         });
     }
+    // Sort by time for online mode (soonest first)
+    else if (filterMode === 'online' || filterOnline) {
+        filteredKajian.sort((a, b) => {
+            const dateA = parseIndoDate(a.date);
+            const dateB = parseIndoDate(b.date);
+
+            if (!dateA && !dateB) return 0;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+
+            // Primary: sort by date/time (soonest first)
+            return dateA.getTime() - dateB.getTime();
+        });
+    }
 
     const clearData = async () => {
         if (confirm('Apakah Anda yakin ingin menghapus semua data kajian dari database?')) {
