@@ -66,6 +66,7 @@ function KajianListContent() {
     const filterMuslimah = searchParams.get('muslimah') === 'true';
     const filterNearby = searchParams.get('nearby') === 'true';
     const filterOngoing = searchParams.get('ongoing') === 'true';
+    const masjidParam = searchParams.get('masjid');
 
     const { settings } = useSettings();
     const { isAdmin } = useAdmin();
@@ -324,12 +325,27 @@ function KajianListContent() {
             }
         }
 
-        const matchesSearch = k.masjid.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            k.pemateri.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            k.tema.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            k.city.toLowerCase().includes(searchTerm.toLowerCase());
+        if (masjidParam || searchTerm) {
+            // Precise filtering if masjidParam exists (from URL)
+            if (masjidParam) {
+                // If filtering by masjid (e.g. from Cari Masjid page), use exact/strict match
+                const matchesMasjid = k.masjid.toLowerCase().trim() === masjidParam.toLowerCase().trim() ||
+                    k.masjid.toLowerCase().includes(masjidParam.toLowerCase());
 
-        if (!matchesSearch) return false;
+                if (!matchesMasjid) return false;
+            }
+
+            // General search filtering (only if searchTerm is present)
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase();
+                const matchesSearch = k.masjid.toLowerCase().includes(term) ||
+                    k.pemateri.toLowerCase().includes(term) ||
+                    k.tema.toLowerCase().includes(term) ||
+                    k.city.toLowerCase().includes(term);
+
+                if (!matchesSearch) return false;
+            }
+        }
 
         // Filter for online kajian
         if (filterOnline) {

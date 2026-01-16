@@ -216,7 +216,7 @@ export default function CariMasjidPage() {
                                             </p>
                                             <div className="flex items-center gap-2">
                                                 <Link
-                                                    href={`/kajian?search=${encodeURIComponent(masjid.name)}`}
+                                                    href={`/kajian?masjid=${encodeURIComponent(masjid.name)}`}
                                                     className="inline-block bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors"
                                                 >
                                                     {masjid.kajianCount} Kajian
