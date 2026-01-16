@@ -131,18 +131,20 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
                             });
 
                             withDistance.sort((a: any, b: any) => {
-                                // 1. Sort by Day primarily
+                                // Primary: Sort by distance (nearest first)
+                                if (a.distance !== b.distance) {
+                                    return a.distance - b.distance;
+                                }
+
+                                // Secondary: If same distance (rare), sort by date first
                                 const dayA = new Date(a._parsedDate).setHours(0, 0, 0, 0);
                                 const dayB = new Date(b._parsedDate).setHours(0, 0, 0, 0);
                                 if (dayA !== dayB) return dayA - dayB;
 
-                                // 2. Within same day, sort by Full Time (hours/minutes)
+                                // Tertiary: Within same day and distance, sort by time
                                 const timeA = new Date(a._parsedDate).getTime();
                                 const timeB = new Date(b._parsedDate).getTime();
-                                if (timeA !== timeB) return timeA - timeB;
-
-                                // 3. If same time, sort by distance
-                                return a.distance - b.distance;
+                                return timeA - timeB;
                             });
 
                             // Calculate Stats
