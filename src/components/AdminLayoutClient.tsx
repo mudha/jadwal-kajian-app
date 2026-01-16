@@ -53,6 +53,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     // Add admin management for Super Admin and standard Admin
     if (session?.role === 'SUPER_ADMIN' || session?.role === 'ADMIN') {
         menuItems.push({ href: '/admin/admins', icon: Users, label: 'Kelola Admin' });
+        menuItems.push({ href: '/admin/contributors', icon: Users, label: 'Kelola Kontributor' });
     }
 
     const isActive = (href: string) => pathname === href;
