@@ -147,7 +147,7 @@ export default function ContributorRegisterPage() {
                                         type="text"
                                         value={formData.fullName}
                                         onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
+                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
                                         placeholder="Ahmad Fauzi"
                                         required
                                     />
@@ -165,7 +165,7 @@ export default function ContributorRegisterPage() {
                                         type="text"
                                         value={formData.username}
                                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
+                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
                                         placeholder="ahmad_sby"
                                         required
                                     />
@@ -183,7 +183,7 @@ export default function ContributorRegisterPage() {
                                         type="email"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
+                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
                                         placeholder="ahmad@example.com"
                                         required
                                     />
@@ -201,7 +201,7 @@ export default function ContributorRegisterPage() {
                                         type="tel"
                                         value={formData.phoneNumber}
                                         onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
+                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
                                         placeholder="08123456789"
                                     />
                                 </div>
@@ -217,7 +217,7 @@ export default function ContributorRegisterPage() {
                                     <select
                                         value={formData.region}
                                         onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
+                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
                                         required
                                     >
                                         <option value="">Pilih wilayah</option>
@@ -239,7 +239,7 @@ export default function ContributorRegisterPage() {
                                         type="text"
                                         value={formData.city}
                                         onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
+                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
                                         placeholder="Surabaya Timur"
                                     />
                                 </div>
@@ -256,7 +256,7 @@ export default function ContributorRegisterPage() {
                                         type="password"
                                         value={formData.password}
                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
+                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
                                         placeholder="Minimal 6 karakter"
                                         required
                                     />
@@ -274,7 +274,7 @@ export default function ContributorRegisterPage() {
                                         type="password"
                                         value={formData.confirmPassword}
                                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
+                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
                                         placeholder="Ulangi password"
                                         required
                                     />
