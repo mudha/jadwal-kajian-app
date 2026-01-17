@@ -7,21 +7,23 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    ResponsiveContainer,
-    AreaChart,
-    Area
+    ResponsiveContainer
 } from 'recharts';
 import {
     Eye,
     Users,
     MessageCircle,
-    ThumbsUp,
+    Smartphone,
     MapPin,
     Globe,
     ArrowUpRight,
     Calendar,
     Search,
-    Smartphone
+    Mosque,
+    Moon,
+    BookOpen,
+    UserCheck,
+    TrendingUp
 } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -57,24 +59,75 @@ export default function StatsView({ stats }: StatsViewProps) {
         return val; // YYYY-MM
     };
 
-    // Mock Referrers removed, using stats.topBrowsers instead
-
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Header / Traffic Chart Section */}
-            <div className="bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8 shadow-sm">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div className="space-y-8 animate-in fade-in duration-500 font-sans">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
+                        <Moon className="w-8 h-8 text-emerald-600 fill-emerald-100" />
+                        Assalamualaikum, Admin
+                    </h1>
+                    <p className="text-slate-500 mt-1">Pantau perkembangan dakwah dan jadwal kajian hari ini.</p>
+                </div>
+                <div className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg text-sm font-semibold border border-emerald-100 shadow-sm flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </div>
+            </div>
+
+            {/* Main Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatCard
+                    title="Total Kajian"
+                    value={stats.totalJadwal}
+                    trend={stats.jadwalTrend}
+                    icon={BookOpen}
+                    color="emerald"
+                />
+                <StatCard
+                    title="Jadwal Hari Ini"
+                    value={stats.jadwalHariIni}
+                    subtitle="Kajian aktif sekarang"
+                    icon={Calendar}
+                    color="amber"
+                />
+                <StatCard
+                    title="Total Masjid"
+                    value={stats.totalMasjid}
+                    subtitle="Masjid terdaftar"
+                    icon={Mosque}
+                    color="blue"
+                />
+                <StatCard
+                    title="Total Ustadz"
+                    value={stats.totalUstadz}
+                    subtitle="Pemateri aktif"
+                    icon={UserCheck}
+                    color="violet"
+                />
+            </div>
+
+            {/* Traffic Analytics Chart */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-sm relative overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl opacity-50 -mr-32 -mt-32 pointer-events-none"></div>
+
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 relative z-10">
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-900">Traffic Overview</h2>
-                        <p className="text-slate-500 text-sm">Visualisasi data pengunjung harian, mingguan, dan bulanan.</p>
+                        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                            <TrendingUp className="w-5 h-5 text-emerald-600" />
+                            Statistik Pengunjung
+                        </h2>
+                        <p className="text-slate-500 text-sm">Grafik kunjungan website berdasarkan waktu.</p>
                     </div>
-                    <div className="flex bg-slate-100 rounded-lg p-1">
+                    <div className="flex bg-slate-100 p-1 rounded-lg">
                         {['Days', 'Weeks', 'Months'].map((range) => (
                             <button
                                 key={range}
                                 onClick={() => setTimeRange(range)}
-                                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${timeRange === range
-                                    ? 'bg-white text-blue-600 shadow-sm'
+                                className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${timeRange === range
+                                    ? 'bg-white text-emerald-600 shadow-sm'
                                     : 'text-slate-500 hover:text-slate-700'
                                     }`}
                             >
@@ -84,9 +137,15 @@ export default function StatsView({ stats }: StatsViewProps) {
                     </div>
                 </div>
 
-                <div className="h-[300px] w-full">
+                <div className="h-[320px] w-full relative z-10">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#059669" stopOpacity={1} />
+                                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.6} />
+                                </linearGradient>
+                            </defs>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                             <XAxis
                                 dataKey="date"
@@ -94,6 +153,7 @@ export default function StatsView({ stats }: StatsViewProps) {
                                 axisLine={false}
                                 tickLine={false}
                                 tickFormatter={formatXAxis}
+                                dy={10}
                             />
                             <YAxis
                                 tick={{ fill: '#64748b', fontSize: 12 }}
@@ -106,211 +166,139 @@ export default function StatsView({ stats }: StatsViewProps) {
                             />
                             <Bar
                                 dataKey="count"
-                                fill="#2563eb"
-                                radius={[4, 4, 0, 0]}
+                                fill="url(#barGradient)"
+                                radius={[6, 6, 0, 0]}
                                 barSize={40}
-                                activeBar={{ fill: '#1d4ed8' }}
+                                activeBar={{ fill: '#047857' }}
                             />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                <SimpleStatCard
-                    label="Active Viewers"
-                    value={stats.visitors24h}
-                    subvalue="+12% since yesterday"
-                    subColor="text-emerald-500"
-                    icon={Eye}
-                />
-                <SimpleStatCard
-                    label="Total Visitors"
-                    value={stats.totalVisitors}
-                    subvalue="All time unique"
-                    icon={Users}
-                />
-                <SimpleStatCard
-                    label="Total Jadwal"
-                    value={stats.totalJadwal}
-                    subvalue={`${stats.jadwalHariIni} today`}
-                    icon={Calendar}
-                />
-                <SimpleStatCard
-                    label="Mobile Users"
-                    value={stats.topBrowsers?.find((b: any) => b.name === 'Mobile' || b.name === 'mobile')?.count || 0}
-                    subvalue="Device usage"
-                    icon={Smartphone}
-                />
-            </div>
+            {/* Secondary Grid: Map & Content */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-            {/* Split View: Posts & Referrers */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Most Viewed Posts */}
-                <div className="bg-white rounded-[1.5rem] border border-slate-200 overflow-hidden shadow-sm flex flex-col">
-                    <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                        <h3 className="font-bold text-slate-900">Recent Updates</h3>
-                        <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">Posts & Pages</span>
-                    </div>
-                    <div className="flex-1 overflow-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-slate-50 text-slate-500">
-                                <tr>
-                                    <th className="px-6 py-3 font-semibold">Title</th>
-                                    <th className="px-6 py-3 font-semibold text-right">Views</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {stats.recentKajian.length > 0 ? stats.recentKajian.map((post: any) => (
-                                    <tr key={post.id} className="hover:bg-slate-50/50">
-                                        <td className="px-6 py-4">
-                                            <div className="font-medium text-slate-900 line-clamp-1">{post.tema}</div>
-                                            <div className="text-xs text-slate-500">{post.pemateri}</div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <span className="font-mono font-bold text-slate-700">
-                                                {post.view_count || 0}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                )) : (
-                                    <tr><td colSpan={2} className="px-6 py-8 text-center text-slate-400">No data available</td></tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className="p-4 border-t border-slate-100 bg-slate-50/50 text-center">
-                        <Link href="/admin/kelola-jadwal" className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center justify-center gap-1 mx-auto">
-                            View all posts <ArrowUpRight className="w-3 h-3" />
-                        </Link>
-                    </div>
-                </div>
+                {/* Location Map */}
+                <div className="bg-slate-900 rounded-2xl p-6 md:p-8 relative overflow-hidden shadow-lg group">
+                    <div className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg')] bg-contain bg-no-repeat bg-center opacity-20 invert"></div>
+                    <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-b from-transparent to-slate-900/90 pointer-events-none"></div>
 
-                {/* Top Devices (Real Data) */}
-                <div className="bg-white rounded-[1.5rem] border border-slate-200 overflow-hidden shadow-sm flex flex-col">
-                    <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                        <h3 className="font-bold text-slate-900">Top Devices</h3>
-                        <span className="bg-orange-50 text-orange-600 px-3 py-1 rounded-full text-xs font-bold">User Agents</span>
+                    <div className="relative z-10 flex justify-between items-start mb-6">
+                        <div>
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                <Globe className="w-5 h-5 text-emerald-400" />
+                                Peta Sebaran Jamaah
+                            </h3>
+                            <p className="text-slate-400 text-sm">Lokasi pengunjung terbanyak.</p>
+                        </div>
+                        <div className="flex bg-slate-800 p-1 rounded-lg text-xs font-bold border border-slate-700">
+                            <button
+                                onClick={() => setLocationTab('cities')}
+                                className={`px-3 py-1 rounded transition-all ${locationTab === 'cities' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                            >
+                                Kota
+                            </button>
+                            <button
+                                onClick={() => setLocationTab('countries')}
+                                className={`px-3 py-1 rounded transition-all ${locationTab === 'countries' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                            >
+                                Negara
+                            </button>
+                        </div>
                     </div>
-                    <div className="flex-1 overflow-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-slate-50 text-slate-500">
-                                <tr>
-                                    <th className="px-6 py-3 font-semibold">Device Type</th>
-                                    <th className="px-6 py-3 font-semibold text-right">Visits</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {stats.topBrowsers && stats.topBrowsers.length > 0 ? stats.topBrowsers.map((device: any, idx: number) => (
-                                    <tr key={idx} className="hover:bg-slate-50/50">
-                                        <td className="px-6 py-4">
-                                            <div className="font-medium text-slate-900">{device.name || 'Unknown'}</div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <span className="font-mono font-bold text-slate-700">{device.count}</span>
-                                        </td>
-                                    </tr>
-                                )) : (
-                                    <tr><td colSpan={2} className="px-6 py-8 text-center text-slate-400">No device data available</td></tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
 
-            {/* Locations Map Mockup */}
-            <div className="bg-white rounded-[1.5rem] border border-slate-200 overflow-hidden shadow-sm p-6 md:p-8">
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h3 className="text-lg font-bold text-slate-900">Locations</h3>
-                        <p className="text-sm text-slate-500">Top visiting cities</p>
-                    </div>
-                    <div className="flex bg-slate-100 p-1 rounded-lg text-xs font-bold">
-                        <button
-                            onClick={() => setLocationTab('cities')}
-                            className={`px-3 py-1 rounded shadow-sm transition-all ${locationTab === 'cities' ? 'bg-white text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                            Cities
-                        </button>
-                        <button
-                            onClick={() => setLocationTab('countries')}
-                            className={`px-3 py-1 rounded shadow-sm transition-all ${locationTab === 'countries' ? 'bg-white text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                            Countries
-                        </button>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                    {/* Visual Map (Placeholder using simple CSS/SVG) */}
-                    {/* Visual Map (Abstract) */}
-                    <div className="bg-slate-900 rounded-xl aspect-[16/9] flex items-center justify-center relative overflow-hidden border border-slate-800 group">
-                        {/* World Map Backdrop (Abstract) */}
-                        <Globe className="w-64 h-64 text-slate-800/50 absolute -right-10 -bottom-10" strokeWidth={0.5} />
-                        <div className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg')] bg-contain bg-no-repeat bg-center opacity-20 invert"></div>
-
-                        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                            <div className="bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-700 shadow-lg">
-                                <p className="text-emerald-400 font-bold text-xs flex items-center gap-2">
+                    <div className="relative h-[200px] w-full flex items-center justify-center mb-6">
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="relative">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-20"></span>
+                                <div className="bg-slate-800/80 backdrop-blur-md px-4 py-2 rounded-full border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2">
                                     <span className="relative flex h-2 w-2">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                                     </span>
-                                    Live Visitor Map
-                                </p>
+                                    <span className="text-emerald-400 font-bold text-xs">Live Visitor Map</span>
+                                </div>
                             </div>
                         </div>
-
-                        {/* Dot Overlays */}
-                        {locationData.length > 0 ? locationData.map((item: any, i: number) => (
-                            <div
-                                key={i}
-                                className="absolute w-3 h-3 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.6)] animate-pulse"
-                                style={{
-                                    top: `${20 + ((i * 13) % 60)}%`,
-                                    left: `${20 + ((i * 17) % 60)}%`,
-                                    animationDelay: `${i * 0.5}s`
-                                }}
-                                title={`${item.name}: ${item.count} visitors`}
-                            />
-                        )) : (
-                            // Mock dots if no data yet for visual appeal
-                            [1, 2, 3, 4, 5].map((_, i) => (
-                                <div
-                                    key={`mock-${i}`}
-                                    className="absolute w-2 h-2 bg-slate-600 rounded-full opacity-50"
-                                    style={{
-                                        top: `${30 + ((i * 23) % 40)}%`,
-                                        left: `${30 + ((i * 29) % 40)}%`
-                                    }}
-                                />
-                            ))
-                        )}
                     </div>
 
-                    {/* Cities List */}
-                    <div className="space-y-4">
-                        {locationData.length > 0 ? locationData.map((item: any, idx: number) => (
-                            <div key={idx} className="flex items-center justify-between group p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                    <div className="space-y-3">
+                        {locationData.length > 0 ? locationData.slice(0, 3).map((item: any, idx: number) => (
+                            <div key={idx} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700 hover:bg-slate-800 transition-colors">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
+                                    <div className="w-6 h-6 rounded bg-slate-700 text-emerald-400 flex items-center justify-center font-bold text-xs">
                                         {idx + 1}
                                     </div>
-                                    <span className="font-medium text-slate-700">{item.name || 'Unknown'}</span>
+                                    <span className="font-medium text-slate-200">{item.name || 'Unknown'}</span>
                                 </div>
-                                <div className="font-mono font-bold text-slate-900">{item.count}</div>
+                                <div className="font-mono font-bold text-emerald-400">{item.count}</div>
                             </div>
                         )) : (
-                            <div className="text-center text-slate-400 italic py-8">No {locationLabel.toLowerCase()} data available yet.</div>
+                            <div className="text-center text-slate-500 italic py-4">Belum ada data lokasi.</div>
                         )}
                         <button
                             onClick={() => alert("Laporan lengkap akan tersedia di update berikutnya!")}
-                            className="w-full py-2 mt-2 text-sm text-blue-600 font-bold bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                            className="w-full py-2.5 mt-2 text-xs font-bold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 transition-all uppercase tracking-wide"
                         >
                             View Full Report
                         </button>
+                    </div>
+                </div>
+
+                <div className="space-y-6">
+                    {/* Top Content */}
+                    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm h-fit">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <Search className="w-5 h-5 text-blue-600" />
+                                Kajian Paling Diminati
+                            </h3>
+                            <Link href="/admin/kelola-jadwal" className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                                Lihat Semua <ArrowUpRight className="w-3 h-3" />
+                            </Link>
+                        </div>
+                        <div className="space-y-4">
+                            {stats.recentKajian.length > 0 ? stats.recentKajian.map((post: any) => (
+                                <div key={post.id} className="flex items-start gap-4 p-3 hover:bg-slate-50 rounded-xl transition-colors border border-transparent hover:border-slate-100 group">
+                                    <div className="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                        <BookOpen className="w-5 h-5" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-slate-900 line-clamp-1">{post.tema}</p>
+                                        <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{post.pemateri}</p>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                        <p className="font-bold text-slate-700">{post.view_count || 0}</p>
+                                        <p className="text-[10px] text-slate-400">views</p>
+                                    </div>
+                                </div>
+                            )) : (
+                                <p className="text-center text-slate-400 py-8">Belum ada data kajian.</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Top Devices */}
+                    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <Smartphone className="w-5 h-5 text-violet-600" />
+                                Akses Perangkat
+                            </h3>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="flex-1 bg-violet-50 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                                <Smartphone className="w-6 h-6 text-violet-600 mb-2" />
+                                {stats.topBrowsers?.find((b: any) => b.name === 'Mobile' || b.name === 'mobile')?.count || 0}
+                                <div className="text-xs font-semibold text-violet-600 uppercase tracking-wide">Mobile</div>
+                            </div>
+                            <div className="flex-1 bg-slate-50 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                                <Globe className="w-6 h-6 text-slate-500 mb-2" />
+                                {stats.totalVisitors - (stats.topBrowsers?.find((b: any) => b.name === 'Mobile' || b.name === 'mobile')?.count || 0)}
+                                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Desktop / Other</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -318,16 +306,32 @@ export default function StatsView({ stats }: StatsViewProps) {
     );
 }
 
-function SimpleStatCard({ label, value, subvalue, icon: Icon, subColor = "text-slate-400" }: any) {
+function StatCard({ title, value, subtitle, trend, icon: Icon, color }: any) {
+    const colorStyles = {
+        emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
+        amber: "bg-amber-50 text-amber-600 border-amber-100",
+        blue: "bg-blue-50 text-blue-600 border-blue-100",
+        violet: "bg-violet-50 text-violet-600 border-violet-100",
+    };
+
+    const styles = colorStyles[color as keyof typeof colorStyles] || colorStyles.emerald;
+
     return (
-        <div className="bg-white border border-slate-200 p-6 rounded-[1.5rem] shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-4">
-                <div className="text-sm font-bold text-slate-500 uppercase tracking-wider">{label}</div>
-                <Icon className="w-5 h-5 text-slate-300" />
+                <div className={`p-3 rounded-xl ${styles}`}>
+                    <Icon className="w-6 h-6" />
+                </div>
+                {trend && (
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${trend.includes('+') ? 'bg-green-50 text-green-700' : 'bg-slate-50 text-slate-600'}`}>
+                        {trend}
+                    </span>
+                )}
             </div>
             <div>
-                <div className="text-3xl font-black text-slate-900 mb-1">{value}</div>
-                <div className={`text-xs font-bold ${subColor}`}>{subvalue}</div>
+                <p className="text-slate-500 text-sm font-medium mb-1">{title}</p>
+                <h3 className="text-3xl font-bold text-slate-900 tracking-tight">{value}</h3>
+                {subtitle && <p className="text-xs text-slate-400 mt-2 font-medium">{subtitle}</p>}
             </div>
         </div>
     );
