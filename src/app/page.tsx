@@ -5,8 +5,8 @@ import HomeContent from '@/components/HomeContent';
 export const dynamic = 'force-dynamic';
 
 const DEFAULT_LAYOUT = {
-  sidebar: ['SidebarBrandWidget', 'SidebarMenuWidget', 'PrayerTimesWidget', 'ContactWidget'],
-  main: ['HeroWidget', 'QuickMenuWidget', 'OngoingWidget', 'LatestKajianWidget', 'KajianListWidget'],
+  sidebar: ['SidebarBrandWidget', 'SidebarMenuWidget', 'OngoingWidget', 'LatestKajianWidget', 'PrayerTimesWidget', 'ContactWidget'],
+  main: ['HeroWidget', 'QuickMenuWidget', 'KajianListWidget'],
   mobile: ['HeroWidget:mobile', 'QuickMenuWidget:mobile', 'OngoingWidget:mobile', 'LatestKajianWidget:mobile', 'KajianListWidget:mobile'],
   hidden: [],
   hidden_mobile: ['SidebarMenuWidget:mobile', 'PrayerTimesWidget:mobile', 'ContactWidget:mobile'],

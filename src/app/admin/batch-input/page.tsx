@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, Suspense, useRef } from 'react';
+import { useAdmin } from '@/hooks/useAdmin';
 import { KajianEntry, parseKajianBroadcast, splitPemateri, splitWaktu } from '@/lib/parser';
 import { parseWithGemini } from '@/lib/ai-parser';
 import { Clipboard, Save, Play, CheckCircle, AlertCircle, FileText, Calendar, Clock, MapPin, LogOut, LayoutDashboard, ExternalLink, Database, PlusCircle, History, Info, Trash2, Image as ImageIcon, Loader2, Upload, X, Sparkles, Eye } from 'lucide-react';
@@ -28,6 +29,9 @@ function BatchInputPageContent() {
     const [isAiLoading, setIsAiLoading] = useState(false);
     const [ocrProgress, setOcrProgress] = useState(0);
     const [lastImageUrl, setLastImageUrl] = useState<string | null>(null);
+
+    const { role, isLoading: isAdminLoading } = useAdmin();
+    const isContributor = !isAdminLoading && role === 'CONTRIBUTOR';
 
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
@@ -100,10 +104,10 @@ function BatchInputPageContent() {
     const isManualMode = searchParams.get('mode') === 'manual';
 
     useEffect(() => {
-        if (isManualMode && entries.length === 0) {
+        if ((isManualMode || isContributor) && entries.length === 0) {
             handleAddManual();
         }
-    }, [isManualMode]);
+    }, [isManualMode, isContributor]);
 
     // Global paste handler for images
     useEffect(() => {
@@ -1069,7 +1073,7 @@ function BatchInputPageContent() {
                 </div>
             </div>
 
-            {!isManualMode && (
+            {!isManualMode && !isContributor && (
                 <AIInputSection
                     onProcess={handleProcess}
                     onAiProcess={handleAiProcess}

@@ -191,6 +191,21 @@ const initDb = async () => {
     )
   `);
 
+  // Ambulances table for free ambulance services directory
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS ambulances (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      region TEXT NOT NULL,
+      city TEXT,
+      address TEXT,
+      contacts TEXT NOT NULL,
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Settings table for dynamic configuration (JSON values)
   await db.execute(`
     CREATE TABLE IF NOT EXISTS settings (

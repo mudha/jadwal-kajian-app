@@ -11,7 +11,8 @@ export async function GET() {
             return NextResponse.json({
                 isAdmin: true,
                 role: sessionData.role || null,
-                username: sessionData.username || null
+                username: sessionData.username || null,
+                fullName: sessionData.fullName || null
             });
         } catch (e) {
             // If parsing fails, return basic authenticated response

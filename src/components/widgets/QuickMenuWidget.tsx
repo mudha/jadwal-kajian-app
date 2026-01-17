@@ -11,7 +11,13 @@ export default function QuickMenuWidget({ data }: WidgetProps) {
     if (!data || data.quickMenuItems === undefined) {
         return <QuickMenuSkeleton />;
     }
-    return <QuickMenu customItems={data?.quickMenuItems} />;
+
+    // Only pass customItems if it exists and has items
+    const customItems = Array.isArray(data.quickMenuItems) && data.quickMenuItems.length > 0
+        ? data.quickMenuItems
+        : undefined;
+
+    return <QuickMenu customItems={customItems} />;
 }
 
 function QuickMenuSkeleton() {

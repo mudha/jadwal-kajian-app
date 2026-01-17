@@ -1,6 +1,7 @@
 import { getAdminStats, DashboardStats } from '@/lib/db-stats';
 import { formatIndoDate } from '@/lib/date-utils';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import {
     Calendar,
     MapPin,
@@ -21,6 +22,24 @@ export const dynamic = 'force-dynamic';
 export default async function AdminDashboardPage() {
     const stats: DashboardStats = await getAdminStats();
 
+    // Get Session Data for Greeting & Permissions
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('admin_session');
+    let fullName = 'Admin';
+    let role = '';
+
+    if (sessionCookie) {
+        try {
+            const session = JSON.parse(sessionCookie.value);
+            fullName = session.fullName || session.username || 'Admin';
+            role = session.role || '';
+        } catch (e) {
+            console.error("Failed to parse session", e);
+        }
+    }
+
+    const isContributor = role === 'CONTRIBUTOR';
+
     return (
         <div className="space-y-8">
             {/* Hero Banner */}
@@ -36,7 +55,7 @@ export default async function AdminDashboardPage() {
                             Admin Panel v2.0
                         </div>
                         <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-                            Assalamu'alaikum, <span className="text-blue-400">Admin.</span>
+                            Assalamu'alaikum, <span className="text-blue-400">{fullName}</span>
                         </h1>
                         <p className="text-slate-400 text-xs md:text-sm mt-0.5 max-w-lg">
                             Selamat bertugas. Semoga hari ini penuh keberkahan.
@@ -81,25 +100,27 @@ export default async function AdminDashboardPage() {
 
             {/* Core Metrics & Actions Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-                <Link href="/admin/batch-input" className="col-span-2 lg:col-span-2 relative overflow-hidden bg-gradient-to-br from-indigo-600 to-violet-600 rounded-[1.5rem] md:rounded-[2.5rem] p-5 md:p-8 text-white shadow-xl hover:shadow-2xl hover:shadow-indigo-500/20 transition-all group">
-                    <div className="absolute top-0 right-0 p-4 md:p-8 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
-                        <Zap className="w-32 h-32 md:w-48 md:h-48 -mr-8 -mt-8 md:-mr-16 md:-mt-16 rotate-12" />
-                    </div>
-                    <div className="relative z-10 h-full flex flex-col justify-between">
-                        <div>
-                            <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 md:mb-6">
-                                <Upload className="w-5 h-5 md:w-7 md:h-7 text-white" />
+                {!isContributor && (
+                    <Link href="/admin/batch-input" className="col-span-2 lg:col-span-2 relative overflow-hidden bg-gradient-to-br from-indigo-600 to-violet-600 rounded-[1.5rem] md:rounded-[2.5rem] p-5 md:p-8 text-white shadow-xl hover:shadow-2xl hover:shadow-indigo-500/20 transition-all group">
+                        <div className="absolute top-0 right-0 p-4 md:p-8 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
+                            <Zap className="w-32 h-32 md:w-48 md:h-48 -mr-8 -mt-8 md:-mr-16 md:-mt-16 rotate-12" />
+                        </div>
+                        <div className="relative z-10 h-full flex flex-col justify-between">
+                            <div>
+                                <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 md:mb-6">
+                                    <Upload className="w-5 h-5 md:w-7 md:h-7 text-white" />
+                                </div>
+                                <h2 className="text-lg md:text-2xl font-bold mb-1 md:mb-2">Input Massal AI</h2>
+                                <p className="text-indigo-100/80 max-w-sm leading-relaxed text-xs md:text-base">
+                                    Ekstrak info kajian dari poster atau teks broadcast WA secara instan.
+                                </p>
                             </div>
-                            <h2 className="text-lg md:text-2xl font-bold mb-1 md:mb-2">Input Massal AI</h2>
-                            <p className="text-indigo-100/80 max-w-sm leading-relaxed text-xs md:text-base">
-                                Ekstrak info kajian dari poster atau teks broadcast WA secara instan.
-                            </p>
+                            <div className="mt-4 md:mt-8 flex items-center gap-2 font-bold text-sm md:text-lg">
+                                Mulai Sekarang <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
+                            </div>
                         </div>
-                        <div className="mt-4 md:mt-8 flex items-center gap-2 font-bold text-sm md:text-lg">
-                            Mulai Sekarang <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
-                        </div>
-                    </div>
-                </Link>
+                    </Link>
+                )}
 
                 <Link href="/admin/map" className="col-span-2 lg:col-span-1 relative overflow-hidden bg-gradient-to-br from-teal-600 to-emerald-600 rounded-[1.5rem] md:rounded-[2.5rem] p-5 md:p-8 text-white shadow-xl hover:shadow-2xl hover:shadow-teal-500/20 transition-all group">
                     <div className="absolute top-0 right-0 p-4 md:p-8 opacity-10 group-hover:opacity-20 transition-opacity duration-500">

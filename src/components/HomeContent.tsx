@@ -8,6 +8,7 @@ import { getKajianStatus, parseIndoDate } from '@/lib/date-utils';
 import WidgetRenderer from '@/components/WidgetRenderer';
 import SidebarMenuWidget from '@/components/widgets/SidebarMenuWidget';
 import MobileHeader from '@/components/MobileHeader';
+import { useSettings } from '@/hooks/useSettings';
 
 interface KajianWithId {
     id: number;
@@ -47,23 +48,28 @@ interface HomeContentProps {
 }
 
 export default function HomeContent({ initialLayout, initialQuickMenu }: HomeContentProps) {
+    const { settings, isLoaded, refreshLocation } = useSettings();
+    const [allKajian, setAllKajian] = useState<KajianWithId[]>([]);
+
+    // Derived state
     const [featuredKajian, setFeaturedKajian] = useState<KajianWithId[]>([]);
     const [latestKajian, setLatestKajian] = useState<KajianWithId[]>([]);
-    // Use "distance" as default if mostly local app, or "date". 
-    // Let's keep "date" as existing default or switch if user wants nearby.
     const [sortMode, setSortMode] = useState<'date' | 'distance'>('date');
-    const [radius, setRadius] = useState(50); // Default radius 50km
+
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // Initialize with server-provided props to avoid flash
     const [layout, setLayout] = useState(initialLayout);
     const [stats, setStats] = useState({ todayCount: 0 });
 
-    // NOTE: We might not need state for quickMenuItems if it never changes on client without refresh,
-    // but keeping it consistent with previous logic.
-    // Actually previous logic filtered items based on layout.hidden_menu.
-    // We should do that filtering here too.
     const [quickMenuItems, setQuickMenuItems] = useState<any[] | null>(null);
+
+    // Initial Location Check on Mount
+    useEffect(() => {
+        if (isLoaded && !settings.userLocation) {
+            refreshLocation(); // Ask for location if not set yet
+        }
+    }, [isLoaded, settings.userLocation, refreshLocation]);
 
     useEffect(() => {
         // Apply filtering logic identical to previous useEffect
@@ -85,124 +91,12 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
             const data = await res.json();
 
             if (Array.isArray(data)) {
-                // 1. Set Latest Input Kajian (API returns ORDER BY id DESC by default)
+                setAllKajian(data);
                 setLatestKajian(data.slice(0, 5));
 
-                // 2. Filter & Sort for "Featured" (Upcoming events)
-                const upcoming = data.map((k: any) => {
-                    const d = parseIndoDate(k.date);
-                    if (d && k.waktu) {
-                        // Try to add hours/minutes for better sorting
-                        const timeMatch = k.waktu.match(/(\d{1,2})[:.](\d{2})/);
-                        if (timeMatch) {
-                            d.setHours(parseInt(timeMatch[1]), parseInt(timeMatch[2]));
-                        } else if (k.waktu.toLowerCase().includes('maghrib')) {
-                            d.setHours(18, 15);
-                        } else if (k.waktu.toLowerCase().includes('isya')) {
-                            d.setHours(19, 30);
-                        } else if (k.waktu.toLowerCase().includes('ashar') || k.waktu.toLowerCase().includes('asar')) {
-                            d.setHours(15, 45);
-                        } else if (k.waktu.toLowerCase().includes('dhuhur') || k.waktu.toLowerCase().includes('dzuhur') || k.waktu.toLowerCase().includes('zuhur')) {
-                            d.setHours(12, 15);
-                        } else if (k.waktu.toLowerCase().includes('subuh') || k.waktu.toLowerCase().includes('shubuh')) {
-                            d.setHours(4, 45);
-                        } else if (k.waktu.toLowerCase().includes('jumat') || k.waktu.toLowerCase().includes("jum'at") || k.waktu.toLowerCase().includes('khutbah')) {
-                            d.setHours(12, 0);
-                        }
-                    }
-                    return {
-                        ...k,
-                        _parsedDate: getKajianStatus(k.date, k.waktu) === 'PAST' ? null : d
-                    };
-                }).filter((k: any) => k._parsedDate !== null);
-
-                // Try to sort by location if available
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            const userLat = position.coords.latitude;
-                            const userLng = position.coords.longitude;
-
-                            const withDistance = upcoming.map((k: any) => {
-                                let distance = 9999999;
-                                if (k.lat && k.lng) {
-                                    distance = getDistanceFromLatLonInKm(userLat, userLng, k.lat, k.lng);
-                                }
-                                return { ...k, distance };
-                            });
-
-                            // Filter by radius (only show kajian within radius)
-                            const withinRadius = withDistance.filter((k: any) => k.distance <= radius);
-
-                            withinRadius.sort((a: any, b: any) => {
-                                // Get dates
-                                const now = new Date();
-                                const dateA = new Date(a._parsedDate);
-                                const dateB = new Date(b._parsedDate);
-
-                                // Check if kajian is today
-                                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                                const todayEnd = new Date(todayStart);
-                                todayEnd.setDate(todayEnd.getDate() + 1);
-
-                                const isAToday = dateA >= todayStart && dateA < todayEnd;
-                                const isBToday = dateB >= todayStart && dateB < todayEnd;
-
-                                // Prioritize TODAY kajian first
-                                if (isAToday && !isBToday) return -1;
-                                if (!isAToday && isBToday) return 1;
-
-                                // Both today OR both not today - use weighted scoring
-                                const hoursUntilA = (dateA.getTime() - now.getTime()) / (1000 * 60 * 60);
-                                const hoursUntilB = (dateB.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-                                // Normalize distance (0-1 range, assuming max 50km)
-                                const normalizedDistanceA = Math.min(a.distance / 50, 1);
-                                const normalizedDistanceB = Math.min(b.distance / 50, 1);
-
-                                // Normalize time (0-1 range, assuming max 168 hours = 7 days)
-                                const normalizedTimeA = Math.min(Math.max(hoursUntilA, 0) / 168, 1);
-                                const normalizedTimeB = Math.min(Math.max(hoursUntilB, 0) / 168, 1);
-
-                                // Weighted score: 60% time + 40% distance
-                                // Lower score = better (sooner + closer)
-                                const scoreA = (normalizedTimeA * 0.6) + (normalizedDistanceA * 0.4);
-                                const scoreB = (normalizedTimeB * 0.6) + (normalizedDistanceB * 0.4);
-
-                                return scoreA - scoreB;
-                            });
-
-                            // Calculate Stats
-                            const todayCount = data.filter((k: any) => getKajianStatus(k.date, k.waktu) === 'TODAY').length;
-                            setStats({ todayCount });
-
-                            setFeaturedKajian(withinRadius);
-                            setSortMode('distance');
-                        },
-                        (error) => {
-                            // Create fallback sort by date + time
-                            upcoming.sort((a: any, b: any) => {
-                                const timeA = a._parsedDate?.getTime() || 0;
-                                const timeB = b._parsedDate?.getTime() || 0;
-                                return timeA - timeB;
-                            });
-
-                            // Calculate Stats (Fallback)
-                            const todayCount = data.filter((k: any) => getKajianStatus(k.date, k.waktu) === 'TODAY').length;
-                            setStats({ todayCount });
-
-                            setFeaturedKajian(upcoming);
-                        }
-                    );
-                } else {
-                    upcoming.sort((a: any, b: any) => (a._parsedDate?.getTime() || 0) - (b._parsedDate?.getTime() || 0));
-
-                    // Calculate Stats (No Geo)
-                    const todayCount = data.filter((k: any) => getKajianStatus(k.date, k.waktu) === 'TODAY').length;
-                    setStats({ todayCount });
-
-                    setFeaturedKajian(upcoming);
-                }
+                // Calculate basic stats immediately
+                const todayCount = data.filter((k: any) => getKajianStatus(k.date, k.waktu) === 'TODAY').length;
+                setStats({ todayCount });
             }
         } catch (err) {
             console.error('Error fetching data:', err);
@@ -215,7 +109,100 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
 
     const handleRefresh = async () => {
         await fetchData();
+        await refreshLocation();
     };
+
+    // Main Processing Effect: Runs when Data or Settings Change
+    useEffect(() => {
+        if (allKajian.length === 0) return;
+
+        // 1. Parse Dates & Pre-process
+        const upcoming = allKajian.map((k: any) => {
+            const d = parseIndoDate(k.date);
+            if (d && k.waktu) {
+                const timeMatch = k.waktu.match(/(\d{1,2})[:.](\d{2})/);
+                if (timeMatch) {
+                    d.setHours(parseInt(timeMatch[1]), parseInt(timeMatch[2]));
+                } else if (k.waktu.toLowerCase().includes('maghrib')) {
+                    d.setHours(18, 15);
+                } else if (k.waktu.toLowerCase().includes('isya')) {
+                    d.setHours(19, 30);
+                } else if (k.waktu.toLowerCase().includes('ashar') || k.waktu.toLowerCase().includes('asar')) {
+                    d.setHours(15, 45);
+                } else if (k.waktu.toLowerCase().includes('dhuhur') || k.waktu.toLowerCase().includes('dzuhur') || k.waktu.toLowerCase().includes('zuhur')) {
+                    d.setHours(12, 15);
+                } else if (k.waktu.toLowerCase().includes('subuh') || k.waktu.toLowerCase().includes('shubuh')) {
+                    d.setHours(4, 45);
+                } else if (k.waktu.toLowerCase().includes('jumat') || k.waktu.toLowerCase().includes("jum'at") || k.waktu.toLowerCase().includes('khutbah')) {
+                    d.setHours(12, 0);
+                }
+            }
+            return {
+                ...k,
+                _parsedDate: getKajianStatus(k.date, k.waktu) === 'PAST' ? null : d
+            };
+        }).filter((k: any) => k._parsedDate !== null);
+
+        // 2. Sort Logic
+        if (settings.userLocation) {
+            const userLat = settings.userLocation.lat;
+            const userLng = settings.userLocation.lng;
+
+            const withDistance = upcoming.map((k: any) => {
+                let distance = 9999999;
+                if (k.lat && k.lng) {
+                    distance = getDistanceFromLatLonInKm(userLat, userLng, k.lat, k.lng);
+                }
+                return { ...k, distance };
+            });
+
+            // Filter by radius
+            const withinRadius = withDistance.filter((k: any) => k.distance <= settings.radius);
+
+            withinRadius.sort((a: any, b: any) => {
+                const now = new Date();
+                const dateA = new Date(a._parsedDate);
+                const dateB = new Date(b._parsedDate);
+
+                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const todayEnd = new Date(todayStart);
+                todayEnd.setDate(todayEnd.getDate() + 1);
+
+                const isAToday = dateA >= todayStart && dateA < todayEnd;
+                const isBToday = dateB >= todayStart && dateB < todayEnd;
+
+                if (isAToday && !isBToday) return -1;
+                if (!isAToday && isBToday) return 1;
+
+                const hoursUntilA = (dateA.getTime() - now.getTime()) / (1000 * 60 * 60);
+                const hoursUntilB = (dateB.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+                const normalizedDistanceA = Math.min(a.distance / 50, 1);
+                const normalizedDistanceB = Math.min(b.distance / 50, 1);
+
+                const normalizedTimeA = Math.min(Math.max(hoursUntilA, 0) / 168, 1);
+                const normalizedTimeB = Math.min(Math.max(hoursUntilB, 0) / 168, 1);
+
+                const scoreA = (normalizedTimeA * 0.6) + (normalizedDistanceA * 0.4);
+                const scoreB = (normalizedTimeB * 0.6) + (normalizedDistanceB * 0.4);
+
+                return scoreA - scoreB;
+            });
+
+            setFeaturedKajian(withinRadius);
+            setSortMode('distance');
+        } else {
+            // Fallback Sort by Date
+            upcoming.sort((a: any, b: any) => {
+                const timeA = a._parsedDate?.getTime() || 0;
+                const timeB = b._parsedDate?.getTime() || 0;
+                return timeA - timeB;
+            });
+            setFeaturedKajian(upcoming);
+            setSortMode('date');
+        }
+
+    }, [allKajian, settings.userLocation, settings.radius]);
 
     const widgetData = {
         featuredKajian,
