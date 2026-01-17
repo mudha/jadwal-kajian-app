@@ -19,7 +19,7 @@ import {
     ArrowUpRight,
     Calendar,
     Search,
-    Mosque,
+    Landmark,
     Moon,
     BookOpen,
     UserCheck,
@@ -96,7 +96,7 @@ export default function StatsView({ stats }: StatsViewProps) {
                     title="Total Masjid"
                     value={stats.totalMasjid}
                     subtitle="Masjid terdaftar"
-                    icon={Mosque}
+                    icon={Landmark}
                     color="blue"
                 />
                 <StatCard
