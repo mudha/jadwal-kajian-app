@@ -80,7 +80,7 @@ export async function POST(
 
         // Send email notification
         try {
-            await sendApprovalEmail(app.email, app.fullName || app.username);
+            await sendApprovalEmail(app.email as string, (app.fullName as string) || (app.username as string));
         } catch (emailError) {
             console.error('Failed to send approval email:', emailError);
         }

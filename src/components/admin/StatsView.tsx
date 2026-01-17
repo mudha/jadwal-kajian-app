@@ -20,9 +20,11 @@ import {
     Globe,
     ArrowUpRight,
     Calendar,
-    Search
+    Search,
+    Smartphone
 } from 'lucide-react';
 import { useState } from 'react';
+import Link from 'next/link';
 
 interface StatsViewProps {
     stats: any;
@@ -55,14 +57,7 @@ export default function StatsView({ stats }: StatsViewProps) {
         return val; // YYYY-MM
     };
 
-    // Mock Referrers Data (since we don't have this in DB yet)
-    const referrers = [
-        { name: 'Google Search', count: Math.floor(stats.totalVisitors * 0.45), url: 'google.com' },
-        { name: 'Direct', count: Math.floor(stats.totalVisitors * 0.30), url: 'portalkajian.online' },
-        { name: 'WhatsApp', count: Math.floor(stats.totalVisitors * 0.15), url: 'whatsapp.com' },
-        { name: 'Facebook', count: Math.floor(stats.totalVisitors * 0.05), url: 'facebook.com' },
-        { name: 'Other', count: Math.floor(stats.totalVisitors * 0.05), url: '-' },
-    ];
+    // Mock Referrers removed, using stats.topBrowsers instead
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -143,10 +138,10 @@ export default function StatsView({ stats }: StatsViewProps) {
                     icon={Calendar}
                 />
                 <SimpleStatCard
-                    label="Comments"
-                    value="0"
-                    subvalue="Not enabled"
-                    icon={MessageCircle}
+                    label="Mobile Users"
+                    value={stats.topBrowsers?.find((b: any) => b.name === 'Mobile' || b.name === 'mobile')?.count || 0}
+                    subvalue="Device usage"
+                    icon={Smartphone}
                 />
             </div>
 
@@ -175,7 +170,7 @@ export default function StatsView({ stats }: StatsViewProps) {
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <span className="font-mono font-bold text-slate-700">
-                                                {(post.id * 7) % 50 + 12} {/* Mock views per post (Deterministic for hydration) */}
+                                                {post.view_count || 0}
                                             </span>
                                         </td>
                                     </tr>
@@ -186,38 +181,39 @@ export default function StatsView({ stats }: StatsViewProps) {
                         </table>
                     </div>
                     <div className="p-4 border-t border-slate-100 bg-slate-50/50 text-center">
-                        <button className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center justify-center gap-1 mx-auto">
+                        <Link href="/admin/kelola-jadwal" className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center justify-center gap-1 mx-auto">
                             View all posts <ArrowUpRight className="w-3 h-3" />
-                        </button>
+                        </Link>
                     </div>
                 </div>
 
-                {/* Referrers */}
+                {/* Top Devices (Real Data) */}
                 <div className="bg-white rounded-[1.5rem] border border-slate-200 overflow-hidden shadow-sm flex flex-col">
                     <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                        <h3 className="font-bold text-slate-900">Top Referrers</h3>
-                        <span className="bg-orange-50 text-orange-600 px-3 py-1 rounded-full text-xs font-bold">Traffic Sources</span>
+                        <h3 className="font-bold text-slate-900">Top Devices</h3>
+                        <span className="bg-orange-50 text-orange-600 px-3 py-1 rounded-full text-xs font-bold">User Agents</span>
                     </div>
                     <div className="flex-1 overflow-auto">
                         <table className="w-full text-sm text-left">
                             <thead className="bg-slate-50 text-slate-500">
                                 <tr>
-                                    <th className="px-6 py-3 font-semibold">Source</th>
-                                    <th className="px-6 py-3 font-semibold text-right">Views</th>
+                                    <th className="px-6 py-3 font-semibold">Device Type</th>
+                                    <th className="px-6 py-3 font-semibold text-right">Visits</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {referrers.map((ref, idx) => (
+                                {stats.topBrowsers && stats.topBrowsers.length > 0 ? stats.topBrowsers.map((device: any, idx: number) => (
                                     <tr key={idx} className="hover:bg-slate-50/50">
                                         <td className="px-6 py-4">
-                                            <div className="font-medium text-blue-600 hover:underline cursor-pointer">{ref.name}</div>
-                                            <div className="text-xs text-slate-500">{ref.url}</div>
+                                            <div className="font-medium text-slate-900">{device.name || 'Unknown'}</div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <span className="font-mono font-bold text-slate-700">{ref.count}</span>
+                                            <span className="font-mono font-bold text-slate-700">{device.count}</span>
                                         </td>
                                     </tr>
-                                ))}
+                                )) : (
+                                    <tr><td colSpan={2} className="px-6 py-8 text-center text-slate-400">No device data available</td></tr>
+                                )}
                             </tbody>
                         </table>
                     </div>

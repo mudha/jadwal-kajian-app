@@ -51,7 +51,13 @@ export async function getAdminStats(): Promise<DashboardStats> {
             db.execute({ sql: 'SELECT COUNT(*) as count FROM kajian WHERE date = ?', args: [yesterdayStr] }),
             db.execute('SELECT COUNT(DISTINCT masjid) as count FROM kajian'),
             db.execute('SELECT COUNT(DISTINCT pemateri) as count FROM kajian'),
-            db.execute('SELECT * FROM kajian ORDER BY id DESC LIMIT 5'),
+            db.execute(`
+                SELECT k.*, 
+                (SELECT COUNT(*) FROM analytics a WHERE a.path = '/kajian/' || k.id) as view_count 
+                FROM kajian k 
+                ORDER BY k.id DESC 
+                LIMIT 5
+            `),
             db.execute('SELECT COUNT(*) as count FROM analytics'),
             db.execute('SELECT COUNT(*) as count FROM analytics WHERE timestamp > datetime("now", "-1 day")'),
             db.execute('SELECT ua_device as name, COUNT(*) as count FROM analytics GROUP BY ua_device ORDER BY count DESC LIMIT 5'),
