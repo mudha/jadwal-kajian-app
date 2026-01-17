@@ -1,27 +1,18 @@
-import { getAdminStats, DashboardStats } from '@/lib/db-stats';
-import { formatIndoDate } from '@/lib/date-utils';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import {
-    Calendar,
-    MapPin,
-    Users,
-    Radio,
-    Upload,
+    ShieldCheck,
     ArrowRight,
     ExternalLink,
-    Zap,
-    TrendingUp,
-    ShieldCheck,
-    Search,
+    Plus,
+    Calendar,
+    Upload,
     Map as MapIconImport
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboardPage() {
-    const stats: DashboardStats = await getAdminStats();
-
     // Get Session Data for Greeting & Permissions
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('admin_session');
@@ -41,287 +32,107 @@ export default async function AdminDashboardPage() {
     const isContributor = role === 'CONTRIBUTOR';
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 max-w-5xl mx-auto">
             {/* Hero Banner */}
-            <div className="relative overflow-hidden bg-slate-900 rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 border border-slate-800">
-                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[400px] h-[400px] bg-blue-600/20 rounded-full blur-[80px] pointer-events-none"></div>
+            <div className="relative overflow-hidden bg-slate-900 rounded-[2rem] p-8 md:p-10 text-white shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
 
-                <div className="relative z-10 flex items-center gap-4 md:gap-6">
-                    <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center border border-blue-500/20 md:block hidden">
-                        <ShieldCheck className="w-8 h-8 text-blue-400" />
+                {/* Decorative Elements */}
+                <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-600/20 rounded-full blur-[100px] pointer-events-none -mr-40 -mt-40"></div>
+                <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-purple-600/10 rounded-full blur-[80px] pointer-events-none -ml-20 -mb-20"></div>
+
+                <div className="relative z-10 flex items-center gap-6">
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-3xl flex items-center justify-center border border-blue-500/20 md:block hidden shadow-lg shadow-blue-900/20">
+                        <ShieldCheck className="w-10 h-10 text-blue-400 drop-shadow-md" />
                     </div>
                     <div>
-                        <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-[10px] font-bold text-blue-200 mb-1.5 md:mb-2 backdrop-blur-md">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-bold text-blue-300 mb-3 backdrop-blur-md">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
                             Admin Panel v2.0
                         </div>
-                        <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-                            Assalamu'alaikum, <span className="text-blue-400">{fullName}</span>
+                        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
+                            Assalamu'alaikum, <span className="bg-gradient-to-r from-blue-200 to-white bg-clip-text text-transparent">{fullName}</span>
                         </h1>
-                        <p className="text-slate-400 text-xs md:text-sm mt-0.5 max-w-lg">
-                            Selamat bertugas. Semoga hari ini penuh keberkahan.
+                        <p className="text-slate-400 text-base max-w-lg leading-relaxed">
+                            Selamat bertugas. Semoga hari ini penuh keberkahan dan kemudahan dalam mengelola data kajian.
                         </p>
                     </div>
                 </div>
-
-                <div className="relative z-10 flex items-center gap-4 w-full md:w-auto">
-                    <Link href="/" target="_blank" className="group flex items-center justify-center gap-2 px-4 py-2.5 md:px-5 md:py-3 rounded-xl bg-white text-slate-900 text-xs md:text-sm font-bold hover:bg-blue-50 transition-all w-full md:w-auto shadow-lg shadow-white/5">
-                        Lihat Aplikasi
-                        <ExternalLink className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover:translate-x-0.5 transition-transform" />
-                    </Link>
-                </div>
             </div>
 
-            {/* Quick Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-                <StatCard
-                    title="Kajian Hari Ini"
-                    value={stats.jadwalHariIni}
-                    icon={Radio}
-                    theme="emerald"
-                    trend={stats.jadwalTrend}
-                />
-                <StatCard
-                    title="Total Jadwal"
-                    value={stats.totalJadwal}
-                    icon={Calendar}
-                    theme="blue"
-                    trend="Database aktif"
-                />
-                <div className="col-span-2 lg:col-span-1">
-                    <StatCard
-                        title="Pengunjung (24j)"
-                        value={stats.visitors24h}
-                        icon={TrendingUp}
-                        theme="purple"
-                        trend="Real-time traffic"
-                    />
-                </div>
-            </div>
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-            {/* Core Metrics & Actions Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-                {!isContributor && (
-                    <Link href="/admin/batch-input" className="col-span-2 lg:col-span-2 relative overflow-hidden bg-gradient-to-br from-indigo-600 to-violet-600 rounded-[1.5rem] md:rounded-[2.5rem] p-5 md:p-8 text-white shadow-xl hover:shadow-2xl hover:shadow-indigo-500/20 transition-all group">
-                        <div className="absolute top-0 right-0 p-4 md:p-8 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
-                            <Zap className="w-32 h-32 md:w-48 md:h-48 -mr-8 -mt-8 md:-mr-16 md:-mt-16 rotate-12" />
-                        </div>
-                        <div className="relative z-10 h-full flex flex-col justify-between">
-                            <div>
-                                <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 md:mb-6">
-                                    <Upload className="w-5 h-5 md:w-7 md:h-7 text-white" />
-                                </div>
-                                <h2 className="text-lg md:text-2xl font-bold mb-1 md:mb-2">Input Massal AI</h2>
-                                <p className="text-indigo-100/80 max-w-sm leading-relaxed text-xs md:text-base">
-                                    Ekstrak info kajian dari poster atau teks broadcast WA secara instan.
-                                </p>
-                            </div>
-                            <div className="mt-4 md:mt-8 flex items-center gap-2 font-bold text-sm md:text-lg">
-                                Mulai Sekarang <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
-                            </div>
-                        </div>
-                    </Link>
-                )}
-
-                <Link href="/admin/map" className="col-span-2 lg:col-span-1 relative overflow-hidden bg-gradient-to-br from-teal-600 to-emerald-600 rounded-[1.5rem] md:rounded-[2.5rem] p-5 md:p-8 text-white shadow-xl hover:shadow-2xl hover:shadow-teal-500/20 transition-all group">
-                    <div className="absolute top-0 right-0 p-4 md:p-8 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
-                        <MapIconImport className="w-32 h-32 md:w-48 md:h-48 -mr-8 -mt-8 md:-mr-16 md:-mt-16 rotate-12" />
+                {/* 1. Add Schedule (Primary Action) */}
+                <Link href="/admin/input" className="group relative overflow-hidden bg-white text-slate-900 border border-slate-200 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:border-blue-200 hover:-translate-y-1 transition-all duration-300">
+                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <Calendar className="w-32 h-32 -mr-8 -mt-8 rotate-12" />
                     </div>
-                    <div className="relative z-10 h-full flex flex-col justify-between">
+                    <div className="relative z-10 flex flex-col h-full justify-between">
                         <div>
-                            <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4 md:mb-6">
-                                <MapIconImport className="w-5 h-5 md:w-7 md:h-7 text-white" />
+                            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <Plus className="w-6 h-6" />
                             </div>
-                            <h2 className="text-lg md:text-2xl font-bold mb-1 md:mb-2">Peta Sebaran</h2>
-                            <p className="text-teal-100/80 max-w-sm leading-relaxed text-xs md:text-base line-clamp-2 md:line-clamp-none">
-                                Lihat visualisasi lokasi semua kajian dalam bentuk peta interaktif.
+                            <h2 className="text-xl font-bold mb-2">Input Kajian Baru</h2>
+                            <p className="text-slate-500 text-sm leading-relaxed">
+                                Tambahkan jadwal kajian baru secara manual atau gunakan form wizard.
                             </p>
                         </div>
-                        <div className="mt-4 md:mt-8 flex items-center gap-2 font-bold text-sm md:text-lg">
-                            Buka Peta <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
+                        <div className="mt-8 flex items-center text-blue-600 font-bold text-sm">
+                            Mulai Input <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </div>
                     </div>
                 </Link>
 
-                <div className="bg-white border border-slate-200 rounded-[1.5rem] md:rounded-[2.5rem] p-5 md:p-8 flex flex-col justify-between hover:border-purple-200 transition-colors">
-                    <div className="flex items-start justify-between mb-4 md:mb-0">
-                        <div className="p-2.5 md:p-3 bg-purple-100 rounded-xl md:rounded-2xl text-purple-600">
-                            <Users className="w-5 h-5 md:w-6 md:h-6" />
+                {/* 2. AI Input (Feature Highlight) */}
+                {!isContributor && (
+                    <Link href="/admin/batch-input" className="group relative overflow-hidden bg-gradient-to-br from-indigo-600 to-violet-600 text-white rounded-[2rem] p-8 shadow-lg hover:shadow-2xl hover:shadow-indigo-500/30 hover:-translate-y-1 transition-all duration-300">
+                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Upload className="w-32 h-32 -mr-8 -mt-8 rotate-12" />
                         </div>
-                        <span className="flex items-center gap-1 text-[10px] md:text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 md:py-1 rounded-full">
-                            <TrendingUp className="w-3 h-3" /> Popular
-                        </span>
-                    </div>
-                    <div>
-                        <div className="text-2xl md:text-4xl font-black text-slate-900 mb-0.5 md:mb-1">{stats.totalUstadz}</div>
-                        <div className="text-slate-500 font-medium text-xs md:text-base">Ustadz Terdaftar</div>
-                    </div>
-                </div>
-
-                <div className="bg-white border border-slate-200 rounded-[1.5rem] md:rounded-[2.5rem] p-5 md:p-8 flex flex-col justify-between hover:border-orange-200 transition-colors">
-                    <div className="flex items-start justify-between mb-4 md:mb-0">
-                        <div className="p-2.5 md:p-3 bg-orange-100 rounded-xl md:rounded-2xl text-orange-600">
-                            <MapPin className="w-5 h-5 md:w-6 md:h-6" />
-                        </div>
-                    </div>
-                    <div>
-                        <div className="text-2xl md:text-4xl font-black text-slate-900 mb-0.5 md:mb-1">{stats.totalMasjid}</div>
-                        <div className="text-slate-500 font-medium text-xs md:text-base">Masjid & Lokasi</div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Recent Activity Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden">
-                    <div className="p-8 border-b border-slate-100 flex items-center justify-between">
-                        <div>
-                            <h3 className="text-xl font-bold text-slate-900">Jadwal Terbaru</h3>
-                            <p className="text-slate-500 text-sm">Update terakhir database kajian.</p>
-                        </div>
-                        <Link href="/admin/manage" className="px-4 py-2 rounded-xl bg-slate-50 text-slate-600 font-bold text-sm hover:bg-slate-100 transition-colors">
-                            Lihat Semua
-                        </Link>
-                    </div>
-                    <div className="divide-y divide-slate-50">
-                        {stats.recentKajian.length > 0 ? (
-                            stats.recentKajian.map((k: any) => (
-                                <div key={k.id} className="p-6 hover:bg-slate-50/80 transition-colors group flex items-center gap-5">
-                                    <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 font-bold flex items-center justify-center shrink-0 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors text-sm">
-                                        #{k.id}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <Link href={`/kajian/${k.id}`}>
-                                            <h4 className="font-bold text-slate-900 text-base mb-1 truncate group-hover:text-blue-600 transition-colors hover:underline cursor-pointer">{k.tema}</h4>
-                                        </Link>
-                                        <div className="flex items-center gap-3 text-sm text-slate-500">
-                                            <span className="flex items-center gap-1.5 font-medium text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md text-xs">
-                                                <Users className="w-3 h-3" /> {k.pemateri}
-                                            </span>
-                                            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                                            <span>{k.date.replace(/Minggu/i, 'Ahad')}</span>
-                                        </div>
-                                    </div>
-                                    <div className="hidden sm:block text-right">
-                                        <div className="text-sm font-bold text-slate-700">{k.city}</div>
-                                        <div className="text-xs text-slate-400">Lokasi</div>
-                                    </div>
+                        <div className="relative z-10 flex flex-col h-full justify-between">
+                            <div>
+                                <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <Upload className="w-6 h-6 text-white" />
                                 </div>
-                            ))
-                        ) : (
-                            <div className="p-12 text-center text-slate-400">Belum ada data jadwal.</div>
-                        )}
-                    </div>
-                </div>
-
-                {/* System Status Panel */}
-                <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white flex flex-col justify-between min-h-[400px] border border-white/10">
-                    <div>
-                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                            System Live
-                        </h3>
-
-                        <div className="space-y-6">
-                            <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                                <div className="text-sm text-slate-400 mb-1">Total Visitors</div>
-                                <div className="text-2xl font-mono font-bold text-emerald-400 flex items-center gap-2">
-                                    {stats.totalVisitors.toLocaleString()} <span className="text-xs font-sans font-medium text-slate-500 bg-white/10 px-2 py-0.5 rounded-full">All Time</span>
-                                </div>
+                                <h2 className="text-xl font-bold mb-2">Input Massal AI</h2>
+                                <p className="text-indigo-100 text-sm leading-relaxed">
+                                    Ekstrak info kajian dari poster/teks secara instan dengan AI.
+                                </p>
                             </div>
-
-                            <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                                <div className="text-sm text-slate-400 mb-1">Recent Activity</div>
-                                <div className="text-2xl font-mono font-bold text-blue-400">
-                                    {stats.visitors24h.toLocaleString()} <span className="text-xs text-slate-500 font-sans font-medium">/ 24h</span>
-                                </div>
-                            </div>
-
-                            <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                                <div className="text-sm text-slate-400 mb-1">Next Scheduler</div>
-                                <div className="text-lg font-medium text-slate-200">
-                                    03:00 WIB
-                                </div>
+                            <div className="mt-8 flex items-center text-white font-bold text-sm">
+                                Coba Sekarang <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                             </div>
                         </div>
-                    </div>
-
-                    <div className="pt-6 border-t border-white/10">
-                        <p className="text-xs text-slate-500 leading-relaxed">
-                            <span className="font-bold text-slate-300">Pro Tip:</span> Gunakan fitur deteksi duplikat secara berkala untuk menjaga kebersihan database masjid dan ustadz.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Visitor Breakdown Section */}
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pt-8 border-t border-slate-100">
-                <BreakdownCard title="Devices" data={stats.topDevices} icon={Radio} />
-                <BreakdownCard title="Browsers" data={stats.topBrowsers} icon={Zap} />
-                <div className="col-span-2 lg:col-span-1">
-                    <BreakdownCard title="Cities" data={stats.topCities} icon={MapPin} />
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function BreakdownCard({ title, data, icon: Icon }: { title: string, data: any[], icon: any }) {
-    const total = data.reduce((acc, curr) => acc + Number(curr.count), 0);
-
-    return (
-        <div className="bg-white border border-slate-200 rounded-[1.5rem] md:rounded-[2.5rem] p-5 md:p-8 h-full">
-            <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
-                    <Icon className="w-4 h-4 md:w-5 md:h-5" />
-                </div>
-                <h3 className="font-bold text-slate-900 text-sm md:text-base">{title}</h3>
-            </div>
-            <div className="space-y-3 md:space-y-4">
-                {data.length > 0 ? data.map((item, i) => {
-                    const percentage = total > 0 ? (Number(item.count) / total) * 100 : 0;
-                    return (
-                        <div key={i} className="space-y-1 md:space-y-1.5">
-                            <div className="flex justify-between text-[10px] md:text-xs font-bold text-slate-600">
-                                <span className="truncate max-w-[80px] md:max-w-[150px]">{item.name || 'Unknown'}</span>
-                                <span>{item.count}</span>
-                            </div>
-                            <div className="h-1 md:h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-blue-500 rounded-full transition-all duration-1000"
-                                    style={{ width: `${percentage}%` }}
-                                ></div>
-                            </div>
-                        </div>
-                    );
-                }) : (
-                    <div className="text-center py-4 text-slate-400 text-[10px] md:text-xs italic">Belum ada data.</div>
+                    </Link>
                 )}
-            </div>
-        </div>
-    );
-}
 
-function StatCard({ title, value, icon: Icon, theme, trend }: any) {
-    const isEmerald = theme === 'emerald';
-    const isPurple = theme === 'purple';
-
-    return (
-        <div className={`relative overflow-hidden rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 flex flex-col justify-center h-full border transition-all hover:scale-[1.02] ${isEmerald
-            ? 'bg-emerald-50 border-emerald-100 hover:shadow-lg hover:shadow-emerald-500/10'
-            : isPurple
-                ? 'bg-purple-50 border-purple-100 hover:shadow-lg hover:shadow-purple-500/10'
-                : 'bg-white border-slate-200 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/5'
-            }`}>
-            <div className="flex items-center justify-between mb-2 md:mb-4">
-                <div className={`p-2 md:p-2.5 rounded-lg md:rounded-xl ${isEmerald ? 'bg-emerald-500 text-white' : isPurple ? 'bg-purple-500 text-white' : 'bg-blue-100 text-blue-600'}`}>
-                    <Icon className="w-4 h-4 md:w-5 md:h-5" />
-                </div>
-                {(isEmerald || isPurple) && <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${isEmerald ? 'bg-emerald-500' : 'bg-purple-500'} animate-ping`}></div>}
+                {/* 3. Maps (Visual) */}
+                <Link href="/admin/map" className="group relative overflow-hidden bg-white text-slate-900 border border-slate-200 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:border-emerald-200 hover:-translate-y-1 transition-all duration-300 lg:col-span-1 md:col-span-2">
+                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <MapIconImport className="w-32 h-32 -mr-8 -mt-8 rotate-12" />
+                    </div>
+                    <div className="relative z-10 flex flex-col h-full justify-between">
+                        <div>
+                            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <MapIconImport className="w-6 h-6" />
+                            </div>
+                            <h2 className="text-xl font-bold mb-2">Peta Sebaran</h2>
+                            <p className="text-slate-500 text-sm leading-relaxed">
+                                Lihat visualisasi lokasi kajian aktif di peta interaktif.
+                            </p>
+                        </div>
+                        <div className="mt-8 flex items-center text-emerald-600 font-bold text-sm">
+                            Buka Peta <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                    </div>
+                </Link>
             </div>
-            <div>
-                <h3 className="text-xl md:text-3xl font-black text-slate-900 mb-0.5 md:mb-1">{value}</h3>
-                <p className="font-bold text-[10px] md:text-sm text-slate-500 mb-0.5 leading-tight">{title}</p>
-                <p className={`text-[9px] md:text-xs font-semibold ${isEmerald ? 'text-emerald-600' : isPurple ? 'text-purple-600' : 'text-slate-400'} truncate`}>{trend}</p>
+
+            {/* Footer Links */}
+            <div className="flex justify-center pt-8 border-t border-slate-100">
+                <Link href="/" target="_blank" className="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition-colors text-sm font-medium">
+                    Lihat Aplikasi Live <ExternalLink className="w-3 h-3" />
+                </Link>
             </div>
         </div>
     );

@@ -13,6 +13,10 @@ export interface DashboardStats {
     topDevices: any[];
     topBrowsers: any[];
     topCities: any[];
+    topCountries: any[];
+    dailyViews: any[];
+    weeklyViews: any[];
+    monthlyViews: any[];
 }
 
 export async function getAdminStats(): Promise<DashboardStats> {
@@ -36,7 +40,11 @@ export async function getAdminStats(): Promise<DashboardStats> {
             vis24Res,
             devicesRes,
             browsersRes,
-            citiesRes
+            citiesRes,
+            countriesRes,
+            dailyRes,
+            weeklyRes,
+            monthlyRes
         ] = await Promise.all([
             db.execute('SELECT COUNT(*) as count FROM kajian'),
             db.execute({ sql: 'SELECT COUNT(*) as count FROM kajian WHERE date = ?', args: [todayStr] }),
@@ -48,7 +56,29 @@ export async function getAdminStats(): Promise<DashboardStats> {
             db.execute('SELECT COUNT(*) as count FROM analytics WHERE timestamp > datetime("now", "-1 day")'),
             db.execute('SELECT ua_device as name, COUNT(*) as count FROM analytics GROUP BY ua_device ORDER BY count DESC LIMIT 5'),
             db.execute('SELECT ua_browser as name, COUNT(*) as count FROM analytics GROUP BY ua_browser ORDER BY count DESC LIMIT 5'),
-            db.execute('SELECT city as name, COUNT(*) as count FROM analytics GROUP BY city ORDER BY count DESC LIMIT 5')
+            db.execute('SELECT city as name, COUNT(*) as count FROM analytics GROUP BY city ORDER BY count DESC LIMIT 5'),
+            db.execute('SELECT country as name, COUNT(*) as count FROM analytics GROUP BY country ORDER BY count DESC LIMIT 5'),
+            db.execute(`
+                SELECT strftime('%Y-%m-%d', timestamp) as date, COUNT(*) as count 
+                FROM analytics 
+                WHERE timestamp > datetime('now', '-7 days')
+                GROUP BY date 
+                ORDER BY date ASC
+            `),
+            db.execute(`
+                SELECT strftime('%Y-%W', timestamp) as date, COUNT(*) as count 
+                FROM analytics 
+                WHERE timestamp > datetime('now', '-8 weeks')
+                GROUP BY date 
+                ORDER BY date ASC
+            `),
+            db.execute(`
+                SELECT strftime('%Y-%m', timestamp) as date, COUNT(*) as count 
+                FROM analytics 
+                WHERE timestamp > datetime('now', '-12 months')
+                GROUP BY date 
+                ORDER BY date ASC
+            `)
         ]);
 
         const countToday = Number(todayRes.rows[0].count);
@@ -65,7 +95,7 @@ export async function getAdminStats(): Promise<DashboardStats> {
             trend = "-100% dari kemarin";
         }
 
-        return {
+        const stats = {
             totalJadwal: Number(totalRes.rows[0].count),
             jadwalHariIni: countToday,
             jadwalTrend: trend,
@@ -76,8 +106,15 @@ export async function getAdminStats(): Promise<DashboardStats> {
             visitors24h: Number(vis24Res.rows[0].count),
             topDevices: devicesRes.rows,
             topBrowsers: browsersRes.rows,
-            topCities: citiesRes.rows
+            topCities: citiesRes.rows,
+            topCountries: countriesRes.rows,
+            dailyViews: dailyRes.rows,
+            weeklyViews: weeklyRes.rows,
+            monthlyViews: monthlyRes.rows
         };
+
+        // Serialize to plain objects to avoid "Classes not supported" error in Next.js Client Components
+        return JSON.parse(JSON.stringify(stats));
     } catch (error) {
         console.error('Failed to fetch admin stats:', error);
         return {
@@ -91,7 +128,11 @@ export async function getAdminStats(): Promise<DashboardStats> {
             visitors24h: 0,
             topDevices: [],
             topBrowsers: [],
-            topCities: []
+            topCities: [],
+            topCountries: [],
+            dailyViews: [],
+            weeklyViews: [],
+            monthlyViews: []
         };
     }
 }

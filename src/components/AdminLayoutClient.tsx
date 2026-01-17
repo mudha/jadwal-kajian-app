@@ -17,6 +17,8 @@ import {
     Merge,
     School,
     Bell,
+    BarChart2,
+    User,
 } from 'lucide-react';
 import LogoutButton from '@/components/LogoutButton';
 import { useEffect } from 'react';
@@ -41,6 +43,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
 
     const menuItems = [
         { href: '/admin', icon: Home, label: 'Dashboard' },
+        { href: '/admin/stats', icon: BarChart2, label: 'Stats' },
         { href: '/admin/manage', icon: List, label: 'Kelola Jadwal' },
         { href: '/admin/input', icon: FileInput, label: 'Input Kajian' },
         { href: '/admin/ustadz', icon: ListMusic, label: 'Kelola Ustadz' },
@@ -48,6 +51,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
         { href: '/admin/sekolah', icon: School, label: 'Kelola Sekolah' },
         { href: '/admin/ambulances', icon: Users, label: 'Kelola Ambulance' },
         { href: '/admin/notifications', icon: Bell, label: 'Broadcast Notifikasi' },
+        { href: '/admin/profile', icon: User, label: 'Profile & Keamanan' },
     ];
 
     // Show Kelola Tampilan for non-contributors
