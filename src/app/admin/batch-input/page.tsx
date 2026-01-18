@@ -1674,43 +1674,46 @@ function BatchInputPageContent() {
                                                                         placeholder="Misal: Membawa makanan untuk berbuka, Khusus ikhwan, dll"
                                                                     />
                                                                 </div>
-                                                                <div className="flex flex-wrap gap-2">
-                                                                    <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${entry.khususAkhwat ? 'bg-pink-50 border-pink-300 text-pink-700' : 'bg-white border-slate-200 text-slate-500 hover:border-pink-200'}`}>
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            checked={entry.khususAkhwat || false}
-                                                                            onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
-                                                                            className="hidden"
-                                                                        />
-                                                                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${entry.khususAkhwat ? 'border-pink-500 bg-pink-500' : 'border-slate-300 bg-white'}`}>
-                                                                            {entry.khususAkhwat && <CheckCircle className="w-3 h-3 text-white" />}
-                                                                        </div>
-                                                                        <span className="text-xs font-black uppercase">🌸 Khusus Akhwat</span>
-                                                                    </label>
-                                                                    <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${entry.isOnline ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-slate-200 text-slate-500 hover:border-blue-200'}`}>
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            checked={entry.isOnline || false}
-                                                                            onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
-                                                                            className="hidden"
-                                                                        />
-                                                                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${entry.isOnline ? 'border-blue-500 bg-blue-500' : 'border-slate-300 bg-white'}`}>
-                                                                            {entry.isOnline && <CheckCircle className="w-3 h-3 text-white" />}
-                                                                        </div>
-                                                                        <span className="text-xs font-black uppercase">💻 Online</span>
-                                                                    </label>
-                                                                    <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${entry.isKidsFriendly ? 'bg-orange-50 border-orange-300 text-orange-700' : 'bg-white border-slate-200 text-slate-500 hover:border-orange-200'}`}>
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            checked={entry.isKidsFriendly || false}
-                                                                            onChange={(e) => updateEntry(idx, 'isKidsFriendly', e.target.checked)}
-                                                                            className="hidden"
-                                                                        />
-                                                                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${entry.isKidsFriendly ? 'border-orange-500 bg-orange-500' : 'border-slate-300 bg-white'}`}>
-                                                                            {entry.isKidsFriendly && <CheckCircle className="w-3 h-3 text-white" />}
-                                                                        </div>
-                                                                        <span className="text-xs font-black uppercase">🎈 Kajian Anak</span>
-                                                                    </label>
+                                                                <div>
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Label Kajian</label>
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${entry.khususAkhwat ? 'bg-pink-50 border-pink-300 text-pink-700' : 'bg-white border-slate-200 text-slate-500 hover:border-pink-200'}`}>
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={entry.khususAkhwat || false}
+                                                                                onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
+                                                                                className="hidden"
+                                                                            />
+                                                                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${entry.khususAkhwat ? 'border-pink-500 bg-pink-500' : 'border-slate-300 bg-white'}`}>
+                                                                                {entry.khususAkhwat && <CheckCircle className="w-3 h-3 text-white" />}
+                                                                            </div>
+                                                                            <span className="text-xs font-black uppercase">🌸 Khusus Akhwat</span>
+                                                                        </label>
+                                                                        <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${entry.isOnline ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-slate-200 text-slate-500 hover:border-blue-200'}`}>
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={entry.isOnline || false}
+                                                                                onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
+                                                                                className="hidden"
+                                                                            />
+                                                                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${entry.isOnline ? 'border-blue-500 bg-blue-500' : 'border-slate-300 bg-white'}`}>
+                                                                                {entry.isOnline && <CheckCircle className="w-3 h-3 text-white" />}
+                                                                            </div>
+                                                                            <span className="text-xs font-black uppercase">💻 Online</span>
+                                                                        </label>
+                                                                        <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${entry.isKidsFriendly ? 'bg-orange-50 border-orange-300 text-orange-700' : 'bg-white border-slate-200 text-slate-500 hover:border-orange-200'}`}>
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={entry.isKidsFriendly || false}
+                                                                                onChange={(e) => updateEntry(idx, 'isKidsFriendly', e.target.checked)}
+                                                                                className="hidden"
+                                                                            />
+                                                                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${entry.isKidsFriendly ? 'border-orange-500 bg-orange-500' : 'border-slate-300 bg-white'}`}>
+                                                                                {entry.isKidsFriendly && <CheckCircle className="w-3 h-3 text-white" />}
+                                                                            </div>
+                                                                            <span className="text-xs font-black uppercase">🎈 Kajian Anak</span>
+                                                                        </label>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -2149,32 +2152,48 @@ function BatchInputPageContent() {
                                                         />
                                                     </div>
 
-                                                    <div className="col-span-2 grid grid-cols-2 gap-3">
-                                                        <label className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.khususAkhwat ? 'bg-pink-50 border-pink-200 text-pink-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={entry.khususAkhwat || false}
-                                                                onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
-                                                                className="hidden"
-                                                            />
-                                                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.khususAkhwat ? 'border-pink-500 bg-pink-500 text-white' : 'border-slate-300'}`}>
-                                                                {entry.khususAkhwat && <CheckCircle className="w-3 h-3" />}
-                                                            </div>
-                                                            <span className="text-xs font-bold uppercase tracking-wide">Akhwat</span>
-                                                        </label>
+                                                    <div className="col-span-2">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Label Kajian</label>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <label className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.khususAkhwat ? 'bg-pink-50 border-pink-200 text-pink-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={entry.khususAkhwat || false}
+                                                                    onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
+                                                                    className="hidden"
+                                                                />
+                                                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.khususAkhwat ? 'border-pink-500 bg-pink-500 text-white' : 'border-slate-300'}`}>
+                                                                    {entry.khususAkhwat && <CheckCircle className="w-3 h-3" />}
+                                                                </div>
+                                                                <span className="text-xs font-bold uppercase tracking-wide text-center">Akhwat</span>
+                                                            </label>
 
-                                                        <label className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.isOnline ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={entry.isOnline || false}
-                                                                onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
-                                                                className="hidden"
-                                                            />
-                                                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.isOnline ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-300'}`}>
-                                                                {entry.isOnline && <CheckCircle className="w-3 h-3" />}
-                                                            </div>
-                                                            <span className="text-xs font-bold uppercase tracking-wide">Online</span>
-                                                        </label>
+                                                            <label className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.isOnline ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={entry.isOnline || false}
+                                                                    onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
+                                                                    className="hidden"
+                                                                />
+                                                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.isOnline ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-300'}`}>
+                                                                    {entry.isOnline && <CheckCircle className="w-3 h-3" />}
+                                                                </div>
+                                                                <span className="text-xs font-bold uppercase tracking-wide text-center">Online</span>
+                                                            </label>
+
+                                                            <label className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.isKidsFriendly ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={entry.isKidsFriendly || false}
+                                                                    onChange={(e) => updateEntry(idx, 'isKidsFriendly', e.target.checked)}
+                                                                    className="hidden"
+                                                                />
+                                                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.isKidsFriendly ? 'border-orange-500 bg-orange-500 text-white' : 'border-slate-300'}`}>
+                                                                    {entry.isKidsFriendly && <CheckCircle className="w-3 h-3" />}
+                                                                </div>
+                                                                <span className="text-xs font-bold uppercase tracking-wide text-center">Anak</span>
+                                                            </label>
+                                                        </div>
                                                     </div>
                                                 </div>
 
