@@ -1153,7 +1153,9 @@ function BatchInputPageContent() {
                                 <CheckCircle className="w-6 h-6" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-xl text-slate-900">Hasil Ekstraksi</h3>
+                                <h3 className="font-bold text-xl text-slate-900">
+                                    {(isContributor || isManualMode) ? 'Input Manual Jadwal Kajian' : 'Hasil Ekstraksi'}
+                                </h3>
                                 <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{entries.length} entri ditemukan</p>
                             </div>
                         </div>

@@ -61,7 +61,7 @@ export default function RecurringPatternSelector({
                                         onChange(p.value, dayOfWeek, weekOfMonth);
                                         setShowPatternDropdown(false);
                                     }}
-                                    className="w-full text-left px-4 py-3 text-sm hover:bg-blue-50 hover:text-blue-600 transition-colors border-b border-slate-50 last:border-none"
+                                    className="w-full text-left px-4 py-3 text-sm text-slate-800 hover:bg-blue-50 hover:text-blue-600 transition-colors border-b border-slate-50 last:border-none"
                                 >
                                     {p.label}
                                 </button>
@@ -96,7 +96,7 @@ export default function RecurringPatternSelector({
                                         onChange(pattern, idx, weekOfMonth);
                                         setShowDayDropdown(false);
                                     }}
-                                    className="w-full text-left px-4 py-3 text-sm hover:bg-blue-50 hover:text-blue-600 transition-colors border-b border-slate-50 last:border-none"
+                                    className="w-full text-left px-4 py-3 text-sm text-slate-800 hover:bg-blue-50 hover:text-blue-600 transition-colors border-b border-slate-50 last:border-none"
                                 >
                                     {day}
                                 </button>
@@ -132,7 +132,7 @@ export default function RecurringPatternSelector({
                                             onChange(pattern, dayOfWeek, week);
                                             setShowWeekDropdown(false);
                                         }}
-                                        className="w-full text-left px-4 py-3 text-sm hover:bg-blue-50 hover:text-blue-600 transition-colors border-b border-slate-50 last:border-none"
+                                        className="w-full text-left px-4 py-3 text-sm text-slate-800 hover:bg-blue-50 hover:text-blue-600 transition-colors border-b border-slate-50 last:border-none"
                                     >
                                         Pekan {week}
                                     </button>
