@@ -310,7 +310,7 @@ export default function RecurringKajianPage() {
                                         dayOfWeek={formData.day_of_week}
                                         weekOfMonth={formData.week_of_month}
                                         onChange={(pattern, dayOfWeek, weekOfMonth) => {
-                                            setFormData({ ...formData, pattern, day_of_week: dayOfWeek, week_of_month: weekOfMonth });
+                                            setFormData({ ...formData, pattern, day_of_week: dayOfWeek, week_of_month: weekOfMonth || 1 });
                                         }}
                                     />
                                     <div className="mt-4 p-3 bg-white rounded-lg">
