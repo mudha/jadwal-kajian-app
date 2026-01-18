@@ -12,22 +12,29 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const includeCanceled = searchParams.get('include_canceled') === 'true';
 
-        // Auto-generate recurring instances if enabled
+        // Auto-generate recurring instances if enabled (NON-BLOCKING)
         const autoGenerate = searchParams.get('auto_generate') !== 'false'; // Default: true
 
         if (autoGenerate) {
-            // Silently generate recurring instances for upcoming months
-            try {
-                await fetch(`${request.url.split('/api')[0]}/api/recurring-kajian/generate`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ months: 3 })
-                }).catch(() => {
-                    // Silent fail - generation is not critical
-                });
-            } catch {
-                // Ignore generation errors
-            }
+            // Fire and forget - don't wait for generation to complete
+            // This runs asynchronously and won't block the response
+            (async () => {
+                try {
+                    const protocol = request.headers.get('x-forwarded-proto') || 'http';
+                    const host = request.headers.get('host');
+                    if (host) {
+                        const baseUrl = `${protocol}://${host}`;
+                        await fetch(`${baseUrl}/api/recurring-kajian/generate`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ months: 3 })
+                        });
+                    }
+                } catch (err) {
+                    // Silent fail - generation errors should not affect main request
+                    console.error('[Kajian API] Auto-generation failed:', err);
+                }
+            })();
         }
 
         // Build query with optional filter for canceled
@@ -35,7 +42,7 @@ export async function GET(request: Request) {
         const args: any[] = [];
 
         if (!includeCanceled) {
-            sql += ' WHERE is_canceled = 0';
+            sql += ' WHERE is_canceled = 0 OR is_canceled IS NULL';
         }
 
         sql += ' ORDER BY id DESC';
