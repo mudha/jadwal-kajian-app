@@ -768,6 +768,11 @@ function ManageKajianList() {
                                                 <td className="px-4 py-4 align-top whitespace-normal">
                                                     <div className="flex flex-wrap items-center gap-2 mb-1">
                                                         <div className="font-bold text-slate-900 break-words w-full" title={item.masjid}>{item.masjid}</div>
+                                                        {item.recurring_kajian_id && (
+                                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded-md text-[9px] font-black uppercase tracking-tighter border border-purple-100 shrink-0">
+                                                                📅 Rutin
+                                                            </span>
+                                                        )}
                                                         {item.lat && item.lng && (
                                                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-teal-50 text-teal-600 rounded-md text-[9px] font-black uppercase tracking-tighter border border-teal-100 shrink-0">
                                                                 <MapPin className="w-2 h-2 fill-teal-600" /> GPS
@@ -917,13 +922,18 @@ function ManageKajianList() {
 
                                     {/* Footer */}
                                     <div className="flex items-center justify-between pt-2">
-                                        {item.lat && item.lng ? (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-teal-50 text-teal-700 rounded-lg text-[10px] font-bold border border-teal-100">
-                                                <MapPin className="w-3 h-3" /> GPS Aktif
-                                            </span>
-                                        ) : (
-                                            <span className="text-[10px] text-slate-400 italic">No GPS</span>
-                                        )}
+                                        <div className="flex items-center gap-2">
+                                            {item.recurring_kajian_id && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 rounded-lg text-[10px] font-bold border border-purple-100">
+                                                    📅 Rutin
+                                                </span>
+                                            )}
+                                            {item.lat && item.lng && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-teal-50 text-teal-700 rounded-lg text-[10px] font-bold border border-teal-100">
+                                                    <MapPin className="w-3 h-3" /> GPS
+                                                </span>
+                                            )}
+                                        </div>
 
                                         <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
                                             {item.attendanceCount || 0} Peserta
