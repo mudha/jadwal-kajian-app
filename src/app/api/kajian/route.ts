@@ -41,8 +41,18 @@ export async function GET(request: Request) {
         let sql = 'SELECT * FROM kajian';
         const args: any[] = [];
 
+        // Build WHERE clauses
+        const whereClauses: string[] = [];
+
+        // Exclude recurring instances from public view
+        whereClauses.push('(recurring_kajian_id IS NULL)');
+
         if (!includeCanceled) {
-            sql += ' WHERE is_canceled = 0 OR is_canceled IS NULL';
+            whereClauses.push('(is_canceled = 0 OR is_canceled IS NULL)');
+        }
+
+        if (whereClauses.length > 0) {
+            sql += ' WHERE ' + whereClauses.join(' AND ');
         }
 
         sql += ' ORDER BY id DESC';
