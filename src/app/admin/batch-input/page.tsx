@@ -17,7 +17,8 @@ import './batch-input.css';
 import ImageUpload from '@/components/ImageUpload';
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
 import ProgressModal from '@/components/admin/ProgressModal';
-import RecurringPatternSelector, { RecurringPattern } from '@/components/admin/RecurringPatternSelector';
+import RecurringPatternSelector from '@/components/admin/RecurringPatternSelector';
+import { RecurringPattern } from '@/lib/recurring-generator';
 
 function BatchInputPageContent() {
     const router = useRouter();
