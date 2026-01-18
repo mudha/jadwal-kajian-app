@@ -222,6 +222,7 @@ function ManageKajianList() {
 
                 setEditingKajian({
                     ...item,
+                    address: item.address || '', // Ensure address is never undefined
                     ...waktuSplit,
                     ...pemateriSplit
                 });
