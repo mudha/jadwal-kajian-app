@@ -7,9 +7,40 @@ import { formatMasjidName } from '@/lib/date-utils';
 // Enable ISR with 60 second revalidation for better performance under high traffic
 export const revalidate = 60; // Cache for 60 seconds
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        const result = await db.execute('SELECT * FROM kajian ORDER BY id DESC');
+        const { searchParams } = new URL(request.url);
+        const includeCanceled = searchParams.get('include_canceled') === 'true';
+
+        // Auto-generate recurring instances if enabled
+        const autoGenerate = searchParams.get('auto_generate') !== 'false'; // Default: true
+
+        if (autoGenerate) {
+            // Silently generate recurring instances for upcoming months
+            try {
+                await fetch(`${request.url.split('/api')[0]}/api/recurring-kajian/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ months: 3 })
+                }).catch(() => {
+                    // Silent fail - generation is not critical
+                });
+            } catch {
+                // Ignore generation errors
+            }
+        }
+
+        // Build query with optional filter for canceled
+        let sql = 'SELECT * FROM kajian';
+        const args: any[] = [];
+
+        if (!includeCanceled) {
+            sql += ' WHERE is_canceled = 0';
+        }
+
+        sql += ' ORDER BY id DESC';
+
+        const result = await db.execute({ sql, args });
 
         // Convert integer booleans from SQLite back to actual booleans for JSON
         const rows = result.rows.map(row => ({
@@ -17,7 +48,9 @@ export async function GET() {
             date: (row.date as string)?.replace(/Minggu/gi, 'Ahad'),
             khususAkhwat: !!row.khususAkhwat,
             isOnline: !!row.isOnline,
-            isKidsFriendly: !!row.isKidsFriendly
+            isKidsFriendly: !!row.isKidsFriendly,
+            is_recurring_instance: !!row.is_recurring_instance,
+            is_canceled: !!row.is_canceled
         }));
 
         return NextResponse.json(rows, {
