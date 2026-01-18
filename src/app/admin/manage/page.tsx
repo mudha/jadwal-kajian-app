@@ -38,6 +38,7 @@ interface Kajian {
     lat?: number;
     lng?: number;
     catatan?: string;
+    recurring_kajian_id?: number; // ID of the recurring kajian template if auto-generated
 }
 
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
@@ -49,6 +50,9 @@ function ManageKajianList() {
     const searchParams = useSearchParams();
 
     const [isLoading, setIsLoading] = useState(true);
+
+    // Filter State for Recurring Kajian
+    const [hideRecurring, setHideRecurring] = useState(true);
 
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
@@ -515,12 +519,18 @@ function ManageKajianList() {
         }
     };
 
-    const filteredList = kajianList.filter(k =>
-        k.masjid.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        k.pemateri.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        k.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        k.tema.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredList = kajianList.filter(k => {
+        // Search filter
+        const matchesSearch = k.masjid.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            k.pemateri.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            k.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            k.tema.toLowerCase().includes(searchTerm.toLowerCase());
+
+        // Recurring filter
+        const matchesRecurringFilter = !hideRecurring || !k.recurring_kajian_id;
+
+        return matchesSearch && matchesRecurringFilter;
+    });
 
     // Pagination Logic
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -650,6 +660,26 @@ function ManageKajianList() {
                         className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none font-medium"
                     />
                 </div>
+                <button
+                    onClick={() => setHideRecurring(!hideRecurring)}
+                    className={`flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-bold text-sm transition-all whitespace-nowrap shadow-sm ${hideRecurring
+                            ? 'bg-white border-2 border-slate-200 text-slate-700 hover:border-purple-300 hover:text-purple-700'
+                            : 'bg-purple-600 text-white hover:bg-purple-700'
+                        }`}
+                    title={hideRecurring ? 'Klik untuk menampilkan kajian rutin' : 'Klik untuk menyembunyikan kajian rutin'}
+                >
+                    {hideRecurring ? (
+                        <>
+                            <Eye className="w-5 h-5" />
+                            <span>Tampilkan Rutin</span>
+                        </>
+                    ) : (
+                        <>
+                            <Eye className="w-5 h-5" />
+                            <span>Sembunyikan Rutin</span>
+                        </>
+                    )}
+                </button>
             </div>
 
             {/* Table / List */}
