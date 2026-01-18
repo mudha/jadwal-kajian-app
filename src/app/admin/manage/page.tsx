@@ -663,8 +663,8 @@ function ManageKajianList() {
                 <button
                     onClick={() => setHideRecurring(!hideRecurring)}
                     className={`flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-bold text-sm transition-all whitespace-nowrap shadow-sm ${hideRecurring
-                            ? 'bg-white border-2 border-slate-200 text-slate-700 hover:border-purple-300 hover:text-purple-700'
-                            : 'bg-purple-600 text-white hover:bg-purple-700'
+                        ? 'bg-white border-2 border-slate-200 text-slate-700 hover:border-purple-300 hover:text-purple-700'
+                        : 'bg-purple-600 text-white hover:bg-purple-700'
                         }`}
                     title={hideRecurring ? 'Klik untuk menampilkan kajian rutin' : 'Klik untuk menyembunyikan kajian rutin'}
                 >
@@ -1236,7 +1236,7 @@ function ManageKajianList() {
                                     <input
                                         type="text"
                                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-slate-900 placeholder:text-slate-400"
-                                        value={editingKajian.address}
+                                        value={editingKajian.address || ''}
                                         onChange={e => setEditingKajian({ ...editingKajian, address: e.target.value })}
                                     />
                                 </div>
