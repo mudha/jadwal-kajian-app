@@ -151,7 +151,7 @@ export default function RecurringKajianPage() {
             tema: kajian.tema || '',
             pattern: kajian.pattern,
             day_of_week: kajian.day_of_week,
-            week_of_month: kajian.week_of_month,
+            week_of_month: kajian.week_of_month || 1,
             waktu_mulai: kajian.waktu_mulai,
             waktu_selesai: kajian.waktu_selesai || 'Selesai',
             cp: kajian.cp || '',
