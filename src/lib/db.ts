@@ -96,6 +96,12 @@ const initDb = async () => {
   try { await db.execute("ALTER TABLE kajian ADD COLUMN cp2 TEXT"); } catch (e) { }
   try { await db.execute("ALTER TABLE kajian ADD COLUMN cp3 TEXT"); } catch (e) { }
 
+  // Recurring Kajian fields
+  try { await db.execute("ALTER TABLE kajian ADD COLUMN recurring_kajian_id INTEGER"); } catch (e) { }
+  try { await db.execute("ALTER TABLE kajian ADD COLUMN is_recurring_instance INTEGER DEFAULT 0"); } catch (e) { }
+  try { await db.execute("ALTER TABLE kajian ADD COLUMN is_canceled INTEGER DEFAULT 0"); } catch (e) { }
+  try { await db.execute("ALTER TABLE kajian ADD COLUMN cancellation_reason TEXT"); } catch (e) { }
+
   // Migrations for sekolah table
   try { await db.execute("ALTER TABLE sekolah ADD COLUMN slug TEXT"); } catch (e) { }
   try { await db.execute("ALTER TABLE sekolah ADD COLUMN provinsi TEXT"); } catch (e) { }

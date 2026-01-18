@@ -11,14 +11,14 @@ interface RecurringPatternSelectorProps {
     onChange: (pattern: RecurringPattern, dayOfWeek: number, weekOfMonth?: number) => void;
 }
 
-const DAY_NAMES = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+const DAY_NAMES = ['Ahad', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
 const PATTERNS: { value: RecurringPattern; label: string }[] = [
-    { value: 'weekly', label: 'Mingguan (Setiap minggu)' },
-    { value: 'biweekly', label: 'Dua Mingguan (Setiap 2 minggu)' },
+    { value: 'weekly', label: 'Pekanan (Setiap pekan)' },
+    { value: 'biweekly', label: 'Dua Pekanan (Setiap 2 pekan)' },
     { value: 'monthly', label: 'Bulanan (Bulan tertentu)' },
-    { value: 'monthly_odd', label: '2x Sebulan (Minggu 1 & 3)' },
-    { value: 'monthly_even', label: '2x Sebulan (Minggu 2 & 4)' },
+    { value: 'monthly_odd', label: '2x Sebulan (Pekan 1 & 3)' },
+    { value: 'monthly_even', label: '2x Sebulan (Pekan 2 & 4)' },
 ];
 
 export default function RecurringPatternSelector({
@@ -110,7 +110,7 @@ export default function RecurringPatternSelector({
             {needsWeekOfMonth && (
                 <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">
-                        Minggu Ke-
+                        Pekan Ke-
                     </label>
                     <div className="relative">
                         <button
@@ -118,7 +118,7 @@ export default function RecurringPatternSelector({
                             onClick={() => setShowWeekDropdown(!showWeekDropdown)}
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all flex items-center justify-between"
                         >
-                            <span>Minggu {weekOfMonth || 1}</span>
+                            <span>Pekan {weekOfMonth || 1}</span>
                             <ChevronDown className="w-4 h-4" />
                         </button>
 
@@ -134,7 +134,7 @@ export default function RecurringPatternSelector({
                                         }}
                                         className="w-full text-left px-4 py-3 text-sm hover:bg-blue-50 hover:text-blue-600 transition-colors border-b border-slate-50 last:border-none"
                                     >
-                                        Minggu {week}
+                                        Pekan {week}
                                     </button>
                                 ))}
                             </div>

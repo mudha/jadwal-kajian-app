@@ -622,6 +622,13 @@ function ManageKajianList() {
                         )}
                     </button>
                     <Link
+                        href="/admin/recurring-kajian"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold text-sm"
+                    >
+                        <Calendar className="w-4 h-4" />
+                        Jadwal Rutin
+                    </Link>
+                    <Link
                         href="/admin/batch-input"
                         className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-sm"
                     >

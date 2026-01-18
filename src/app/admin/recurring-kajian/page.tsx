@@ -117,7 +117,11 @@ export default function RecurringKajianPage() {
                 body: JSON.stringify(formData)
             });
 
-            const data = await res.json();
+            const contentType = res.headers.get('content-type');
+            let data;
+            if (contentType && contentType.includes('application/json')) {
+                data = await res.json();
+            }
 
             if (res.ok) {
                 setMessage(`✅ ${editingId ? 'Updated' : 'Created'} successfully!`);
@@ -125,10 +129,11 @@ export default function RecurringKajianPage() {
                 fetchRecurringKajian();
                 setIsFormOpen(false);
             } else {
-                setMessage(`❌ Error: ${data.error}`);
+                setMessage(`❌ Error: ${data?.error || res.statusText || 'Unknown error'}`);
             }
-        } catch (error) {
-            setMessage('❌ Failed to save');
+        } catch (error: any) {
+            console.error('Save error:', error);
+            setMessage(`❌ Failed to save: ${error.message || 'System error'}`);
         } finally {
             setIsSaving(false);
         }
@@ -263,9 +268,9 @@ export default function RecurringKajianPage() {
                     </div>
                 </div>
 
-                {/* Message */}
-                {message && (
-                    <div className="bg-white border border-slate-200 rounded-xl p-4 text-sm font-medium">
+                {/* Message (Global) */}
+                {message && !isFormOpen && (
+                    <div className="bg-white border border-slate-200 rounded-xl p-4 text-sm font-medium shadow-sm animate-in fade-in slide-in-from-top-4">
                         {message}
                     </div>
                 )}
@@ -274,7 +279,7 @@ export default function RecurringKajianPage() {
                 {isFormOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                         <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
-                            <div className="sticky top-0 bg-white border-b border-slate-200 p-6 flex items-center justify-between">
+                            <div className="sticky top-0 bg-white border-b border-slate-200 p-6 flex items-center justify-between z-10">
                                 <h2 className="text-2xl font-black text-slate-900">
                                     {editingId ? 'Edit' : 'Tambah'} Kajian Rutin
                                 </h2>
@@ -285,6 +290,16 @@ export default function RecurringKajianPage() {
                                     ✕
                                 </button>
                             </div>
+
+                            {/* Inner Modal Message */}
+                            {message && isFormOpen && (
+                                <div className={`mx-6 mt-4 p-4 rounded-xl text-sm font-bold border ${message.includes('✅')
+                                    ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                                    : 'bg-red-50 border-red-100 text-red-700'
+                                    }`}>
+                                    {message}
+                                </div>
+                            )}
 
                             <form onSubmit={handleSubmit} className="p-6 space-y-6">
                                 {/* Recurring Pattern */}

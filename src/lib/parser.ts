@@ -20,6 +20,13 @@ export interface KajianEntry {
     date: string; // From the header
     khususAkhwat?: boolean; // True if kajian is exclusively for women
     linkInfo?: string; // Link pendaftaran, streaming, atau WAG
+
+    // Recurring Fields
+    isRecurring?: boolean;
+    recurringPattern?: 'weekly' | 'biweekly' | 'monthly' | 'monthly_odd' | 'monthly_even';
+    recurringDay?: number;
+    recurringWeek?: number;
+
     isOnline?: boolean; // True if kajian is online (Zoom, YouTube, etc.)
     isKidsFriendly?: boolean; // True if kajian is for kids
     attendanceCount?: number; // Count of people planning to attend

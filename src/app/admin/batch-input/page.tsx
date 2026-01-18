@@ -17,6 +17,7 @@ import './batch-input.css';
 import ImageUpload from '@/components/ImageUpload';
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
 import ProgressModal from '@/components/admin/ProgressModal';
+import RecurringPatternSelector, { RecurringPattern } from '@/components/admin/RecurringPatternSelector';
 
 function BatchInputPageContent() {
     const router = useRouter();
@@ -790,44 +791,98 @@ function BatchInputPageContent() {
         try {
             setIsSaving(true);
 
-            // Try to save directly
-            const response = await fetch('/api/kajian', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(entriesToSave),
-            });
+            const tematikEntries = entriesToSave.filter(e => !e.isRecurring);
+            const recurringEntries = entriesToSave.filter(e => e.isRecurring);
 
-            const data = await response.json();
+            const successfulEntries = new Set<KajianEntry>();
+            let recurringErrors = 0;
 
-            // Handle duplicate detection (409 status)
-            if (response.status === 409 && data.duplicates) {
-                setDuplicateEntries(data.duplicates);
-                setPendingSaveEntries(entriesToSave);
-                setShowDuplicateModal(true);
-                setIsSaving(false);
-                return;
+            // 1. Process Recurring Entries (One by One)
+            if (recurringEntries.length > 0) {
+                for (const entry of recurringEntries) {
+                    try {
+                        const res = await fetch('/api/recurring-kajian', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(entry)
+                        });
+
+                        if (res.ok) {
+                            successfulEntries.add(entry);
+                        } else {
+                            recurringErrors++;
+                            console.error('Failed recurring save:', await res.json());
+                        }
+                    } catch (err) {
+                        recurringErrors++;
+                        console.error('Error saving recurring:', err);
+                    }
+                }
             }
 
-            if (!response.ok) {
-                setMessage(`Gagal menyimpan: ${data.error || 'Server error'}`);
-                setIsSaving(false);
-                return;
+            // 2. Process Tematik Entries (Bulk)
+            if (tematikEntries.length > 0) {
+                const response = await fetch('/api/kajian', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(tematikEntries),
+                });
+
+                const data = await response.json();
+
+                // Handle duplicate detection (409 status)
+                if (response.status === 409 && data.duplicates) {
+                    // Update list to remove ALREADY saved recurring entries
+                    if (successfulEntries.size > 0) {
+                        const savedIndices = new Set([...successfulEntries].map(e => entries.indexOf(e)));
+                        const remainingEntries = entries.filter((_, i) => !savedIndices.has(i));
+                        setEntries(remainingEntries);
+                        setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
+
+                        setMessage(`✅ ${successfulEntries.size} kajian rutin tersimpan. ⚠️ Ditemukan duplikat pada kajian tematik.`);
+                    } else {
+                        setDuplicateEntries(data.duplicates);
+                    }
+
+                    setDuplicateEntries(data.duplicates);
+                    setPendingSaveEntries(tematikEntries);
+                    setShowDuplicateModal(true);
+                    setIsSaving(false);
+                    return;
+                }
+
+                if (!response.ok) {
+                    setMessage(`Gagal menyimpan kajian tematik: ${data.error || 'Server error'}`);
+                } else {
+                    tematikEntries.forEach(e => successfulEntries.add(e));
+                }
             }
 
-            setMessage(`Alhamdulillah, ${entriesToSave.length} jadwal berhasil disimpan!`);
-            fetchStats();
+            const savedCount = successfulEntries.size;
 
-            // Remove saved entries from list
-            const savedIndices = new Set(entriesToSave.map(e => entries.indexOf(e)));
-            const remainingEntries = entries.filter((_, i) => !savedIndices.has(i));
-            setEntries(remainingEntries);
-            setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
+            if (savedCount > 0) {
+                setMessage(`Alhamdulillah, ${savedCount} jadwal berhasil disimpan!${recurringErrors > 0 ? ` (${recurringErrors} gagal)` : ''}`);
+                fetchStats();
 
-            if (remainingEntries.length === 0) {
-                setInputText('');
+                // Trigger generation for newly created recurring entries
+                if (recurringEntries.length > 0) {
+                    fetch('/api/recurring-kajian/generate', { method: 'POST' })
+                        .catch(err => console.error('Auto-generation failed:', err));
+                }
+
+                // Remove saved entries from list
+                const savedIndices = new Set([...successfulEntries].map(e => entries.indexOf(e)));
+                const remainingEntries = entries.filter((_, i) => !savedIndices.has(i));
+                setEntries(remainingEntries);
+                setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
+
+                if (remainingEntries.length === 0) {
+                    setInputText('');
+                }
+            } else if (recurringErrors > 0) {
+                setMessage('Gagal menyimpan kajian rutin. Cek koneksi atau data.');
             }
+
         } catch (e) {
             setMessage('Kesalahan koneksi atau sistem saat menyimpan.');
             console.error(e);
@@ -1328,24 +1383,64 @@ function BatchInputPageContent() {
 
                                                         {/* SECTION 3: Schedule */}
                                                         <div className="bg-gradient-to-br from-purple-50/50 to-transparent p-5 rounded-2xl border border-purple-100/50">
-                                                            <h3 className="text-xs font-black text-purple-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                                                <Calendar className="w-4 h-4" /> Jadwal
-                                                            </h3>
+                                                            <div className="flex items-center justify-between mb-4">
+                                                                <h3 className="text-xs font-black text-purple-900 uppercase tracking-wider flex items-center gap-2">
+                                                                    <Calendar className="w-4 h-4" /> Jadwal
+                                                                </h3>
+
+                                                                {/* Toggle Tematik/Rutin */}
+                                                                <div className="bg-white border border-purple-200 rounded-lg p-1 flex">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => updateEntry(idx, 'isRecurring', false)}
+                                                                        className={`px-3 py-1.5 text-[10px] font-black uppercase rounded-md transition-all ${!entry.isRecurring ? 'bg-purple-500 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
+                                                                    >
+                                                                        Tematik
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => updateEntry(idx, 'isRecurring', true)}
+                                                                        className={`px-3 py-1.5 text-[10px] font-black uppercase rounded-md transition-all ${entry.isRecurring ? 'bg-purple-500 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
+                                                                    >
+                                                                        Rutin
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+
                                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                                <div>
-                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Tanggal</label>
-                                                                    <input
-                                                                        type="date"
-                                                                        value={(() => {
-                                                                            const d = parseIndoDate(entry.date);
-                                                                            return d ? formatYYYYMMDD(d) : '';
-                                                                        })()}
-                                                                        onChange={(e) => {
-                                                                            const val = e.target.valueAsDate;
-                                                                            if (val) updateEntry(idx, 'date', formatIndoDate(val));
-                                                                        }}
-                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
-                                                                    />
+                                                                <div className={entry.isRecurring ? 'md:col-span-3' : ''}>
+                                                                    {entry.isRecurring ? (
+                                                                        <div className="bg-white rounded-xl border-2 border-purple-100 p-4">
+                                                                            <RecurringPatternSelector
+                                                                                value={{
+                                                                                    pattern: entry.recurringPattern || 'weekly',
+                                                                                    day_of_week: entry.recurringDay || 0,
+                                                                                    week_of_month: entry.recurringWeek
+                                                                                }}
+                                                                                onChange={(val) => {
+                                                                                    updateEntry(idx, 'recurringPattern', val.pattern);
+                                                                                    updateEntry(idx, 'recurringDay', val.day_of_week);
+                                                                                    updateEntry(idx, 'recurringWeek', val.week_of_month);
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div>
+                                                                            <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Tanggal</label>
+                                                                            <input
+                                                                                type="date"
+                                                                                value={(() => {
+                                                                                    const d = parseIndoDate(entry.date);
+                                                                                    return d ? formatYYYYMMDD(d) : '';
+                                                                                })()}
+                                                                                onChange={(e) => {
+                                                                                    const val = e.target.valueAsDate;
+                                                                                    if (val) updateEntry(idx, 'date', formatIndoDate(val));
+                                                                                }}
+                                                                                className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                            />
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                                 <div>
                                                                     <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Waktu Mulai</label>
@@ -1717,22 +1812,58 @@ function BatchInputPageContent() {
                                                 <div className="space-y-4">
                                                     <div className="grid grid-cols-1 gap-4">
                                                         <div>
-                                                            <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">
-                                                                <Calendar className="w-3 h-3" /> Tanggal Kajian
-                                                            </label>
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                                    <Calendar className="w-3 h-3" /> Tanggal / Pola
+                                                                </label>
+                                                                <div className="bg-slate-50 border border-slate-200 rounded-lg p-0.5 flex">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => updateEntry(idx, 'isRecurring', false)}
+                                                                        className={`px-2 py-1 text-[9px] font-black uppercase rounded transition-all ${!entry.isRecurring ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-400'}`}
+                                                                    >
+                                                                        Tematik
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => updateEntry(idx, 'isRecurring', true)}
+                                                                        className={`px-2 py-1 text-[9px] font-black uppercase rounded transition-all ${entry.isRecurring ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-400'}`}
+                                                                    >
+                                                                        Rutin
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+
                                                             <div className="relative">
-                                                                <input
-                                                                    type="date"
-                                                                    value={(() => {
-                                                                        const d = parseIndoDate(entry.date);
-                                                                        return d ? formatYYYYMMDD(d) : '';
-                                                                    })()}
-                                                                    onChange={(e) => {
-                                                                        const val = e.target.valueAsDate;
-                                                                        if (val) updateEntry(idx, 'date', formatIndoDate(val));
-                                                                    }}
-                                                                    className="w-full bg-blue-50/50 border border-blue-100 rounded-xl px-4 py-3 text-sm font-bold text-blue-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                                                />
+                                                                {entry.isRecurring ? (
+                                                                    <div className="bg-slate-50 rounded-xl border border-slate-200 p-3">
+                                                                        <RecurringPatternSelector
+                                                                            value={{
+                                                                                pattern: entry.recurringPattern || 'weekly',
+                                                                                day_of_week: entry.recurringDay || 0,
+                                                                                week_of_month: entry.recurringWeek
+                                                                            }}
+                                                                            onChange={(val) => {
+                                                                                updateEntry(idx, 'recurringPattern', val.pattern);
+                                                                                updateEntry(idx, 'recurringDay', val.day_of_week);
+                                                                                updateEntry(idx, 'recurringWeek', val.week_of_month);
+                                                                            }}
+                                                                        />
+                                                                    </div>
+                                                                ) : (
+                                                                    <input
+                                                                        type="date"
+                                                                        value={(() => {
+                                                                            const d = parseIndoDate(entry.date);
+                                                                            return d ? formatYYYYMMDD(d) : '';
+                                                                        })()}
+                                                                        onChange={(e) => {
+                                                                            const val = e.target.valueAsDate;
+                                                                            if (val) updateEntry(idx, 'date', formatIndoDate(val));
+                                                                        }}
+                                                                        className="w-full bg-blue-50/50 border border-blue-100 rounded-xl px-4 py-3 text-sm font-bold text-blue-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                                    />
+                                                                )}
                                                             </div>
                                                         </div>
                                                         <div className="grid grid-cols-2 gap-3">

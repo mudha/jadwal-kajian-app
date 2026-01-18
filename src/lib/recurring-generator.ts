@@ -211,7 +211,7 @@ export function generateRecurringDates(
  * Helper to get day name from day number
  */
 export function getDayName(dayOfWeek: number): string {
-    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const days = ['Ahad', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     return days[dayOfWeek] || '';
 }
 
@@ -225,13 +225,13 @@ export function getPatternDescription(config: RecurringConfig): string {
         case 'weekly':
             return `Setiap ${dayName}`;
         case 'biweekly':
-            return `Setiap 2 minggu (${dayName})`;
+            return `Setiap 2 pekan (${dayName})`;
         case 'monthly':
-            return `Setiap bulan (Minggu ke-${config.weekOfMonth}, ${dayName})`;
+            return `Setiap bulan (Pekan ke-${config.weekOfMonth}, ${dayName})`;
         case 'monthly_odd':
-            return `2x sebulan (Minggu 1 & 3, ${dayName})`;
+            return `2x sebulan (Pekan 1 & 3, ${dayName})`;
         case 'monthly_even':
-            return `2x sebulan (Minggu 2 & 4, ${dayName})`;
+            return `2x sebulan (Pekan 2 & 4, ${dayName})`;
         default:
             return 'Tidak diketahui';
     }

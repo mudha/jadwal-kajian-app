@@ -106,8 +106,29 @@ export default async function AdminDashboardPage() {
                     </Link>
                 )}
 
-                {/* 3. Maps (Visual) */}
-                <Link href="/admin/map" className="group relative overflow-hidden bg-white text-slate-900 border border-slate-200 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:border-emerald-200 hover:-translate-y-1 transition-all duration-300 lg:col-span-1 md:col-span-2">
+                {/* 3. Recurring Kajian (New Feature) */}
+                <Link href="/admin/recurring-kajian" className="group relative overflow-hidden bg-white text-slate-900 border border-slate-200 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:border-purple-200 hover:-translate-y-1 transition-all duration-300">
+                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <Calendar className="w-32 h-32 -mr-8 -mt-8 rotate-12 text-purple-600" />
+                    </div>
+                    <div className="relative z-10 flex flex-col h-full justify-between">
+                        <div>
+                            <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <Calendar className="w-6 h-6" />
+                            </div>
+                            <h2 className="text-xl font-bold mb-2">Jadwal Kajian Rutin</h2>
+                            <p className="text-slate-500 text-sm leading-relaxed">
+                                Kelola template kajian rutin (Pekanan/Bulanan) yang otomatis digenerate.
+                            </p>
+                        </div>
+                        <div className="mt-8 flex items-center text-purple-600 font-bold text-sm">
+                            Kelola Rutin <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                    </div>
+                </Link>
+
+                {/* 4. Maps (Visual) */}
+                <Link href="/admin/map" className="group relative overflow-hidden bg-white text-slate-900 border border-slate-200 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:border-emerald-200 hover:-translate-y-1 transition-all duration-300">
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                         <MapIconImport className="w-32 h-32 -mr-8 -mt-8 rotate-12" />
                     </div>
