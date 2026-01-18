@@ -21,9 +21,12 @@ interface KajianCardProps {
     waktu?: string;
     distance?: number;
     className?: string;
+    isRecurringInstance?: boolean;
+    isCanceled?: boolean;
+    cancellationReason?: string;
 }
 
-export default function KajianCard({ id, date, location, title, ustadz, ustadz2, ustadz3, imageUrl, attendanceCount = 0, khususAkhwat, isOnline, isKidsFriendly, waktu, distance, className = 'w-60' }: KajianCardProps) {
+export default function KajianCard({ id, date, location, title, ustadz, ustadz2, ustadz3, imageUrl, attendanceCount = 0, khususAkhwat, isOnline, isKidsFriendly, waktu, distance, className = 'w-60', isRecurringInstance, isCanceled, cancellationReason }: KajianCardProps) {
     const [count, setCount] = useState(attendanceCount);
     const [hasAttended, setHasAttended] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
@@ -124,7 +127,22 @@ export default function KajianCard({ id, date, location, title, ustadz, ustadz2,
                             🎈 Anak
                         </div>
                     )}
+                    {isRecurringInstance && !isCanceled && (
+                        <div className="px-2 py-1 bg-gradient-to-r from-purple-500 to-violet-600 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-purple-200/50">
+                            🔄 Rutin
+                        </div>
+                    )}
                 </div>
+
+                {/* Canceled Overlay */}
+                {isCanceled && (
+                    <div className="absolute inset-0 bg-red-600/80 backdrop-blur-sm flex items-center justify-center z-20">
+                        <div className="text-center px-4">
+                            <p className="text-white font-black text-lg mb-1 drop-shadow-lg">LIBUR</p>
+                            <p className="text-white/90 text-xs font-bold drop-shadow">{cancellationReason || 'Qadarullah'}</p>
+                        </div>
+                    </div>
+                )}
             </div>
             <div className="p-5">
                 <div className="flex flex-wrap items-center gap-2 mb-3">

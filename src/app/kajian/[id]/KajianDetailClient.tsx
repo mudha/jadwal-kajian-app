@@ -32,6 +32,10 @@ interface KajianDetail {
     catatan?: string;
     cp2?: string;
     cp3?: string;
+    is_recurring_instance?: boolean;
+    is_canceled?: boolean;
+    cancellation_reason?: string;
+    recurring_kajian_id?: number;
 }
 
 import { Info } from 'lucide-react';
@@ -72,6 +76,7 @@ export default function KajianDetailPage() {
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
 
     // Layout Settings State
     const [layout, setLayout] = useState(DEFAULT_LAYOUT);
@@ -436,6 +441,16 @@ export default function KajianDetailPage() {
                                                         • Sedang Berlangsung
                                                     </span>
                                                 )}
+                                                {kajian.is_recurring_instance && !kajian.is_canceled && (
+                                                    <span className="inline-block px-3 py-1 bg-purple-50 text-purple-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-purple-100">
+                                                        🔄 Kajian Rutin
+                                                    </span>
+                                                )}
+                                                {kajian.is_canceled && (
+                                                    <span className="inline-block px-3 py-1 bg-red-600 text-white text-[10px] font-black rounded-lg uppercase tracking-widest border border-red-700 shadow-sm animate-pulse">
+                                                        🚫 LIBUR - {kajian.cancellation_reason || 'Qadarullah'}
+                                                    </span>
+                                                )}
                                                 {getKajianStatus(kajian.date, kajian.waktu) === 'PAST' && (
                                                     <span className="inline-block px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-slate-200">
                                                         ✓ Selesai
@@ -618,6 +633,36 @@ export default function KajianDetailPage() {
                                                     <Trash2 className="w-4 h-4" />
                                                     Hapus
                                                 </button>
+                                                {kajian.is_recurring_instance && (
+                                                    <button
+                                                        onClick={async () => {
+                                                            if (isCancelling) return;
+                                                            setIsCancelling(true);
+                                                            try {
+                                                                const method = kajian.is_canceled ? 'DELETE' : 'POST';
+                                                                const res = await fetch(`/api/kajian/${kajian.id}/cancel`, { method });
+                                                                if (res.ok) {
+                                                                    setKajian({ ...kajian, is_canceled: !kajian.is_canceled });
+                                                                    alert(kajian.is_canceled ? 'Kajian diaktifkan kembali' : 'Kajian ditandai libur');
+                                                                } else {
+                                                                    alert('Gagal mengupdate status');
+                                                                }
+                                                            } catch (e) {
+                                                                console.error(e);
+                                                                alert('Error');
+                                                            } finally {
+                                                                setIsCancelling(false);
+                                                            }
+                                                        }}
+                                                        className={`col-span-2 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-colors ${kajian.is_canceled
+                                                            ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                                                            : 'bg-orange-50 text-orange-700 hover:bg-orange-100'
+                                                            }`}
+                                                    >
+                                                        <CalendarIcon className="w-4 h-4" />
+                                                        {kajian.is_canceled ? '✓ Aktifkan Kembali' : '🚫 Tandai Libur'}
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     )}
