@@ -1413,15 +1413,13 @@ function BatchInputPageContent() {
                                                                     {entry.isRecurring ? (
                                                                         <div className="bg-white rounded-xl border-2 border-purple-100 p-4">
                                                                             <RecurringPatternSelector
-                                                                                value={{
-                                                                                    pattern: entry.recurringPattern || 'weekly',
-                                                                                    day_of_week: entry.recurringDay || 0,
-                                                                                    week_of_month: entry.recurringWeek
-                                                                                }}
-                                                                                onChange={(val) => {
-                                                                                    updateEntry(idx, 'recurringPattern', val.pattern);
-                                                                                    updateEntry(idx, 'recurringDay', val.day_of_week);
-                                                                                    updateEntry(idx, 'recurringWeek', val.week_of_month);
+                                                                                pattern={entry.recurringPattern || 'weekly'}
+                                                                                dayOfWeek={entry.recurringDay || 0}
+                                                                                weekOfMonth={entry.recurringWeek}
+                                                                                onChange={(pattern, day, week) => {
+                                                                                    updateEntry(idx, 'recurringPattern', pattern);
+                                                                                    updateEntry(idx, 'recurringDay', day);
+                                                                                    updateEntry(idx, 'recurringWeek', week);
                                                                                 }}
                                                                             />
                                                                         </div>
