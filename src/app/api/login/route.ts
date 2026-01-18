@@ -5,7 +5,8 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
     try {
-        const { username, password } = await request.json();
+        const { username: rawUsername, password } = await request.json();
+        const username = rawUsername.trim().toLowerCase();
 
         // 1. Try to find user in database
         const result = await db.execute({

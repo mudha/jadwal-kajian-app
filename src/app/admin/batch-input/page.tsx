@@ -1713,6 +1713,59 @@ function BatchInputPageContent() {
 
                                                 <div className="h-px bg-slate-100" />
 
+                                                {/* Schedule Info (NEW: User Friendly Date & Time) */}
+                                                <div className="space-y-4">
+                                                    <div className="grid grid-cols-1 gap-4">
+                                                        <div>
+                                                            <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">
+                                                                <Calendar className="w-3 h-3" /> Tanggal Kajian
+                                                            </label>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="date"
+                                                                    value={(() => {
+                                                                        const d = parseIndoDate(entry.date);
+                                                                        return d ? formatYYYYMMDD(d) : '';
+                                                                    })()}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.valueAsDate;
+                                                                        if (val) updateEntry(idx, 'date', formatIndoDate(val));
+                                                                    }}
+                                                                    className="w-full bg-blue-50/50 border border-blue-100 rounded-xl px-4 py-3 text-sm font-bold text-blue-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <div>
+                                                                <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">
+                                                                    <Clock className="w-3 h-3" /> Waktu Mulai
+                                                                </label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={entry.waktu_mulai || ''}
+                                                                    onChange={(e) => updateEntry(idx, 'waktu_mulai', e.target.value)}
+                                                                    placeholder="Cth: 19:00"
+                                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">
+                                                                    Waktu Selesai
+                                                                </label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={entry.waktu_selesai || 'Selesai'}
+                                                                    onChange={(e) => updateEntry(idx, 'waktu_selesai', e.target.value)}
+                                                                    placeholder="Selesai"
+                                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="h-px bg-slate-100" />
+
                                                 {/* Location Info */}
                                                 <div className="space-y-4">
                                                     <div className="grid grid-cols-1 gap-4">
