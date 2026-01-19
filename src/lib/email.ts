@@ -1,81 +1,123 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-interface EmailOptions {
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+interface SendVerificationEmailParams {
     to: string;
-    subject: string;
-    html: string;
+    fullName: string;
+    verificationToken: string;
 }
 
-export async function sendEmail({ to, subject, html }: EmailOptions) {
-    const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
-
-    if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-        console.warn('⚠️ SMTP settings not configured. Email not sent.');
-        console.log(`[MOCK EMAIL] To: ${to} | Subject: ${subject}`);
-        return false;
-    }
+export async function sendVerificationEmail({ to, fullName, verificationToken }: SendVerificationEmailParams) {
+    const verificationUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify-email?token=${verificationToken}`;
 
     try {
-        const transporter = nodemailer.createTransport({
-            host: SMTP_HOST,
-            port: Number(SMTP_PORT) || 587,
-            secure: Number(SMTP_PORT) === 465, // true for 465, false for other ports
-            auth: {
-                user: SMTP_USER,
-                pass: SMTP_PASS,
-            },
-        });
-
-        await transporter.verify();
-
-        const info = await transporter.sendMail({
-            from: SMTP_FROM || '"Portal Kajian Admin" <no-reply@portalkajian.online>',
+        const { data, error } = await resend.emails.send({
+            from: process.env.SEND_FROM_EMAIL || 'PortalKajian <noreply@portalkajian.online>',
             to,
-            subject,
-            html,
+            subject: 'Verifikasi Email - PortalKajian.online',
+            html: `
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifikasi Email</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f5f5f5;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; max-width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%); border-radius: 12px 12px 0 0;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">PortalKajian.online</h1>
+                            <p style="margin: 10px 0 0; color: #e0f2f1; font-size: 14px;">Jadwal Kajian Ilmiah Terpercaya</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <p style="margin: 0 0 20px; color: #1f2937; font-size: 16px; line-height: 1.6;">
+                                <strong>Assalamu'alaikum warahmatullahi wabarakatuh,</strong>
+                            </p>
+                            
+                            <p style="margin: 0 0 20px; color: #4b5563; font-size: 15px; line-height: 1.6;">
+                                Terima kasih <strong>${fullName}</strong> sudah mendaftar sebagai kontributor di <strong>PortalKajian.online</strong>!
+                            </p>
+                            
+                            <p style="margin: 0 0 30px; color: #4b5563; font-size: 15px; line-height: 1.6;">
+                                Untuk mengaktifkan akun Anda, silakan klik tombol di bawah ini:
+                            </p>
+                            
+                            <!-- CTA Button -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td align="center" style="padding: 0 0 30px;">
+                                        <a href="${verificationUrl}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(13, 148, 136, 0.3);">
+                                            ✉️ Verifikasi Email Saya
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="margin: 0 0 10px; color: #6b7280; font-size: 13px; line-height: 1.6;">
+                                Jika tombol tidak berfungsi, copy dan paste link berikut ke browser Anda:
+                            </p>
+                            <p style="margin: 0 0 30px; color: #0d9488; font-size: 13px; word-break: break-all;">
+                                <a href="${verificationUrl}" style="color: #0d9488; text-decoration: underline;">${verificationUrl}</a>
+                            </p>
+                            
+                            <div style="padding: 20px; background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 6px; margin-bottom: 30px;">
+                                <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.5;">
+                                    ⏰ <strong>Link akan expired dalam 24 jam.</strong>
+                                </p>
+                            </div>
+                            
+                            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+                            
+                            <p style="margin: 0 0 10px; color: #6b7280; font-size: 13px; line-height: 1.6;">
+                                Jika Anda tidak mendaftar di PortalKajian.online, abaikan email ini.
+                            </p>
+                            
+                            <p style="margin: 0; color: #4b5563; font-size: 14px;">
+                                <strong>BarakAllahu fiikum,</strong><br>
+                                Tim PortalKajian.online
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #f9fafb; border-radius: 0 0 12px 12px; text-align: center;">
+                            <p style="margin: 0 0 10px; color: #9ca3af; font-size: 12px;">
+                                © 2026 PortalKajian.online. All rights reserved.
+                            </p>
+                            <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                                <a href="https://portalkajian.online" style="color: #0d9488; text-decoration: none;">portalkajian.online</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+            `,
         });
 
-        console.log(`✅ Email sent to ${to}: ${info.messageId}`);
-        return true;
+        if (error) {
+            console.error('Error sending verification email:', error);
+            return { success: false, error };
+        }
+
+        console.log('✅ Verification email sent successfully:', data);
+        return { success: true, data };
     } catch (error) {
-        console.error('❌ Failed to send email:', error);
-        return false;
+        console.error('Error sending verification email:', error);
+        return { success: false, error };
     }
-}
-
-export async function sendApprovalEmail(email: string, name: string, loginUrl: string = 'https://portalkajian.online/admin') {
-    const subject = 'Selamat! Akun Kontributor Anda Disetujui 🎉';
-    const html = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <h1 style="color: #2563eb;">Portal Kajian</h1>
-            </div>
-            
-            <p>Assalamu'alaikum <strong>${name}</strong>,</p>
-            
-            <p>Alhamdulillah, pendaftaran Anda sebagai kontributor di Portal Kajian telah disetujui oleh Admin.</p>
-            
-            <p>Sekarang Anda dapat login ke Admin Panel untuk mulai menginput jadwal kajian dan berkontribusi.</p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="${loginUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                    Login ke Admin Panel
-                </a>
-            </div>
-            
-            <p style="color: #64748b; font-size: 14px;">
-                Jika tombol di atas tidak berfungsi, silakan copy link berikut:<br>
-                <a href="${loginUrl}">${loginUrl}</a>
-            </p>
-            
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
-            
-            <p style="color: #94a3b8; font-size: 12px; text-align: center;">
-                Email ini dikirim otomatis. Mohon jangan dibalas.<br>
-                &copy; ${new Date().getFullYear()} Portal Kajian Sunnah Indonesia
-            </p>
-        </div>
-    `;
-
-    return sendEmail({ to: email, subject, html });
 }

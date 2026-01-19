@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+import { sendVerificationEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
     try {
@@ -16,7 +18,7 @@ export async function POST(request: Request) {
 
         if (password.length < 6) {
             return NextResponse.json(
-                { error: 'Password minimal  6 karakter' },
+                { error: 'Password minimal 6 karakter' },
                 { status: 400 }
             );
         }
@@ -37,17 +39,47 @@ export async function POST(request: Request) {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Insert to contributor_applications table
+        // Generate verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const tokenExpiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24 hours from now
+
+        // Insert to contributor_applications table with verification fields
         await db.execute({
             sql: `INSERT INTO contributor_applications 
-                  (username, email, password, fullName, region, city, phoneNumber, motivation) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            args: [username, email, hashedPassword, fullName, region, city || null, phoneNumber || null, motivation || null]
+                  (username, email, password, fullName, region, city, phoneNumber, motivation, 
+                   email_verified, verification_token, token_expires_at) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [
+                username,
+                email,
+                hashedPassword,
+                fullName,
+                region,
+                city || null,
+                phoneNumber || null,
+                motivation || null,
+                0, // email_verified = false
+                verificationToken,
+                tokenExpiresAt
+            ]
         });
 
+        // Send verification email
+        const emailResult = await sendVerificationEmail({
+            to: email,
+            fullName,
+            verificationToken
+        });
+
+        if (!emailResult.success) {
+            console.error('Failed to send verification email:', emailResult.error);
+            // Don't fail registration, just log the error
+        }
+
         return NextResponse.json({
-            message: 'Pendaftaran berhasil! Silakan tunggu persetujuan admin (maks 24 jam).',
-            status: 'pending'
+            message: 'Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi.',
+            status: 'pending_verification',
+            email
         }, { status: 201 });
 
     } catch (error: any) {
