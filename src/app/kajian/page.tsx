@@ -74,6 +74,7 @@ function KajianListContent() {
     const [kajianList, setKajianList] = useState<KajianWithId[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState<'all' | 'today' | 'upcoming' | 'past'>('all');
+    const [recurringTypeFilter, setRecurringTypeFilter] = useState<'all' | 'tematik' | 'rutin'>('all');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingKajian, setEditingKajian] = useState<KajianWithId | null>(null);
     const [showMap, setShowMap] = useState(false);
@@ -242,6 +243,9 @@ function KajianListContent() {
     }
 
     const filteredKajian = processedKajian.filter(k => {
+        // Recurring Type Filter
+        if (recurringTypeFilter === 'tematik' && k.recurring_kajian_id) return false;
+        if (recurringTypeFilter === 'rutin' && !k.recurring_kajian_id) return false;
         // City Filtering (Priority)
         // City Filtering (Priority)
         if (filterCity) {
@@ -637,7 +641,31 @@ function KajianListContent() {
                             />
                         )}
 
-                        {/* Tabs Filter */}
+                        {/* Recurring Type Filter Tabs */}
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {[
+                                { id: 'all', label: '📋 Semua Kajian', color: 'slate' },
+                                { id: 'tematik', label: '🎯 Kajian Tematik', color: 'blue' },
+                                { id: 'rutin', label: '🔄 Kajian Rutin', color: 'purple' },
+                            ].map((type) => (
+                                <button
+                                    key={type.id}
+                                    onClick={() => setRecurringTypeFilter(type.id as any)}
+                                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${recurringTypeFilter === type.id
+                                            ? type.id === 'all'
+                                                ? 'bg-slate-600 text-white shadow-lg'
+                                                : type.id === 'tematik'
+                                                    ? 'bg-blue-600 text-white shadow-lg'
+                                                    : 'bg-purple-600 text-white shadow-lg'
+                                            : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                                        }`}
+                                >
+                                    <span>{type.label}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Time-based Tabs Filter */}
                         <div className="flex flex-wrap gap-1.5 mb-8 bg-white/50 p-1 rounded-2xl border border-slate-200 w-fit">
                             {[
                                 { id: 'all', label: 'Semua', icon: ListFilter },
