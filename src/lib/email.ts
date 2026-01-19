@@ -110,7 +110,11 @@ export async function sendVerificationEmail({ to, fullName, verificationToken }:
         });
 
         if (error) {
-            console.error('Error sending verification email:', error);
+            console.error('Error sending verification email:', {
+                name: error.name,
+                message: error.message,
+                to
+            });
             return { success: false, error };
         }
 
