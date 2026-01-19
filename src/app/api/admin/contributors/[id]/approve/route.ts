@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { sendApprovalEmail } from '@/lib/email';
 import { cookies } from 'next/headers';
 import db from '@/lib/db';
 
@@ -78,12 +77,12 @@ export async function POST(
             args: ['approved', id]
         });
 
-        // Send email notification
-        try {
-            await sendApprovalEmail(app.email as string, (app.fullName as string) || (app.username as string));
-        } catch (emailError) {
-            console.error('Failed to send approval email:', emailError);
-        }
+        // Send email notification (TODO: implement sendApprovalEmail)
+        // try {
+        //     await sendApprovalEmail(app.email as string, (app.fullName as string) || (app.username as string));
+        // } catch (emailError) {
+        //     console.error('Failed to send approval email:', emailError);
+        // }
 
         return NextResponse.json({
             message: 'Kontributor berhasil disetujui',
