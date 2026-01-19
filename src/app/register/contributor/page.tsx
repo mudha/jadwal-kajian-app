@@ -87,9 +87,11 @@ export default function ContributorRegisterPage() {
                     </div>
                     <h1 className="text-2xl font-bold text-slate-900 mb-4">Pendaftaran Berhasil! 🎉</h1>
                     <p className="text-slate-600 mb-6 leading-relaxed">
-                        Terima kasih telah mendaftar sebagai kontributor. Aplikasi Anda sedang direview oleh admin.
+                        Terima kasih telah mendaftar. Akun Anda telah dibuat.
                         <br /><br />
-                        <strong>Anda akan menerima notifikasi via email dalam 1x24 jam.</strong>
+                        <strong>Silakan cek email Anda untuk verifikasi akun sebelum login.</strong>
+                        <br />
+                        <span className="text-sm text-slate-500">(Cek folder spam jika tidak ada di inbox)</span>
                     </p>
                     <Link
                         href="/"
