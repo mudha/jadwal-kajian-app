@@ -247,6 +247,19 @@ function KajianListContent() {
         // Recurring Type Filter
         if (recurringTypeFilter === 'tematik' && k.recurring_kajian_id) return false;
         if (recurringTypeFilter === 'rutin' && !k.recurring_kajian_id) return false;
+
+        // Limit recurring kajian to show only next 6 days
+        if (k.recurring_kajian_id) {
+            const kajianDate = parseIndoDate(k.date);
+            if (kajianDate) {
+                const now = new Date();
+                const sixDaysFromNow = new Date();
+                sixDaysFromNow.setDate(now.getDate() + 6);
+
+                // Only show recurring entries within next 6 days
+                if (kajianDate > sixDaysFromNow) return false;
+            }
+        }
         // City Filtering (Priority)
         // City Filtering (Priority)
         if (filterCity) {
