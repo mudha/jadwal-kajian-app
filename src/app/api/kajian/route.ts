@@ -44,9 +44,6 @@ export async function GET(request: Request) {
         // Build WHERE clauses
         const whereClauses: string[] = [];
 
-        // Exclude recurring instances from public view
-        whereClauses.push('(recurring_kajian_id IS NULL)');
-
         if (!includeCanceled) {
             whereClauses.push('(is_canceled = 0 OR is_canceled IS NULL)');
         }

@@ -9,11 +9,11 @@ export const dynamic = 'force-dynamic';
  * POST /api/recurring-kajian/generate
  * 
  * Generates kajian instances from recurring templates
- * Generates for the next N months (default: 3)
+ * Generates for the next N months (default: 1.5 months ≈ 6 weeks)
  */
 export async function POST(request: Request) {
     try {
-        const { months = 3 } = await request.json().catch(() => ({}));
+        const { months = 1.5 } = await request.json().catch(() => ({}));
 
         // Get all active recurring kajian
         const recurringResult = await db.execute({
