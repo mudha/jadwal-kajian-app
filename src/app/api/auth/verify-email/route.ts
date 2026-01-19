@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
         // Check token expiration
         const now = Date.now();
-        if (user.token_expires_at && now > user.token_expires_at) {
+        if (user.token_expires_at && now > Number(user.token_expires_at)) {
             return NextResponse.json(
                 { error: 'Token sudah expired. Silakan daftar ulang.' },
                 { status: 400 }
