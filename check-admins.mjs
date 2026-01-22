@@ -1,7 +1,8 @@
-
 import { createClient } from '@libsql/client';
 import dotenv from 'dotenv';
+import path from 'path';
 
+// Load environment variables from .env.local
 dotenv.config({ path: '.env.local' });
 
 const db = createClient({
@@ -9,10 +10,14 @@ const db = createClient({
     authToken: process.env.TURSO_AUTH_TOKEN,
 });
 
-async function check() {
-    console.log('Checking admins schema...');
-    const res = await db.execute('PRAGMA table_info(admins)');
-    console.log(JSON.stringify(res.rows, null, 2));
+async function checkAdmins() {
+    try {
+        const result = await db.execute('SELECT id, username, email, role, fullName FROM admins');
+        console.log('--- Admin Users ---');
+        console.table(result.rows);
+    } catch (error) {
+        console.error('Error fetching admins:', error);
+    }
 }
 
-check().catch(console.error);
+checkAdmins();
