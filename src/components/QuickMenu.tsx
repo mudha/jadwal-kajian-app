@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { BookText, Clock, Video, Flower2, MapPin, MessageCircle, FileText, Calendar, Home, GraduationCap, Briefcase, Truck } from 'lucide-react';
+import { BookText, Clock, Video, Flower2, MapPin, MessageCircle, FileText, Calendar, Home, GraduationCap, Briefcase, Truck, BookOpen } from 'lucide-react';
 
 
 export default function QuickMenu({ customItems }: { customItems?: any[] }) {
@@ -15,6 +15,16 @@ export default function QuickMenu({ customItems }: { customItems?: any[] }) {
             gradient: 'from-purple-500 to-purple-600',
             iconBg: 'bg-purple-50',
             iconColor: 'text-purple-600',
+        },
+        {
+            id: 'ebook-islami',
+            label: 'Ebook Islami',
+            iconName: 'BookOpen',
+            href: '#',
+            gradient: 'from-cyan-500 to-cyan-600',
+            iconBg: 'bg-cyan-50',
+            iconColor: 'text-cyan-600',
+            badge: 'SOON'
         },
         {
             id: 'loker',
@@ -128,7 +138,7 @@ export default function QuickMenu({ customItems }: { customItems?: any[] }) {
     ];
 
     const ICON_MAP: any = {
-        BookText, Clock, Video, Flower2, MapPin, MessageCircle, FileText, Calendar, Home, GraduationCap, Briefcase, Truck
+        BookText, Clock, Video, Flower2, MapPin, MessageCircle, FileText, Calendar, Home, GraduationCap, Briefcase, Truck, BookOpen
     };
 
     // Simplified logic: If customItems is provided (even if empty), use it as the source of truth.

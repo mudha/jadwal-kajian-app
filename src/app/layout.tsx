@@ -78,6 +78,7 @@ import GlobalPullToRefresh from "@/components/GlobalPullToRefresh";
 // ... existing imports ...
 
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { useSettings, SettingsProvider } from '@/hooks/useSettings';
 
 export default function RootLayout({
   children,
@@ -109,19 +110,21 @@ export default function RootLayout({
           }}
         />
         <ThemeProvider>
-          <AnalyticsTracker />
-          <Navbar />
-          <div className="mx-auto min-h-screen bg-white dark:bg-slate-900 md:bg-transparent shadow-xl md:shadow-none max-w-md md:max-w-7xl md:px-0">
-            <main className="md:container md:mx-auto">
-              <GlobalPullToRefresh>
-                {children}
-              </GlobalPullToRefresh>
-              <Footer />
-            </main>
-            <Suspense fallback={null}>
-              <BottomNav />
-            </Suspense>
-          </div>
+          <SettingsProvider>
+            <AnalyticsTracker />
+            <Navbar />
+            <div className="mx-auto min-h-screen bg-white dark:bg-slate-900 md:bg-transparent shadow-xl md:shadow-none max-w-md md:max-w-7xl md:px-0">
+              <main className="md:container md:mx-auto">
+                <GlobalPullToRefresh>
+                  {children}
+                </GlobalPullToRefresh>
+                <Footer />
+              </main>
+              <Suspense fallback={null}>
+                <BottomNav />
+              </Suspense>
+            </div>
+          </SettingsProvider>
         </ThemeProvider>
       </body>
     </html>

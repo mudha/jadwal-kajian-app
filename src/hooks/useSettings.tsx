@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface UserLocation {
     lat: number;
@@ -27,7 +27,18 @@ const DEFAULT_SETTINGS: AppSettings = {
     },
 };
 
-export function useSettings() {
+interface SettingsContextType {
+    settings: AppSettings;
+    isLoaded: boolean;
+    updateRadius: (radius: number) => void;
+    updateLocation: (location: UserLocation) => void;
+    refreshLocation: () => Promise<boolean>;
+    toggleNotification: (type: 'adzan' | 'kajian') => void;
+}
+
+const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+
+export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
     const [isLoaded, setIsLoaded] = useState(false);
 
@@ -110,7 +121,7 @@ export function useSettings() {
         });
     };
 
-    return {
+    const value = {
         settings,
         isLoaded,
         updateRadius,
@@ -118,4 +129,18 @@ export function useSettings() {
         refreshLocation,
         toggleNotification
     };
+
+    return (
+        <SettingsContext.Provider value= { value } >
+        { children }
+        </SettingsContext.Provider>
+    );
+}
+
+export function useSettings() {
+    const context = useContext(SettingsContext);
+    if (context === undefined) {
+        throw new Error('useSettings must be used within a SettingsProvider');
+    }
+    return context;
 }
