@@ -51,10 +51,16 @@ export async function POST(request: Request) {
             }
 
             // Create admin account
-            const hashedPassword = await bcrypt.hash(application.password, 10);
+            const hashedPassword = await bcrypt.hash(application.password as string, 10);
             await db.execute({
                 sql: `INSERT INTO admins (username, password, fullName, email, role, createdAt) VALUES (?, ?, ?, ?, ?, datetime('now'))`,
-                args: [application.username, hashedPassword, application.full_name, application.email, 'CONTRIBUTOR']
+                args: [
+                    application.username as string,
+                    hashedPassword,
+                    application.full_name as string, // Note: DB usually has fullName, check register api?
+                    application.email as string,
+                    'CONTRIBUTOR'
+                ]
             });
 
             // Update status
