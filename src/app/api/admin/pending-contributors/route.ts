@@ -57,7 +57,7 @@ export async function POST(request: Request) {
                 args: [
                     application.username as string,
                     hashedPassword,
-                    application.full_name as string, // Note: DB usually has fullName, check register api?
+                    application.fullName as string,
                     application.email as string,
                     'CONTRIBUTOR'
                 ]
