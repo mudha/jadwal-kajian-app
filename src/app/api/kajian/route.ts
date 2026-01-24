@@ -134,9 +134,10 @@ export async function POST(request: Request) {
         INSERT INTO kajian (
             region, city, masjid, address, gmapsUrl, lat, lng, 
             pemateri, pemateri2, pemateri3, tema, waktu, waktu_mulai, waktu_selesai, 
-            cp, cp2, cp3, date, khususAkhwat, linkInfo, imageUrl, isOnline, isKidsFriendly, catatan
+            cp, cp2, cp3, date, khususAkhwat, linkInfo, imageUrl, isOnline, isKidsFriendly, catatan,
+            created_by
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
             args: [
                 item.region || 'INDONESIA',
@@ -162,7 +163,8 @@ export async function POST(request: Request) {
                 item.imageUrl || null,
                 item.isOnline ? 1 : 0,
                 item.isKidsFriendly ? 1 : 0,
-                item.catatan || null
+                item.catatan || null,
+                (JSON.parse(session.value) as any).id || 0
             ]
         }));
 

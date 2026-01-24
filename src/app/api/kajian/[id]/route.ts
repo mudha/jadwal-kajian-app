@@ -79,7 +79,9 @@ export async function PATCH(
                 imageUrl = ?, 
                 isOnline = ?,
                 isKidsFriendly = ?,
-                catatan = ?
+                catatan = ?,
+                is_canceled = ?,
+                cancellation_reason = ?
             WHERE id = ?
         `,
             args: [
@@ -107,6 +109,8 @@ export async function PATCH(
                 body.isOnline ? 1 : 0,
                 body.isKidsFriendly ? 1 : 0,
                 body.catatan || null,
+                body.is_canceled ? 1 : 0,
+                body.cancellation_reason || null,
                 id
             ]
         });

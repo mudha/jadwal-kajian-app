@@ -32,6 +32,7 @@ export async function POST(request: Request) {
             const cookieStore = await cookies();
             const sessionData = JSON.stringify({
                 isLoggedIn: true,
+                id: admin ? admin.id : 0, // 0 for default admin
                 username: admin ? (admin.username as string) : 'admin',
                 role: admin ? (admin.role as string) : 'SUPER_ADMIN', // 'admin' hardcoded is Super Admin
                 fullName: admin ? (admin.fullName as string) : 'Admin Local'

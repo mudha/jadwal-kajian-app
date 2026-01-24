@@ -32,6 +32,8 @@ export interface KajianDetail {
     lat?: number;
     lng?: number;
     catatan?: string;
+    is_canceled?: boolean;
+    cancellation_reason?: string;
 }
 
 interface EditKajianModalProps {
@@ -147,7 +149,9 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave, onToa
 
             const payload = {
                 ...formData,
-                waktu: combinedWaktu
+                waktu: combinedWaktu,
+                is_canceled: formData.is_canceled,
+                cancellation_reason: formData.cancellation_reason
             };
 
             await onSave(payload);
@@ -585,24 +589,54 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave, onToa
                     </label>
                 </div>
 
-                {/* Footer */}
-                <div className="sticky bottom-0 bg-white border-t border-slate-100 p-6 flex justify-end gap-3 z-10 rounded-b-3xl">
-                    <button
-                        onClick={onClose}
-                        className="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-all"
-                    >
-                        Batal
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50"
-                    >
-                        {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                        {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
-                    </button>
-                </div>
+            </div>
+
+            {/* Status Pembatalan */}
+            <div className="mx-6 p-4 bg-red-50 border border-red-100 rounded-2xl">
+                <label className="flex items-center gap-3 cursor-pointer mb-2">
+                    <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={formData.is_canceled || false}
+                        onChange={e => handleChange('is_canceled', e.target.checked)}
+                    />
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${formData.is_canceled ? 'border-red-500 bg-red-500 text-white' : 'border-slate-300 bg-white'}`}>
+                        {formData.is_canceled && <div className="w-2.5 h-2.5 bg-white rounded-sm" />}
+                    </div>
+                    <span className={`font-bold text-sm ${formData.is_canceled ? 'text-red-700' : 'text-slate-600'}`}>KAJIAN LIBUR / BATAL</span>
+                </label>
+
+                {formData.is_canceled && (
+                    <div className="ml-8 animate-in slide-in-from-top-2">
+                        <input
+                            type="text"
+                            className="w-full px-4 py-2 bg-white border border-red-200 focus:border-red-400 rounded-xl outline-none text-sm font-medium text-red-800 placeholder:text-red-300/50"
+                            value={formData.cancellation_reason || ''}
+                            onChange={e => handleChange('cancellation_reason', e.target.value)}
+                            placeholder="Alasan pembatalan (cth: Ustadz berhalangan hadir)..."
+                        />
+                    </div>
+                )}
+            </div>
+
+            {/* Footer */}
+            <div className="sticky bottom-0 bg-white border-t border-slate-100 p-6 flex justify-end gap-3 z-10 rounded-b-3xl">
+                <button
+                    onClick={onClose}
+                    className="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-all"
+                >
+                    Batal
+                </button>
+                <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                >
+                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                    {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
             </div>
         </div>
+
     );
 }

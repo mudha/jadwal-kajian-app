@@ -103,6 +103,8 @@ export default function KajianListWidget({ data }: WidgetProps) {
                         imageUrl={kajian.imageUrl}
                         attendanceCount={kajian.attendanceCount}
                         waktu={kajian.waktu}
+                        isCanceled={!!kajian.is_canceled}
+                        cancellationReason={kajian.cancellation_reason}
                     />
                 ))}
             </div>
@@ -116,8 +118,16 @@ export default function KajianListWidget({ data }: WidgetProps) {
             <div className="hidden md:grid grid-cols-2 gap-6">
                 {rawKajian.map((kajian: any) => (
                     <Link href={`/kajian/${kajian.id}`} key={kajian.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex gap-4 block">
-                        <div className="w-24 h-24 bg-slate-200 rounded-xl shrink-0 overflow-hidden">
+                        <div className="w-24 h-24 bg-slate-200 rounded-xl shrink-0 overflow-hidden relative">
                             <img src={kajian.imageUrl || '/images/default-kajian.png'} alt={kajian.tema} className="w-full h-full object-cover" />
+                            {/* Canceled Overlay (Desktop) */}
+                            {kajian.is_canceled && (
+                                <div className="absolute inset-0 bg-red-600/80 backdrop-blur-sm flex items-center justify-center z-10">
+                                    <div className="text-center px-1">
+                                        <p className="text-white font-black text-xs mb-0.5 drop-shadow-md">LIBUR</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         <div>
                             <div className="flex items-center gap-2 mb-1">
@@ -129,7 +139,9 @@ export default function KajianListWidget({ data }: WidgetProps) {
                                     </span>
                                 )}
                             </div>
-                            <h3 className="font-bold text-slate-900 line-clamp-2 mb-1">{kajian.tema}</h3>
+                            <h3 className={`font-bold text-slate-900 line-clamp-2 mb-1 ${kajian.is_canceled ? 'line-through decoration-red-500 decoration-2 text-slate-400' : ''}`}>
+                                {kajian.tema}
+                            </h3>
                             <p className="text-xs text-slate-500 mb-2">{kajian.pemateri}</p>
                             <p className="text-[10px] text-slate-400 flex items-center gap-1">
                                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300"></span>

@@ -1,255 +1,155 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { CheckCircle, XCircle, User, Mail, MapPin, Phone, MessageSquare, Calendar, Loader2, AlertCircle } from 'lucide-react';
-import ConfirmationModal from '@/components/admin/ConfirmationModal';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Users, Shield, ShieldCheck, FileText, ChevronRight, Search, UserPlus, BarChart2 } from 'lucide-react';
+import PendingContributorsList from '@/components/admin/PendingContributorsList';
 
-interface Application {
+interface Contributor {
     id: number;
     username: string;
-    email: string;
     fullName: string;
-    region: string;
-    city: string | null;
-    phoneNumber: string | null;
-    motivation: string | null;
-    status: 'pending' | 'approved' | 'rejected';
-    createdAt: string;
+    role: string;
+    total_kajian: number;
 }
 
-export default function ContributorsManagementPage() {
-    const [applications, setApplications] = useState<Application[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [actionLoading, setActionLoading] = useState(false);
-    const [confirmAction, setConfirmAction] = useState<{ type: 'approve' | 'reject', id: number } | null>(null);
-
-    const fetchApplications = async () => {
-        try {
-            const res = await fetch('/api/admin/contributors/applications');
-            if (!res.ok) throw new Error('Failed to fetch');
-            const data = await res.json();
-            setApplications(data);
-        } catch (err) {
-            setError('Gagal memuat data pendaftar');
-        } finally {
-            setLoading(false);
-        }
-    };
+export default function ContributorsPage() {
+    const [contributors, setContributors] = useState<Contributor[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState<'pending' | 'performance'>('pending');
 
     useEffect(() => {
-        fetchApplications();
+        fetchContributors();
     }, []);
 
-    const handleApprove = async (id: number) => {
-        setActionLoading(true);
+    const fetchContributors = async () => {
         try {
-            const res = await fetch(`/api/admin/contributors/${id}/approve`, {
-                method: 'POST'
-            });
-            if (res.ok) {
-                await fetchApplications();
-                setConfirmAction(null);
-            } else {
-                const data = await res.json();
-                alert(data.details ? `Gagal: ${data.details}` : (data.error || 'Gagal menyetujui pendaftar'));
-                return;
-            }
-        } catch (err) {
-            alert('Terjadi kesalahan');
+            const res = await fetch('/api/admin/contributors');
+            const data = await res.json();
+            setContributors(data);
+        } catch (error) {
+            console.error('Failed to fetch contributors:', error);
         } finally {
-            setActionLoading(false);
+            setIsLoading(false);
         }
     };
 
-    const handleReject = async (id: number) => {
-        setActionLoading(true);
-        try {
-            const res = await fetch(`/api/admin/contributors/${id}/reject`, {
-                method: 'POST'
-            });
-            if (res.ok) {
-                await fetchApplications();
-                setConfirmAction(null);
-            } else {
-                const data = await res.json();
-                alert(data.error || 'Gagal menolak');
-            }
-        } catch (err) {
-            alert('Terjadi kesalahan');
-        } finally {
-            setActionLoading(false);
-        }
-    };
-
-    const pendingCount = applications.filter(a => a.status === 'pending').length;
-    const approvedCount = applications.filter(a => a.status === 'approved').length;
-    const rejectedCount = applications.filter(a => a.status === 'rejected').length;
-
-    if (loading) {
-        return (
-            <div className="p-8 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
-            </div>
-        );
-    }
+    const filteredContributors = contributors.filter(c =>
+        c.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.fullName && c.fullName.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
 
     return (
         <div className="space-y-8">
-            {/* Header */}
-            <div>
-                <h1 className="text-3xl font-black text-slate-900 tracking-tighter">Kelola Pendaftar Kontributor</h1>
-                <p className="text-slate-500 mt-2 font-bold">Review dan approve pendaftar kontributor baru</p>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6">
-                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">Pending</p>
-                    <p className="text-4xl font-black text-amber-700">{pendingCount}</p>
-                </div>
-                <div className="bg-green-50 border border-green-200 rounded-2xl p-6">
-                    <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-2">Disetujui</p>
-                    <p className="text-4xl font-black text-green-700">{approvedCount}</p>
-                </div>
-                <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
-                    <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-2">Ditolak</p>
-                    <p className="text-4xl font-black text-red-700">{rejectedCount}</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tighter">Kelola Kontributor</h1>
+                    <p className="text-slate-500 font-bold mt-2">Setujui pendaftar baru dan pantau kinerja tim.</p>
                 </div>
             </div>
 
-            {/* Error */}
-            {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-600" />
-                    <p className="text-red-800 font-bold">{error}</p>
+            {/* Tab Navigation */}
+            <div className="flex p-1 bg-slate-100 rounded-2xl w-fit">
+                <button
+                    onClick={() => setActiveTab('pending')}
+                    className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'pending'
+                            ? 'bg-white text-blue-600 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                >
+                    <UserPlus className="w-4 h-4" />
+                    Permintaan
+                </button>
+                <button
+                    onClick={() => setActiveTab('performance')}
+                    className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'performance'
+                            ? 'bg-white text-blue-600 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                >
+                    <BarChart2 className="w-4 h-4" />
+                    Kinerja
+                </button>
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'pending' ? (
+                <div className="animate-in fade-in slide-in-from-left-4 duration-300">
+                    <div className="bg-blue-50 border border-blue-100 p-6 rounded-3xl mb-8">
+                        <h2 className="text-lg font-bold text-blue-900 mb-1">Permintaan Bergabung</h2>
+                        <p className="text-blue-700 text-sm">Review dan setujui pendaftar yang ingin menjadi kontributor.</p>
+                    </div>
+                    <PendingContributorsList />
+                </div>
+            ) : (
+                <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <p className="text-sm text-slate-500 font-medium">Total Kontributor Aktif: <strong className="text-slate-900">{contributors.length}</strong></p>
+                        </div>
+                        <div className="relative w-full md:w-auto">
+                            <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Cari kontributor..."
+                                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-700"
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    {isLoading ? (
+                        <div className="p-8 text-center text-slate-500">Memuat data...</div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {filteredContributors.map((c) => (
+                                <Link href={`/admin/contributors/${c.id}`} key={c.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                        <Users className="w-24 h-24" />
+                                    </div>
+
+                                    <div className="relative z-10 flex items-start justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${c.role === 'SUPER_ADMIN'
+                                                    ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-amber-200'
+                                                    : 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-200'
+                                                } shadow-md`}>
+                                                {c.role === 'SUPER_ADMIN'
+                                                    ? <ShieldCheck className="w-6 h-6 text-white" />
+                                                    : <Shield className="w-6 h-6 text-white" />
+                                                }
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-lg text-slate-900 leading-tight">{c.fullName || c.username}</h3>
+                                                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">{c.role}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-6 flex items-center justify-between">
+                                        <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg">
+                                            <FileText className="w-4 h-4 text-slate-400" />
+                                            <span className="font-black text-slate-700">{c.total_kajian}</span>
+                                            <span className="text-xs font-bold text-slate-400">Kajian</span>
+                                        </div>
+
+                                        <div className="p-2 rounded-full bg-slate-50 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                                            <ChevronRight className="w-5 h-5" />
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    )}
+
+                    {!isLoading && filteredContributors.length === 0 && (
+                        <div className="text-center py-12 bg-white rounded-3xl border border-slate-100 border-dashed">
+                            <p className="text-slate-400 font-bold">Tidak ada kontributor ditemukan</p>
+                        </div>
+                    )}
                 </div>
             )}
-
-            {/* Applications List */}
-            <div className="space-y-4">
-                {applications.length === 0 ? (
-                    <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center">
-                        <p className="text-slate-500 font-bold">Belum ada pendaftar</p>
-                    </div>
-                ) : (
-                    applications.map(app => (
-                        <div
-                            key={app.id}
-                            className={`bg-white rounded-2xl border-2 p-6 transition-all ${app.status === 'pending'
-                                ? 'border-amber-200 hover:shadow-lg'
-                                : app.status === 'approved'
-                                    ? 'border-green-200 opacity-75'
-                                    : 'border-red-200 opacity-50'
-                                }`}
-                        >
-                            <div className="flex items-start justify-between gap-4 mb-4">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <h3 className="text-xl font-black text-slate-900">{app.fullName}</h3>
-                                        <span
-                                            className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${app.status === 'pending'
-                                                ? 'bg-amber-100 text-amber-700'
-                                                : app.status === 'approved'
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-red-100 text-red-700'
-                                                }`}
-                                        >
-                                            {app.status === 'pending' ? '⏳ Pending' : app.status === 'approved' ? '✓ Disetujui' : '✗ Ditolak'}
-                                        </span>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                                        <div className="flex items-center gap-2 text-slate-600">
-                                            <User className="w-4 h-4 text-slate-400" />
-                                            <span className="font-medium">Username: <strong>{app.username}</strong></span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-slate-600">
-                                            <Mail className="w-4 h-4 text-slate-400" />
-                                            <span className="font-medium">{app.email}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-slate-600">
-                                            <MapPin className="w-4 h-4 text-slate-400" />
-                                            <span className="font-medium">{app.region}{app.city ? `, ${app.city}` : ''}</span>
-                                        </div>
-                                        {app.phoneNumber && (
-                                            <div className="flex items-center gap-2 text-slate-600">
-                                                <Phone className="w-4 h-4 text-slate-400" />
-                                                <span className="font-medium">{app.phoneNumber}</span>
-                                            </div>
-                                        )}
-                                        <div className="flex items-center gap-2 text-slate-600">
-                                            <Calendar className="w-4 h-4 text-slate-400" />
-                                            <span className="font-medium text-xs">
-                                                {new Date(app.createdAt).toLocaleDateString('id-ID', {
-                                                    day: 'numeric',
-                                                    month: 'long',
-                                                    year: 'numeric'
-                                                })}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {app.motivation && (
-                                        <div className="mt-3 bg-slate-50 rounded-xl p-3">
-                                            <div className="flex items-start gap-2 text-sm">
-                                                <MessageSquare className="w-4 h-4 text-slate-400 mt-0.5" />
-                                                <div>
-                                                    <p className="font-bold text-slate-500 text-[10px] uppercase tracking-wider mb-1">Motivasi</p>
-                                                    <p className="text-slate-700 leading-relaxed">{app.motivation}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Actions */}
-                                {app.status === 'pending' && (
-                                    <div className="flex gap-2 shrink-0">
-                                        <button
-                                            onClick={() => setConfirmAction({ type: 'approve', id: app.id })}
-                                            className="p-3 bg-green-50 hover:bg-green-100 text-green-600 rounded-xl transition-colors border border-green-200"
-                                            title="Setujui"
-                                        >
-                                            <CheckCircle className="w-5 h-5" />
-                                        </button>
-                                        <button
-                                            onClick={() => setConfirmAction({ type: 'reject', id: app.id })}
-                                            className="p-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-colors border border-red-200"
-                                            title="Tolak"
-                                        >
-                                            <XCircle className="w-5 h-5" />
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ))
-                )}
-            </div>
-
-            {/* Confirmation Modal */}
-            <ConfirmationModal
-                isOpen={!!confirmAction}
-                onClose={() => setConfirmAction(null)}
-                onConfirm={() => {
-                    if (!confirmAction) return;
-                    if (confirmAction.type === 'approve') {
-                        handleApprove(confirmAction.id);
-                    } else {
-                        handleReject(confirmAction.id);
-                    }
-                }}
-                title={confirmAction?.type === 'approve' ? 'Setujui Pendaftar?' : 'Tolak Pendaftar?'}
-                message={
-                    confirmAction?.type === 'approve'
-                        ? 'Akun kontributor akan otomatis dibuat dan bisa langsung login'
-                        : 'Pendaftar akan ditandai sebagai ditolak'
-                }
-                confirmText={confirmAction?.type === 'approve' ? 'Ya, Setujui' : 'Ya, Tolak'}
-                cancelText="Batal"
-                type={confirmAction?.type === 'approve' ? 'info' : 'danger'}
-                isLoading={actionLoading}
-            />
         </div>
     );
 }
