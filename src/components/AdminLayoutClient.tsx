@@ -50,7 +50,14 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
 
     }, []);
 
-    const menuItems = [
+    interface MenuItem {
+        href: string;
+        icon: any;
+        label: string;
+        badge?: number;
+    }
+
+    const menuItems: MenuItem[] = [
         { href: '/admin', icon: Home, label: 'Dashboard' },
         { href: '/admin/stats', icon: BarChart2, label: 'Stats' },
         { href: '/admin/manage', icon: List, label: 'Kelola Jadwal' },
@@ -120,10 +127,8 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                                 <item.icon className="w-5 h-5" />
                                 <span className="font-medium">{item.label}</span>
                             </div>
-                            {/* @ts-ignore - dynamic property check */}
                             {item.badge && (
                                 <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[1.25rem] text-center">
-                                    {/* @ts-ignore */}
                                     {item.badge}
                                 </span>
                             )}
@@ -193,10 +198,8 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                                 <item.icon className="w-5 h-5" />
                                 <span className="font-medium">{item.label}</span>
                             </div>
-                            {/* @ts-ignore */}
                             {item.badge && (
                                 <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[1.25rem] text-center">
-                                    {/* @ts-ignore */}
                                     {item.badge}
                                 </span>
                             )}
