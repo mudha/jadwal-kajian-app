@@ -44,7 +44,7 @@ export default async function AdminDashboardPage() {
                 FROM contributor_applications 
                 WHERE status = 'pending'
             `);
-            pendingContributorsCount = parseInt(result.rows[0].count);
+            pendingContributorsCount = Number(result.rows[0].count ?? 0);
         } catch (error) {
             console.error("Failed to fetch pending contributors", error);
         }
