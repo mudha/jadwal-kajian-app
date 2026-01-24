@@ -21,7 +21,7 @@ export async function GET() {
             WHERE status = 'pending'
         `);
 
-        const count = parseInt(result.rows[0].count);
+        const count = Number(result.rows[0].count ?? 0);
 
         return NextResponse.json({ contributors: count });
     } catch (error) {
