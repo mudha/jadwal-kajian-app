@@ -428,17 +428,17 @@ export default function KajianDetailPage() {
                                                 <span className="inline-block px-3 py-1 bg-teal-50 text-teal-700 text-[10px] font-black rounded-lg uppercase tracking-widest border border-teal-100">
                                                     {kajian.city}
                                                 </span>
-                                                {kajian.isOnline && (
+                                                {!!kajian.isOnline && (
                                                     <span className="inline-block px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-blue-100">
                                                         🎥 Kajian Online
                                                     </span>
                                                 )}
-                                                {kajian.isKidsFriendly && (
+                                                {!!kajian.isKidsFriendly && (
                                                     <span className="inline-block px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-orange-100 animate-bounce">
                                                         🎈 Kajian Anak
                                                     </span>
                                                 )}
-                                                {(kajian.khususAkhwat || kajian.pemateri.toLowerCase().includes('ustadzah')) && (
+                                                {!!(kajian.khususAkhwat || kajian.pemateri.toLowerCase().includes('ustadzah')) && (
                                                     <span className="inline-block px-3 py-1 bg-pink-50 text-pink-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-pink-100 animate-pulse">
                                                         🌸 Khusus Akhwat
                                                     </span>
@@ -448,12 +448,12 @@ export default function KajianDetailPage() {
                                                         • Sedang Berlangsung
                                                     </span>
                                                 )}
-                                                {kajian.is_recurring_instance && !kajian.is_canceled && (
+                                                {!!kajian.is_recurring_instance && !kajian.is_canceled && (
                                                     <span className="inline-block px-3 py-1 bg-purple-50 text-purple-600 text-[10px] font-black rounded-lg uppercase tracking-widest border border-purple-100">
                                                         🔄 Kajian Rutin
                                                     </span>
                                                 )}
-                                                {kajian.is_canceled && (
+                                                {!!kajian.is_canceled && (
                                                     <span className="inline-block px-3 py-1 bg-red-600 text-white text-[10px] font-black rounded-lg uppercase tracking-widest border border-red-700 shadow-sm animate-pulse">
                                                         🚫 LIBUR - {kajian.cancellation_reason || 'Qadarullah'}
                                                     </span>
@@ -622,7 +622,7 @@ export default function KajianDetailPage() {
                                     </div>
 
                                     {/* Admin Controls */}
-                                    {isAdmin && (
+                                    {!!isAdmin && (
                                         <div className="mt-6 pt-6 border-t border-slate-100">
                                             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3">Admin Controls</p>
                                             <div className="grid grid-cols-2 gap-3">
