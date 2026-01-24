@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
+import db from '@/lib/db';
 import {
     ShieldCheck,
     ArrowRight,
@@ -7,7 +8,9 @@ import {
     Plus,
     Calendar,
     Upload,
-    Map as MapIconImport
+    Map as MapIconImport,
+    Users,
+    AlertTriangle
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -30,6 +33,22 @@ export default async function AdminDashboardPage() {
     }
 
     const isContributor = role === 'CONTRIBUTOR';
+    const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
+
+    // Fetch pending contributors count (Server Side)
+    let pendingContributorsCount = 0;
+    if (isAdmin) {
+        try {
+            const result = await db.execute(`
+                SELECT COUNT(*) as count 
+                FROM contributor_applications 
+                WHERE status = 'pending'
+            `);
+            pendingContributorsCount = parseInt(result.rows[0].count);
+        } catch (error) {
+            console.error("Failed to fetch pending contributors", error);
+        }
+    }
 
     return (
         <div className="space-y-8 max-w-5xl mx-auto">
@@ -58,6 +77,31 @@ export default async function AdminDashboardPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Pending Contributors Alert */}
+            {isAdmin && pendingContributorsCount > 0 && (
+                <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center shrink-0">
+                            <Users className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-800">
+                                {pendingContributorsCount} Pendaftar Kontributor Menunggu Persetujuan
+                            </h3>
+                            <p className="text-slate-600 text-sm">
+                                Ada pendaftar baru yang menunggu verifikasi Anda. Segera tinjau aplikasi mereka.
+                            </p>
+                        </div>
+                    </div>
+                    <Link
+                        href="/admin/contributors"
+                        className="px-6 py-2.5 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors shadow-lg shadow-orange-600/20 whitespace-nowrap"
+                    >
+                        Tinjau Sekarang
+                    </Link>
+                </div>
+            )}
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

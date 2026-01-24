@@ -32,7 +32,7 @@ export function parseIndoDate(dateStr: string): Date | null {
     }
 }
 
-export function getKajianStatus(dateStr: string, waktuStr?: string): 'PAST' | 'TODAY' | 'TOMORROW' | 'UPCOMING' {
+export function getKajianStatus(dateStr: string, waktuStr?: string): 'PAST' | 'TODAY' | 'TOMORROW' | 'DAY_AFTER_TOMORROW' | 'UPCOMING' {
     const kajianDate = parseIndoDate(dateStr);
     if (!kajianDate) return 'UPCOMING';
 
@@ -43,12 +43,16 @@ export function getKajianStatus(dateStr: string, waktuStr?: string): 'PAST' | 'T
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
+    const dayAfterTomorrow = new Date(today);
+    dayAfterTomorrow.setDate(today.getDate() + 2);
+
     const targetDate = new Date(kajianDate);
     targetDate.setHours(0, 0, 0, 0);
 
     const tDate = targetDate.getTime();
     const dToday = today.getTime();
     const dTomorrow = tomorrow.getTime();
+    const dDayAfterTomorrow = dayAfterTomorrow.getTime();
 
     // Debug logging
     console.log('[getKajianStatus] Input:', {
@@ -73,6 +77,11 @@ export function getKajianStatus(dateStr: string, waktuStr?: string): 'PAST' | 'T
     if (tDate === dTomorrow) {
         console.log('[getKajianStatus] Result: TOMORROW');
         return 'TOMORROW';
+    }
+
+    // Check for Day After Tomorrow
+    if (tDate === dDayAfterTomorrow) {
+        return 'DAY_AFTER_TOMORROW';
     }
 
     if (tDate > dToday && tDate !== dTomorrow) return 'UPCOMING';

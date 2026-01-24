@@ -2,7 +2,7 @@
 import { useEffect, useState, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Search, Edit, Trash2, Plus, Calendar, MapPin, X, Save, AlertTriangle, ChevronDown, User, Clock, CheckCircle, Info, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Edit, Trash2, Plus, Calendar, MapPin, X, Save, AlertTriangle, ChevronDown, User, Clock, CheckCircle, Info, Eye, ChevronLeft, ChevronRight, Repeat } from 'lucide-react';
 import Link from 'next/link';
 import { indonesianCities } from '@/data/cities';
 import { parseIndoDate, formatIndoDate, formatYYYYMMDD } from '@/lib/date-utils';
@@ -1443,6 +1443,13 @@ function ManageKajianList() {
                         </div>
 
                         <div className="p-8 border-t border-slate-100 bg-slate-50 shrink-0 flex justify-end gap-3">
+                            <Link
+                                href={`/admin/recurring-kajian?source_id=${editingKajian.id}`}
+                                className="mr-auto px-6 py-3 bg-purple-50 text-purple-700 font-bold rounded-xl border border-purple-100 hover:bg-purple-100 transition-all flex items-center gap-2"
+                            >
+                                <Repeat className="w-5 h-5" />
+                                Jadikan Rutin
+                            </Link>
                             <button
                                 type="button"
                                 onClick={() => setIsEditModalOpen(false)}

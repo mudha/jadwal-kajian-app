@@ -107,6 +107,11 @@ export default function KajianCard({ id, date, location, title, ustadz, ustadz2,
                             🔔 BESOK
                         </div>
                     )}
+                    {getKajianStatus(date, waktu) === 'DAY_AFTER_TOMORROW' && (
+                        <div className="px-2 py-1 bg-gradient-to-r from-orange-400 to-amber-500 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-orange-200/50">
+                            ⏳ BESOK LUSA
+                        </div>
+                    )}
                     {getKajianStatus(date, waktu) === 'PAST' && (
                         <div className="px-2 py-1 bg-slate-500 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-slate-200/50">
                             ✓ Selesai

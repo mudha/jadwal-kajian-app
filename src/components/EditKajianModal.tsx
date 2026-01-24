@@ -39,9 +39,10 @@ interface EditKajianModalProps {
     onClose: () => void;
     kajian: KajianDetail;
     onSave: (updatedKajian: KajianDetail) => Promise<void>;
+    onToast?: (message: string, type: 'success' | 'error' | 'info') => void;
 }
 
-export default function EditKajianModal({ isOpen, onClose, kajian, onSave }: EditKajianModalProps) {
+export default function EditKajianModal({ isOpen, onClose, kajian, onSave, onToast }: EditKajianModalProps) {
     const [formData, setFormData] = useState<KajianDetail>({ ...kajian });
     const [isSaving, setIsSaving] = useState(false);
     const [isExtracting, setIsExtracting] = useState(false);
@@ -173,13 +174,16 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave }: Edi
                     lng: data.lng,
                     gmapsUrl: data.expandedUrl || url
                 }));
-                alert(`Koordinat ditemukan: ${data.lat}, ${data.lng}`);
+                // alert(`Koordinat ditemukan: ${data.lat}, ${data.lng}`);
+                if (onToast) onToast(`Koordinat ditemukan: ${data.lat}, ${data.lng}`, 'success');
             } else {
-                alert('Gagal mengekstrak koordinat. Pastikan link valid.');
+                // alert('Gagal mengekstrak koordinat. Pastikan link valid.');
+                if (onToast) onToast('Gagal mengekstrak koordinat. Pastikan link valid.', 'error');
             }
         } catch (error) {
             console.error(error);
-            alert('Terjadi kesalahan saat mengekstrak koordinat.');
+            // alert('Terjadi kesalahan saat mengekstrak koordinat.');
+            if (onToast) onToast('Terjadi kesalahan saat mengekstrak koordinat.', 'error');
         } finally {
             setIsExtracting(false);
         }

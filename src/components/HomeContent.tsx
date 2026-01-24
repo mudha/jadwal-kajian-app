@@ -23,6 +23,7 @@ interface KajianWithId {
     lat?: number;
     lng?: number;
     distance?: number;
+    is_recurring_instance?: boolean;
 }
 
 function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -141,7 +142,21 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
                 ...k,
                 _parsedDate: getKajianStatus(k.date, k.waktu) === 'PAST' ? null : d
             };
-        }).filter((k: any) => k._parsedDate !== null);
+        }).filter((k: any) => {
+            if (k._parsedDate === null) return false;
+
+            // Filter specific strategy for recurring kajian:
+            // Only show recurring instances if they occur within the next 6 days.
+            // Non-recurring (one-time) events are always shown regardless of how far in the future.
+            if (k.is_recurring_instance) {
+                const now = new Date();
+                const diffTime = k._parsedDate.getTime() - now.getTime();
+                const diffDays = diffTime / (1000 * 60 * 60 * 24);
+                return diffDays <= 6;
+            }
+
+            return true;
+        });
 
         // 2. Sort Logic
         if (settings.userLocation) {

@@ -32,13 +32,22 @@ interface SessionData {
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [session, setSession] = useState<SessionData | null>(null);
+    const [pendingCounts, setPendingCounts] = useState<{ contributors: number }>({ contributors: 0 });
     const pathname = usePathname();
 
     useEffect(() => {
+        // Fetch session
         fetch('/api/admin/check-session')
             .then(res => res.json())
             .then(data => setSession(data))
             .catch(() => setSession({ isAdmin: false, role: null, username: null }));
+
+        // Fetch pending counts
+        fetch('/api/admin/pending-counts')
+            .then(res => res.json())
+            .then(data => setPendingCounts(data))
+            .catch(err => console.error('Failed to fetch pending counts', err));
+
     }, []);
 
     const menuItems = [
@@ -63,7 +72,12 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     // Add admin management for Super Admin and standard Admin
     if (session?.role === 'SUPER_ADMIN' || session?.role === 'ADMIN') {
         menuItems.push({ href: '/admin/admins', icon: Users, label: 'Kelola Admin' });
-        menuItems.push({ href: '/admin/contributors', icon: Users, label: 'Kelola Kontributor' });
+        menuItems.push({
+            href: '/admin/contributors',
+            icon: Users,
+            label: 'Kelola Kontributor',
+            badge: pendingCounts.contributors > 0 ? pendingCounts.contributors : undefined
+        });
     }
 
     // Direct link to manual input for contributors
@@ -92,23 +106,32 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                     </div>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-2">
+                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                     {menuItems.map((item) => (
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive(item.href)
+                            className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all ${isActive(item.href)
                                 ? 'bg-blue-600 text-white'
                                 : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                                 }`}
                         >
-                            <item.icon className="w-5 h-5" />
-                            <span className="font-medium">{item.label}</span>
+                            <div className="flex items-center gap-3">
+                                <item.icon className="w-5 h-5" />
+                                <span className="font-medium">{item.label}</span>
+                            </div>
+                            {/* @ts-ignore - dynamic property check */}
+                            {item.badge && (
+                                <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[1.25rem] text-center">
+                                    {/* @ts-ignore */}
+                                    {item.badge}
+                                </span>
+                            )}
                         </Link>
                     ))}
                 </nav>
 
-                <div className="px-4 pb-2">
+                <div className="px-4 pb-2 pt-2 border-t border-slate-800 mt-auto">
                     <Link
                         href="/"
                         target="_blank"
@@ -119,7 +142,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                     </Link>
                 </div>
 
-                <div className="p-4 border-t border-slate-800">
+                <div className="p-4">
                     <LogoutButton />
                 </div>
             </aside>
@@ -161,18 +184,27 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                             key={item.href}
                             href={item.href}
                             onClick={() => setIsMobileMenuOpen(false)}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive(item.href)
+                            className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all ${isActive(item.href)
                                 ? 'bg-blue-600 text-white'
                                 : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                                 }`}
                         >
-                            <item.icon className="w-5 h-5" />
-                            <span className="font-medium">{item.label}</span>
+                            <div className="flex items-center gap-3">
+                                <item.icon className="w-5 h-5" />
+                                <span className="font-medium">{item.label}</span>
+                            </div>
+                            {/* @ts-ignore */}
+                            {item.badge && (
+                                <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[1.25rem] text-center">
+                                    {/* @ts-ignore */}
+                                    {item.badge}
+                                </span>
+                            )}
                         </Link>
                     ))}
                 </nav>
 
-                <div className="px-4 pb-2">
+                <div className="px-4 pb-2 border-t border-slate-800">
                     <Link
                         href="/"
                         target="_blank"
@@ -184,7 +216,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                     </Link>
                 </div>
 
-                <div className="p-4 border-t border-slate-800">
+                <div className="p-4">
                     <LogoutButton />
                 </div>
             </aside>

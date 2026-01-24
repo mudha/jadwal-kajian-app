@@ -48,6 +48,7 @@ import WidgetRenderer from '@/components/WidgetRenderer';
 import SidebarMenuWidget from '@/components/widgets/SidebarMenuWidget';
 import EditKajianModal from '@/components/EditKajianModal';
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
+import Toast, { ToastType } from '@/components/Toast';
 
 const DEFAULT_LAYOUT = {
     sidebar: ['SidebarBrandWidget', 'SidebarMenuWidget', 'PrayerTimesWidget', 'ContactWidget'],
@@ -81,6 +82,12 @@ export default function KajianDetailPage() {
     // Layout Settings State
     const [layout, setLayout] = useState(DEFAULT_LAYOUT);
     const [quickMenuItems, setQuickMenuItems] = useState<any[] | null>(null);
+
+    // Toast State
+    const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+    const showToast = (message: string, type: ToastType = 'success') => {
+        setToast({ message, type });
+    };
 
     useEffect(() => {
         const fetchLayout = async () => {
@@ -272,13 +279,13 @@ export default function KajianDetailPage() {
                 setKajian(updated);
                 setIsEditModalOpen(false);
                 setEditingKajian(null);
-                alert('Kajian berhasil diupdate!');
+                showToast('Kajian berhasil diupdate!', 'success');
             } else {
-                alert('Gagal mengupdate kajian');
+                showToast('Gagal mengupdate kajian', 'error');
             }
         } catch (err) {
             console.error('Error updating kajian:', err);
-            alert('Error updating kajian');
+            showToast('Error updating kajian', 'error');
         }
     };
 
@@ -335,11 +342,11 @@ export default function KajianDetailPage() {
             if (res.ok) {
                 router.push('/kajian');
             } else {
-                alert('Gagal menghapus kajian');
+                showToast('Gagal menghapus kajian', 'error');
             }
         } catch (e) {
             console.error('Error deleting kajian:', e);
-            alert('Terjadi kesalahan saat menghapus');
+            showToast('Terjadi kesalahan saat menghapus', 'error');
         } finally {
             setIsDeleting(false);
         }
@@ -643,13 +650,13 @@ export default function KajianDetailPage() {
                                                                 const res = await fetch(`/api/kajian/${kajian.id}/cancel`, { method });
                                                                 if (res.ok) {
                                                                     setKajian({ ...kajian, is_canceled: !kajian.is_canceled });
-                                                                    alert(kajian.is_canceled ? 'Kajian diaktifkan kembali' : 'Kajian ditandai libur');
+                                                                    showToast(kajian.is_canceled ? 'Kajian diaktifkan kembali' : 'Kajian ditandai libur', 'success');
                                                                 } else {
-                                                                    alert('Gagal mengupdate status');
+                                                                    showToast('Gagal mengupdate status', 'error');
                                                                 }
                                                             } catch (e) {
                                                                 console.error(e);
-                                                                alert('Error');
+                                                                showToast('Error occured', 'error');
                                                             } finally {
                                                                 setIsCancelling(false);
                                                             }
@@ -817,12 +824,14 @@ export default function KajianDetailPage() {
                 )}
 
                 {/* Edit Modal */}
+                {/* Edit Modal */}
                 {isEditModalOpen && editingKajian && (
                     <EditKajianModal
                         isOpen={isEditModalOpen}
                         onClose={() => setIsEditModalOpen(false)}
                         kajian={editingKajian}
                         onSave={saveEdit}
+                        onToast={showToast}
                     />
                 )}
 
@@ -837,6 +846,15 @@ export default function KajianDetailPage() {
                     type="danger"
                     isLoading={isDeleting}
                 />
+
+                {/* Toast Notification */}
+                {toast && (
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => setToast(null)}
+                    />
+                )}
             </div>
         </div>
     );

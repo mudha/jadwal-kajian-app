@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAdmin } from '@/hooks/useAdmin';
 import RecurringPatternSelector from '@/components/admin/RecurringPatternSelector';
 import AutosuggestInput from '@/components/admin/AutosuggestInput';
@@ -29,6 +29,8 @@ interface RecurringKajian {
 
 export default function RecurringKajianPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const sourceId = searchParams.get('source_id');
     const { role, isLoading } = useAdmin();
     const [recurringList, setRecurringList] = useState<RecurringKajian[]>([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -36,6 +38,7 @@ export default function RecurringKajianPage() {
     const [message, setMessage] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isWaktuDropdownOpen, setIsWaktuDropdownOpen] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -76,6 +79,60 @@ export default function RecurringKajianPage() {
         }
     }, [role, isLoading]);
 
+    // Handle source_id from Manage page
+    useEffect(() => {
+        if (sourceId && role && !isFormOpen && !editingId) {
+            const fetchSourceKajian = async () => {
+                try {
+                    const res = await fetch(`/api/kajian/${sourceId}`);
+                    if (!res.ok) throw new Error('Failed to fetch source kajian');
+
+                    const sourceData = await res.json();
+
+                    // Pre-fill form with source data
+                    setFormData(prev => ({
+                        ...prev,
+                        masjid: sourceData.masjid,
+                        address: sourceData.address || '',
+                        city: sourceData.city,
+                        pemateri: 'Pekan ini: ' + sourceData.pemateri, // Add prefix to indicate it needs editing
+                        tema: sourceData.tema,
+                        waktu_mulai: sourceData.waktu?.split(' - ')[0] || '',
+                        waktu_selesai: sourceData.waktu?.split(' - ')[1] || 'Selesai',
+                        cp: sourceData.cp,
+                        cp2: sourceData.cp2,
+                        cp3: sourceData.cp3,
+                        gmapsUrl: sourceData.gmapsUrl,
+                        lat: sourceData.lat,
+                        lng: sourceData.lng,
+                        imageUrl: sourceData.imageUrl,
+                        catatan: sourceData.catatan,
+                        linkInfo: sourceData.linkInfo,
+                        khususAkhwat: !!sourceData.khususAkhwat,
+                        isOnline: !!sourceData.isOnline,
+                        isKidsFriendly: !!sourceData.isKidsFriendly,
+
+                        // Default recurring settings
+                        pattern: 'weekly',
+                        day_of_week: new Date(sourceData.date).getDay() || 7, // 0 is Sunday, map to 7 if needed or keep 0? lib usually handles 0-6
+                        week_of_month: 1
+                    }));
+
+                    setIsFormOpen(true);
+                    setMessage('📝 Creating recurring schedule from existing kajian');
+
+                    // Clear the param so it doesn't reopen on refresh
+                    router.replace('/admin/recurring-kajian');
+                } catch (error) {
+                    console.error('Error fetching source:', error);
+                    setMessage('❌ Failed to load source data');
+                }
+            };
+
+            fetchSourceKajian();
+        }
+    }, [sourceId, role, isFormOpen, editingId, router]);
+
     useEffect(() => {
         // Update preview when pattern changes
         const dates = generateRecurringDates(
@@ -97,6 +154,34 @@ export default function RecurringKajianPage() {
             setRecurringList(data);
         } catch (error) {
             console.error('Failed to fetch recurring kajian:', error);
+        }
+    };
+
+    const handleExtractCoords = async (url: string) => {
+        if (!url) return;
+
+        try {
+            const res = await fetch('/api/tools/extract-gmaps', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                setFormData(prev => ({
+                    ...prev,
+                    lat: data.lat,
+                    lng: data.lng,
+                    gmapsUrl: data.expandedUrl || url
+                }));
+                setMessage(`✅ Koordinat ditemukan: ${data.lat}, ${data.lng}`);
+            } else {
+                setMessage('❌ Gagal mengekstrak koordinat dari URL tersebut');
+            }
+        } catch (error) {
+            console.error(error);
+            setMessage('❌ Terjadi kesalahan saat mengekstrak koordinat');
         }
     };
 
@@ -333,6 +418,17 @@ export default function RecurringKajianPage() {
                                             type="masjid"
                                             value={formData.masjid}
                                             onChange={(val) => setFormData({ ...formData, masjid: val })}
+                                            onSelect={(item) => {
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    masjid: item.value,
+                                                    city: item.city || prev.city,
+                                                    address: item.address || prev.address,
+                                                    gmapsUrl: item.gmapsUrl || item.gmapsurl || prev.gmapsUrl,
+                                                    lat: item.lat ?? prev.lat,
+                                                    lng: item.lng ?? prev.lng
+                                                }));
+                                            }}
                                             className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold"
                                             placeholder="Masjid..."
                                         />
@@ -349,6 +445,57 @@ export default function RecurringKajianPage() {
                                             ))}
                                         </select>
                                     </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Link Google Maps</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-blue-700 truncate placeholder:text-slate-400"
+                                            value={formData.gmapsUrl || ''}
+                                            onChange={e => setFormData({ ...formData, gmapsUrl: e.target.value })}
+                                            placeholder="https://maps.app.goo.gl/..."
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => handleExtractCoords(formData.gmapsUrl || '')}
+                                            disabled={!formData.gmapsUrl}
+                                            className="px-3 bg-teal-50 text-teal-600 rounded-xl hover:bg-teal-100 transition-colors disabled:opacity-50"
+                                            title="Ekstrak Lat/Lng"
+                                        >
+                                            <MapPin className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                    <div className="flex gap-4 mt-2">
+                                        <div className="flex-1">
+                                            <input
+                                                type="number"
+                                                step="any"
+                                                placeholder="Latitude"
+                                                value={formData.lat || ''}
+                                                onChange={e => {
+                                                    const val = e.target.value.replace(',', '.');
+                                                    setFormData({ ...formData, lat: val === '' ? null : parseFloat(val) });
+                                                }}
+                                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-900 placeholder:text-slate-400"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <input
+                                                type="number"
+                                                step="any"
+                                                placeholder="Longitude"
+                                                value={formData.lng || ''}
+                                                onChange={e => {
+                                                    const val = e.target.value.replace(',', '.');
+                                                    setFormData({ ...formData, lng: val === '' ? null : parseFloat(val) });
+                                                }}
+                                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-900 placeholder:text-slate-400"
+                                            />
+                                        </div>
+                                    </div>
+
                                 </div>
 
                                 {/* Pemateri & Tema */}
@@ -379,14 +526,41 @@ export default function RecurringKajianPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="text-xs font-bold text-slate-600 mb-2 block">Waktu Mulai</label>
-                                        <input
-                                            type="text"
-                                            value={formData.waktu_mulai}
-                                            onChange={(e) => setFormData({ ...formData, waktu_mulai: e.target.value })}
-                                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold"
-                                            placeholder="Ba'da Maghrib"
-                                            required
-                                        />
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={formData.waktu_mulai}
+                                                onChange={(e) => {
+                                                    setFormData({ ...formData, waktu_mulai: e.target.value });
+                                                    setIsWaktuDropdownOpen(true);
+                                                }}
+                                                onFocus={() => setIsWaktuDropdownOpen(true)}
+                                                onBlur={() => setTimeout(() => setIsWaktuDropdownOpen(false), 200)}
+                                                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold"
+                                                placeholder="Ba'da Maghrib"
+                                                required
+                                            />
+                                            {isWaktuDropdownOpen && (
+                                                <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-xl shadow-xl">
+                                                    {['Ba\'da Shubuh', 'Ba\'da Dhuhur', 'Ba\'da Ashar', 'Ba\'da Maghrib', 'Ba\'da Isya', 'Shubuh', 'Dhuhur', 'Ashar', 'Maghrib', 'Isya', 'Sholat Jumat']
+                                                        .filter(w => w.toLowerCase().includes((formData.waktu_mulai || '').toLowerCase()))
+                                                        .map(waktu => (
+                                                            <button
+                                                                key={waktu}
+                                                                type="button"
+                                                                className="w-full text-left px-4 py-2 hover:bg-slate-50 font-medium text-slate-700 text-sm"
+                                                                onClick={() => {
+                                                                    setFormData({ ...formData, waktu_mulai: waktu });
+                                                                    setIsWaktuDropdownOpen(false);
+                                                                }}
+                                                            >
+                                                                {waktu}
+                                                            </button>
+                                                        ))
+                                                    }
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                     <div>
                                         <label className="text-xs font-bold text-slate-600 mb-2 block">Waktu Selesai</label>

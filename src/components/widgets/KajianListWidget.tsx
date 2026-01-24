@@ -1,5 +1,4 @@
-'use client';
-
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Clock, MapPin } from 'lucide-react';
 import KajianCard from '@/components/KajianCard';
@@ -14,6 +13,13 @@ export default function KajianListWidget({ data }: WidgetProps) {
     const rawKajian = data?.featuredKajian || [];
     const sortMode = data?.sortMode || 'date';
     const { settings, updateRadius } = useSettings();
+
+    // Local state for the input to allow "empty" state while typing
+    const [internalRadius, setInternalRadius] = useState<string>(String(settings.radius || 10));
+
+    useEffect(() => {
+        setInternalRadius(String(settings.radius));
+    }, [settings.radius]);
 
     // Default radius logic: 
     // If we have distance data, we can filter. 
@@ -49,9 +55,34 @@ export default function KajianListWidget({ data }: WidgetProps) {
                             max="100"
                             value={settings.radius}
                             onChange={(e) => updateRadius(parseInt(e.target.value))}
-                            className="w-32 md:w-24 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600 hover:accent-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                            className="w-24 md:w-32 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600 hover:accent-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                         />
-                        <span className="text-xs font-bold text-teal-600 min-w-[3rem] text-right whitespace-nowrap">{settings.radius} km</span>
+                        <div className="flex items-center gap-1 min-w-[3.5rem] justify-end">
+                            <input
+                                type="text"
+                                inputMode="numeric"
+                                value={internalRadius}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setInternalRadius(val);
+
+                                    // Update global radius immediately if valid number
+                                    const numVal = parseInt(val);
+                                    if (!isNaN(numVal) && numVal > 0) {
+                                        updateRadius(numVal);
+                                    }
+                                }}
+                                onBlur={() => {
+                                    // Reset to actual setting if empty or invalid on blur
+                                    const numVal = parseInt(internalRadius);
+                                    if (isNaN(numVal) || numVal <= 0) {
+                                        setInternalRadius(String(settings.radius));
+                                    }
+                                }}
+                                className="w-10 text-right text-xs font-bold text-teal-600 bg-transparent border-b border-dotted border-teal-300 focus:border-teal-600 focus:outline-none p-0"
+                            />
+                            <span className="text-xs font-bold text-teal-600">km</span>
+                        </div>
                     </div>
                 )}
             </div>
