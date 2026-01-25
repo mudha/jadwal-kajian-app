@@ -805,7 +805,12 @@ function BatchInputPageContent() {
                         const res = await fetch('/api/recurring-kajian', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(entry)
+                            body: JSON.stringify({
+                                ...entry,
+                                pattern: entry.recurringPattern || 'weekly',
+                                day_of_week: entry.recurringDay ?? 0,
+                                week_of_month: entry.recurringWeek || 1
+                            })
                         });
 
                         if (res.ok) {
