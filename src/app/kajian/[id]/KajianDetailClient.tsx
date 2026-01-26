@@ -640,7 +640,7 @@ export default function KajianDetailPage() {
                                                     <Trash2 className="w-4 h-4" />
                                                     Hapus
                                                 </button>
-                                                {kajian.is_recurring_instance && (
+                                                {!!kajian.is_recurring_instance && (
                                                     <button
                                                         onClick={async () => {
                                                             if (isCancelling) return;
