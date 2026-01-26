@@ -676,7 +676,7 @@ export default function KajianDetailPage() {
                                 </div>
 
                                 {/* Weekly Schedule Section */}
-                                {(loadingRelated || relatedKajian.length > 0) && (
+                                {!!(loadingRelated || relatedKajian.length) && (
                                     <div className="mt-8 bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
                                         <div className="flex items-center gap-3 mb-6">
                                             <div className="p-2 bg-teal-50 rounded-xl">
@@ -733,7 +733,7 @@ export default function KajianDetailPage() {
                                 )}
 
                                 {/* Related Ustadz Section */}
-                                {(loadingRelated || relatedUstadzKajian.length > 0) && (
+                                {!!(loadingRelated || relatedUstadzKajian.length) && (
                                     <div className="mt-8 bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
                                         <div className="flex items-center gap-3 mb-6">
                                             <div className="p-2 bg-blue-50 rounded-xl">
