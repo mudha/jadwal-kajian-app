@@ -95,9 +95,11 @@ export default function KajianListWidget({ data }: WidgetProps) {
                         key={kajian.id}
                         id={kajian.id}
                         date={`${kajian.date}`}
-                        location={kajian.distance && kajian.distance < 1000
-                            ? `${formatMasjidName(kajian.masjid)} • ${kajian.distance.toFixed(1)} km`
-                            : `${formatMasjidName(kajian.masjid)} • ${kajian.city}`}
+                        location={kajian.isOnline
+                            ? `${formatMasjidName(kajian.masjid)} • Online`
+                            : kajian.distance && kajian.distance < 1000
+                                ? `${formatMasjidName(kajian.masjid)} • ${kajian.distance.toFixed(1)} km`
+                                : `${formatMasjidName(kajian.masjid)} • ${kajian.city}`}
                         title={kajian.tema}
                         ustadz={kajian.pemateri}
                         imageUrl={kajian.imageUrl}
@@ -146,7 +148,16 @@ export default function KajianListWidget({ data }: WidgetProps) {
                             <p className="text-[10px] text-slate-400 flex items-center gap-1">
                                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300"></span>
                                 {formatMasjidName(kajian.masjid)}, {kajian.city}
-                                {kajian.distance && kajian.distance < 1000 && (
+                                {kajian.isOnline ? (
+                                    <span className="flex items-center gap-0.5 text-purple-600 font-bold ml-1 bg-purple-50 px-1.5 py-0.5 rounded-md">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                                            <line x1="9" y1="9" x2="9.01" y2="9" />
+                                            <line x1="15" y1="9" x2="15.01" y2="9" />
+                                        </svg> Online
+                                    </span>
+                                ) : kajian.distance && kajian.distance < 1000 && (
                                     <span className="flex items-center gap-0.5 text-teal-600 font-bold ml-1 bg-teal-50 px-1.5 py-0.5 rounded-md">
                                         <MapPin className="w-2.5 h-2.5" /> {kajian.distance.toFixed(1)} km
                                     </span>

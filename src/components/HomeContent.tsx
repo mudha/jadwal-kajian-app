@@ -24,6 +24,7 @@ interface KajianWithId {
     lng?: number;
     distance?: number;
     is_recurring_instance?: boolean;
+    isOnline?: boolean;
 }
 
 function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -93,7 +94,10 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
 
             if (Array.isArray(data)) {
                 setAllKajian(data);
-                setLatestKajian(data.slice(0, 5));
+
+                // Filter out recurring instances for "Latest Info" to prevent flooding
+                const nonRecurring = data.filter((k: any) => !k.is_recurring_instance);
+                setLatestKajian(nonRecurring.slice(0, 5));
 
                 // Calculate basic stats immediately
                 const todayCount = data.filter((k: any) => getKajianStatus(k.date, k.waktu) === 'TODAY').length;
@@ -171,37 +175,25 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
                 return { ...k, distance };
             });
 
-            // Filter by radius
-            const withinRadius = withDistance.filter((k: any) => k.distance <= settings.radius);
+            // Filter by radius (but always include online kajian)
+            const withinRadius = withDistance.filter((k: any) => k.isOnline || k.distance <= settings.radius);
 
             withinRadius.sort((a: any, b: any) => {
-                const now = new Date();
                 const dateA = new Date(a._parsedDate);
                 const dateB = new Date(b._parsedDate);
 
-                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const todayEnd = new Date(todayStart);
-                todayEnd.setDate(todayEnd.getDate() + 1);
+                // Primary sort: by time (earliest first)
+                const timeDiff = dateA.getTime() - dateB.getTime();
 
-                const isAToday = dateA >= todayStart && dateA < todayEnd;
-                const isBToday = dateB >= todayStart && dateB < todayEnd;
+                // If times are very close (within 1 hour), use distance as tiebreaker
+                // Treat online kajian as distance = 0 for tiebreaker purposes
+                if (Math.abs(timeDiff) < 3600000) {
+                    const distA = a.isOnline ? 0 : a.distance;
+                    const distB = b.isOnline ? 0 : b.distance;
+                    return distA - distB;
+                }
 
-                if (isAToday && !isBToday) return -1;
-                if (!isAToday && isBToday) return 1;
-
-                const hoursUntilA = (dateA.getTime() - now.getTime()) / (1000 * 60 * 60);
-                const hoursUntilB = (dateB.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-                const normalizedDistanceA = Math.min(a.distance / 50, 1);
-                const normalizedDistanceB = Math.min(b.distance / 50, 1);
-
-                const normalizedTimeA = Math.min(Math.max(hoursUntilA, 0) / 168, 1);
-                const normalizedTimeB = Math.min(Math.max(hoursUntilB, 0) / 168, 1);
-
-                const scoreA = (normalizedTimeA * 0.6) + (normalizedDistanceA * 0.4);
-                const scoreB = (normalizedTimeB * 0.6) + (normalizedDistanceB * 0.4);
-
-                return scoreA - scoreB;
+                return timeDiff;
             });
 
             setFeaturedKajian(withinRadius);
