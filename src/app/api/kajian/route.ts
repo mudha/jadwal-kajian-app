@@ -90,12 +90,43 @@ export async function POST(request: Request) {
         const existingKajian = await db.execute('SELECT id, masjid, city, date, waktu, tema, pemateri FROM kajian');
 
         for (const entry of entries) {
-            const duplicate = existingKajian.rows.find((existing: any) =>
-                existing.masjid === formatMasjidName(entry.masjid) &&
-                String(existing.city).toLowerCase() === String(entry.city || '').toLowerCase() &&
-                existing.date === entry.date &&
-                existing.waktu === entry.waktu
-            );
+            // Check if this entry is an Online event
+            const isOnline = entry.isOnline ||
+                String(entry.masjid).toLowerCase().includes('online') ||
+                String(entry.city).toLowerCase().includes('online') ||
+                String(entry.address || '').toLowerCase().includes('online');
+
+            const duplicate = existingKajian.rows.find((existing: any) => {
+                // Common checks
+                const isSameDate = existing.date === entry.date;
+                const isSameTime = existing.waktu === entry.waktu;
+
+                if (!isSameDate || !isSameTime) return false;
+
+                // Logic for Online Events
+                if (isOnline) {
+                    // Check if existing is also potentially online (or just check strict metadata match)
+                    // 1. If Link is provided and matches -> DUPLICATE
+                    if (entry.link && existing.link && entry.link === existing.link) return true;
+
+                    // 2. If Pemateri is same AND Tema is similar -> DUPLICATE
+                    // Use simple inclusion for now to avoid heavy computation
+                    const samePemateri = String(existing.pemateri).toLowerCase() === String(entry.pemateri).toLowerCase();
+                    const similarTema = String(existing.tema).toLowerCase().includes(String(entry.tema).toLowerCase()) ||
+                        String(entry.tema).toLowerCase().includes(String(existing.tema).toLowerCase());
+
+                    if (samePemateri && similarTema) return true;
+
+                    // Otherwise, allow multiple online events at same time
+                    return false;
+                }
+
+                // Logic for Offline Events (Strict Venue Check)
+                else {
+                    return existing.masjid === formatMasjidName(entry.masjid) &&
+                        String(existing.city).toLowerCase() === String(entry.city || '').toLowerCase();
+                }
+            });
 
             if (duplicate) {
                 duplicates.push({
