@@ -321,12 +321,12 @@ export default function MasjidManagementPage() {
             return;
         }
 
-        const sourceNames = selectedMasjids
+        const sourceItems = selectedMasjids
             .filter(m => m.id !== mergeTarget)
-            .map(m => m.name);
+            .map(m => ({ name: m.name, city: m.city }));
 
-        if (sourceNames.length === 0) {
-            showAlert('Perhatian', 'Nama target tidak boleh sama dengan semua nama yang dipilih', 'warning');
+        if (sourceItems.length === 0) {
+            showAlert('Perhatian', 'Tidak ada item sumber (masjid lain) untuk digabungkan', 'warning');
             return;
         }
 
@@ -334,12 +334,27 @@ export default function MasjidManagementPage() {
             const response = await fetch('/api/admin/masjid/merge', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sourceNames, targetName: targetMasjid.name }),
+                body: JSON.stringify({
+                    sourceItems,
+                    targetDetails: {
+                        name: targetMasjid.name,
+                        city: targetMasjid.city,
+                        address: targetMasjid.address,
+                        gmapsUrl: targetMasjid.gmapsUrl,
+                        lat: targetMasjid.lat,
+                        lng: targetMasjid.lng
+                    }
+                }),
             });
 
             if (response.ok) {
-                showAlert('Berhasil', `Berhasil menggabungkan ${sourceNames.length} masjid`, 'info', () => {
-                    setIsDuplicateModalOpen(true);
+                showAlert('Berhasil', `Berhasil menggabungkan ${sourceItems.length} masjid`, 'info', () => {
+                    // Refresh duplicate list if modal is open
+                    if (isDuplicateModalOpen) {
+                        // This might need a refresh trigger for the duplicate component if it manages its own state deeply
+                        // But refreshing the main list is usually enough if it re-renders
+                        setIsDuplicateModalOpen(false); // Close it to force user to re-scan manually or we can trigger re-scan
+                    }
                 });
                 setSelectedForMerge(new Set());
                 setMergeTarget('');

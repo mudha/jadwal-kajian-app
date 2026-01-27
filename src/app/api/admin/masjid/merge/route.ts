@@ -4,36 +4,51 @@ import db from '@/lib/db';
 // POST - Merge multiple masjid into one
 export async function POST(request: Request) {
     try {
-        const { sourceNames, targetName } = await request.json();
+        const { sourceItems, targetDetails } = await request.json();
 
-        if (!sourceNames || !Array.isArray(sourceNames) || sourceNames.length === 0) {
+        if (!sourceItems || !Array.isArray(sourceItems) || sourceItems.length === 0) {
             return NextResponse.json(
-                { error: 'Source names array is required' },
+                { error: 'Source items array is required' },
                 { status: 400 }
             );
         }
 
-        if (!targetName) {
+        if (!targetDetails || !targetDetails.name || !targetDetails.city) {
             return NextResponse.json(
-                { error: 'Target name is required' },
+                { error: 'Target details (name and city) are required' },
                 { status: 400 }
             );
         }
 
-        console.log('[MERGE] Starting merge:', { sourceNames, targetName });
+        console.log('[MERGE] Starting merge:', { sourceItems, targetDetails });
 
-        // Update all kajian with source names to target name
+        // Update all kajian with source fields to target fields
         let updatedCount = 0;
-        for (const sourceName of sourceNames) {
+        for (const source of sourceItems) {
             try {
+                // We update ALL location fields to match the target
+                // This ensures everything is unified under the target's identity
                 const result = await db.execute({
-                    sql: 'UPDATE kajian SET masjid = ? WHERE masjid = ?',
-                    args: [targetName, sourceName],
+                    sql: `
+                        UPDATE kajian 
+                        SET masjid = ?, city = ?, address = ?, gmapsUrl = ?, lat = ?, lng = ?
+                        WHERE masjid = ? AND city = ?
+                    `,
+                    args: [
+                        targetDetails.name,
+                        targetDetails.city,
+                        targetDetails.address || '',
+                        targetDetails.gmapsUrl || '',
+                        targetDetails.lat || null,
+                        targetDetails.lng || null,
+                        source.name,
+                        source.city
+                    ],
                 });
-                console.log(`[MERGE] Updated ${sourceName} -> ${targetName}:`, result);
-                updatedCount++;
+                console.log(`[MERGE] Updated ${source.name} (${source.city}) -> ${targetDetails.name}:`, result);
+                updatedCount++; // This counts query executions, not necessarily affected rows
             } catch (err) {
-                console.error(`[MERGE] Error updating ${sourceName}:`, err);
+                console.error(`[MERGE] Error updating ${source.name}:`, err);
                 throw err;
             }
         }
@@ -41,8 +56,8 @@ export async function POST(request: Request) {
         console.log('[MERGE] Merge completed successfully');
 
         return NextResponse.json({
-            message: `Successfully merged ${sourceNames.length} masjid names into "${targetName}"`,
-            mergedCount: sourceNames.length,
+            message: `Successfully merged ${sourceItems.length} masjid items into "${targetDetails.name}"`,
+            mergedCount: sourceItems.length,
             updatedCount: updatedCount,
         });
     } catch (error: any) {
