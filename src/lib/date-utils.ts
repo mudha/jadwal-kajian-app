@@ -181,7 +181,7 @@ export function getHijriDate(date: Date): string {
         day: 'numeric',
         month: 'long',
         year: 'numeric'
-    }).format(date);
+    }).format(date).replace(/Syakban/g, "Sya'ban");
 }
 
 export function isKajianOngoing(dateStr: string, waktuStr: string): boolean {

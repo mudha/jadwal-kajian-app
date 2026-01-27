@@ -349,7 +349,7 @@ function parseDaurohFormat(lines: string[]): KajianEntry[] {
 
         // 🗓 or 📅 or 📝 (Header Date check)
         // Match: "🗓️ *Senin Ke-1, 5 Januari 2025*" or "📝 *JADWAL...*" or "📆 Selasa, 17 Syakban 1447 H / 6 Januari 2026 M"
-        if (/[🗓📅📆]/.test(line)) {
+        if (/[🗓📅📆]/.test(line) || /Sya'ban/i.test(line)) {
             const val = line.replace(/[🗓📅📆]/gu, '').replace(/^\s*[:,-]\s*\*/, '').replace(/\*$/, '').trim();
             // Try to extract AD Date "6 Januari 2026"
             const adDateMatch = val.match(/\d{1,2}\s+[A-Za-z]+\s+\d{4}/g);
@@ -571,7 +571,7 @@ function parseNarrativeFormat(text: string): KajianEntry[] {
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             // Date detection: "31 Desember 2025" or "12 Rajab 1447 H"
-            if (/\d{1,2}\s+(?:Jan|Feb|Mar|Apr|Mei|Jun|Jul|Agu|Sep|Okt|Nov|Des|Rajab|Muharram|Ramadhan|Syawal|Dzulqa|Dzulhi)[a-z]*\s+\d{4}/i.test(line)) {
+            if (/\d{1,2}\s+(?:Jan|Feb|Mar|Apr|Mei|Jun|Jul|Agu|Sep|Okt|Nov|Des|Rajab|Muharram|Ramadhan|Syawal|Dzulqa|Dzulhi|Syakban|Sya'ban|Syaban)[a-z]*\s+\d{4}/i.test(line)) {
                 // If line contains Hijri, prefer the AD date if available in nearby lines
                 if (!entry.date || entry.date === 'TBD' || line.includes('Masehi') || !line.includes('H.')) {
                     entry.date = cleanValue(line);
