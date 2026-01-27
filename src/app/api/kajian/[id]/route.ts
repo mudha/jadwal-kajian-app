@@ -52,6 +52,23 @@ export async function PATCH(
         const { id } = await params;
         const body = await request.json();
 
+        // Intelligent Time Formatting Logic: Sync legacy 'waktu' field
+        if (body.waktu_mulai) {
+            const start = String(body.waktu_mulai).trim();
+            const end = body.waktu_selesai ? String(body.waktu_selesai).trim() : 'Selesai';
+
+            // Reconstruct display string: "16.00 - 17.00 WIB"
+            let formattedTime = `${start} - ${end}`;
+
+            // Auto-append WIB if it looks like clock time and missing timezone
+            if (/\d{1,2}[:.]\d{2}/.test(start) && !/WIB|WITA|WIT/i.test(formattedTime)) {
+                formattedTime += ' WIB';
+            }
+
+            // Override legacy field so frontend cards display the new time correctly
+            body.waktu = formattedTime;
+        }
+
         await db.execute({
             sql: `
             UPDATE kajian 
