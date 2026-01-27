@@ -98,6 +98,17 @@ function BatchInputPageContent() {
     // Stats and Recent Data
     const [stats, setStats] = useState({ total: 0, today: 0 });
 
+    // Success Modal State
+    const [successModal, setSuccessModal] = useState<{
+        isOpen: boolean;
+        ids: string[];
+        count: number;
+    }>({
+        isOpen: false,
+        ids: [],
+        count: 0
+    });
+
     useEffect(() => {
         fetchStats();
     }, []);
@@ -796,6 +807,7 @@ function BatchInputPageContent() {
             const recurringEntries = entriesToSave.filter(e => e.isRecurring);
 
             const successfulEntries = new Set<KajianEntry>();
+            const savedIds: string[] = [];
             let recurringErrors = 0;
 
             // 1. Process Recurring Entries (One by One)
@@ -861,6 +873,9 @@ function BatchInputPageContent() {
                     setMessage(`Gagal menyimpan kajian tematik: ${data.error || 'Server error'}`);
                 } else {
                     tematikEntries.forEach(e => successfulEntries.add(e));
+                    if (data.ids && Array.isArray(data.ids)) {
+                        savedIds.push(...data.ids);
+                    }
                 }
             }
 
@@ -884,7 +899,32 @@ function BatchInputPageContent() {
 
                 if (remainingEntries.length === 0) {
                     setInputText('');
+                    // Auto-add new manual entry if in manual mode
+                    if (isManualMode || isContributor) {
+                        setEntries([{
+                            region: 'INDONESIA',
+                            city: 'Jakarta',
+                            masjid: '',
+                            address: '',
+                            gmapsUrl: '',
+                            pemateri: '',
+                            tema: '',
+                            waktu: '',
+                            date: formatYYYYMMDD(new Date()),
+                            cp: '',
+                            khususAkhwat: false,
+                            isOnline: false,
+                            isKidsFriendly: false
+                        }]);
+                    }
                 }
+
+                // Show Success Modal
+                setSuccessModal({
+                    isOpen: true,
+                    ids: savedIds,
+                    count: savedCount
+                });
             } else if (recurringErrors > 0) {
                 setMessage('Gagal menyimpan kajian rutin. Cek koneksi atau data.');
             }
@@ -2510,6 +2550,55 @@ function BatchInputPageContent() {
                     </div>
                 )
             }
+
+            {/* Success Modal */}
+            {successModal.isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-6 text-center">
+                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <CheckCircle className="w-8 h-8 text-green-600" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800 mb-2">Berhasil Disimpan!</h3>
+                            <p className="text-slate-600 mb-6">
+                                Alhamdulillah, {successModal.count} jadwal kajian berhasil ditambahkan.
+                            </p>
+
+                            <div className="space-y-3">
+                                <button
+                                    onClick={() => {
+                                        if (successModal.ids.length === 1) {
+                                            window.open(`/kajian/${successModal.ids[0]}`, '_blank');
+                                        } else {
+                                            router.push('/admin/dashboard');
+                                        }
+                                    }}
+                                    className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <ExternalLink className="w-4 h-4" />
+                                    Lihat Hasil
+                                </button>
+
+                                <button
+                                    onClick={() => setSuccessModal({ isOpen: false, ids: [], count: 0 })}
+                                    className="w-full py-3 bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <PlusCircle className="w-4 h-4" />
+                                    Input Lagi
+                                </button>
+
+                                <button
+                                    onClick={() => setSuccessModal({ isOpen: false, ids: [], count: 0 })}
+                                    className="w-full py-2 text-slate-400 hover:text-slate-600 text-sm font-semibold transition-colors"
+                                >
+                                    Tutup
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             <ConfirmationModal
                 isOpen={alertConfig.isOpen}

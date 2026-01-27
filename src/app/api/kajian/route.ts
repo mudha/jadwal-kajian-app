@@ -199,9 +199,13 @@ export async function POST(request: Request) {
             ]
         }));
 
-        await db.batch(statements);
+        const results = await db.batch(statements);
 
-        return NextResponse.json({ success: true, count: entries.length });
+        // Extract IDs from batch results
+        // LibSQL/SQLite returns lastInsertRowid as string or bigint in the ResultSet
+        const ids = results.map(r => r.lastInsertRowid?.toString()).filter(id => id);
+
+        return NextResponse.json({ success: true, count: entries.length, ids });
     } catch (error) {
         console.error('Database Error:', error);
         return NextResponse.json({ error: 'Failed to save data' }, { status: 500 });
