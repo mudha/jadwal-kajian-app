@@ -156,7 +156,7 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
                 const now = new Date();
                 const diffTime = k._parsedDate.getTime() - now.getTime();
                 const diffDays = diffTime / (1000 * 60 * 60 * 24);
-                return diffDays <= 6;
+                return diffDays <= 2;
             }
 
             return true;
