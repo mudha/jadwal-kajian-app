@@ -159,6 +159,24 @@ export async function POST(request: Request) {
             }, { status: 409 });
         }
 
+        // Sync 'waktu' field from 'waktu_mulai' and 'waktu_selesai' before saving
+        entries.forEach(item => {
+            if (item.waktu_mulai) {
+                const start = String(item.waktu_mulai).trim();
+                const end = item.waktu_selesai ? String(item.waktu_selesai).trim() : 'Selesai';
+
+                let formattedTime = `${start} - ${end}`;
+
+                // Auto-append WIB if it looks like clock time and missing timezone
+                if (/\d{1,2}[:.]\d{2}/.test(start) && !/WIB|WITA|WIT/i.test(formattedTime)) {
+                    formattedTime += ' WIB';
+                }
+
+                // Override item.waktu with formatted string
+                item.waktu = formattedTime;
+            }
+        });
+
         // Batch insert using transactions
         const statements = entries.map(item => ({
             sql: `
