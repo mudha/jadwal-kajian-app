@@ -87,7 +87,7 @@ export async function POST(request: Request) {
 
         // Check for duplicates
         const duplicates: any[] = [];
-        const existingKajian = await db.execute('SELECT id, masjid, city, date, waktu, tema, pemateri FROM kajian');
+        const existingKajian = await db.execute('SELECT id, masjid, city, date, waktu, tema, pemateri, linkInfo FROM kajian');
 
         for (const entry of entries) {
             // Check if this entry is an Online event
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
                 if (isOnline) {
                     // Check if existing is also potentially online (or just check strict metadata match)
                     // 1. If Link is provided and matches -> DUPLICATE
-                    if (entry.link && existing.link && entry.link === existing.link) return true;
+                    if (entry.linkInfo && existing.linkInfo && entry.linkInfo === existing.linkInfo) return true;
 
                     // 2. If Pemateri is same AND Tema is similar -> DUPLICATE
                     // Use simple inclusion for now to avoid heavy computation
