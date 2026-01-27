@@ -992,11 +992,12 @@ function BatchInputPageContent() {
                 const savedCount = finalEntries.length;
                 const skippedCount = pendingSaveEntries.length - finalEntries.length;
 
-                if (action === 'skip' && skippedCount > 0) {
-                    setMessage(`Alhamdulillah, ${savedCount} jadwal baru berhasil disimpan! (${skippedCount} duplikat dilewati)`);
-                } else {
-                    setMessage(`Alhamdulillah, ${savedCount} jadwal berhasil disimpan!`);
-                }
+                // Show Success Modal instead of just message
+                setSuccessModal({
+                    isOpen: true,
+                    ids: data.ids || [],
+                    count: savedCount
+                });
 
                 fetchStats();
 
@@ -1009,6 +1010,24 @@ function BatchInputPageContent() {
 
                 if (remainingEntries.length === 0) {
                     setInputText('');
+                    // Auto-add new manual entry if in manual mode
+                    if (isManualMode || isContributor) {
+                        setEntries([{
+                            region: 'INDONESIA',
+                            city: 'Jakarta',
+                            masjid: '',
+                            address: '',
+                            gmapsUrl: '',
+                            pemateri: '',
+                            tema: '',
+                            waktu: '',
+                            date: formatYYYYMMDD(new Date()),
+                            cp: '',
+                            khususAkhwat: false,
+                            isOnline: false,
+                            isKidsFriendly: false
+                        }]);
+                    }
                 }
 
             } catch (e) {
