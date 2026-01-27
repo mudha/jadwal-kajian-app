@@ -267,9 +267,5 @@ export function formatMasjidName(name: string): string {
         return n;
     }
 
-    if (!hasPrefix) {
-        return `Masjid ${n}`;
-    }
-
     return n;
 }
