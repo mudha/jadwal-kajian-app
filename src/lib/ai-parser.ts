@@ -143,10 +143,24 @@ export async function parseWithGemini(originalText: string): Promise<KajianEntry
         if (!text) throw new Error("AI tidak mengembalikan teks");
 
         // Cleanup markdown and potential hallucinations
-        let cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        cleanJson = cleanJson.replace(/:\s*undefined/g, ': null');
+        let cleanText = text.replace(/:\s*undefined/g, ': null');
 
-        return JSON.parse(cleanJson) as KajianEntry[];
+        // Robust JSON extraction
+        const jsonStartIndex = cleanText.indexOf('[');
+        const jsonEndIndex = cleanText.lastIndexOf(']');
+
+        if (jsonStartIndex !== -1 && jsonEndIndex !== -1 && jsonEndIndex > jsonStartIndex) {
+            cleanText = cleanText.substring(jsonStartIndex, jsonEndIndex + 1);
+        } else {
+            // Fallback: try finding a single object and wrapping it
+            const objStartIndex = cleanText.indexOf('{');
+            const objEndIndex = cleanText.lastIndexOf('}');
+            if (objStartIndex !== -1 && objEndIndex !== -1 && objEndIndex > objStartIndex) {
+                cleanText = `[${cleanText.substring(objStartIndex, objEndIndex + 1)}]`;
+            }
+        }
+
+        return JSON.parse(cleanText) as KajianEntry[];
     } catch (error: any) {
         console.error("Error parsing with Gemini:", error);
         const errorMessage = error.message || "Kesalahan tidak diketahui";
