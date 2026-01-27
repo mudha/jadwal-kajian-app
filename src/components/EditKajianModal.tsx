@@ -606,7 +606,7 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave, onToa
                                         onChange={e => handleChange('is_canceled', e.target.checked)}
                                     />
                                     <div className={`mt-0.5 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${formData.is_canceled ? 'border-red-500 bg-red-500' : 'border-slate-300 bg-white'}`}>
-                                        {formData.is_canceled && (
+                                        {!!formData.is_canceled && (
                                             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                             </svg>
@@ -623,7 +623,7 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave, onToa
                                 </div>
 
                                 {/* Alasan Pembatalan */}
-                                {formData.is_canceled && (
+                                {!!formData.is_canceled && (
                                     <div className="mt-4 pl-10 animate-in slide-in-from-top-2 fade-in duration-200">
                                         <label className="text-xs font-bold text-red-600 uppercase tracking-wider mb-2 block">
                                             Alasan Pembatalan
