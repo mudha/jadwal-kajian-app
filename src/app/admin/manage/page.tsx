@@ -38,6 +38,8 @@ interface Kajian {
     lat?: number;
     lng?: number;
     catatan?: string;
+    is_canceled?: boolean;
+    cancellation_reason?: string;
     recurring_kajian_id?: number; // ID of the recurring kajian template if auto-generated
 }
 
@@ -978,8 +980,8 @@ function ManageKajianList() {
 
             {/* Edit Modal (Duplicated for simplicity in this file) */}
             {isEditModalOpen && editingKajian && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+                <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center p-0 md:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-t-3xl md:rounded-3xl w-full max-w-2xl shadow-2xl relative overflow-hidden animate-in slide-in-from-bottom-5 md:zoom-in-95 duration-200 flex flex-col h-[85vh] md:h-auto md:max-h-[90vh]">
                         <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
                             <h2 className="text-2xl font-black text-slate-900">Edit Jadwal</h2>
                             <button
@@ -1438,6 +1440,41 @@ function ManageKajianList() {
                                         />
                                         <span className={`font-bold ${editingKajian.isKidsFriendly ? 'text-orange-700' : 'text-slate-600'}`}>🎈 Kajian Anak</span>
                                     </label>
+                                </div>
+
+                                {/* Status Admin Section - Added for consistency */}
+                                <div className="pt-6 border-t border-slate-100 mt-4">
+                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 px-1">Status Admin</h3>
+                                    <div className={`transition-all duration-300 ${!!editingKajian.is_canceled ? 'bg-red-50 border-red-200 shadow-sm' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'} border rounded-2xl p-4`}>
+                                        <label className="flex items-center gap-3 cursor-pointer select-none">
+                                            <input
+                                                type="checkbox"
+                                                className="hidden"
+                                                checked={!!editingKajian.is_canceled}
+                                                onChange={e => setEditingKajian({ ...editingKajian, is_canceled: e.target.checked })}
+                                            />
+                                            <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${!!editingKajian.is_canceled ? 'border-red-500 bg-red-500 text-white' : 'border-slate-300 bg-white'}`}>
+                                                {!!editingKajian.is_canceled && <X className="w-4 h-4" />}
+                                            </div>
+                                            <div className="flex-1">
+                                                <span className={`font-black text-sm block ${!!editingKajian.is_canceled ? 'text-red-700' : 'text-slate-700'}`}>KAJIAN DIBATALKAN / DILIBURKAN</span>
+                                                <span className="text-xs text-slate-500 font-medium">Centang jika kajian ini batal atau libur</span>
+                                            </div>
+                                        </label>
+
+                                        {!!editingKajian.is_canceled && (
+                                            <div className="mt-4 pl-9 animate-in slide-in-from-top-2 fade-in duration-300">
+                                                <label className="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-1.5 block">Alasan Pembatalan</label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full px-4 py-2.5 bg-white border-2 border-red-100 focus:border-red-400 rounded-xl outline-none text-sm font-bold text-red-800 placeholder:text-red-300/50 transition-all shadow-sm"
+                                                    value={editingKajian.cancellation_reason || ''}
+                                                    onChange={e => setEditingKajian({ ...editingKajian, cancellation_reason: e.target.value })}
+                                                    placeholder="Contoh: Ustadz sedang sakit / berhalangan..."
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </form>
                         </div>
