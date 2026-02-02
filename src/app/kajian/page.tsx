@@ -690,14 +690,13 @@ function KajianListContent() {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id as any)}
-                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-xs transition-all whitespace-nowrap ${activeTab === tab.id
+                                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${activeTab === tab.id
                                         ? 'bg-teal-600 text-white shadow-lg shadow-teal-200 ring-2 ring-teal-600 ring-offset-2'
                                         : 'text-slate-500 hover:bg-white hover:text-slate-900'
                                         }`}
                                 >
-                                    <tab.icon className="w-3.5 h-3.5" />
-                                    <span className="hidden sm:inline">{tab.label}</span>
-                                    <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
+                                    <tab.icon className="w-4 h-4" />
+                                    <span>{tab.label}</span>
                                 </button>
                             ))}
                         </div>
