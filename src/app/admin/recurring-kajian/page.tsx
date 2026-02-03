@@ -134,6 +134,66 @@ export default function RecurringKajianPage() {
     }, [sourceId, role, isFormOpen, editingId, router]);
 
     useEffect(() => {
+        const handlePaste = async (e: ClipboardEvent) => {
+            if (!isFormOpen) return;
+
+            const items = e.clipboardData?.items;
+            if (!items) return;
+
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const file = items[i].getAsFile();
+                    if (!file) continue;
+
+                    e.preventDefault();
+                    setMessage('⏳ Mengupload gambar dari clipboard...');
+
+                    try {
+                        const { compressImage } = await import('@/lib/image-compression');
+                        const compressedFile = await compressImage(file);
+
+                        const authRes = await fetch('/api/imagekit-auth');
+                        const authData = await authRes.json();
+
+                        if (!authData.token) throw new Error('Gagal auth ImageKit');
+
+                        const formData = new FormData();
+                        formData.append('file', compressedFile);
+                        formData.append('fileName', `flyer-recurring-${Date.now()}`);
+                        formData.append('publicKey', authData.publicKey || process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || '');
+                        formData.append('signature', authData.signature);
+                        formData.append('expire', authData.expire.toString());
+                        formData.append('token', authData.token);
+                        formData.append('folder', '/flyers');
+
+                        const uploadRes = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const data = await uploadRes.json();
+                        if (data.url) {
+                            setFormData(prev => ({ ...prev, imageUrl: data.url }));
+                            setMessage('✅ Gambar berhasil diupload dari clipboard!');
+                        } else {
+                            throw new Error('Upload failed');
+                        }
+                    } catch (error) {
+                        console.error('Paste upload error:', error);
+                        setMessage('❌ Gagal mengupload gambar dari clipboard');
+                    }
+                    break;
+                }
+            }
+        };
+
+        if (isFormOpen) {
+            window.addEventListener('paste', handlePaste);
+        }
+        return () => window.removeEventListener('paste', handlePaste);
+    }, [isFormOpen]);
+
+    useEffect(() => {
         // Update preview when pattern changes
         const dates = generateRecurringDates(
             {
