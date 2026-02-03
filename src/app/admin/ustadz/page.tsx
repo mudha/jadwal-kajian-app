@@ -25,7 +25,7 @@ export default function UstadzManagementPage() {
 
     // Delete Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [ustadzToDelete, setUstadzToDelete] = useState<number | null>(null);
+    const [ustadzToDelete, setUstadzToDelete] = useState<Ustadz | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
     // Alert Modal State
@@ -66,7 +66,7 @@ export default function UstadzManagementPage() {
         e.preventDefault();
         try {
             const url = editingUstadz
-                ? `/api/admin/ustadz/${editingUstadz.id}`
+                ? `/api/admin/ustadz/${encodeURIComponent(editingUstadz.name)}`
                 : '/api/admin/ustadz';
             const method = editingUstadz ? 'PUT' : 'POST';
 
@@ -87,8 +87,8 @@ export default function UstadzManagementPage() {
         }
     };
 
-    const handleDelete = (id: number) => {
-        setUstadzToDelete(id);
+    const handleDelete = (ustadz: Ustadz) => {
+        setUstadzToDelete(ustadz);
         setIsDeleteModalOpen(true);
     };
 
@@ -96,7 +96,7 @@ export default function UstadzManagementPage() {
         if (!ustadzToDelete) return;
         setIsDeleting(true);
         try {
-            const response = await fetch(`/api/admin/ustadz/${ustadzToDelete}`, {
+            const response = await fetch(`/api/admin/ustadz/${encodeURIComponent(ustadzToDelete.name)}`, {
                 method: 'DELETE',
             });
 
@@ -323,7 +323,7 @@ export default function UstadzManagementPage() {
                                                             <Edit className="w-4 h-4" />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleDelete(ustadz.id)}
+                                                            onClick={() => handleDelete(ustadz)}
                                                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
@@ -366,7 +366,7 @@ export default function UstadzManagementPage() {
                                             <Edit className="w-4 h-4" />
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(ustadz.id)}
+                                            onClick={() => handleDelete(ustadz)}
                                             className="p-2.5 text-red-600 bg-red-50 border border-red-100 rounded-xl hover:bg-red-100 active:scale-95 transition-all"
                                         >
                                             <Trash2 className="w-4 h-4" />
