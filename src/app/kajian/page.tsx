@@ -386,7 +386,7 @@ function KajianListContent() {
 
         const status = getKajianStatus(k.date, k.waktu);
         if (activeTab === 'today') return status === 'TODAY';
-        if (activeTab === 'upcoming') return status === 'UPCOMING';
+        if (activeTab === 'upcoming') return ['UPCOMING', 'TOMORROW', 'DAY_AFTER_TOMORROW'].includes(status);
         if (activeTab === 'past') return status === 'PAST';
 
         return true;
