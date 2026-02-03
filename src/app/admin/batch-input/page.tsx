@@ -143,10 +143,14 @@ function BatchInputPageContent() {
 
                     try {
                         // Show loading toast
-                        setMessage('Mengupload gambar dari clipboard...');
+                        setMessage('⏳ Mengupload gambar dari clipboard...');
+
+                        // Import compression utility dynamically
+                        const { compressImage } = await import('@/lib/image-compression');
+                        const compressedFile = await compressImage(file);
 
                         const formData = new FormData();
-                        formData.append('file', file);
+                        formData.append('file', compressedFile);
 
                         // Upload to ImageKit
                         const authRes = await fetch('/api/imagekit-auth');
@@ -156,7 +160,7 @@ function BatchInputPageContent() {
                             throw new Error('Gagal mendapatkan auth ImageKit');
                         }
 
-                        // formData already contains 'file' from line 148
+                        // formData already contains 'file'
                         formData.append('fileName', `flyer-${Date.now()}`);
                         formData.append('publicKey', authData.publicKey || process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || '');
                         formData.append('signature', authData.signature);
@@ -233,16 +237,26 @@ function BatchInputPageContent() {
     };
 
     const handleImageUpload = async (file: File) => {
+        // Validate file size (check large files, e.g. > 30MB)
+        if (file.size > 30 * 1024 * 1024) {
+            setMessage('Ukuran file terlalu besar. Maksimal 30MB.');
+            return;
+        }
+
         setIsOcrLoading(true);
         setOcrProgress(0);
         try {
+            // Import compression utility dynamically
+            const { compressImage } = await import('@/lib/image-compression');
+            const compressedFile = await compressImage(file);
+
             // 1. Upload to ImageKit
             const authRes = await fetch('/api/imagekit-auth');
             const authData = await authRes.json();
 
             if (authData.token) {
                 const formData = new FormData();
-                formData.append('file', file);
+                formData.append('file', compressedFile);
                 formData.append('fileName', `ocr-${Date.now()}`);
                 formData.append('publicKey', authData.publicKey || process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || '');
                 formData.append('signature', authData.signature);

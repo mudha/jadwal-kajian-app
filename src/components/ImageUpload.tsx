@@ -24,15 +24,19 @@ export default function ImageUpload({ value, onChange, label = "Gambar / Poster"
             return;
         }
 
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            alert('Ukuran file terlalu besar. Maksimal 5MB.');
+        // Validate initial file size (max 30MB - allow large text for compression)
+        if (file.size > 30 * 1024 * 1024) {
+            alert('Ukuran file terlalu besar. Maksimal 30MB.');
             return;
         }
 
         setIsUploading(true);
 
         try {
+            // Import compression utility dynamically
+            const { compressImage } = await import('@/lib/image-compression');
+            const compressedFile = await compressImage(file);
+
             // 1. Get Auth Parameters from our API
             const authRes = await fetch('/api/imagekit-auth');
             const authData = await authRes.json();
@@ -43,7 +47,7 @@ export default function ImageUpload({ value, onChange, label = "Gambar / Poster"
 
             // 2. Upload directly to ImageKit
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', compressedFile);
             formData.append('fileName', `flyer-${Date.now()}`);
             formData.append('publicKey', authData.publicKey || process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || '');
             formData.append('signature', authData.signature);
