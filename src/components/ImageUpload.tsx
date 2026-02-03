@@ -1,6 +1,6 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
-import { Upload, X, Image as ImageIcon, Loader2, Eye, Pencil, Trash2 } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Upload, Eye, Pencil, Trash2, Loader2 } from 'lucide-react';
 
 interface ImageUploadProps {
     value?: string;
@@ -24,48 +24,36 @@ export default function ImageUpload({ value, onChange, label = "Gambar / Poster"
             return;
         }
 
-        setIsUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
+        // Validate file size (max 10MB for ImgBB)
+        if (file.size > 10 * 1024 * 1024) {
+            alert('Ukuran file terlalu besar. Maksimal 10MB.');
+            return;
+        }
 
-        // Use Cloudinary if configured, otherwise fallback to local API
-        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-        const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+        setIsUploading(true);
 
         try {
-            let url = '';
+            const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
 
-            if (cloudName && uploadPreset) {
-                // Upload to Cloudinary
-                formData.append('upload_preset', uploadPreset);
-                formData.append('folder', 'jadwal-kajian');
-
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await res.json();
-
-                if (data.secure_url) {
-                    url = data.secure_url;
-                } else {
-                    throw new Error(data.error?.message || 'Upload ke Cloudinary gagal');
-                }
-            } else {
-                // Fallback to local API (legacy)
-                const res = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await res.json();
-                if (data.url) {
-                    url = data.url;
-                } else {
-                    throw new Error('Upload lokal gagal');
-                }
+            if (!apiKey) {
+                throw new Error('API Key ImgBB belum dikonfigurasi.');
             }
 
-            onChange(url);
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                onChange(data.data.url);
+            } else {
+                throw new Error(data.error?.message || 'Upload ke ImgBB gagal');
+            }
         } catch (e: any) {
             console.error('Upload error:', e);
             alert(`Gagal mengupload gambar: ${e.message}`);
@@ -153,7 +141,7 @@ export default function ImageUpload({ value, onChange, label = "Gambar / Poster"
                     {isUploading ? (
                         <>
                             <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-                            <p className="text-xs font-bold text-slate-500">Mengupload...</p>
+                            <p className="text-xs font-bold text-slate-500">Mengupload ke Firebase...</p>
                         </>
                     ) : (
                         <>
@@ -162,7 +150,7 @@ export default function ImageUpload({ value, onChange, label = "Gambar / Poster"
                             </div>
                             <div className="text-center">
                                 <p className="text-xs font-bold text-slate-600">Klik Upload atau Paste (Ctrl+V)</p>
-                                <p className="text-[10px] text-slate-400 mt-1">Format: JPG, PNG, WEBP (Max 2MB)</p>
+                                <p className="text-[10px] text-slate-400 mt-1">Format: JPG, PNG, WEBP (Max 5MB)</p>
                             </div>
                         </>
                     )}
