@@ -83,6 +83,11 @@ export default function KajianCard({ id, date, location, title, ustadz, ustadz2,
                 <img
                     src={imageUrl || '/images/default-kajian.png'}
                     alt={title}
+                    onError={(e) => {
+                        e.currentTarget.src = '/images/default-kajian.png';
+                        // Optional: Add a small visual indicator that the image is missing?
+                        // For now just fallback cleanly so it looks nice.
+                    }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
