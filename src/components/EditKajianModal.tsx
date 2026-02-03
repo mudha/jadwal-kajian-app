@@ -84,44 +84,44 @@ export default function EditKajianModal({ isOpen, onClose, kajian, onSave, onToa
                     const file = items[i].getAsFile();
                     if (!file) continue;
 
+                    if (onToast) onToast('⏳ Mengupload gambar dari clipboard...', 'info');
+
                     try {
+                        // Import compression utility dynamically
+                        const { compressImage } = await import('@/lib/image-compression');
+                        const compressedFile = await compressImage(file);
+
+                        // Fetch ImageKit auth data
+                        const authRes = await fetch('/api/imagekit-auth');
+                        const authData = await authRes.json();
+
+                        if (!authData.token) throw new Error('Gagal auth ImageKit');
+
                         const formData = new FormData();
-                        formData.append('file', file);
+                        formData.append('file', compressedFile);
+                        formData.append('fileName', `poster-${Date.now()}`);
+                        formData.append('publicKey', authData.publicKey || process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || '');
+                        formData.append('signature', authData.signature);
+                        formData.append('expire', authData.expire.toString());
+                        formData.append('token', authData.token);
+                        formData.append('folder', '/flyers');
 
-                        // Try Cloudinary first
-                        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-                        const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+                        // Upload to ImageKit
+                        const uploadRes = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
+                            method: 'POST',
+                            body: formData
+                        });
 
-                        let url = '';
-                        if (cloudName && uploadPreset) {
-                            formData.append('upload_preset', uploadPreset);
-                            formData.append('folder', 'jadwal-kajian');
-
-                            const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-                                method: 'POST',
-                                body: formData
-                            });
-                            const data = await res.json();
-                            if (data.secure_url) {
-                                url = data.secure_url;
-                            }
+                        const data = await uploadRes.json();
+                        if (data.url) {
+                            handleChange('imageUrl', data.url);
+                            if (onToast) onToast('✅ Gambar berhasil diupload!', 'success');
                         } else {
-                            // Fallback to local API
-                            const res = await fetch('/api/upload', {
-                                method: 'POST',
-                                body: formData
-                            });
-                            const data = await res.json();
-                            if (data.url) {
-                                url = data.url;
-                            }
-                        }
-
-                        if (url) {
-                            handleChange('imageUrl', url);
+                            throw new Error('Upload gagal');
                         }
                     } catch (error) {
                         console.error('Global paste upload error:', error);
+                        if (onToast) onToast('❌ Gagal mengupload gambar', 'error');
                     }
 
                     break;
