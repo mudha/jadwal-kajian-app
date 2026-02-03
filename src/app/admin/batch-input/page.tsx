@@ -148,34 +148,29 @@ function BatchInputPageContent() {
                         const formData = new FormData();
                         formData.append('file', file);
 
-                        // Try Cloudinary first
-                        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-                        const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+                        // Upload to ImageKit
+                        const authRes = await fetch('/api/imagekit-auth');
+                        const authData = await authRes.json();
 
-                        let url = '';
-                        if (cloudName && uploadPreset) {
-                            formData.append('upload_preset', uploadPreset);
-                            formData.append('folder', 'jadwal-kajian');
-
-                            const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-                                method: 'POST',
-                                body: formData
-                            });
-                            const data = await res.json();
-                            if (data.secure_url) {
-                                url = data.secure_url;
-                            }
-                        } else {
-                            // Fallback to local API
-                            const res = await fetch('/api/upload', {
-                                method: 'POST',
-                                body: formData
-                            });
-                            const data = await res.json();
-                            if (data.url) {
-                                url = data.url;
-                            }
+                        if (!authData.token) {
+                            throw new Error('Gagal mendapatkan auth ImageKit');
                         }
+
+                        // formData already contains 'file' from line 148
+                        formData.append('fileName', `flyer-${Date.now()}`);
+                        formData.append('publicKey', process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || '');
+                        formData.append('signature', authData.signature);
+                        formData.append('expire', authData.expire.toString());
+                        formData.append('token', authData.token);
+                        formData.append('folder', '/flyers');
+
+                        const uploadRes = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const data = await uploadRes.json();
+                        let url = data.url;
 
                         if (url) {
                             updateEntry(targetIndex, 'imageUrl', url);
@@ -241,20 +236,28 @@ function BatchInputPageContent() {
         setIsOcrLoading(true);
         setOcrProgress(0);
         try {
-            // 1. Upload to Cloudinary (Unsigned Preset)
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'jadwal_kajian_preset');
+            // 1. Upload to ImageKit
+            const authRes = await fetch('/api/imagekit-auth');
+            const authData = await authRes.json();
 
-            const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-            if (cloudName) {
-                const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+            if (authData.token) {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('fileName', `ocr-${Date.now()}`);
+                formData.append('publicKey', process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || '');
+                formData.append('signature', authData.signature);
+                formData.append('expire', authData.expire.toString());
+                formData.append('token', authData.token);
+                formData.append('folder', '/ocr-uploads');
+
+                const uploadRes = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
                     method: 'POST',
                     body: formData
                 });
+
                 const uploadData = await uploadRes.json();
-                if (uploadData.secure_url) {
-                    setLastImageUrl(uploadData.secure_url);
+                if (uploadData.url) {
+                    setLastImageUrl(uploadData.url);
                 }
             }
 
