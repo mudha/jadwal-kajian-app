@@ -158,7 +158,7 @@ function BatchInputPageContent() {
 
                         // formData already contains 'file' from line 148
                         formData.append('fileName', `flyer-${Date.now()}`);
-                        formData.append('publicKey', process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || '');
+                        formData.append('publicKey', authData.publicKey || process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || '');
                         formData.append('signature', authData.signature);
                         formData.append('expire', authData.expire.toString());
                         formData.append('token', authData.token);
@@ -244,7 +244,7 @@ function BatchInputPageContent() {
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('fileName', `ocr-${Date.now()}`);
-                formData.append('publicKey', process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || '');
+                formData.append('publicKey', authData.publicKey || process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || '');
                 formData.append('signature', authData.signature);
                 formData.append('expire', authData.expire.toString());
                 formData.append('token', authData.token);
