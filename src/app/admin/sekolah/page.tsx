@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, MapPin, Loader2, Wand2 } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, MapPin, Loader2, Wand2, X } from 'lucide-react';
 import SchoolFormModal from '@/components/admin/SchoolFormModal';
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
 
@@ -204,11 +204,19 @@ export default function AdminSekolahPage() {
                 <input
                     type="text"
                     placeholder="Cari sekolah berdasarkan nama atau kota..."
-                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 shadow-sm outline-none focus:ring-2 focus:ring-purple-500 transition-all font-medium text-slate-800"
+                    className="w-full pl-12 pr-12 py-3 rounded-xl border border-slate-200 shadow-sm outline-none focus:ring-2 focus:ring-purple-500 transition-all font-medium text-slate-800"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                 />
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                {search && (
+                    <button
+                        onClick={() => setSearch('')}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                )}
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Users, Shield, ShieldCheck, FileText, ChevronRight, Search, UserPlus, BarChart2 } from 'lucide-react';
+import { Users, Shield, ShieldCheck, FileText, ChevronRight, Search, UserPlus, BarChart2, X } from 'lucide-react';
 import PendingContributorsList from '@/components/admin/PendingContributorsList';
 
 interface Contributor {
@@ -53,8 +53,8 @@ export default function ContributorsPage() {
                 <button
                     onClick={() => setActiveTab('pending')}
                     className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'pending'
-                            ? 'bg-white text-blue-600 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
                         }`}
                 >
                     <UserPlus className="w-4 h-4" />
@@ -63,8 +63,8 @@ export default function ContributorsPage() {
                 <button
                     onClick={() => setActiveTab('performance')}
                     className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'performance'
-                            ? 'bg-white text-blue-600 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
                         }`}
                 >
                     <BarChart2 className="w-4 h-4" />
@@ -92,10 +92,18 @@ export default function ContributorsPage() {
                             <input
                                 type="text"
                                 placeholder="Cari kontributor..."
-                                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-700"
+                                className="w-full pl-10 pr-10 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-700"
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
                             />
+                            {searchTerm && (
+                                <button
+                                    onClick={() => setSearchTerm('')}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -112,8 +120,8 @@ export default function ContributorsPage() {
                                     <div className="relative z-10 flex items-start justify-between">
                                         <div className="flex items-center gap-4">
                                             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${c.role === 'SUPER_ADMIN'
-                                                    ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-amber-200'
-                                                    : 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-200'
+                                                ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-amber-200'
+                                                : 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-200'
                                                 } shadow-md`}>
                                                 {c.role === 'SUPER_ADMIN'
                                                     ? <ShieldCheck className="w-6 h-6 text-white" />
