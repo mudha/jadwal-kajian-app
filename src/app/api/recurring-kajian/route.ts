@@ -63,7 +63,7 @@ export async function POST(request: Request) {
         }
 
         // Validate pattern
-        const validPatterns = ['weekly', 'biweekly', 'monthly', 'monthly_odd', 'monthly_even'];
+        const validPatterns = ['weekly', 'biweekly', 'monthly', 'monthly_odd', 'monthly_even', 'custom'];
         if (!validPatterns.includes(data.pattern)) {
             return NextResponse.json(
                 { error: 'Invalid recurring pattern' },
@@ -83,6 +83,14 @@ export async function POST(request: Request) {
         if (data.pattern === 'monthly' && (!data.week_of_month || data.week_of_month < 1 || data.week_of_month > 4)) {
             return NextResponse.json(
                 { error: 'week_of_month is required for monthly pattern (1-4)' },
+                { status: 400 }
+            );
+        }
+
+        // Custom pattern requires week_of_month (should be a bitmask > 0)
+        if (data.pattern === 'custom' && (!data.week_of_month || data.week_of_month < 1)) {
+            return NextResponse.json(
+                { error: 'week_of_month is required for custom pattern (bitmask)' },
                 { status: 400 }
             );
         }

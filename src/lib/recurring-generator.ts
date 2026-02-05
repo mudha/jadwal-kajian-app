@@ -9,12 +9,13 @@ export type RecurringPattern =
     | 'biweekly'
     | 'monthly'
     | 'monthly_odd'
-    | 'monthly_even';
+    | 'monthly_even'
+    | 'custom'; // Custom weeks (bitmask)
 
 export interface RecurringConfig {
     pattern: RecurringPattern;
     dayOfWeek: number; // 0 = Sunday, 6 = Saturday
-    weekOfMonth?: number; // 1-4 for monthly patterns
+    weekOfMonth?: number; // 1-4 for monthly patterns, or bitmask for custom (1=week1, 2=week2, 4=week3, etc)
 }
 
 /**
@@ -31,11 +32,33 @@ function getWeekOfMonth(date: Date): number {
 }
 
 /**
+ * Convert bitmask to array of weeks
+ * e.g. 21 (10101 binary) -> [1, 3, 5]
+ */
+export function bitmaskToWeeks(mask: number): number[] {
+    const weeks: number[] = [];
+    for (let i = 1; i <= 5; i++) {
+        if ((mask & (1 << (i - 1))) !== 0) {
+            weeks.push(i);
+        }
+    }
+    return weeks;
+}
+
+/**
+ * Convert array of weeks to bitmask
+ * e.g. [1, 3, 5] -> 21
+ */
+export function weeksToBitmask(weeks: number[]): number {
+    return weeks.reduce((acc, week) => acc | (1 << (week - 1)), 0);
+}
+
+/**
  * Get the nth occurrence of a weekday in a month
  * @param year Year
  * @param month Month (0-11)
  * @param dayOfWeek Day of week (0-6)
- * @param occurrence Which occurrence (1-4)
+ * @param occurrence Which occurrence (1-5)
  * @returns Date or null if doesn't exist
  */
 function getNthWeekdayOfMonth(
@@ -138,6 +161,32 @@ export function generateRecurringDates(
             break;
         }
 
+        case 'custom': {
+            // Custom weeks based on bitmask
+            const weekMask = config.weekOfMonth || 0;
+            const targetWeeks = bitmaskToWeeks(weekMask);
+
+            let current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+
+            while (current <= endDate) {
+                for (const weekNum of targetWeeks) {
+                    const occurrence = getNthWeekdayOfMonth(
+                        current.getFullYear(),
+                        current.getMonth(),
+                        dayOfWeek,
+                        weekNum
+                    );
+
+                    if (occurrence && occurrence >= startDate && occurrence <= endDate) {
+                        dates.push(occurrence);
+                    }
+                }
+
+                current.setMonth(current.getMonth() + 1);
+            }
+            break;
+        }
+
         case 'monthly_odd': {
             // Occurs on weeks 1 and 3 of each month
             let current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
@@ -228,6 +277,9 @@ export function getPatternDescription(config: RecurringConfig): string {
             return `Setiap 2 pekan (${dayName})`;
         case 'monthly':
             return `Setiap bulan (Pekan ke-${config.weekOfMonth}, ${dayName})`;
+        case 'custom':
+            const weeks = bitmaskToWeeks(config.weekOfMonth || 0);
+            return `Pekan ke ${weeks.join(', ')} (${dayName})`;
         case 'monthly_odd':
             return `2x sebulan (Pekan 1 & 3, ${dayName})`;
         case 'monthly_even':
@@ -236,3 +288,4 @@ export function getPatternDescription(config: RecurringConfig): string {
             return 'Tidak diketahui';
     }
 }
+

@@ -495,15 +495,13 @@ export default function RecurringKajianPage() {
                                     </div>
                                     <div>
                                         <label className="text-xs font-bold text-slate-600 mb-2 block">Kota</label>
-                                        <select
+                                        <AutosuggestInput
+                                            type="city"
                                             value={formData.city}
-                                            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                            onChange={(val) => setFormData({ ...formData, city: val })}
                                             className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold"
-                                        >
-                                            {indonesianCities.map(city => (
-                                                <option key={city} value={city}>{city}</option>
-                                            ))}
-                                        </select>
+                                            placeholder="Kota..."
+                                        />
                                     </div>
                                 </div>
 

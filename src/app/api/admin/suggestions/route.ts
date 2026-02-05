@@ -1,18 +1,17 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { indonesianCities } from '@/data/cities';
 
-// GET - Get autocomplete suggestions for masjid and pemateri
+// GET - Get autocomplete suggestions for masjid, pemateri, and city
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
-        const type = searchParams.get('type'); // 'masjid' or 'pemateri'
+        const type = searchParams.get('type'); // 'masjid', 'pemateri', 'city'
         const query = searchParams.get('q') || '';
 
-        if (!type || !['masjid', 'pemateri'].includes(type)) {
+        if (!type || !['masjid', 'pemateri', 'city'].includes(type)) {
             return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
         }
-
-        const field = type === 'masjid' ? 'masjid' : 'pemateri';
 
         let sql = '';
         let args = [`%${query}%`];
@@ -35,6 +34,17 @@ export async function GET(request: Request) {
                 ORDER BY count DESC, masjid ASC
                 LIMIT 10
             `;
+        } else if (type === 'city') {
+            sql = `
+                SELECT city as value, COUNT(*) as count
+                FROM kajian
+                WHERE city IS NOT NULL 
+                AND city != '' 
+                AND LOWER(city) LIKE LOWER(?)
+                GROUP BY city
+                ORDER BY count DESC, city ASC
+                LIMIT 20
+            `;
         } else {
             sql = `
                 SELECT DISTINCT pemateri as value, COUNT(*) as count
@@ -53,17 +63,38 @@ export async function GET(request: Request) {
             args
         });
 
-        // Debug log
-        if (type === 'masjid' && result.rows.length > 0) {
-            console.log('Suggestion debug:', result.rows[0]);
-        }
-
-        const suggestions = result.rows.map((row: any) => ({
+        let suggestions = result.rows.map((row: any) => ({
             value: row.value,
             count: row.count,
-            // Pass all other fields
             ...row
         }));
+
+        // For city, merge with static list
+        if (type === 'city') {
+            // 1. Get DB values map
+            const dbMap = new Map(suggestions.map((s: any) => [s.value.toLowerCase(), s]));
+
+            // 2. Filter static list
+            const filteredStatic = indonesianCities
+                .filter(city => city.toLowerCase().includes(query.toLowerCase()))
+                .slice(0, 10); // Limit static matches
+
+            // 3. Merge
+            for (const city of filteredStatic) {
+                if (!dbMap.has(city.toLowerCase())) {
+                    suggestions.push({ value: city, count: 0 });
+                }
+            }
+
+            // 4. Sort (High count first, then alphabetical)
+            suggestions.sort((a: any, b: any) => {
+                if (b.count !== a.count) return b.count - a.count;
+                return a.value.localeCompare(b.value);
+            });
+
+            // 5. Limit final result
+            suggestions = suggestions.slice(0, 10);
+        }
 
         return NextResponse.json(suggestions);
     } catch (error) {

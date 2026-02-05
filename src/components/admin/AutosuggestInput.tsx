@@ -8,7 +8,7 @@ interface AutosuggestInputProps {
     onChange: (value: string) => void;
     onSelect?: (item: any) => void;
     placeholder?: string;
-    type: 'masjid' | 'pemateri';
+    type: 'masjid' | 'pemateri' | 'city';
     className?: string;
 }
 

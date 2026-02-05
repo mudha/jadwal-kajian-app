@@ -1,6 +1,6 @@
 'use client';
 
-import { RecurringPattern } from '@/lib/recurring-generator';
+import { RecurringPattern, bitmaskToWeeks, weeksToBitmask } from '@/lib/recurring-generator';
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 
@@ -19,6 +19,7 @@ const PATTERNS: { value: RecurringPattern; label: string }[] = [
     { value: 'monthly', label: 'Bulanan (Bulan tertentu)' },
     { value: 'monthly_odd', label: '2x Sebulan (Pekan 1 & 3)' },
     { value: 'monthly_even', label: '2x Sebulan (Pekan 2 & 4)' },
+    { value: 'custom', label: 'Kustom (Pilih pekan spesifik)' },
 ];
 
 export default function RecurringPatternSelector({
@@ -33,6 +34,19 @@ export default function RecurringPatternSelector({
 
     const selectedPattern = PATTERNS.find(p => p.value === pattern);
     const needsWeekOfMonth = pattern === 'monthly';
+    const isCustom = pattern === 'custom';
+
+    // For custom pattern, get selected weeks from bitmask
+    const selectedWeeks = isCustom ? bitmaskToWeeks(weekOfMonth || 0) : [];
+
+    const toggleWeek = (week: number) => {
+        const newWeeks = selectedWeeks.includes(week)
+            ? selectedWeeks.filter(w => w !== week)
+            : [...selectedWeeks, week];
+
+        const newBitmask = weeksToBitmask(newWeeks);
+        onChange(pattern, dayOfWeek, newBitmask);
+    };
 
     return (
         <div className="space-y-4">
@@ -58,7 +72,9 @@ export default function RecurringPatternSelector({
                                     key={p.value}
                                     type="button"
                                     onClick={() => {
-                                        onChange(p.value, dayOfWeek, weekOfMonth);
+                                        // Default to week 1 for monthly, empty strict for custom (0)
+                                        const defaultWeek = p.value === 'monthly' ? 1 : (p.value === 'custom' ? 0 : undefined);
+                                        onChange(p.value, dayOfWeek, defaultWeek);
                                         setShowPatternDropdown(false);
                                     }}
                                     className="w-full text-left px-4 py-3 text-sm text-slate-800 hover:bg-blue-50 hover:text-blue-600 transition-colors border-b border-slate-50 last:border-none"
@@ -142,6 +158,41 @@ export default function RecurringPatternSelector({
                     </div>
                 </div>
             )}
+
+            {/* Custom Weeks Selector */}
+            {isCustom && (
+                <div className="bg-white rounded-xl border border-slate-200 p-4">
+                    <label className="text-[10px] font-black text-slate-400 uppercase mb-3 block tracking-widest">
+                        Pilih Pekan
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                        {[1, 2, 3, 4, 5].map(week => {
+                            const isSelected = selectedWeeks.includes(week);
+                            return (
+                                <button
+                                    key={week}
+                                    type="button"
+                                    onClick={() => toggleWeek(week)}
+                                    className={`
+                                        w-10 h-10 rounded-lg text-sm font-bold transition-all border-2
+                                        ${isSelected
+                                            ? 'bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-500/30'
+                                            : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-blue-300 hover:bg-white'}
+                                    `}
+                                >
+                                    {week}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    {selectedWeeks.length === 0 && (
+                        <p className="mt-2 text-xs text-red-500 font-medium">
+                            * Pilih minimal satu pekan
+                        </p>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
+
