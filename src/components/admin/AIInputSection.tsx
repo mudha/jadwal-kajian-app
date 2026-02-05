@@ -4,7 +4,7 @@ import { Upload, Loader2, Image as ImageIcon, PlusCircle, Play, Sparkles, X, Fil
 interface AIInputSectionProps {
     onProcess: () => void;
     onAiProcess: () => void;
-    onImageUpload: (file: File) => void;
+    onImageUpload: (files: File[]) => void;
     inputText: string;
     setInputText: (text: string) => void;
     lastImageUrl: string | null;
@@ -57,8 +57,13 @@ export default function AIInputSection({
                                         id="poster-upload"
                                         type="file"
                                         accept="image/*"
+                                        multiple
                                         className="hidden"
-                                        onChange={(e) => e.target.files?.[0] && onImageUpload(e.target.files[0])}
+                                        onChange={(e) => {
+                                            if (e.target.files && e.target.files.length > 0) {
+                                                onImageUpload(Array.from(e.target.files));
+                                            }
+                                        }}
                                     />
 
                                     {isOcrLoading ? (

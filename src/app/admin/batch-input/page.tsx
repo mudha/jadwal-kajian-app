@@ -236,28 +236,41 @@ function BatchInputPageContent() {
         router.refresh();
     };
 
-    const handleImageUpload = async (file: File) => {
-        // Validate file size (check large files, e.g. > 30MB)
-        if (file.size > 30 * 1024 * 1024) {
-            setMessage('Ukuran file terlalu besar. Maksimal 30MB.');
-            return;
-        }
-
+    const handleImageUpload = async (files: File[]) => {
         setIsOcrLoading(true);
         setOcrProgress(0);
+
         try {
             // Import compression utility dynamically
             const { compressImage } = await import('@/lib/image-compression');
-            const compressedFile = await compressImage(file);
 
-            // 1. Upload to ImageKit
+            // Get Auth once
             const authRes = await fetch('/api/imagekit-auth');
             const authData = await authRes.json();
 
-            if (authData.token) {
+            if (!authData.token) {
+                throw new Error('Gagal mendapatkan auth ImageKit');
+            }
+
+            let processedCount = 0;
+            const totalFiles = files.length;
+
+            for (const file of files) {
+                // Validate file size (check large files, e.g. > 30MB)
+                if (file.size > 30 * 1024 * 1024) {
+                    setMessage(`Skip: File ${file.name} terlalu besar (>30MB).`);
+                    continue;
+                }
+
+                // Update progress context
+                setMessage(`Memproses gambar ${processedCount + 1} dari ${totalFiles}...`);
+
+                const compressedFile = await compressImage(file);
+
+                // 1. Upload to ImageKit
                 const formData = new FormData();
                 formData.append('file', compressedFile);
-                formData.append('fileName', `ocr-${Date.now()}`);
+                formData.append('fileName', `ocr-${Date.now()}-${processedCount}`);
                 formData.append('publicKey', authData.publicKey || process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || '');
                 formData.append('signature', authData.signature);
                 formData.append('expire', authData.expire.toString());
@@ -270,32 +283,40 @@ function BatchInputPageContent() {
                 });
 
                 const uploadData = await uploadRes.json();
-                if (uploadData.url) {
-                    setLastImageUrl(uploadData.url);
+                const imageUrl = uploadData.url;
+
+                if (imageUrl) {
+                    setLastImageUrl(imageUrl);
                 }
-            }
 
-
-            // 2. Tesseract OCR
-            const result = await Tesseract.recognize(
-                file,
-                'ind+eng',
-                {
-                    logger: m => {
-                        if (m.status === 'recognizing text') {
-                            setOcrProgress(Math.round(m.progress * 100));
+                // 2. Tesseract OCR
+                setOcrProgress(0); // Reset for this file
+                const result = await Tesseract.recognize(
+                    file,
+                    'ind+eng',
+                    {
+                        logger: m => {
+                            if (m.status === 'recognizing text') {
+                                setOcrProgress(Math.round(m.progress * 100));
+                            }
                         }
                     }
-                }
-            );
-            setInputText(prev => prev + (prev ? '\n\n' : '') + result.data.text);
-            setMessage('Alhamdulillah, gambar berhasil diupload dan teks berhasil dibaca! Sekarang silakan klik "Ekstrak Jadwal".');
+                );
+
+                // Append with Delimiters
+                const delimiter = `=== GAMBAR: ${imageUrl || 'unknown'} ===`;
+                const endDelimiter = `=== BATAS GAMBAR ===`;
+                setInputText(prev => prev + (prev ? '\n\n' : '') + delimiter + '\n' + result.data.text + '\n' + endDelimiter);
+
+                processedCount++;
+            }
+
+            setMessage(`Alhamdulillah, ${processedCount} gambar berhasil diperoses! Silakan klik "AI Gemini" atau "Ekstrak".`);
         } catch (e) {
             console.error(e);
-            setMessage('Gagal memproses gambar. Pastikan format benar dan konfigurasi Cloudinary sesuai.');
+            setMessage('Gagal memproses gambar. Pastikan format benar.');
         } finally {
             setIsOcrLoading(false);
-
         }
     };
 
@@ -303,12 +324,14 @@ function BatchInputPageContent() {
         const handlePaste = (e: ClipboardEvent) => {
             const items = e.clipboardData?.items;
             if (!items) return;
+            const files: File[] = [];
             for (let i = 0; i < items.length; i++) {
                 if (items[i].type.indexOf('image') !== -1) {
                     const file = items[i].getAsFile();
-                    if (file) handleImageUpload(file);
+                    if (file) files.push(file);
                 }
             }
+            if (files.length > 0) handleImageUpload(files);
         };
 
         window.addEventListener('paste', handlePaste);
@@ -565,8 +588,57 @@ function BatchInputPageContent() {
                 totalSteps: 100 // Estimate
             });
 
-            const parsed = await parseWithGemini(inputText);
+            // NEW: Parse with Delimiters Support
+            // Split by "=== GAMBAR: (url) ==="
+            const parts = inputText.split(/=== GAMBAR: (.*?) ===/);
+            // Result array: [text_before, url1, text1, url2, text2, ...]
+
+            let allParsedEntries: KajianEntry[] = [];
+
+            if (parts.length > 2) {
+                // We have delimited content
+                // Iterate 1, 3, 5... for URLs. 2, 4, 6... for Text
+                for (let i = 1; i < parts.length; i += 2) {
+                    const url = parts[i];
+                    let content = parts[i + 1] || '';
+                    // Remove end delimiter
+                    content = content.replace(/=== BATAS GAMBAR ===/g, '').trim();
+
+                    if (!content) continue; // Skip empty blocks
+
+                    setProgressModal(prev => ({
+                        ...prev,
+                        message: `Menganalisis Poster ${Math.ceil(i / 2)} dari ${Math.floor(parts.length / 2)}...`
+                    }));
+
+                    try {
+                        const parsedChunk = await parseWithGemini(content);
+                        // Attach URL to these entries
+                        const chunkEntries = parsedChunk.map(entry => ({ ...entry, imageUrl: url }));
+                        allParsedEntries.push(...chunkEntries);
+                    } catch (err) {
+                        console.error(`Error parsing chunk ${i}:`, err);
+                        // Continue to next chunk
+                    }
+                }
+            } else {
+                // Fallback: No delimiters, treat as single block
+                allParsedEntries = await parseWithGemini(inputText);
+            }
+
+            // If no results, try fallback
+            if (allParsedEntries.length === 0 && parts.length <= 2) {
+                // Might have failed or been empty
+                // pass
+            }
+
+            const parsed = allParsedEntries;
+
             if (stopSignal.current) return;
+
+            if (parsed.length === 0) {
+                throw new Error('Tidak ada jadwal yang ditemukan dari teks yang diberikan.');
+            }
 
             setProgressModal(prev => ({
                 ...prev,
@@ -608,7 +680,8 @@ function BatchInputPageContent() {
                     ...cleanEntry,
                     ...waktuSplit,
                     ...pemateriSplit,
-                    imageUrl: lastImageUrl || defaultImg
+                    // Use entry.imageUrl if set (from delimiter), else fallback to lastImageUrl
+                    imageUrl: entry.imageUrl || lastImageUrl || defaultImg
                 };
             });
             setEntries(enrichedEntries);
