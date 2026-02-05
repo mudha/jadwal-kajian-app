@@ -7,8 +7,8 @@ interface AIInputSectionProps {
     onImageUpload: (files: File[]) => void;
     inputText: string;
     setInputText: (text: string) => void;
-    lastImageUrl: string | null;
-    setLastImageUrl: (url: string | null) => void;
+    uploadedImages: string[];
+    setUploadedImages: (urls: string[]) => void;
     isOcrLoading: boolean;
     ocrProgress: number;
     isGeocoding: boolean;
@@ -21,8 +21,8 @@ export default function AIInputSection({
     onImageUpload,
     inputText,
     setInputText,
-    lastImageUrl,
-    setLastImageUrl,
+    uploadedImages,
+    setUploadedImages,
     isOcrLoading,
     ocrProgress,
     isGeocoding,
@@ -102,15 +102,33 @@ export default function AIInputSection({
                                         value={inputText}
                                         onChange={(e) => setInputText(e.target.value)}
                                     />
-                                    {lastImageUrl && (
-                                        <div className="absolute top-4 right-4 group">
-                                            <div className="relative">
-                                                <img src={lastImageUrl} className="w-16 h-16 object-cover rounded-xl border-4 border-white shadow-lg animate-in zoom-in-50 duration-300" />
+                                    {uploadedImages.length > 0 && (
+                                        <div className="absolute top-4 right-4 max-h-[160px] overflow-y-auto">
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {uploadedImages.map((url, idx) => (
+                                                    <div key={idx} className="relative group">
+                                                        <img
+                                                            src={url}
+                                                            className="w-16 h-16 object-cover rounded-xl border-2 border-white shadow-lg animate-in zoom-in-50 duration-300"
+                                                        />
+                                                        <div className="absolute -top-1 -right-1 bg-blue-600 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-lg">
+                                                            {idx + 1}
+                                                        </div>
+                                                        <button
+                                                            onClick={() => setUploadedImages(uploadedImages.filter((_, i) => i !== idx))}
+                                                            className="absolute -bottom-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity transform scale-75 hover:scale-100"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="mt-2 text-right">
                                                 <button
-                                                    onClick={() => setLastImageUrl(null)}
-                                                    className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    onClick={() => setUploadedImages([])}
+                                                    className="text-[10px] text-red-500 hover:text-red-700 font-bold underline"
                                                 >
-                                                    <X className="w-3 h-3" />
+                                                    Clear All
                                                 </button>
                                             </div>
                                         </div>

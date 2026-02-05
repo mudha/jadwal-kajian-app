@@ -30,7 +30,7 @@ function BatchInputPageContent() {
     const [isOcrLoading, setIsOcrLoading] = useState(false);
     const [isAiLoading, setIsAiLoading] = useState(false);
     const [ocrProgress, setOcrProgress] = useState(0);
-    const [lastImageUrl, setLastImageUrl] = useState<string | null>(null);
+    const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
     const { role, isLoading: isAdminLoading } = useAdmin();
     const isContributor = !isAdminLoading && role === 'CONTRIBUTOR';
@@ -286,7 +286,7 @@ function BatchInputPageContent() {
                 const imageUrl = uploadData.url;
 
                 if (imageUrl) {
-                    setLastImageUrl(imageUrl);
+                    setUploadedImages(prev => [...prev, imageUrl]);
                 }
 
                 // 2. Tesseract OCR
@@ -389,7 +389,7 @@ function BatchInputPageContent() {
                     ...cleanEntry,
                     ...waktuSplit,
                     ...pemateriSplit,
-                    imageUrl: lastImageUrl || defaultImg
+                    imageUrl: entry.imageUrl || (uploadedImages.length > 0 ? uploadedImages[uploadedImages.length - 1] : defaultImg)
                 };
             });
             setEntries(enrichedEntries);
@@ -680,8 +680,8 @@ function BatchInputPageContent() {
                     ...cleanEntry,
                     ...waktuSplit,
                     ...pemateriSplit,
-                    // Use entry.imageUrl if set (from delimiter), else fallback to lastImageUrl
-                    imageUrl: entry.imageUrl || lastImageUrl || defaultImg
+                    // Use entry.imageUrl if set (from delimiter), else fallback to last uploaded image
+                    imageUrl: entry.imageUrl || (uploadedImages.length > 0 ? uploadedImages[uploadedImages.length - 1] : defaultImg)
                 };
             });
             setEntries(enrichedEntries);
@@ -1290,8 +1290,8 @@ function BatchInputPageContent() {
                     onImageUpload={handleImageUpload}
                     inputText={inputText}
                     setInputText={setInputText}
-                    lastImageUrl={lastImageUrl}
-                    setLastImageUrl={setLastImageUrl}
+                    uploadedImages={uploadedImages}
+                    setUploadedImages={setUploadedImages}
                     isOcrLoading={isOcrLoading}
                     ocrProgress={ocrProgress}
                     isGeocoding={isGeocoding}
