@@ -826,7 +826,7 @@ function BatchInputPageContent() {
                 setEntries([...normalized]); // Live update UI
             }
 
-            setLastImageUrl(null); // Reset after processing
+            setUploadedImages([]); // Reset after processing
             setIsGeocoding(false);
 
             if (stopSignal.current) {
