@@ -316,6 +316,181 @@ function BatchInputPageContent() {
 
 
 
+    const handleProcess = async () => {
+        try {
+            // Use Regex pattern matching for extraction
+            setIsGeocoding(true);
+            setProgressModal({
+                isOpen: true,
+                title: 'Proses Ekstraksi',
+                message: 'Sedang mengekstrak data dengan Regex...',
+                progress: 10,
+                currentStep: 0,
+                totalSteps: 0
+            });
+
+            // Strip delimiters for Regex parsing to avoid confusion? 
+            // Or just pass as is. Regex usually looks for specific patterns (Waktu, Tempat, etc).
+            // Delimiters shouldn't hurt unless they match.
+            const parsed = parseKajianBroadcast(inputText);
+
+            const enrichedEntries = parsed.map(entry => {
+                const isFriday = entry.waktu?.toLowerCase().includes('jumat') || entry.waktu?.toLowerCase().includes("jum'at") || entry.tema?.toLowerCase().includes('jumat') || entry.tema === '';
+                const defaultImg = isFriday ? '/images/khutbah-jumat-cover.png' : undefined;
+
+                // Auto-split waktu and pemateri
+                const waktuSplit = splitWaktu(entry.waktu);
+                const pemateriSplit = splitPemateri(entry.pemateri);
+
+                // Sanitize Online Entries
+                let cleanEntry = { ...entry };
+                const masjidRaw = entry.masjid?.toLowerCase() || '';
+                const cityRaw = entry.city?.toLowerCase() || '';
+                const addressRaw = entry.address?.toLowerCase() || '';
+
+                const isOnline = entry.isOnline ||
+                    masjidRaw.includes('online') ||
+                    masjidRaw.includes('zoom') ||
+                    cityRaw.includes('online') ||
+                    addressRaw.includes('online');
+
+                if (isOnline) {
+                    cleanEntry.gmapsUrl = '';
+                    cleanEntry.lat = undefined;
+                    cleanEntry.lng = undefined;
+                    cleanEntry.masjid = 'Online';
+                    cleanEntry.city = 'Online';
+                    cleanEntry.address = 'Online';
+                    cleanEntry.isOnline = true;
+                }
+
+                return {
+                    ...cleanEntry,
+                    ...waktuSplit,
+                    ...pemateriSplit,
+                    imageUrl: entry.imageUrl || (uploadedImages.length > 0 ? uploadedImages[uploadedImages.length - 1].url : defaultImg)
+                };
+            });
+            setEntries(enrichedEntries);
+            setSelectedIndices(new Set(enrichedEntries.map((_, i) => i)));
+
+            if (enrichedEntries.length === 0) {
+                throw new Error('Tidak ada jadwal yang ditemukan dengan Regex. Coba gunakan AI Gemini.');
+            }
+
+            setProgressModal({
+                isOpen: true,
+                title: 'Proses Ekstraksi',
+                message: `Berhasil mengekstrak ${enrichedEntries.length} jadwal. Memulai pencarian koordinat lokasi...`,
+                progress: 20,
+                currentStep: 0,
+                totalSteps: enrichedEntries.length
+            });
+
+            const withCoords = [...enrichedEntries];
+
+            // 1. Geocoding
+            for (let i = 0; i < withCoords.length; i++) {
+                const entry = withCoords[i];
+
+                if (entry.isOnline) {
+                    withCoords[i] = { ...entry, gmapsUrl: '', lat: undefined, lng: undefined };
+                    setEntries([...withCoords]);
+                    continue;
+                }
+
+                const progress = 20 + ((i / withCoords.length) * 40);
+                setProgressModal(prev => ({
+                    ...prev,
+                    progress,
+                    currentStep: i + 1,
+                    message: `Mencari koordinat lokasi... (${i + 1}/${withCoords.length})`
+                }));
+
+                const urlCoords = extractCoordsFromUrl(entry.gmapsUrl);
+                if (urlCoords) {
+                    withCoords[i] = { ...entry, lat: urlCoords.lat, lng: urlCoords.lng };
+                    setEntries([...withCoords]);
+                    continue;
+                }
+
+                if (entry.gmapsUrl && !entry.gmapsUrl.includes('google.com/maps') && !entry.gmapsUrl.includes('google.co.id/maps')) {
+                    // simplified resolve URL for manual process to save lines
+                }
+
+                const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
+                if (coords) {
+                    const gmapsUrl = entry.gmapsUrl || `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
+                    withCoords[i] = { ...entry, lat: coords.lat, lng: coords.lng, gmapsUrl };
+                    setEntries([...withCoords]);
+                }
+            }
+
+            // 2. Normalization
+            setProgressModal({
+                isOpen: true,
+                title: 'Proses Ekstraksi',
+                message: 'Menormalisasi nama ustadz...',
+                progress: 60,
+                currentStep: 0,
+                totalSteps: withCoords.length
+            });
+            const normalized = [...withCoords];
+
+            for (let i = 0; i < normalized.length; i++) {
+                const entry = normalized[i];
+                const progress = 60 + ((i / normalized.length) * 35);
+                setProgressModal(prev => ({
+                    ...prev,
+                    progress,
+                    currentStep: i + 1,
+                    message: `Menormalisasi nama... (${i + 1}/${normalized.length})`
+                }));
+
+                try {
+                    const ustadzResponse = await fetch('/api/admin/normalize', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: entry.pemateri, type: 'ustadz', threshold: 0.8 }),
+                    });
+                    const ustadzData = await ustadzResponse.json();
+
+                    if (ustadzData.hasExactMatch || (ustadzData.suggestions && ustadzData.suggestions.length > 0)) {
+                        const bestMatch = ustadzData.hasExactMatch
+                            ? ustadzData.canonicalName
+                            : ustadzData.suggestions[0].name;
+                        normalized[i] = { ...entry, pemateri: bestMatch };
+                    }
+                } catch (e) {
+                    console.error('Error normalizing ustadz:', e);
+                }
+                setEntries([...normalized]);
+            }
+
+            setUploadedImages([]); // Reset after processing
+
+            setProgressModal({
+                isOpen: true,
+                title: 'Ekstraksi Selesai!',
+                message: `Alhamdulillah! ${normalized.length} jadwal berhasil diekstrak dan siap disimpan.`,
+                progress: 100,
+                currentStep: normalized.length,
+                totalSteps: normalized.length
+            });
+            setMessage(`Ekstraksi selesai. Data telah diproses dan dinormalisasi.`);
+
+            setTimeout(() => {
+                setProgressModal(prev => ({ ...prev, isOpen: false }));
+            }, 3000);
+        } catch (e: any) {
+            setProgressModal(prev => ({ ...prev, isOpen: false }));
+            setMessage(`Gagal memproses: ${e.message || 'Kesalahan'}. Pastikan format sesuai.`);
+            console.error(e);
+        } finally {
+            setIsGeocoding(false);
+        }
+    };
+
     const handleAiProcess = async () => {
         stopSignal.current = false;
         try {
