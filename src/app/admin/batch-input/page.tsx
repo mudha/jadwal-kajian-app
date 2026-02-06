@@ -240,10 +240,29 @@ function BatchInputPageContent() {
         }
     };
 
+    // Global paste handler (Queue Mode)
+    useEffect(() => {
+        const handleGlobalPaste = async (e: ClipboardEvent) => {
+            const items = e.clipboardData?.items;
+            if (!items) return;
 
+            const files: File[] = [];
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const file = items[i].getAsFile();
+                    if (file) files.push(file);
+                }
+            }
 
+            if (files.length > 0) {
+                e.preventDefault();
+                handleImageUpload(files);
+            }
+        };
 
-
+        document.addEventListener('paste', handleGlobalPaste);
+        return () => document.removeEventListener('paste', handleGlobalPaste);
+    }, [handleImageUpload]);
 
     const handleProcess = async () => {
         try {
