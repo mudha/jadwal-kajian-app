@@ -291,279 +291,299 @@ function BatchInputPageContent() {
                 const uploadData = await uploadRes.json();
                 const imageUrl = uploadData.url;
 
-            }
-        }
-
-            // Split by "=== GAMBAR: (url) ==="
-            const parts = fullTextContent.split(/=== GAMBAR: (.*?) ===/);
-        // Result array: [text_before, url1, text1, url2, text2, ...]
-
-        let allParsedEntries: KajianEntry[] = [];
-
-        if (parts.length > 2) {
-            // We have delimited content
-            // Iterate 1, 3, 5... for URLs. 2, 4, 6... for Text
-            for (let i = 1; i < parts.length; i += 2) {
-                const url = parts[i];
-                let content = parts[i + 1] || '';
-                // Remove end delimiter
-                content = content.replace(/=== BATAS GAMBAR ===/g, '').trim();
-
-                if (!content) continue; // Skip empty blocks
-
-                setProgressModal(prev => ({
-                    ...prev,
-                    message: `Menganalisis Poster ${Math.ceil(i / 2)} dari ${Math.floor(parts.length / 2)}...`
-                }));
-
-                try {
-                    const parsedChunk = await parseWithGemini(content);
-                    // Attach URL to these entries
-                    const chunkEntries = parsedChunk.map(entry => ({ ...entry, imageUrl: url }));
-                    allParsedEntries.push(...chunkEntries);
-                } catch (err) {
-                    console.error(`Error parsing chunk ${i}:`, err);
-                    // Continue to next chunk
+                if (imageUrl) {
+                    setUploadedImages(prev => [...prev, {
+                        id: `img-${Date.now()}-${Math.random()}`,
+                        url: imageUrl,
+                        file: file // Store original file for OCR later
+                    }]);
                 }
-            }
-        } else {
-            // Fallback: No delimiters, treat as single block
-            allParsedEntries = await parseWithGemini(inputText);
-        }
 
-        // If no results, try fallback
-        if (allParsedEntries.length === 0 && parts.length <= 2) {
-            // Might have failed or been empty
-            // pass
-        }
-
-        const parsed = allParsedEntries;
-
-        if (stopSignal.current) return;
-
-        if (parsed.length === 0) {
-            throw new Error('Tidak ada jadwal yang ditemukan dari teks yang diberikan.');
-        }
-
-        setProgressModal(prev => ({
-            ...prev,
-            message: `Alhamdulillah! AI berhasil mengekstrak ${parsed.length} jadwal. Memproses data...`,
-            progress: 30
-        }));
-
-        const enrichedEntries = parsed.map(entry => {
-            const isFriday = entry.waktu?.toLowerCase().includes('jumat') || entry.waktu?.toLowerCase().includes("jum'at") || entry.tema?.toLowerCase().includes('jumat') || entry.tema === '';
-            const defaultImg = isFriday ? '/images/khutbah-jumat-cover.png' : undefined;
-
-            // Auto-split waktu and pemateri if AI didn't do it
-            const waktuSplit = entry.waktu_mulai ? {} : splitWaktu(entry.waktu);
-            const pemateriSplit = entry.pemateri2 ? {} : splitPemateri(entry.pemateri);
-
-            // Sanitize Online Entries
-            let cleanEntry = { ...entry };
-            const masjidRaw = entry.masjid?.toLowerCase() || '';
-            const cityRaw = entry.city?.toLowerCase() || '';
-            const addressRaw = entry.address?.toLowerCase() || '';
-
-            const isOnline = entry.isOnline ||
-                masjidRaw.includes('online') ||
-                masjidRaw.includes('zoom') ||
-                cityRaw.includes('online') ||
-                addressRaw.includes('online');
-
-            if (isOnline) {
-                cleanEntry.gmapsUrl = '';
-                cleanEntry.lat = undefined;
-                cleanEntry.lng = undefined;
-                cleanEntry.masjid = 'Online';
-                cleanEntry.city = 'Online';
-                cleanEntry.address = 'Online';
-                cleanEntry.isOnline = true;
+                processedCount++;
             }
 
-            return {
-                ...cleanEntry,
-                ...waktuSplit,
-                ...pemateriSplit,
-                // Use entry.imageUrl if set (from delimiter), else fallback to last uploaded image
-                imageUrl: entry.imageUrl || (uploadedImages.length > 0 ? uploadedImages[uploadedImages.length - 1] : defaultImg)
-            };
-        });
-        setEntries(enrichedEntries);
-        setSelectedIndices(new Set(enrichedEntries.map((_, i) => i)));
+            setMessage(`Siap! ${processedCount} gambar berhasil diupload. Klik "AI Gemini" / "Proses" untuk mengekstrak.`);
+        } catch (e: any) {
+            console.error(e);
+            setMessage('Gagal memproses gambar. Pastikan format benar.');
+        } finally {
+            setIsOcrLoading(false);
+        }
+    };
 
-        setIsGeocoding(true);
-        const withCoords = [...enrichedEntries];
 
-        // 1. Geocoding Phase
-        for (let i = 0; i < withCoords.length; i++) {
-            if (stopSignal.current) break;
-            const entry = withCoords[i];
 
-            // Skip Geocoding for Online Events (AI Mode)
-            if (entry.isOnline ||
-                entry.masjid?.toLowerCase().includes('online') ||
-                entry.city?.toLowerCase().includes('online') ||
-                entry.address?.toLowerCase().includes('online')) {
 
-                withCoords[i] = { ...entry, lat: undefined, lng: undefined, gmapsUrl: '' };
-                setEntries([...withCoords]);
-                continue;
-            }
+    // Split by "=== GAMBAR: (url) ==="
+    const parts = fullTextContent.split(/=== GAMBAR: (.*?) ===/);
+    // Result array: [text_before, url1, text1, url2, text2, ...]
 
-            // Progress from 30% to 70%
-            const progress = 30 + Math.round(((i + 1) / withCoords.length) * 40);
+    let allParsedEntries: KajianEntry[] = [];
 
-            if (stopSignal.current) break;
+    if (parts.length > 2) {
+        // We have delimited content
+        // Iterate 1, 3, 5... for URLs. 2, 4, 6... for Text
+        for (let i = 1; i < parts.length; i += 2) {
+            const url = parts[i];
+            let content = parts[i + 1] || '';
+            // Remove end delimiter
+            content = content.replace(/=== BATAS GAMBAR ===/g, '').trim();
+
+            if (!content) continue; // Skip empty blocks
+
             setProgressModal(prev => ({
                 ...prev,
-                progress,
-                message: `Mencari koordinat lokasi... (${i + 1}/${withCoords.length})\n${entry.masjid}`,
-                currentStep: i + 1,
-                totalSteps: withCoords.length
+                message: `Menganalisis Poster ${Math.ceil(i / 2)} dari ${Math.floor(parts.length / 2)}...`
             }));
 
-            const urlCoords = extractCoordsFromUrl(entry.gmapsUrl);
-            if (urlCoords) {
-                // console.log(`Got coords from URL for ${entry.masjid}:`, urlCoords);
-                withCoords[i] = { ...entry, lat: urlCoords.lat, lng: urlCoords.lng };
-                setEntries([...withCoords]); // Live update UI
-                continue; // Skip geocoding if we got precise coords from URL
-            }
-
-            // If URL exists but is short (bit.ly, goo.gl, etc), try to resolve it first
-            if (entry.gmapsUrl && !entry.gmapsUrl.includes('google.com/maps') && !entry.gmapsUrl.includes('google.co.id/maps')) {
-                try {
-                    const resolveRes = await fetch('/api/admin/resolve-url', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ url: entry.gmapsUrl })
-                    });
-                    const resolveData = await resolveRes.json();
-                    if (resolveData.resolvedUrl) {
-                        const resolvedCoords = extractCoordsFromUrl(resolveData.resolvedUrl);
-                        if (resolvedCoords) {
-                            withCoords[i] = {
-                                ...entry,
-                                lat: resolvedCoords.lat,
-                                lng: resolvedCoords.lng,
-                                gmapsUrl: resolveData.resolvedUrl // Update to full URL
-                            };
-                            setEntries([...withCoords]);
-                            continue;
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error resolving URL:', e);
-                }
-            }
-
-            const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
-            if (stopSignal.current) break;
-            if (coords) {
-                // Generate Google Maps URL from coordinates ONLY IF we don't have one
-                const gmapsUrl = entry.gmapsUrl || `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
-                withCoords[i] = { ...entry, lat: coords.lat, lng: coords.lng, gmapsUrl };
-                setEntries([...withCoords]); // Live update UI
-            }
-        }
-        if (stopSignal.current) return;
-
-        // 2. Normalization Phase (DISABLED FOR MASJID AS REQUESTED)
-        setProgressModal(prev => ({
-            ...prev,
-            title: 'Normalisasi Data',
-            message: 'Menormalisasi nama ustadz...', // Only Ustadz now
-            progress: 70
-        }));
-
-        const normalized = [...withCoords];
-
-        for (let i = 0; i < normalized.length; i++) {
-            if (stopSignal.current) break;
-            const entry = normalized[i];
-            // Progress from 70% to 95%
-            const progress = 70 + Math.round(((i + 1) / normalized.length) * 25);
-
-            if (stopSignal.current) break;
-            setProgressModal(prev => ({
-                ...prev,
-                progress,
-                message: `Menormalisasi nama... (${i + 1}/${normalized.length})`
-            }));
-
-            // Normalize ustadz name
-            if (stopSignal.current) break;
             try {
-                const ustadzResponse = await fetch('/api/admin/normalize', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: entry.pemateri, type: 'ustadz', threshold: 0.8 }),
-                });
-                const ustadzData = await ustadzResponse.json();
-
-                if (ustadzData.hasExactMatch || (ustadzData.suggestions && ustadzData.suggestions.length > 0)) {
-                    const bestMatch = ustadzData.hasExactMatch
-                        ? ustadzData.canonicalName
-                        : ustadzData.suggestions[0].name;
-                    normalized[i] = { ...entry, pemateri: bestMatch };
-                }
-            } catch (e) {
-                console.error('Error normalizing ustadz:', e);
+                const parsedChunk = await parseWithGemini(content);
+                // Attach URL to these entries
+                const chunkEntries = parsedChunk.map(entry => ({ ...entry, imageUrl: url }));
+                allParsedEntries.push(...chunkEntries);
+            } catch (err) {
+                console.error(`Error parsing chunk ${i}:`, err);
+                // Continue to next chunk
             }
-
-            // Normalize masjid name and auto-fill location data
-            // DISABLED as per user request: "gak usah dinormalisasi aja yg mesjid"
-            /* 
-            if (stopSignal.current) break;
-            try {
-                const masjidResponse = await fetch('/api/admin/normalize', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: entry.masjid, type: 'masjid', threshold: 0.8 }),
-                });
-                 // ... existing logic ...
-            } catch (e) {
-                console.error('Error normalizing masjid:', e);
-            }
-            */
-            // We still update the entry to ensure changes flow through
-            setEntries([...normalized]); // Live update UI
         }
-
-        setUploadedImages([]); // Reset after processing
-        setIsGeocoding(false);
-
-        if (stopSignal.current) {
-            setProgressModal(prev => ({ ...prev, isOpen: false }));
-            setMessage("Proses dibatalkan oleh pengguna.");
-            return;
-        }
-
-        // Completion
-        setProgressModal({
-            isOpen: true,
-            title: 'Selesai!',
-            message: `Alhamdulillah! ${normalized.length} jadwal berhasil diekstrak dan siap disimpan.`,
-            progress: 100,
-            currentStep: normalized.length,
-            totalSteps: normalized.length
-        });
-        setMessage(`Ekstraksi AI selesai. Data telah diproses.`);
-
-        // Auto-close modal after 2 seconds
-        setTimeout(() => {
-            setProgressModal(prev => ({ ...prev, isOpen: false }));
-        }, 2000);
-
-    } catch (e: any) {
-        setProgressModal(prev => ({ ...prev, isOpen: false }));
-        setMessage(`Gagal memproses dengan AI: ${e.message || 'Kesalahan tidak diketahui'}`);
-        setIsGeocoding(false);
-        console.error(e);
-    } finally {
-        setIsAiLoading(false);
+    } else {
+        // Fallback: No delimiters, treat as single block
+        allParsedEntries = await parseWithGemini(inputText);
     }
+
+    // If no results, try fallback
+    if (allParsedEntries.length === 0 && parts.length <= 2) {
+        // Might have failed or been empty
+        // pass
+    }
+
+    const parsed = allParsedEntries;
+
+    if (stopSignal.current) return;
+
+    if (parsed.length === 0) {
+        throw new Error('Tidak ada jadwal yang ditemukan dari teks yang diberikan.');
+    }
+
+    setProgressModal(prev => ({
+        ...prev,
+        message: `Alhamdulillah! AI berhasil mengekstrak ${parsed.length} jadwal. Memproses data...`,
+        progress: 30
+    }));
+
+    const enrichedEntries = parsed.map(entry => {
+        const isFriday = entry.waktu?.toLowerCase().includes('jumat') || entry.waktu?.toLowerCase().includes("jum'at") || entry.tema?.toLowerCase().includes('jumat') || entry.tema === '';
+        const defaultImg = isFriday ? '/images/khutbah-jumat-cover.png' : undefined;
+
+        // Auto-split waktu and pemateri if AI didn't do it
+        const waktuSplit = entry.waktu_mulai ? {} : splitWaktu(entry.waktu);
+        const pemateriSplit = entry.pemateri2 ? {} : splitPemateri(entry.pemateri);
+
+        // Sanitize Online Entries
+        let cleanEntry = { ...entry };
+        const masjidRaw = entry.masjid?.toLowerCase() || '';
+        const cityRaw = entry.city?.toLowerCase() || '';
+        const addressRaw = entry.address?.toLowerCase() || '';
+
+        const isOnline = entry.isOnline ||
+            masjidRaw.includes('online') ||
+            masjidRaw.includes('zoom') ||
+            cityRaw.includes('online') ||
+            addressRaw.includes('online');
+
+        if (isOnline) {
+            cleanEntry.gmapsUrl = '';
+            cleanEntry.lat = undefined;
+            cleanEntry.lng = undefined;
+            cleanEntry.masjid = 'Online';
+            cleanEntry.city = 'Online';
+            cleanEntry.address = 'Online';
+            cleanEntry.isOnline = true;
+        }
+
+        return {
+            ...cleanEntry,
+            ...waktuSplit,
+            ...pemateriSplit,
+            // Use entry.imageUrl if set (from delimiter), else fallback to last uploaded image
+            imageUrl: entry.imageUrl || (uploadedImages.length > 0 ? uploadedImages[uploadedImages.length - 1] : defaultImg)
+        };
+    });
+    setEntries(enrichedEntries);
+    setSelectedIndices(new Set(enrichedEntries.map((_, i) => i)));
+
+    setIsGeocoding(true);
+    const withCoords = [...enrichedEntries];
+
+    // 1. Geocoding Phase
+    for (let i = 0; i < withCoords.length; i++) {
+        if (stopSignal.current) break;
+        const entry = withCoords[i];
+
+        // Skip Geocoding for Online Events (AI Mode)
+        if (entry.isOnline ||
+            entry.masjid?.toLowerCase().includes('online') ||
+            entry.city?.toLowerCase().includes('online') ||
+            entry.address?.toLowerCase().includes('online')) {
+
+            withCoords[i] = { ...entry, lat: undefined, lng: undefined, gmapsUrl: '' };
+            setEntries([...withCoords]);
+            continue;
+        }
+
+        // Progress from 30% to 70%
+        const progress = 30 + Math.round(((i + 1) / withCoords.length) * 40);
+
+        if (stopSignal.current) break;
+        setProgressModal(prev => ({
+            ...prev,
+            progress,
+            message: `Mencari koordinat lokasi... (${i + 1}/${withCoords.length})\n${entry.masjid}`,
+            currentStep: i + 1,
+            totalSteps: withCoords.length
+        }));
+
+        const urlCoords = extractCoordsFromUrl(entry.gmapsUrl);
+        if (urlCoords) {
+            // console.log(`Got coords from URL for ${entry.masjid}:`, urlCoords);
+            withCoords[i] = { ...entry, lat: urlCoords.lat, lng: urlCoords.lng };
+            setEntries([...withCoords]); // Live update UI
+            continue; // Skip geocoding if we got precise coords from URL
+        }
+
+        // If URL exists but is short (bit.ly, goo.gl, etc), try to resolve it first
+        if (entry.gmapsUrl && !entry.gmapsUrl.includes('google.com/maps') && !entry.gmapsUrl.includes('google.co.id/maps')) {
+            try {
+                const resolveRes = await fetch('/api/admin/resolve-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: entry.gmapsUrl })
+                });
+                const resolveData = await resolveRes.json();
+                if (resolveData.resolvedUrl) {
+                    const resolvedCoords = extractCoordsFromUrl(resolveData.resolvedUrl);
+                    if (resolvedCoords) {
+                        withCoords[i] = {
+                            ...entry,
+                            lat: resolvedCoords.lat,
+                            lng: resolvedCoords.lng,
+                            gmapsUrl: resolveData.resolvedUrl // Update to full URL
+                        };
+                        setEntries([...withCoords]);
+                        continue;
+                    }
+                }
+            } catch (e) {
+                console.error('Error resolving URL:', e);
+            }
+        }
+
+        const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
+        if (stopSignal.current) break;
+        if (coords) {
+            // Generate Google Maps URL from coordinates ONLY IF we don't have one
+            const gmapsUrl = entry.gmapsUrl || `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
+            withCoords[i] = { ...entry, lat: coords.lat, lng: coords.lng, gmapsUrl };
+            setEntries([...withCoords]); // Live update UI
+        }
+    }
+    if (stopSignal.current) return;
+
+    // 2. Normalization Phase (DISABLED FOR MASJID AS REQUESTED)
+    setProgressModal(prev => ({
+        ...prev,
+        title: 'Normalisasi Data',
+        message: 'Menormalisasi nama ustadz...', // Only Ustadz now
+        progress: 70
+    }));
+
+    const normalized = [...withCoords];
+
+    for (let i = 0; i < normalized.length; i++) {
+        if (stopSignal.current) break;
+        const entry = normalized[i];
+        // Progress from 70% to 95%
+        const progress = 70 + Math.round(((i + 1) / normalized.length) * 25);
+
+        if (stopSignal.current) break;
+        setProgressModal(prev => ({
+            ...prev,
+            progress,
+            message: `Menormalisasi nama... (${i + 1}/${normalized.length})`
+        }));
+
+        // Normalize ustadz name
+        if (stopSignal.current) break;
+        try {
+            const ustadzResponse = await fetch('/api/admin/normalize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: entry.pemateri, type: 'ustadz', threshold: 0.8 }),
+            });
+            const ustadzData = await ustadzResponse.json();
+
+            if (ustadzData.hasExactMatch || (ustadzData.suggestions && ustadzData.suggestions.length > 0)) {
+                const bestMatch = ustadzData.hasExactMatch
+                    ? ustadzData.canonicalName
+                    : ustadzData.suggestions[0].name;
+                normalized[i] = { ...entry, pemateri: bestMatch };
+            }
+        } catch (e) {
+            console.error('Error normalizing ustadz:', e);
+        }
+
+        // Normalize masjid name and auto-fill location data
+        // DISABLED as per user request: "gak usah dinormalisasi aja yg mesjid"
+        /* 
+        if (stopSignal.current) break;
+        try {
+            const masjidResponse = await fetch('/api/admin/normalize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: entry.masjid, type: 'masjid', threshold: 0.8 }),
+            });
+             // ... existing logic ...
+        } catch (e) {
+            console.error('Error normalizing masjid:', e);
+        }
+        */
+        // We still update the entry to ensure changes flow through
+        setEntries([...normalized]); // Live update UI
+    }
+
+    setUploadedImages([]); // Reset after processing
+    setIsGeocoding(false);
+
+    if (stopSignal.current) {
+        setProgressModal(prev => ({ ...prev, isOpen: false }));
+        setMessage("Proses dibatalkan oleh pengguna.");
+        return;
+    }
+
+    // Completion
+    setProgressModal({
+        isOpen: true,
+        title: 'Selesai!',
+        message: `Alhamdulillah! ${normalized.length} jadwal berhasil diekstrak dan siap disimpan.`,
+        progress: 100,
+        currentStep: normalized.length,
+        totalSteps: normalized.length
+    });
+    setMessage(`Ekstraksi AI selesai. Data telah diproses.`);
+
+    // Auto-close modal after 2 seconds
+    setTimeout(() => {
+        setProgressModal(prev => ({ ...prev, isOpen: false }));
+    }, 2000);
+
+} catch (e: any) {
+    setProgressModal(prev => ({ ...prev, isOpen: false }));
+    setMessage(`Gagal memproses dengan AI: ${e.message || 'Kesalahan tidak diketahui'}`);
+    setIsGeocoding(false);
+    console.error(e);
+} finally {
+    setIsAiLoading(false);
+}
 };
 
 
