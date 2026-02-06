@@ -129,78 +129,7 @@ function BatchInputPageContent() {
     }, [isManualMode, isContributor]);
 
     // Global paste handler for images
-    useEffect(() => {
-        const handleGlobalPaste = async (e: ClipboardEvent) => {
-            // Only handle if there are entries
-            if (entries.length === 0) return;
 
-            // Check if clipboard contains image
-            const items = e.clipboardData?.items;
-            if (!items) return;
-
-            for (let i = 0; i < items.length; i++) {
-                if (items[i].type.indexOf('image') !== -1) {
-                    e.preventDefault();
-                    const file = items[i].getAsFile();
-                    if (!file) continue;
-
-                    // Upload to the last/active entry
-                    const targetIndex = entries.length - 1;
-
-                    try {
-                        // Show loading toast
-                        setMessage('⏳ Mengupload gambar dari clipboard...');
-
-                        // Import compression utility dynamically
-                        const { compressImage } = await import('@/lib/image-compression');
-                        const compressedFile = await compressImage(file);
-
-                        const formData = new FormData();
-                        formData.append('file', compressedFile);
-
-                        // Upload to ImageKit
-                        const authRes = await fetch('/api/imagekit-auth');
-                        const authData = await authRes.json();
-
-                        if (!authData.token) {
-                            throw new Error('Gagal mendapatkan auth ImageKit');
-                        }
-
-                        // formData already contains 'file'
-                        formData.append('fileName', `flyer-${Date.now()}`);
-                        formData.append('publicKey', authData.publicKey || process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || '');
-                        formData.append('signature', authData.signature);
-                        formData.append('expire', authData.expire.toString());
-                        formData.append('token', authData.token);
-                        formData.append('folder', '/flyers');
-
-                        const uploadRes = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
-                            method: 'POST',
-                            body: formData
-                        });
-
-                        const data = await uploadRes.json();
-                        let url = data.url;
-
-                        if (url) {
-                            updateEntry(targetIndex, 'imageUrl', url);
-                            setMessage('✅ Gambar berhasil diupload!');
-                        } else {
-                            throw new Error('Upload gagal');
-                        }
-                    } catch (error) {
-                        console.error('Global paste upload error:', error);
-                        showAlert('Gagal', 'Gagal mengupload gambar dari clipboard', 'danger');
-                    }
-
-                    break;
-                }
-            }
-        };
-
-        document.addEventListener('paste', handleGlobalPaste);
-        return () => document.removeEventListener('paste', handleGlobalPaste);
-    }, [entries]);
 
     const fetchStats = async () => {
         try {
