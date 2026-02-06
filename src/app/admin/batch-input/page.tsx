@@ -318,981 +318,1425 @@ function BatchInputPageContent() {
     const parts = fullTextContent.split(/=== GAMBAR: (.*?) ===/);
     // Result array: [text_before, url1, text1, url2, text2, ...]
 
-    let allParsedEntries: KajianEntry[] = [];
+    const handleAiProcess = async () => {
+        stopSignal.current = false;
+        try {
+            setIsAiLoading(true);
+            setProgressModal({
+                isOpen: true,
+                title: 'AI Gemini Extraction',
+                message: 'Sedang menyiapkan data...',
+                progress: 5,
+                currentStep: 0,
+                totalSteps: 100
+            });
 
-    if (parts.length > 2) {
-        // We have delimited content
-        // Iterate 1, 3, 5... for URLs. 2, 4, 6... for Text
-        for (let i = 1; i < parts.length; i += 2) {
-            const url = parts[i];
-            let content = parts[i + 1] || '';
-            // Remove end delimiter
-            content = content.replace(/=== BATAS GAMBAR ===/g, '').trim();
+            // 1. Process Pending Images with OCR
+            let fullTextContent = inputText;
 
-            if (!content) continue; // Skip empty blocks
+            if (uploadedImages.length > 0) {
+                for (let i = 0; i < uploadedImages.length; i++) {
+                    const imgItem = uploadedImages[i];
+                    setProgressModal(prev => ({
+                        ...prev,
+                        message: `Membaca Teks Gambar ${i + 1} dari ${uploadedImages.length}...`,
+                        progress: 5 + Math.round((i / uploadedImages.length) * 20)
+                    }));
+
+                    try {
+                        let textResult = '';
+                        if (imgItem.file) {
+                            const result = await Tesseract.recognize(
+                                imgItem.file,
+                                'ind+eng'
+                            );
+                            textResult = result.data.text;
+                        } else {
+                            const result = await Tesseract.recognize(
+                                imgItem.url,
+                                'ind+eng'
+                            );
+                            textResult = result.data.text;
+                        }
+
+                        const delimiter = `=== GAMBAR: ${imgItem.url} ===`;
+                        const endDelimiter = `=== BATAS GAMBAR ===`;
+                        fullTextContent += (fullTextContent ? '\n\n' : '') + delimiter + '\n' + textResult + '\n' + endDelimiter;
+
+                    } catch (ocrErr) {
+                        console.error('OCR Error:', ocrErr);
+                    }
+                }
+            }
 
             setProgressModal(prev => ({
                 ...prev,
-                message: `Menganalisis Poster ${Math.ceil(i / 2)} dari ${Math.floor(parts.length / 2)}...`
+                title: 'AI Gemini Extraction',
+                message: 'Mengirim data ke AI Gemini...',
+                progress: 25
             }));
 
-            try {
-                const parsedChunk = await parseWithGemini(content);
-                // Attach URL to these entries
-                const chunkEntries = parsedChunk.map(entry => ({ ...entry, imageUrl: url }));
-                allParsedEntries.push(...chunkEntries);
-            } catch (err) {
-                console.error(`Error parsing chunk ${i}:`, err);
-                // Continue to next chunk
-            }
-        }
-    } else {
-        // Fallback: No delimiters, treat as single block
-        allParsedEntries = await parseWithGemini(inputText);
-    }
+            // Split by "=== GAMBAR: (url) ==="
+            const parts = fullTextContent.split(/=== GAMBAR: (.*?) ===/);
 
-    // If no results, try fallback
-    if (allParsedEntries.length === 0 && parts.length <= 2) {
-        // Might have failed or been empty
-        // pass
-    }
+            let allParsedEntries: KajianEntry[] = [];
 
-    const parsed = allParsedEntries;
+            if (parts.length > 2) {
+                for (let i = 1; i < parts.length; i += 2) {
+                    const url = parts[i];
+                    let content = parts[i + 1] || '';
+                    content = content.replace(/=== BATAS GAMBAR ===/g, '').trim();
 
-    if (stopSignal.current) return;
+                    if (!content) continue;
 
-    if (parsed.length === 0) {
-        throw new Error('Tidak ada jadwal yang ditemukan dari teks yang diberikan.');
-    }
+                    setProgressModal(prev => ({
+                        ...prev,
+                        message: `Menganalisis Poster ${Math.ceil(i / 2)} dari ${Math.floor(parts.length / 2)}...`
+                    }));
 
-    setProgressModal(prev => ({
-        ...prev,
-        message: `Alhamdulillah! AI berhasil mengekstrak ${parsed.length} jadwal. Memproses data...`,
-        progress: 30
-    }));
-
-    const enrichedEntries = parsed.map(entry => {
-        const isFriday = entry.waktu?.toLowerCase().includes('jumat') || entry.waktu?.toLowerCase().includes("jum'at") || entry.tema?.toLowerCase().includes('jumat') || entry.tema === '';
-        const defaultImg = isFriday ? '/images/khutbah-jumat-cover.png' : undefined;
-
-        // Auto-split waktu and pemateri if AI didn't do it
-        const waktuSplit = entry.waktu_mulai ? {} : splitWaktu(entry.waktu);
-        const pemateriSplit = entry.pemateri2 ? {} : splitPemateri(entry.pemateri);
-
-        // Sanitize Online Entries
-        let cleanEntry = { ...entry };
-        const masjidRaw = entry.masjid?.toLowerCase() || '';
-        const cityRaw = entry.city?.toLowerCase() || '';
-        const addressRaw = entry.address?.toLowerCase() || '';
-
-        const isOnline = entry.isOnline ||
-            masjidRaw.includes('online') ||
-            masjidRaw.includes('zoom') ||
-            cityRaw.includes('online') ||
-            addressRaw.includes('online');
-
-        if (isOnline) {
-            cleanEntry.gmapsUrl = '';
-            cleanEntry.lat = undefined;
-            cleanEntry.lng = undefined;
-            cleanEntry.masjid = 'Online';
-            cleanEntry.city = 'Online';
-            cleanEntry.address = 'Online';
-            cleanEntry.isOnline = true;
-        }
-
-        return {
-            ...cleanEntry,
-            ...waktuSplit,
-            ...pemateriSplit,
-            // Use entry.imageUrl if set (from delimiter), else fallback to last uploaded image
-            imageUrl: entry.imageUrl || (uploadedImages.length > 0 ? uploadedImages[uploadedImages.length - 1] : defaultImg)
-        };
-    });
-    setEntries(enrichedEntries);
-    setSelectedIndices(new Set(enrichedEntries.map((_, i) => i)));
-
-    setIsGeocoding(true);
-    const withCoords = [...enrichedEntries];
-
-    // 1. Geocoding Phase
-    for (let i = 0; i < withCoords.length; i++) {
-        if (stopSignal.current) break;
-        const entry = withCoords[i];
-
-        // Skip Geocoding for Online Events (AI Mode)
-        if (entry.isOnline ||
-            entry.masjid?.toLowerCase().includes('online') ||
-            entry.city?.toLowerCase().includes('online') ||
-            entry.address?.toLowerCase().includes('online')) {
-
-            withCoords[i] = { ...entry, lat: undefined, lng: undefined, gmapsUrl: '' };
-            setEntries([...withCoords]);
-            continue;
-        }
-
-        // Progress from 30% to 70%
-        const progress = 30 + Math.round(((i + 1) / withCoords.length) * 40);
-
-        if (stopSignal.current) break;
-        setProgressModal(prev => ({
-            ...prev,
-            progress,
-            message: `Mencari koordinat lokasi... (${i + 1}/${withCoords.length})\n${entry.masjid}`,
-            currentStep: i + 1,
-            totalSteps: withCoords.length
-        }));
-
-        const urlCoords = extractCoordsFromUrl(entry.gmapsUrl);
-        if (urlCoords) {
-            // console.log(`Got coords from URL for ${entry.masjid}:`, urlCoords);
-            withCoords[i] = { ...entry, lat: urlCoords.lat, lng: urlCoords.lng };
-            setEntries([...withCoords]); // Live update UI
-            continue; // Skip geocoding if we got precise coords from URL
-        }
-
-        // If URL exists but is short (bit.ly, goo.gl, etc), try to resolve it first
-        if (entry.gmapsUrl && !entry.gmapsUrl.includes('google.com/maps') && !entry.gmapsUrl.includes('google.co.id/maps')) {
-            try {
-                const resolveRes = await fetch('/api/admin/resolve-url', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: entry.gmapsUrl })
-                });
-                const resolveData = await resolveRes.json();
-                if (resolveData.resolvedUrl) {
-                    const resolvedCoords = extractCoordsFromUrl(resolveData.resolvedUrl);
-                    if (resolvedCoords) {
-                        withCoords[i] = {
-                            ...entry,
-                            lat: resolvedCoords.lat,
-                            lng: resolvedCoords.lng,
-                            gmapsUrl: resolveData.resolvedUrl // Update to full URL
-                        };
-                        setEntries([...withCoords]);
-                        continue;
+                    try {
+                        const parsedChunk = await parseWithGemini(content);
+                        const chunkEntries = parsedChunk.map(entry => ({ ...entry, imageUrl: url }));
+                        allParsedEntries.push(...chunkEntries);
+                    } catch (err) {
+                        console.error(`Error parsing chunk ${i}:`, err);
                     }
                 }
-            } catch (e) {
-                console.error('Error resolving URL:', e);
+            } else {
+                allParsedEntries = await parseWithGemini(fullTextContent);
             }
-        }
 
-        const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
-        if (stopSignal.current) break;
-        if (coords) {
-            // Generate Google Maps URL from coordinates ONLY IF we don't have one
-            const gmapsUrl = entry.gmapsUrl || `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
-            withCoords[i] = { ...entry, lat: coords.lat, lng: coords.lng, gmapsUrl };
-            setEntries([...withCoords]); // Live update UI
-        }
-    }
-    if (stopSignal.current) return;
+            const parsed = allParsedEntries;
 
-    // 2. Normalization Phase (DISABLED FOR MASJID AS REQUESTED)
-    setProgressModal(prev => ({
-        ...prev,
-        title: 'Normalisasi Data',
-        message: 'Menormalisasi nama ustadz...', // Only Ustadz now
-        progress: 70
-    }));
+            if (stopSignal.current) return;
 
-    const normalized = [...withCoords];
-
-    for (let i = 0; i < normalized.length; i++) {
-        if (stopSignal.current) break;
-        const entry = normalized[i];
-        // Progress from 70% to 95%
-        const progress = 70 + Math.round(((i + 1) / normalized.length) * 25);
-
-        if (stopSignal.current) break;
-        setProgressModal(prev => ({
-            ...prev,
-            progress,
-            message: `Menormalisasi nama... (${i + 1}/${normalized.length})`
-        }));
-
-        // Normalize ustadz name
-        if (stopSignal.current) break;
-        try {
-            const ustadzResponse = await fetch('/api/admin/normalize', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: entry.pemateri, type: 'ustadz', threshold: 0.8 }),
-            });
-            const ustadzData = await ustadzResponse.json();
-
-            if (ustadzData.hasExactMatch || (ustadzData.suggestions && ustadzData.suggestions.length > 0)) {
-                const bestMatch = ustadzData.hasExactMatch
-                    ? ustadzData.canonicalName
-                    : ustadzData.suggestions[0].name;
-                normalized[i] = { ...entry, pemateri: bestMatch };
+            if (parsed.length === 0) {
+                // If parts existed but failed, maybe try fallback?
+                if (allParsedEntries.length === 0 && fullTextContent.length > 10) {
+                    // Try one more time with full text if chunking failed
+                    try {
+                        const fallbackParsed = await parseWithGemini(fullTextContent);
+                        if (fallbackParsed.length > 0) {
+                            parsed.push(...fallbackParsed);
+                        }
+                    } catch (e) { }
+                }
             }
-        } catch (e) {
-            console.error('Error normalizing ustadz:', e);
-        }
 
-        // Normalize masjid name and auto-fill location data
-        // DISABLED as per user request: "gak usah dinormalisasi aja yg mesjid"
-        /* 
-        if (stopSignal.current) break;
-        try {
-            const masjidResponse = await fetch('/api/admin/normalize', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: entry.masjid, type: 'masjid', threshold: 0.8 }),
+            if (parsed.length === 0) {
+                throw new Error('Tidak ada jadwal yang ditemukan dari teks yang diberikan.');
+            }
+
+            setProgressModal(prev => ({
+                ...prev,
+                message: `Alhamdulillah! AI berhasil mengekstrak ${parsed.length} jadwal. Memproses data...`,
+                progress: 30
+            }));
+
+            const enrichedEntries = parsed.map(entry => {
+                const isFriday = entry.waktu?.toLowerCase().includes('jumat') || entry.waktu?.toLowerCase().includes("jum'at") || entry.tema?.toLowerCase().includes('jumat') || entry.tema === '';
+                const defaultImg = isFriday ? '/images/khutbah-jumat-cover.png' : undefined;
+
+                const waktuSplit = entry.waktu_mulai ? {} : splitWaktu(entry.waktu);
+                const pemateriSplit = entry.pemateri2 ? {} : splitPemateri(entry.pemateri);
+
+                let cleanEntry = { ...entry };
+                const masjidRaw = entry.masjid?.toLowerCase() || '';
+                const cityRaw = entry.city?.toLowerCase() || '';
+                const addressRaw = entry.address?.toLowerCase() || '';
+
+                const isOnline = entry.isOnline ||
+                    masjidRaw.includes('online') ||
+                    masjidRaw.includes('zoom') ||
+                    cityRaw.includes('online') ||
+                    addressRaw.includes('online');
+
+                if (isOnline) {
+                    cleanEntry.gmapsUrl = '';
+                    cleanEntry.lat = undefined;
+                    cleanEntry.lng = undefined;
+                    cleanEntry.masjid = 'Online';
+                    cleanEntry.city = 'Online';
+                    cleanEntry.address = 'Online';
+                    cleanEntry.isOnline = true;
+                }
+
+                return {
+                    ...cleanEntry,
+                    ...waktuSplit,
+                    ...pemateriSplit,
+                    imageUrl: entry.imageUrl || (uploadedImages.length > 0 ? uploadedImages[uploadedImages.length - 1].url : defaultImg)
+                };
             });
-             // ... existing logic ...
-        } catch (e) {
-            console.error('Error normalizing masjid:', e);
-        }
-        */
-        // We still update the entry to ensure changes flow through
-        setEntries([...normalized]); // Live update UI
-    }
+            setEntries(enrichedEntries);
+            setSelectedIndices(new Set(enrichedEntries.map((_, i) => i)));
 
-    setUploadedImages([]); // Reset after processing
-    setIsGeocoding(false);
+            setIsGeocoding(true);
+            const withCoords = [...enrichedEntries];
 
-    if (stopSignal.current) {
-        setProgressModal(prev => ({ ...prev, isOpen: false }));
-        setMessage("Proses dibatalkan oleh pengguna.");
-        return;
-    }
+            for (let i = 0; i < withCoords.length; i++) {
+                if (stopSignal.current) break;
+                const entry = withCoords[i];
 
-    // Completion
-    setProgressModal({
-        isOpen: true,
-        title: 'Selesai!',
-        message: `Alhamdulillah! ${normalized.length} jadwal berhasil diekstrak dan siap disimpan.`,
-        progress: 100,
-        currentStep: normalized.length,
-        totalSteps: normalized.length
-    });
-    setMessage(`Ekstraksi AI selesai. Data telah diproses.`);
+                if (entry.isOnline ||
+                    entry.masjid?.toLowerCase().includes('online') ||
+                    entry.city?.toLowerCase().includes('online') ||
+                    entry.address?.toLowerCase().includes('online')) {
 
-    // Auto-close modal after 2 seconds
-    setTimeout(() => {
-        setProgressModal(prev => ({ ...prev, isOpen: false }));
-    }, 2000);
+                    withCoords[i] = { ...entry, lat: undefined, lng: undefined, gmapsUrl: '' };
+                    setEntries([...withCoords]);
+                    continue;
+                }
 
-} catch (e: any) {
-    setProgressModal(prev => ({ ...prev, isOpen: false }));
-    setMessage(`Gagal memproses dengan AI: ${e.message || 'Kesalahan tidak diketahui'}`);
-    setIsGeocoding(false);
-    console.error(e);
-} finally {
-    setIsAiLoading(false);
-}
-};
+                const progress = 30 + Math.round(((i + 1) / withCoords.length) * 40);
 
+                if (stopSignal.current) break;
+                setProgressModal(prev => ({
+                    ...prev,
+                    progress,
+                    message: `Mencari koordinat lokasi... (${i + 1}/${withCoords.length})\n${entry.masjid}`,
+                    currentStep: i + 1,
+                    totalSteps: withCoords.length
+                }));
 
+                const urlCoords = extractCoordsFromUrl(entry.gmapsUrl);
+                if (urlCoords) {
+                    withCoords[i] = { ...entry, lat: urlCoords.lat, lng: urlCoords.lng };
+                    setEntries([...withCoords]);
+                    continue;
+                }
 
+                if (entry.gmapsUrl && !entry.gmapsUrl.includes('google.com/maps') && !entry.gmapsUrl.includes('google.co.id/maps')) {
+                    try {
+                        const resolveRes = await fetch('/api/admin/resolve-url', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: entry.gmapsUrl })
+                        });
+                        const resolveData = await resolveRes.json();
+                        if (resolveData.resolvedUrl) {
+                            const resolvedCoords = extractCoordsFromUrl(resolveData.resolvedUrl);
+                            if (resolvedCoords) {
+                                withCoords[i] = {
+                                    ...entry,
+                                    lat: resolvedCoords.lat,
+                                    lng: resolvedCoords.lng,
+                                    gmapsUrl: resolveData.resolvedUrl
+                                };
+                                setEntries([...withCoords]);
+                                continue;
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error resolving URL:', e);
+                    }
+                }
 
-const toggleSelection = (index: number) => {
-    const newSelected = new Set(selectedIndices);
-    if (newSelected.has(index)) {
-        newSelected.delete(index);
-    } else {
-        newSelected.add(index);
-    }
-    setSelectedIndices(newSelected);
-};
+                const coords = await geocodeAddress(entry.masjid, entry.address, entry.city);
+                if (stopSignal.current) break;
+                if (coords) {
+                    const gmapsUrl = entry.gmapsUrl || `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
+                    withCoords[i] = { ...entry, lat: coords.lat, lng: coords.lng, gmapsUrl };
+                    setEntries([...withCoords]);
+                }
+            }
+            if (stopSignal.current) return;
 
-const toggleAll = () => {
-    if (selectedIndices.size === entries.length) {
-        setSelectedIndices(new Set());
-    } else {
-        setSelectedIndices(new Set(entries.map((_, i) => i)));
-    }
-};
+            setProgressModal(prev => ({
+                ...prev,
+                title: 'Normalisasi Data',
+                message: 'Menormalisasi nama ustadz...',
+                progress: 70
+            }));
 
-const handleSave = async () => {
-    const entriesToSave = entries.filter((_, i) => selectedIndices.has(i));
+            const normalized = [...withCoords];
 
-    if (entriesToSave.length === 0) {
-        setMessage('Pilih setidaknya satu jadwal untuk disimpan.');
-        return;
-    }
+            for (let i = 0; i < normalized.length; i++) {
+                if (stopSignal.current) break;
+                const entry = normalized[i];
+                const progress = 70 + Math.round(((i + 1) / normalized.length) * 25);
 
-    try {
-        setIsSaving(true);
+                if (stopSignal.current) break;
+                setProgressModal(prev => ({
+                    ...prev,
+                    progress,
+                    message: `Menormalisasi nama... (${i + 1}/${normalized.length})`
+                }));
 
-        const tematikEntries = entriesToSave.filter(e => !e.isRecurring);
-        const recurringEntries = entriesToSave.filter(e => e.isRecurring);
-
-        const successfulEntries = new Set<KajianEntry>();
-        const savedIds: string[] = [];
-        let recurringErrors = 0;
-
-        // 1. Process Recurring Entries (One by One)
-        if (recurringEntries.length > 0) {
-            for (const entry of recurringEntries) {
+                if (stopSignal.current) break;
                 try {
-                    const res = await fetch('/api/recurring-kajian', {
+                    const ustadzResponse = await fetch('/api/admin/normalize', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            ...entry,
-                            pattern: entry.recurringPattern || 'weekly',
-                            day_of_week: entry.recurringDay ?? 0,
-                            week_of_month: entry.recurringWeek || 1
-                        })
+                        body: JSON.stringify({ name: entry.pemateri, type: 'ustadz', threshold: 0.8 }),
                     });
+                    const ustadzData = await ustadzResponse.json();
 
-                    if (res.ok) {
-                        successfulEntries.add(entry);
-                    } else {
-                        recurringErrors++;
-                        console.error('Failed recurring save:', await res.json());
+                    if (ustadzData.hasExactMatch || (ustadzData.suggestions && ustadzData.suggestions.length > 0)) {
+                        const bestMatch = ustadzData.hasExactMatch
+                            ? ustadzData.canonicalName
+                            : ustadzData.suggestions[0].name;
+                        normalized[i] = { ...entry, pemateri: bestMatch };
                     }
-                } catch (err) {
-                    recurringErrors++;
-                    console.error('Error saving recurring:', err);
+                } catch (e) {
+                    console.error('Error normalizing ustadz:', e);
                 }
+                setEntries([...normalized]);
             }
-        }
 
-        // 2. Process Tematik Entries (Bulk)
-        if (tematikEntries.length > 0) {
-            const response = await fetch('/api/kajian', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(tematikEntries),
-            });
+            setUploadedImages([]);
+            setIsGeocoding(false);
 
-            const data = await response.json();
-
-            // Handle duplicate detection (409 status)
-            if (response.status === 409 && data.duplicates) {
-                // Update list to remove ALREADY saved recurring entries
-                if (successfulEntries.size > 0) {
-                    const savedIndices = new Set([...successfulEntries].map(e => entries.indexOf(e)));
-                    const remainingEntries = entries.filter((_, i) => !savedIndices.has(i));
-                    setEntries(remainingEntries);
-                    setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
-
-                    setMessage(`✅ ${successfulEntries.size} kajian rutin tersimpan. ⚠️ Ditemukan duplikat pada kajian tematik.`);
-                } else {
-                    setDuplicateEntries(data.duplicates);
-                }
-
-                setDuplicateEntries(data.duplicates);
-                setPendingSaveEntries(tematikEntries);
-                setShowDuplicateModal(true);
-                setIsSaving(false);
+            if (stopSignal.current) {
+                setProgressModal(prev => ({ ...prev, isOpen: false }));
+                setMessage("Proses dibatalkan oleh pengguna.");
                 return;
             }
 
-            if (!response.ok) {
-                setMessage(`Gagal menyimpan kajian tematik: ${data.error || 'Server error'}`);
-            } else {
-                tematikEntries.forEach(e => successfulEntries.add(e));
-                if (data.ids && Array.isArray(data.ids)) {
-                    savedIds.push(...data.ids);
-                }
-            }
-        }
-
-        const savedCount = successfulEntries.size;
-
-        if (savedCount > 0) {
-            setMessage(`Alhamdulillah, ${savedCount} jadwal berhasil disimpan!${recurringErrors > 0 ? ` (${recurringErrors} gagal)` : ''}`);
-            fetchStats();
-
-            // Trigger generation for newly created recurring entries
-            if (recurringEntries.length > 0) {
-                fetch('/api/recurring-kajian/generate', { method: 'POST' })
-                    .catch(err => console.error('Auto-generation failed:', err));
-            }
-
-            // Remove saved entries from list
-            const savedIndices = new Set([...successfulEntries].map(e => entries.indexOf(e)));
-            const remainingEntries = entries.filter((_, i) => !savedIndices.has(i));
-            setEntries(remainingEntries);
-            setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
-
-            if (remainingEntries.length === 0) {
-                setInputText('');
-                // Auto-add new manual entry if in manual mode
-                if (isManualMode || isContributor) {
-                    setEntries([{
-                        region: 'INDONESIA',
-                        city: 'Jakarta',
-                        masjid: '',
-                        address: '',
-                        gmapsUrl: '',
-                        pemateri: '',
-                        tema: '',
-                        waktu: '',
-                        date: formatYYYYMMDD(new Date()),
-                        cp: '',
-                        khususAkhwat: false,
-                        isOnline: false,
-                        isKidsFriendly: false
-                    }]);
-                }
-            }
-
-            // Show Success Modal
-            setSuccessModal({
+            setProgressModal({
                 isOpen: true,
-                ids: savedIds,
-                count: savedCount
+                title: 'Selesai!',
+                message: `Alhamdulillah! ${normalized.length} jadwal berhasil diekstrak dan siap disimpan.`,
+                progress: 100,
+                currentStep: normalized.length,
+                totalSteps: normalized.length
             });
-        } else if (recurringErrors > 0) {
-            setMessage('Gagal menyimpan kajian rutin. Cek koneksi atau data.');
+            setMessage(`Ekstraksi AI selesai. Data telah diproses.`);
+
+            setTimeout(() => {
+                setProgressModal(prev => ({ ...prev, isOpen: false }));
+            }, 2000);
+
+        } catch (e: any) {
+            setProgressModal(prev => ({ ...prev, isOpen: false }));
+            setMessage(`Gagal memproses dengan AI: ${e.message || 'Kesalahan tidak diketahui'}`);
+            setIsGeocoding(false);
+            console.error(e);
+        } finally {
+            setIsAiLoading(false);
         }
+    };
 
-    } catch (e) {
-        setMessage('Kesalahan koneksi atau sistem saat menyimpan.');
-        console.error(e);
-    } finally {
-        setIsSaving(false);
-    }
-};
 
-const handleConfirmSave = async (action: 'all' | 'skip') => {
-    try {
-        setIsSaving(true);
-        setShowDuplicateModal(false);
-        console.log('handleConfirmSave called with action:', action);
 
-        let finalEntries = [...pendingSaveEntries];
 
-        if (action === 'skip') {
-            // Filter out duplicates using new format
-            const duplicateSignatures = new Set(duplicateEntries.map(d =>
-                `${d.new.masjid}|${d.new.city}|${d.new.date}|${d.new.waktu}`
-            ));
-
-            finalEntries = pendingSaveEntries.filter(e =>
-                !duplicateSignatures.has(`${formatMasjidName(e.masjid)}|${e.city}|${e.date}|${e.waktu}`)
-            );
-            console.log('Filtered entries (skip mode):', finalEntries.length);
+    const toggleSelection = (index: number) => {
+        const newSelected = new Set(selectedIndices);
+        if (newSelected.has(index)) {
+            newSelected.delete(index);
+        } else {
+            newSelected.add(index);
         }
+        setSelectedIndices(newSelected);
+    };
 
-        if (finalEntries.length === 0) {
-            // Even if all are skipped, we clear them from the list
-            const processedObjects = new Set(pendingSaveEntries);
-            const remainingEntries = entries.filter(e => !processedObjects.has(e));
-            setEntries(remainingEntries);
-            setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
-            if (remainingEntries.length === 0) setInputText('');
+    const toggleAll = () => {
+        if (selectedIndices.size === entries.length) {
+            setSelectedIndices(new Set());
+        } else {
+            setSelectedIndices(new Set(entries.map((_, i) => i)));
+        }
+    };
 
-            setMessage('Tidak ada data baru untuk disimpan (semua duplikat dilewati).');
-            setIsSaving(false);
-            setDuplicateEntries([]);
-            setPendingSaveEntries([]);
+    const handleSave = async () => {
+        const entriesToSave = entries.filter((_, i) => selectedIndices.has(i));
+
+        if (entriesToSave.length === 0) {
+            setMessage('Pilih setidaknya satu jadwal untuk disimpan.');
             return;
         }
 
         try {
-            console.log('Saving', finalEntries.length, 'entries...');
-            const response = await fetch('/api/kajian', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(finalEntries),
-            });
+            setIsSaving(true);
 
-            const data = await response.json();
+            const tematikEntries = entriesToSave.filter(e => !e.isRecurring);
+            const recurringEntries = entriesToSave.filter(e => e.isRecurring);
 
-            if (!response.ok) {
-                console.error('API error:', data);
-                setMessage(`Gagal menyimpan: ${data.error || 'Server error'}`);
-                setIsSaving(false);
-                return;
-            }
+            const successfulEntries = new Set<KajianEntry>();
+            const savedIds: string[] = [];
+            let recurringErrors = 0;
 
-            const savedCount = finalEntries.length;
-            const skippedCount = pendingSaveEntries.length - finalEntries.length;
+            // 1. Process Recurring Entries (One by One)
+            if (recurringEntries.length > 0) {
+                for (const entry of recurringEntries) {
+                    try {
+                        const res = await fetch('/api/recurring-kajian', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                ...entry,
+                                pattern: entry.recurringPattern || 'weekly',
+                                day_of_week: entry.recurringDay ?? 0,
+                                week_of_month: entry.recurringWeek || 1
+                            })
+                        });
 
-            // Show Success Modal instead of just message
-            setSuccessModal({
-                isOpen: true,
-                ids: data.ids || [],
-                count: savedCount
-            });
-
-            fetchStats();
-
-            // Remove PROCESSED entries from list (both saved and skipped)
-            const processedObjects = new Set(pendingSaveEntries);
-            const remainingEntries = entries.filter(e => !processedObjects.has(e));
-
-            setEntries(remainingEntries);
-            setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
-
-            if (remainingEntries.length === 0) {
-                setInputText('');
-                // Auto-add new manual entry if in manual mode
-                if (isManualMode || isContributor) {
-                    setEntries([{
-                        region: 'INDONESIA',
-                        city: 'Jakarta',
-                        masjid: '',
-                        address: '',
-                        gmapsUrl: '',
-                        pemateri: '',
-                        tema: '',
-                        waktu: '',
-                        date: formatYYYYMMDD(new Date()),
-                        cp: '',
-                        khususAkhwat: false,
-                        isOnline: false,
-                        isKidsFriendly: false
-                    }]);
+                        if (res.ok) {
+                            successfulEntries.add(entry);
+                        } else {
+                            recurringErrors++;
+                            console.error('Failed recurring save:', await res.json());
+                        }
+                    } catch (err) {
+                        recurringErrors++;
+                        console.error('Error saving recurring:', err);
+                    }
                 }
             }
 
+            // 2. Process Tematik Entries (Bulk)
+            if (tematikEntries.length > 0) {
+                const response = await fetch('/api/kajian', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(tematikEntries),
+                });
+
+                const data = await response.json();
+
+                // Handle duplicate detection (409 status)
+                if (response.status === 409 && data.duplicates) {
+                    // Update list to remove ALREADY saved recurring entries
+                    if (successfulEntries.size > 0) {
+                        const savedIndices = new Set([...successfulEntries].map(e => entries.indexOf(e)));
+                        const remainingEntries = entries.filter((_, i) => !savedIndices.has(i));
+                        setEntries(remainingEntries);
+                        setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
+
+                        setMessage(`✅ ${successfulEntries.size} kajian rutin tersimpan. ⚠️ Ditemukan duplikat pada kajian tematik.`);
+                    } else {
+                        setDuplicateEntries(data.duplicates);
+                    }
+
+                    setDuplicateEntries(data.duplicates);
+                    setPendingSaveEntries(tematikEntries);
+                    setShowDuplicateModal(true);
+                    setIsSaving(false);
+                    return;
+                }
+
+                if (!response.ok) {
+                    setMessage(`Gagal menyimpan kajian tematik: ${data.error || 'Server error'}`);
+                } else {
+                    tematikEntries.forEach(e => successfulEntries.add(e));
+                    if (data.ids && Array.isArray(data.ids)) {
+                        savedIds.push(...data.ids);
+                    }
+                }
+            }
+
+            const savedCount = successfulEntries.size;
+
+            if (savedCount > 0) {
+                setMessage(`Alhamdulillah, ${savedCount} jadwal berhasil disimpan!${recurringErrors > 0 ? ` (${recurringErrors} gagal)` : ''}`);
+                fetchStats();
+
+                // Trigger generation for newly created recurring entries
+                if (recurringEntries.length > 0) {
+                    fetch('/api/recurring-kajian/generate', { method: 'POST' })
+                        .catch(err => console.error('Auto-generation failed:', err));
+                }
+
+                // Remove saved entries from list
+                const savedIndices = new Set([...successfulEntries].map(e => entries.indexOf(e)));
+                const remainingEntries = entries.filter((_, i) => !savedIndices.has(i));
+                setEntries(remainingEntries);
+                setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
+
+                if (remainingEntries.length === 0) {
+                    setInputText('');
+                    // Auto-add new manual entry if in manual mode
+                    if (isManualMode || isContributor) {
+                        setEntries([{
+                            region: 'INDONESIA',
+                            city: 'Jakarta',
+                            masjid: '',
+                            address: '',
+                            gmapsUrl: '',
+                            pemateri: '',
+                            tema: '',
+                            waktu: '',
+                            date: formatYYYYMMDD(new Date()),
+                            cp: '',
+                            khususAkhwat: false,
+                            isOnline: false,
+                            isKidsFriendly: false
+                        }]);
+                    }
+                }
+
+                // Show Success Modal
+                setSuccessModal({
+                    isOpen: true,
+                    ids: savedIds,
+                    count: savedCount
+                });
+            } else if (recurringErrors > 0) {
+                setMessage('Gagal menyimpan kajian rutin. Cek koneksi atau data.');
+            }
+
         } catch (e) {
-            console.error('Save error:', e);
-            setMessage('Gagal menyimpan data.');
+            setMessage('Kesalahan koneksi atau sistem saat menyimpan.');
+            console.error(e);
         } finally {
             setIsSaving(false);
-            setDuplicateEntries([]);
-            setPendingSaveEntries([]);
         }
-    } catch (error: any) {
-        console.error('Outer handleConfirmSave error:', error);
-        setMessage(`Error: ${error.message || 'Kesalahan tidak diketahui'}`);
-        setIsSaving(false);
-    }
-};
-
-
-const handleDeleteExisting = async (existingId: number, duplicateIndex: number) => {
-    if (!confirm('Yakin ingin menghapus kajian yang sudah ada di database? Tindakan ini tidak dapat dibatalkan.')) {
-        return;
-    }
-
-    try {
-        setIsSaving(true);
-        console.log('Deleting existing kajian ID:', existingId);
-
-        const response = await fetch(`/api/kajian/${existingId}`, {
-            method: 'DELETE'
-        });
-
-        if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.error || 'Failed to delete');
-        }
-
-        // Remove from duplicateEntries
-        const updatedDuplicates = duplicateEntries.filter((_, i) => i !== duplicateIndex);
-        setDuplicateEntries(updatedDuplicates);
-
-        setMessage(`Kajian ID ${existingId} berhasil dihapus dari database.`);
-
-        // If no more duplicates, close modal and save remaining
-        if (updatedDuplicates.length === 0) {
-            setShowDuplicateModal(false);
-            // Automatically save the entries now that duplicates are resolved
-            await handleConfirmSave('all');
-        }
-    } catch (error: any) {
-        console.error('Delete error:', error);
-        setMessage(`Gagal menghapus: ${error.message || 'Kesalahan tidak diketahui'}`);
-    } finally {
-        setIsSaving(false);
-    }
-};
-
-const updateEntry = (index: number, field: keyof KajianEntry, value: string | number | boolean | undefined) => {
-    setEntries(prev => {
-        const newEntries = [...prev];
-        newEntries[index] = { ...newEntries[index], [field]: value };
-        return newEntries;
-    });
-};
-
-// Auto-extract coordinates when Google Maps URL is entered
-const autoExtractCoordinates = async (idx: number, url: string) => {
-    // Only proceed if URL looks like a Google Maps link
-    if (!url || (!url.includes('maps.google') && !url.includes('maps.app.goo.gl') && !url.includes('goo.gl') && !url.includes('maps'))) {
-        return;
-    }
-
-    try {
-        const res = await fetch('/api/tools/extract-gmaps', {
-            method: 'POST',
-            body: JSON.stringify({ url }),
-            headers: { 'Content-Type': 'application/json' }
-        });
-        const data = await res.json();
-
-        if (data.success && data.lat && data.lng) {
-            // Auto-fill the coordinates
-            setEntries(prev => {
-                const updated = [...prev];
-                updated[idx] = {
-                    ...updated[idx],
-                    lat: data.lat,
-                    lng: data.lng,
-                    gmapsUrl: data.expandedUrl || url // Use expanded URL if available
-                };
-                return updated;
-            });
-        }
-    } catch (e) {
-        console.error('Auto-extract failed:', e);
-        // Silently fail - user can still use manual extract button
-    }
-};
-
-// Debounced version to avoid too many API calls
-const debouncedAutoExtract = useRef<NodeJS.Timeout | null>(null);
-
-const handleGmapsUrlChange = (idx: number, url: string) => {
-    // Update the URL immediately
-    updateEntry(idx, 'gmapsUrl', url);
-
-    // Clear previous timeout
-    if (debouncedAutoExtract.current) {
-        clearTimeout(debouncedAutoExtract.current);
-    }
-
-    // Set new timeout for auto-extract (1 second after user stops typing)
-    if (url && url.trim().length > 10) { // Only try if URL looks substantial
-        debouncedAutoExtract.current = setTimeout(() => {
-            autoExtractCoordinates(idx, url);
-        }, 1000);
-    }
-};
-
-const handleAddManual = () => {
-    const newEntry: KajianEntry = {
-        region: 'INDONESIA',
-        city: 'Jakarta',
-        masjid: '',
-        address: '',
-        pemateri: '',
-        tema: '',
-        waktu: '',
-        date: '',
-        cp: '',
-        gmapsUrl: ''
     };
-    setEntries([newEntry, ...entries]);
-    setSelectedIndices(new Set([0, ...Array.from(selectedIndices).map(i => i + 1)]));
-    setMessage('Baru: Baris kosong ditambahkan. Silakan isi detailnya.');
-};
 
-const handleDiscard = (index: number) => {
-    const newEntries = entries.filter((_, i) => i !== index);
-    setEntries(newEntries);
-    const newSelected = new Set<number>();
-    selectedIndices.forEach(i => {
-        if (i < index) newSelected.add(i);
-        else if (i > index) newSelected.add(i - 1);
-    });
-    setSelectedIndices(newSelected);
-};
+    const handleConfirmSave = async (action: 'all' | 'skip') => {
+        try {
+            setIsSaving(true);
+            setShowDuplicateModal(false);
+            console.log('handleConfirmSave called with action:', action);
 
-return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-        <div className="batch-header flex-col md:flex-row items-start md:items-center gap-4">
-            <div>
-                <h1 className="batch-title">Input Massal Jadwal Kajian</h1>
-                <p className="batch-subtitle">Ekstrak jadwal dari poster atau broadcast message</p>
-            </div>
-            <div className="flex items-center gap-3 w-full md:w-auto">
-                <Link href="/kajian" className="hidden md:flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:text-blue-600 transition-colors">
-                    <ExternalLink className="w-4 h-4" />
-                    Lihat Publik
-                </Link>
-                <div className="px-4 py-2 bg-blue-50 rounded-lg border border-blue-100 flex-1 md:flex-none text-center">
-                    <p className="text-xs text-blue-600 font-medium">{stats.total} Jadwal</p>
+            let finalEntries = [...pendingSaveEntries];
+
+            if (action === 'skip') {
+                // Filter out duplicates using new format
+                const duplicateSignatures = new Set(duplicateEntries.map(d =>
+                    `${d.new.masjid}|${d.new.city}|${d.new.date}|${d.new.waktu}`
+                ));
+
+                finalEntries = pendingSaveEntries.filter(e =>
+                    !duplicateSignatures.has(`${formatMasjidName(e.masjid)}|${e.city}|${e.date}|${e.waktu}`)
+                );
+                console.log('Filtered entries (skip mode):', finalEntries.length);
+            }
+
+            if (finalEntries.length === 0) {
+                // Even if all are skipped, we clear them from the list
+                const processedObjects = new Set(pendingSaveEntries);
+                const remainingEntries = entries.filter(e => !processedObjects.has(e));
+                setEntries(remainingEntries);
+                setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
+                if (remainingEntries.length === 0) setInputText('');
+
+                setMessage('Tidak ada data baru untuk disimpan (semua duplikat dilewati).');
+                setIsSaving(false);
+                setDuplicateEntries([]);
+                setPendingSaveEntries([]);
+                return;
+            }
+
+            try {
+                console.log('Saving', finalEntries.length, 'entries...');
+                const response = await fetch('/api/kajian', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(finalEntries),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    console.error('API error:', data);
+                    setMessage(`Gagal menyimpan: ${data.error || 'Server error'}`);
+                    setIsSaving(false);
+                    return;
+                }
+
+                const savedCount = finalEntries.length;
+                const skippedCount = pendingSaveEntries.length - finalEntries.length;
+
+                // Show Success Modal instead of just message
+                setSuccessModal({
+                    isOpen: true,
+                    ids: data.ids || [],
+                    count: savedCount
+                });
+
+                fetchStats();
+
+                // Remove PROCESSED entries from list (both saved and skipped)
+                const processedObjects = new Set(pendingSaveEntries);
+                const remainingEntries = entries.filter(e => !processedObjects.has(e));
+
+                setEntries(remainingEntries);
+                setSelectedIndices(new Set(remainingEntries.map((_, i) => i)));
+
+                if (remainingEntries.length === 0) {
+                    setInputText('');
+                    // Auto-add new manual entry if in manual mode
+                    if (isManualMode || isContributor) {
+                        setEntries([{
+                            region: 'INDONESIA',
+                            city: 'Jakarta',
+                            masjid: '',
+                            address: '',
+                            gmapsUrl: '',
+                            pemateri: '',
+                            tema: '',
+                            waktu: '',
+                            date: formatYYYYMMDD(new Date()),
+                            cp: '',
+                            khususAkhwat: false,
+                            isOnline: false,
+                            isKidsFriendly: false
+                        }]);
+                    }
+                }
+
+            } catch (e) {
+                console.error('Save error:', e);
+                setMessage('Gagal menyimpan data.');
+            } finally {
+                setIsSaving(false);
+                setDuplicateEntries([]);
+                setPendingSaveEntries([]);
+            }
+        } catch (error: any) {
+            console.error('Outer handleConfirmSave error:', error);
+            setMessage(`Error: ${error.message || 'Kesalahan tidak diketahui'}`);
+            setIsSaving(false);
+        }
+    };
+
+
+    const handleDeleteExisting = async (existingId: number, duplicateIndex: number) => {
+        if (!confirm('Yakin ingin menghapus kajian yang sudah ada di database? Tindakan ini tidak dapat dibatalkan.')) {
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            console.log('Deleting existing kajian ID:', existingId);
+
+            const response = await fetch(`/api/kajian/${existingId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to delete');
+            }
+
+            // Remove from duplicateEntries
+            const updatedDuplicates = duplicateEntries.filter((_, i) => i !== duplicateIndex);
+            setDuplicateEntries(updatedDuplicates);
+
+            setMessage(`Kajian ID ${existingId} berhasil dihapus dari database.`);
+
+            // If no more duplicates, close modal and save remaining
+            if (updatedDuplicates.length === 0) {
+                setShowDuplicateModal(false);
+                // Automatically save the entries now that duplicates are resolved
+                await handleConfirmSave('all');
+            }
+        } catch (error: any) {
+            console.error('Delete error:', error);
+            setMessage(`Gagal menghapus: ${error.message || 'Kesalahan tidak diketahui'}`);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const updateEntry = (index: number, field: keyof KajianEntry, value: string | number | boolean | undefined) => {
+        setEntries(prev => {
+            const newEntries = [...prev];
+            newEntries[index] = { ...newEntries[index], [field]: value };
+            return newEntries;
+        });
+    };
+
+    // Auto-extract coordinates when Google Maps URL is entered
+    const autoExtractCoordinates = async (idx: number, url: string) => {
+        // Only proceed if URL looks like a Google Maps link
+        if (!url || (!url.includes('maps.google') && !url.includes('maps.app.goo.gl') && !url.includes('goo.gl') && !url.includes('maps'))) {
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/tools/extract-gmaps', {
+                method: 'POST',
+                body: JSON.stringify({ url }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await res.json();
+
+            if (data.success && data.lat && data.lng) {
+                // Auto-fill the coordinates
+                setEntries(prev => {
+                    const updated = [...prev];
+                    updated[idx] = {
+                        ...updated[idx],
+                        lat: data.lat,
+                        lng: data.lng,
+                        gmapsUrl: data.expandedUrl || url // Use expanded URL if available
+                    };
+                    return updated;
+                });
+            }
+        } catch (e) {
+            console.error('Auto-extract failed:', e);
+            // Silently fail - user can still use manual extract button
+        }
+    };
+
+    // Debounced version to avoid too many API calls
+    const debouncedAutoExtract = useRef<NodeJS.Timeout | null>(null);
+
+    const handleGmapsUrlChange = (idx: number, url: string) => {
+        // Update the URL immediately
+        updateEntry(idx, 'gmapsUrl', url);
+
+        // Clear previous timeout
+        if (debouncedAutoExtract.current) {
+            clearTimeout(debouncedAutoExtract.current);
+        }
+
+        // Set new timeout for auto-extract (1 second after user stops typing)
+        if (url && url.trim().length > 10) { // Only try if URL looks substantial
+            debouncedAutoExtract.current = setTimeout(() => {
+                autoExtractCoordinates(idx, url);
+            }, 1000);
+        }
+    };
+
+    const handleAddManual = () => {
+        const newEntry: KajianEntry = {
+            region: 'INDONESIA',
+            city: 'Jakarta',
+            masjid: '',
+            address: '',
+            pemateri: '',
+            tema: '',
+            waktu: '',
+            date: '',
+            cp: '',
+            gmapsUrl: ''
+        };
+        setEntries([newEntry, ...entries]);
+        setSelectedIndices(new Set([0, ...Array.from(selectedIndices).map(i => i + 1)]));
+        setMessage('Baru: Baris kosong ditambahkan. Silakan isi detailnya.');
+    };
+
+    const handleDiscard = (index: number) => {
+        const newEntries = entries.filter((_, i) => i !== index);
+        setEntries(newEntries);
+        const newSelected = new Set<number>();
+        selectedIndices.forEach(i => {
+            if (i < index) newSelected.add(i);
+            else if (i > index) newSelected.add(i - 1);
+        });
+        setSelectedIndices(newSelected);
+    };
+
+    return (
+        <div className="space-y-6 max-w-7xl mx-auto">
+            <div className="batch-header flex-col md:flex-row items-start md:items-center gap-4">
+                <div>
+                    <h1 className="batch-title">Input Massal Jadwal Kajian</h1>
+                    <p className="batch-subtitle">Ekstrak jadwal dari poster atau broadcast message</p>
+                </div>
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                    <Link href="/kajian" className="hidden md:flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:text-blue-600 transition-colors">
+                        <ExternalLink className="w-4 h-4" />
+                        Lihat Publik
+                    </Link>
+                    <div className="px-4 py-2 bg-blue-50 rounded-lg border border-blue-100 flex-1 md:flex-none text-center">
+                        <p className="text-xs text-blue-600 font-medium">{stats.total} Jadwal</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        {!isManualMode && !isContributor && (
-            <AIInputSection
-                onProcess={handleProcess}
-                onAiProcess={handleAiProcess}
-                onImageUpload={handleImageUpload}
-                inputText={inputText}
-                setInputText={setInputText}
-                uploadedImages={uploadedImages}
-                setUploadedImages={setUploadedImages}
-                isOcrLoading={isOcrLoading}
-                ocrProgress={ocrProgress}
-                isGeocoding={isGeocoding}
-                isAiLoading={isAiLoading}
-            />
-        )}
+            {!isManualMode && !isContributor && (
+                <AIInputSection
+                    onProcess={handleProcess}
+                    onAiProcess={handleAiProcess}
+                    onImageUpload={handleImageUpload}
+                    inputText={inputText}
+                    setInputText={setInputText}
+                    uploadedImages={uploadedImages}
+                    setUploadedImages={setUploadedImages}
+                    isOcrLoading={isOcrLoading}
+                    ocrProgress={ocrProgress}
+                    isGeocoding={isGeocoding}
+                    isAiLoading={isAiLoading}
+                />
+            )}
 
-        <div className="w-full">
-            <div className="batch-card min-h-[600px]">
-                <div className="batch-card-header batch-card-header-green flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-emerald-600 p-3 rounded-2xl text-white shadow-lg shadow-emerald-100">
-                            <CheckCircle className="w-6 h-6" />
+            <div className="w-full">
+                <div className="batch-card min-h-[600px]">
+                    <div className="batch-card-header batch-card-header-green flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-emerald-600 p-3 rounded-2xl text-white shadow-lg shadow-emerald-100">
+                                <CheckCircle className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-xl text-slate-900">
+                                    {(isContributor || isManualMode) ? 'Input Manual Jadwal Kajian' : 'Hasil Ekstraksi'}
+                                </h3>
+                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{entries.length} entri ditemukan</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="font-bold text-xl text-slate-900">
-                                {(isContributor || isManualMode) ? 'Input Manual Jadwal Kajian' : 'Hasil Ekstraksi'}
-                            </h3>
-                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{entries.length} entri ditemukan</p>
-                        </div>
-                    </div>
-                    <div className="flex gap-2 w-full md:w-auto">
-                        <button
-                            onClick={handleAddManual}
-                            className="batch-btn batch-btn-secondary flex-1 md:flex-none"
-                        >
-                            <PlusCircle className="w-4 h-4" /> Manual
-                        </button>
-                        {entries.length > 0 && (
+                        <div className="flex gap-2 w-full md:w-auto">
                             <button
-                                onClick={handleSave}
-                                className="batch-btn batch-btn-success flex-1 md:flex-none"
+                                onClick={handleAddManual}
+                                className="batch-btn batch-btn-secondary flex-1 md:flex-none"
                             >
-                                <Save className="w-4 h-4" /> Simpan {selectedIndices.size}
+                                <PlusCircle className="w-4 h-4" /> Manual
                             </button>
-                        )}
+                            {entries.length > 0 && (
+                                <button
+                                    onClick={handleSave}
+                                    className="batch-btn batch-btn-success flex-1 md:flex-none"
+                                >
+                                    <Save className="w-4 h-4" /> Simpan {selectedIndices.size}
+                                </button>
+                            )}
+                        </div>
                     </div>
-                </div>
 
-                {entries.length > 0 ? (
-                    <div className="overflow-hidden">
-                        <div className="hidden md:block">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-slate-50 border-b border-slate-100">
-                                        <th className="p-5 w-16">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedIndices.size === entries.length && entries.length > 0}
-                                                onChange={toggleAll}
-                                                className="w-5 h-5 rounded-lg border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                            />
-                                        </th>
-                                        <th className="p-5 font-black text-slate-400 uppercase tracking-widest text-[11px]">Rincian Jadwal</th>
-                                        <th className="p-5 w-16 text-right"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {entries.map((entry, idx) => (
-                                        <tr key={idx} className={`transition-all group/row ${selectedIndices.has(idx) ? 'bg-white' : 'opacity-40 hover:opacity-100'}`}>
-                                            <td className="p-5 align-top">
+                    {entries.length > 0 ? (
+                        <div className="overflow-hidden">
+                            <div className="hidden md:block">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-slate-50 border-b border-slate-100">
+                                            <th className="p-5 w-16">
                                                 <input
                                                     type="checkbox"
-                                                    checked={selectedIndices.has(idx)}
-                                                    onChange={() => toggleSelection(idx)}
-                                                    className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                    checked={selectedIndices.size === entries.length && entries.length > 0}
+                                                    onChange={toggleAll}
+                                                    className="w-5 h-5 rounded-lg border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
                                                 />
-                                            </td>
-                                            <td className="p-3 space-y-6 flex gap-6">
-                                                <div className="shrink-0 w-32">
-                                                    <ImageUpload
-                                                        value={entry.imageUrl}
-                                                        onChange={(val) => updateEntry(idx, 'imageUrl', val)}
-                                                        label=""
-                                                        className="w-full"
+                                            </th>
+                                            <th className="p-5 font-black text-slate-400 uppercase tracking-widest text-[11px]">Rincian Jadwal</th>
+                                            <th className="p-5 w-16 text-right"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {entries.map((entry, idx) => (
+                                            <tr key={idx} className={`transition-all group/row ${selectedIndices.has(idx) ? 'bg-white' : 'opacity-40 hover:opacity-100'}`}>
+                                                <td className="p-5 align-top">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedIndices.has(idx)}
+                                                        onChange={() => toggleSelection(idx)}
+                                                        className="w-6 h-6 rounded-xl border-slate-200 text-blue-600 focus:ring-blue-500 cursor-pointer"
                                                     />
-                                                </div>
-                                                <div className="flex-1 space-y-4">
-                                                    {/* SECTION 1: Masjid & Location */}
-                                                    <div className="bg-gradient-to-br from-blue-50/50 to-transparent p-5 rounded-2xl border border-blue-100/50">
-                                                        <h3 className="text-xs font-black text-blue-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                                            <MapPin className="w-4 h-4" /> Masjid & Lokasi
-                                                        </h3>
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                            <div className="md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Nama Masjid</label>
-                                                                <AutosuggestInput
-                                                                    type="masjid"
-                                                                    value={entry.masjid}
-                                                                    onChange={(val) => updateEntry(idx, 'masjid', val)}
-                                                                    onSelect={(item) => {
-                                                                        if (item.address) updateEntry(idx, 'address', item.address);
-                                                                        if (item.city) updateEntry(idx, 'city', item.city);
-                                                                        if (item.gmapsUrl || item.gmapsurl) updateEntry(idx, 'gmapsUrl', item.gmapsUrl || item.gmapsurl);
-                                                                        if (item.lat !== undefined) updateEntry(idx, 'lat', item.lat);
-                                                                        if (item.lng !== undefined) updateEntry(idx, 'lng', item.lng);
-                                                                    }}
-                                                                    className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900 transition-all"
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Kota</label>
-                                                                <div className="relative">
+                                                </td>
+                                                <td className="p-3 space-y-6 flex gap-6">
+                                                    <div className="shrink-0 w-32">
+                                                        <ImageUpload
+                                                            value={entry.imageUrl}
+                                                            onChange={(val) => updateEntry(idx, 'imageUrl', val)}
+                                                            label=""
+                                                            className="w-full"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1 space-y-4">
+                                                        {/* SECTION 1: Masjid & Location */}
+                                                        <div className="bg-gradient-to-br from-blue-50/50 to-transparent p-5 rounded-2xl border border-blue-100/50">
+                                                            <h3 className="text-xs font-black text-blue-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                                                <MapPin className="w-4 h-4" /> Masjid & Lokasi
+                                                            </h3>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div className="md:col-span-2">
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Nama Masjid</label>
+                                                                    <AutosuggestInput
+                                                                        type="masjid"
+                                                                        value={entry.masjid}
+                                                                        onChange={(val) => updateEntry(idx, 'masjid', val)}
+                                                                        onSelect={(item) => {
+                                                                            if (item.address) updateEntry(idx, 'address', item.address);
+                                                                            if (item.city) updateEntry(idx, 'city', item.city);
+                                                                            if (item.gmapsUrl || item.gmapsurl) updateEntry(idx, 'gmapsUrl', item.gmapsUrl || item.gmapsurl);
+                                                                            if (item.lat !== undefined) updateEntry(idx, 'lat', item.lat);
+                                                                            if (item.lng !== undefined) updateEntry(idx, 'lng', item.lng);
+                                                                        }}
+                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900 transition-all"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Kota</label>
+                                                                    <div className="relative">
+                                                                        <input
+                                                                            type="text"
+                                                                            value={entry.city}
+                                                                            onChange={(e) => {
+                                                                                updateEntry(idx, 'city', e.target.value);
+                                                                                setActiveCityDropdownIndex(idx);
+                                                                                setCityFilter(e.target.value);
+                                                                            }}
+                                                                            onFocus={() => setActiveCityDropdownIndex(idx)}
+                                                                            onBlur={() => setTimeout(() => setActiveCityDropdownIndex(null), 200)}
+                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                        />
+                                                                        {activeCityDropdownIndex === idx && cityFilter && (
+                                                                            <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border-2 border-slate-200 rounded-xl shadow-xl">
+                                                                                {indonesianCities
+                                                                                    .filter(c => c.toLowerCase().includes(cityFilter.toLowerCase()))
+                                                                                    .slice(0, 10)
+                                                                                    .map(city => (
+                                                                                        <button
+                                                                                            key={city}
+                                                                                            type="button"
+                                                                                            className="w-full text-left px-4 py-2 hover:bg-blue-50 font-medium text-sm"
+                                                                                            onClick={() => {
+                                                                                                updateEntry(idx, 'city', city);
+                                                                                                setActiveCityDropdownIndex(null);
+                                                                                            }}
+                                                                                        >
+                                                                                            {city}
+                                                                                        </button>
+                                                                                    ))
+                                                                                }
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="md:col-span-2">
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Alamat</label>
                                                                     <input
                                                                         type="text"
-                                                                        value={entry.city}
-                                                                        onChange={(e) => {
-                                                                            updateEntry(idx, 'city', e.target.value);
-                                                                            setActiveCityDropdownIndex(idx);
-                                                                            setCityFilter(e.target.value);
-                                                                        }}
-                                                                        onFocus={() => setActiveCityDropdownIndex(idx)}
-                                                                        onBlur={() => setTimeout(() => setActiveCityDropdownIndex(null), 200)}
+                                                                        value={entry.address}
+                                                                        onChange={(e) => updateEntry(idx, 'address', e.target.value)}
                                                                         className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
                                                                     />
-                                                                    {activeCityDropdownIndex === idx && cityFilter && (
-                                                                        <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border-2 border-slate-200 rounded-xl shadow-xl">
-                                                                            {indonesianCities
-                                                                                .filter(c => c.toLowerCase().includes(cityFilter.toLowerCase()))
-                                                                                .slice(0, 10)
-                                                                                .map(city => (
-                                                                                    <button
-                                                                                        key={city}
-                                                                                        type="button"
-                                                                                        className="w-full text-left px-4 py-2 hover:bg-blue-50 font-medium text-sm"
-                                                                                        onClick={() => {
-                                                                                            updateEntry(idx, 'city', city);
-                                                                                            setActiveCityDropdownIndex(null);
-                                                                                        }}
-                                                                                    >
-                                                                                        {city}
-                                                                                    </button>
-                                                                                ))
-                                                                            }
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* SECTION 2: Kajian Details */}
+                                                        <div className="bg-gradient-to-br from-emerald-50/50 to-transparent p-5 rounded-2xl border border-emerald-100/50">
+                                                            <h3 className="text-xs font-black text-emerald-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                                                <FileText className="w-4 h-4" /> Detail Kajian
+                                                            </h3>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div className="md:col-span-2">
+                                                                    <div className="flex items-center justify-between mb-2">
+                                                                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Pemateri / Ustadz</label>
+                                                                        {!entry.pemateri2 && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => updateEntry(idx, 'pemateri2', '')}
+                                                                                className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                                                                            >
+                                                                                <PlusCircle className="w-3 h-3" /> Tambah
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <AutosuggestInput
+                                                                            type="pemateri"
+                                                                            value={entry.pemateri}
+                                                                            onChange={(val) => updateEntry(idx, 'pemateri', val)}
+                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                            placeholder="Pemateri utama..."
+                                                                        />
+                                                                        {entry.pemateri2 !== undefined && (
+                                                                            <div className="relative">
+                                                                                <AutosuggestInput
+                                                                                    type="pemateri"
+                                                                                    value={entry.pemateri2 || ''}
+                                                                                    onChange={(val) => updateEntry(idx, 'pemateri2', val)}
+                                                                                    className="w-full bg-white border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-2.5 pr-10 outline-none font-bold text-slate-900"
+                                                                                    placeholder="Pemateri kedua..."
+                                                                                />
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        const { pemateri2, ...rest } = entries[idx];
+                                                                                        const newEntries = [...entries];
+                                                                                        newEntries[idx] = rest as any;
+                                                                                        setEntries(newEntries);
+                                                                                    }}
+                                                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
+                                                                                >
+                                                                                    <X className="w-4 h-4" />
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                        {entry.pemateri2 && !entry.pemateri3 && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => updateEntry(idx, 'pemateri3', '')}
+                                                                                className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                                                                            >
+                                                                                <PlusCircle className="w-3 h-3" /> Tambah Ketiga
+                                                                            </button>
+                                                                        )}
+                                                                        {entry.pemateri3 !== undefined && (
+                                                                            <div className="relative">
+                                                                                <AutosuggestInput
+                                                                                    type="pemateri"
+                                                                                    value={entry.pemateri3 || ''}
+                                                                                    onChange={(val) => updateEntry(idx, 'pemateri3', val)}
+                                                                                    className="w-full bg-white border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-2.5 pr-10 outline-none font-bold text-slate-900"
+                                                                                    placeholder="Pemateri ketiga..."
+                                                                                />
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        const { pemateri3, ...rest } = entries[idx];
+                                                                                        const newEntries = [...entries];
+                                                                                        newEntries[idx] = rest as any;
+                                                                                        setEntries(newEntries);
+                                                                                    }}
+                                                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
+                                                                                >
+                                                                                    <X className="w-4 h-4" />
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="md:col-span-2">
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Tema/Judul Kajian</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={entry.tema}
+                                                                        onChange={(e) => updateEntry(idx, 'tema', e.target.value)}
+                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* SECTION 3: Schedule */}
+                                                        <div className="bg-gradient-to-br from-purple-50/50 to-transparent p-5 rounded-2xl border border-purple-100/50">
+                                                            <div className="flex items-center justify-between mb-4">
+                                                                <h3 className="text-xs font-black text-purple-900 uppercase tracking-wider flex items-center gap-2">
+                                                                    <Calendar className="w-4 h-4" /> Jadwal
+                                                                </h3>
+
+                                                                {/* Toggle Tematik/Rutin */}
+                                                                <div className="bg-white border border-purple-200 rounded-lg p-1 flex">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => updateEntry(idx, 'isRecurring', false)}
+                                                                        className={`px-3 py-1.5 text-[10px] font-black uppercase rounded-md transition-all ${!entry.isRecurring ? 'bg-purple-500 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
+                                                                    >
+                                                                        Tematik
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => updateEntry(idx, 'isRecurring', true)}
+                                                                        className={`px-3 py-1.5 text-[10px] font-black uppercase rounded-md transition-all ${entry.isRecurring ? 'bg-purple-500 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
+                                                                    >
+                                                                        Rutin
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                                <div className={entry.isRecurring ? 'md:col-span-3' : ''}>
+                                                                    {entry.isRecurring ? (
+                                                                        <div className="bg-white rounded-xl border-2 border-purple-100 p-4">
+                                                                            <RecurringPatternSelector
+                                                                                pattern={entry.recurringPattern || 'weekly'}
+                                                                                dayOfWeek={entry.recurringDay || 0}
+                                                                                weekOfMonth={entry.recurringWeek}
+                                                                                onChange={(pattern, day, week) => {
+                                                                                    updateEntry(idx, 'recurringPattern', pattern);
+                                                                                    updateEntry(idx, 'recurringDay', day);
+                                                                                    updateEntry(idx, 'recurringWeek', week);
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div>
+                                                                            <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Tanggal</label>
+                                                                            <input
+                                                                                type="date"
+                                                                                value={(() => {
+                                                                                    const d = parseIndoDate(entry.date);
+                                                                                    return d ? formatYYYYMMDD(d) : '';
+                                                                                })()}
+                                                                                onChange={(e) => {
+                                                                                    const val = e.target.valueAsDate;
+                                                                                    if (val) updateEntry(idx, 'date', formatIndoDate(val));
+                                                                                }}
+                                                                                className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                            />
                                                                         </div>
                                                                     )}
                                                                 </div>
-                                                            </div>
-                                                            <div className="md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Alamat</label>
-                                                                <input
-                                                                    type="text"
-                                                                    value={entry.address}
-                                                                    onChange={(e) => updateEntry(idx, 'address', e.target.value)}
-                                                                    className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
-                                                                />
+                                                                <div>
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Waktu Mulai</label>
+                                                                    <div className="relative">
+                                                                        <input
+                                                                            type="text"
+                                                                            value={entry.waktu_mulai || ''}
+                                                                            onChange={(e) => {
+                                                                                updateEntry(idx, 'waktu_mulai', e.target.value);
+                                                                                setActiveWaktuDropdownIndex(idx);
+                                                                            }}
+                                                                            onFocus={() => setActiveWaktuDropdownIndex(idx)}
+                                                                            onBlur={() => setTimeout(() => setActiveWaktuDropdownIndex(null), 200)}
+                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                            placeholder="Ba'da Maghrib / 19.00"
+                                                                        />
+                                                                        {activeWaktuDropdownIndex === idx && (
+                                                                            <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border-2 border-slate-200 rounded-xl shadow-xl">
+                                                                                {['Ba\'da Shubuh', 'Ba\'da Dhuhur', 'Ba\'da Ashar', 'Ba\'da Maghrib', 'Ba\'da Isya', 'Shubuh', 'Dhuhur', 'Ashar', 'Maghrib', 'Isya', 'Sholat Jumat']
+                                                                                    .filter(w => w.toLowerCase().includes((entry.waktu_mulai || '').toLowerCase()))
+                                                                                    .map(waktu => (
+                                                                                        <button
+                                                                                            key={waktu}
+                                                                                            type="button"
+                                                                                            className="w-full text-left px-4 py-2 hover:bg-purple-50 font-medium text-sm"
+                                                                                            onClick={() => {
+                                                                                                updateEntry(idx, 'waktu_mulai', waktu);
+                                                                                                setActiveWaktuDropdownIndex(null);
+                                                                                            }}
+                                                                                        >
+                                                                                            {waktu}
+                                                                                        </button>
+                                                                                    ))
+                                                                                }
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Waktu Selesai</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={entry.waktu_selesai || 'Selesai'}
+                                                                        onChange={(e) => updateEntry(idx, 'waktu_selesai', e.target.value)}
+                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                                        placeholder="Selesai / 20.00"
+                                                                    />
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
 
-                                                    {/* SECTION 2: Kajian Details */}
-                                                    <div className="bg-gradient-to-br from-emerald-50/50 to-transparent p-5 rounded-2xl border border-emerald-100/50">
-                                                        <h3 className="text-xs font-black text-emerald-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                                            <FileText className="w-4 h-4" /> Detail Kajian
-                                                        </h3>
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                            <div className="md:col-span-2">
-                                                                <div className="flex items-center justify-between mb-2">
-                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Pemateri / Ustadz</label>
-                                                                    {!entry.pemateri2 && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => updateEntry(idx, 'pemateri2', '')}
-                                                                            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
-                                                                        >
-                                                                            <PlusCircle className="w-3 h-3" /> Tambah
-                                                                        </button>
-                                                                    )}
+                                                        {/* SECTION 4: Contact & Maps */}
+                                                        <div className="bg-gradient-to-br from-amber-50/50 to-transparent p-5 rounded-2xl border border-amber-100/50">
+                                                            <h3 className="text-xs font-black text-amber-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                                                <MapPin className="w-4 h-4" /> Kontak & Lokasi Digital
+                                                            </h3>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div>
+                                                                    <div className="flex items-center justify-between mb-2">
+                                                                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Contact Person</label>
+                                                                        {entry.cp2 === undefined && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => updateEntry(idx, 'cp2', '')}
+                                                                                className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1"
+                                                                            >
+                                                                                <PlusCircle className="w-3 h-3" /> Tambah
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <input
+                                                                            type="text"
+                                                                            placeholder="CP (Contact Person)"
+                                                                            value={entry.cp || ''}
+                                                                            onChange={(e) => updateEntry(idx, 'cp', e.target.value)}
+                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-emerald-700"
+                                                                        />
+                                                                        {entry.cp2 !== undefined && (
+                                                                            <div className="relative">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    placeholder="CP 2..."
+                                                                                    value={entry.cp2}
+                                                                                    onChange={(e) => updateEntry(idx, 'cp2', e.target.value)}
+                                                                                    className="w-full bg-white border-2 border-slate-200 focus:border-amber-500 rounded-xl px-4 py-2.5 pr-10 outline-none font-bold text-emerald-700"
+                                                                                />
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => updateEntry(idx, 'cp2', undefined)}
+                                                                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500"
+                                                                                >
+                                                                                    <X className="w-3 h-3" />
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                        {entry.cp3 !== undefined && (
+                                                                            <div className="relative">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    placeholder="CP 3..."
+                                                                                    value={entry.cp3}
+                                                                                    onChange={(e) => updateEntry(idx, 'cp3', e.target.value)}
+                                                                                    className="w-full bg-white border-2 border-slate-200 focus:border-amber-500 rounded-xl px-4 py-2.5 pr-10 outline-none font-bold text-emerald-700"
+                                                                                />
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => updateEntry(idx, 'cp3', undefined)}
+                                                                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500"
+                                                                                >
+                                                                                    <X className="w-3 h-3" />
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                        {entry.cp2 !== undefined && entry.cp3 === undefined && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => updateEntry(idx, 'cp3', '')}
+                                                                                className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1"
+                                                                            >
+                                                                                <PlusCircle className="w-3 h-3" /> Tambah CP 3
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                                 <div className="space-y-2">
-                                                                    <AutosuggestInput
-                                                                        type="pemateri"
-                                                                        value={entry.pemateri}
-                                                                        onChange={(val) => updateEntry(idx, 'pemateri', val)}
-                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
-                                                                        placeholder="Pemateri utama..."
-                                                                    />
-                                                                    {entry.pemateri2 !== undefined && (
-                                                                        <div className="relative">
-                                                                            <AutosuggestInput
-                                                                                type="pemateri"
-                                                                                value={entry.pemateri2 || ''}
-                                                                                onChange={(val) => updateEntry(idx, 'pemateri2', val)}
-                                                                                className="w-full bg-white border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-2.5 pr-10 outline-none font-bold text-slate-900"
-                                                                                placeholder="Pemateri kedua..."
+                                                                    <div>
+                                                                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Google Maps URL</label>
+                                                                        <div className="flex gap-2">
+                                                                            <input
+                                                                                type="text"
+                                                                                placeholder="https://maps.google.com/..."
+                                                                                value={entry.gmapsUrl || ''}
+                                                                                onChange={(e) => handleGmapsUrlChange(idx, e.target.value)}
+                                                                                className="flex-1 bg-white border-2 border-slate-200 focus:border-amber-500 rounded-xl px-4 py-2.5 outline-none font-bold text-blue-700 text-sm"
                                                                             />
                                                                             <button
                                                                                 type="button"
-                                                                                onClick={() => {
-                                                                                    const { pemateri2, ...rest } = entries[idx];
-                                                                                    const newEntries = [...entries];
-                                                                                    newEntries[idx] = rest as any;
-                                                                                    setEntries(newEntries);
+                                                                                onClick={async () => {
+                                                                                    if (!entry.gmapsUrl) return showAlert('Peringatan', 'Masukkan URL Maps terlebih dahulu', 'warning');
+                                                                                    setIsGeocoding(true);
+                                                                                    try {
+                                                                                        const res = await fetch('/api/tools/extract-gmaps', {
+                                                                                            method: 'POST',
+                                                                                            body: JSON.stringify({ url: entry.gmapsUrl }),
+                                                                                            headers: { 'Content-Type': 'application/json' }
+                                                                                        });
+                                                                                        const data = await res.json();
+                                                                                        if (data.success) {
+                                                                                            updateEntry(idx, 'lat', data.lat);
+                                                                                            updateEntry(idx, 'lng', data.lng);
+                                                                                            updateEntry(idx, 'gmapsUrl', data.expandedUrl);
+                                                                                            showAlert('Berhasil', `Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`, 'info');
+                                                                                        } else {
+                                                                                            showAlert('Gagal', 'Gagal mengekstrak: ' + data.error, 'danger');
+                                                                                        }
+                                                                                    } catch (e) {
+                                                                                        showAlert('Kesalahan', 'Terjadi kesalahan sistem', 'danger');
+                                                                                    } finally {
+                                                                                        setIsGeocoding(false);
+                                                                                    }
                                                                                 }}
-                                                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
+                                                                                disabled={isGeocoding}
+                                                                                className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-bold text-xs whitespace-nowrap"
+                                                                                title="Ekstrak Koordinat dari Link"
                                                                             >
-                                                                                <X className="w-4 h-4" />
+                                                                                <MapPin className="w-4 h-4" />
+                                                                                {isGeocoding ? 'Memproses...' : 'Ekstrak'}
                                                                             </button>
                                                                         </div>
-                                                                    )}
-                                                                    {entry.pemateri2 && !entry.pemateri3 && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => updateEntry(idx, 'pemateri3', '')}
-                                                                            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
-                                                                        >
-                                                                            <PlusCircle className="w-3 h-3" /> Tambah Ketiga
-                                                                        </button>
-                                                                    )}
-                                                                    {entry.pemateri3 !== undefined && (
-                                                                        <div className="relative">
-                                                                            <AutosuggestInput
-                                                                                type="pemateri"
-                                                                                value={entry.pemateri3 || ''}
-                                                                                onChange={(val) => updateEntry(idx, 'pemateri3', val)}
-                                                                                className="w-full bg-white border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-2.5 pr-10 outline-none font-bold text-slate-900"
-                                                                                placeholder="Pemateri ketiga..."
+                                                                    </div>
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <div>
+                                                                            <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Latitude</label>
+                                                                            <input
+                                                                                type="number"
+                                                                                step="any"
+                                                                                placeholder="Latitude"
+                                                                                value={entry.lat || ''}
+                                                                                onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
+                                                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono"
                                                                             />
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => {
-                                                                                    const { pemateri3, ...rest } = entries[idx];
-                                                                                    const newEntries = [...entries];
-                                                                                    newEntries[idx] = rest as any;
-                                                                                    setEntries(newEntries);
-                                                                                }}
-                                                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
-                                                                            >
-                                                                                <X className="w-4 h-4" />
-                                                                            </button>
                                                                         </div>
-                                                                    )}
+                                                                        <div>
+                                                                            <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Longitude</label>
+                                                                            <input
+                                                                                type="number"
+                                                                                step="any"
+                                                                                placeholder="Longitude"
+                                                                                value={entry.lng || ''}
+                                                                                onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
+                                                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono"
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Link Info/Pendaftaran</label>
+                                                                        <input
+                                                                            type="text"
+                                                                            placeholder="Link Pendaftaran / Info Utama"
+                                                                            value={entry.linkInfo || ''}
+                                                                            onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)}
+                                                                            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-purple-600"
+                                                                        />
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                            <div className="md:col-span-2">
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Tema/Judul Kajian</label>
-                                                                <input
-                                                                    type="text"
-                                                                    value={entry.tema}
-                                                                    onChange={(e) => updateEntry(idx, 'tema', e.target.value)}
-                                                                    className="w-full bg-white border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
+                                                        </div>
+
+                                                        {/* SECTION 5: Additional Options */}
+                                                        <div className="bg-gradient-to-br from-slate-50 to-transparent p-5 rounded-2xl border border-slate-200">
+                                                            <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                                                <Info className="w-4 h-4" /> Informasi Tambahan
+                                                            </h3>
+                                                            <div className="space-y-3">
+                                                                {/* Image Upload */}
+                                                                <ImageUpload
+                                                                    value={entry.imageUrl || ''}
+                                                                    onChange={(url) => updateEntry(idx, 'imageUrl', url)}
+                                                                    label="Gambar / Poster"
                                                                 />
+
+                                                                <div>
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Catatan</label>
+                                                                    <textarea
+                                                                        rows={2}
+                                                                        value={entry.catatan || ''}
+                                                                        onChange={(e) => updateEntry(idx, 'catatan', e.target.value)}
+                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-slate-400 rounded-xl px-4 py-2.5 outline-none text-slate-900 resize-y"
+                                                                        placeholder="Misal: Membawa makanan untuk berbuka, Khusus ikhwan, dll"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Label Kajian</label>
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${entry.khususAkhwat ? 'bg-pink-50 border-pink-300 text-pink-700' : 'bg-white border-slate-200 text-slate-500 hover:border-pink-200'}`}>
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={entry.khususAkhwat || false}
+                                                                                onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
+                                                                                className="hidden"
+                                                                            />
+                                                                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${entry.khususAkhwat ? 'border-pink-500 bg-pink-500' : 'border-slate-300 bg-white'}`}>
+                                                                                {entry.khususAkhwat && <CheckCircle className="w-3 h-3 text-white" />}
+                                                                            </div>
+                                                                            <span className="text-xs font-black uppercase">🌸 Khusus Akhwat</span>
+                                                                        </label>
+                                                                        <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${entry.isOnline ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-slate-200 text-slate-500 hover:border-blue-200'}`}>
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={entry.isOnline || false}
+                                                                                onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
+                                                                                className="hidden"
+                                                                            />
+                                                                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${entry.isOnline ? 'border-blue-500 bg-blue-500' : 'border-slate-300 bg-white'}`}>
+                                                                                {entry.isOnline && <CheckCircle className="w-3 h-3 text-white" />}
+                                                                            </div>
+                                                                            <span className="text-xs font-black uppercase">💻 Online</span>
+                                                                        </label>
+                                                                        <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${entry.isKidsFriendly ? 'bg-orange-50 border-orange-300 text-orange-700' : 'bg-white border-slate-200 text-slate-500 hover:border-orange-200'}`}>
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={entry.isKidsFriendly || false}
+                                                                                onChange={(e) => updateEntry(idx, 'isKidsFriendly', e.target.checked)}
+                                                                                className="hidden"
+                                                                            />
+                                                                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${entry.isKidsFriendly ? 'border-orange-500 bg-orange-500' : 'border-slate-300 bg-white'}`}>
+                                                                                {entry.isKidsFriendly && <CheckCircle className="w-3 h-3 text-white" />}
+                                                                            </div>
+                                                                            <span className="text-xs font-black uppercase">🎈 Kajian Anak</span>
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
+                                                </td>
+                                                <td className="p-3 align-top text-right">
+                                                    <div className="flex flex-col gap-2">
+                                                        <button onClick={() => setPreviewIndex(idx)} className="p-3 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-2xl transition-all opacity-0 group-hover/row:opacity-100" title="Preview Tampilan">
+                                                            <Eye className="w-5 h-5" />
+                                                        </button>
+                                                        <button onClick={() => handleDiscard(idx)} className="p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover/row:opacity-100" title="Hapus">
+                                                            <Trash2 className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table >
+                            </div >
 
-                                                    {/* SECTION 3: Schedule */}
-                                                    <div className="bg-gradient-to-br from-purple-50/50 to-transparent p-5 rounded-2xl border border-purple-100/50">
-                                                        <div className="flex items-center justify-between mb-4">
-                                                            <h3 className="text-xs font-black text-purple-900 uppercase tracking-wider flex items-center gap-2">
-                                                                <Calendar className="w-4 h-4" /> Jadwal
-                                                            </h3>
-
-                                                            {/* Toggle Tematik/Rutin */}
-                                                            <div className="bg-white border border-purple-200 rounded-lg p-1 flex">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => updateEntry(idx, 'isRecurring', false)}
-                                                                    className={`px-3 py-1.5 text-[10px] font-black uppercase rounded-md transition-all ${!entry.isRecurring ? 'bg-purple-500 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
-                                                                >
-                                                                    Tematik
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => updateEntry(idx, 'isRecurring', true)}
-                                                                    className={`px-3 py-1.5 text-[10px] font-black uppercase rounded-md transition-all ${entry.isRecurring ? 'bg-purple-500 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
-                                                                >
-                                                                    Rutin
-                                                                </button>
-                                                            </div>
+                            {/* Mobile View: Stacked Cards */}
+                            < div className="md:hidden divide-y divide-slate-100" >
+                                {
+                                    entries.map((entry, idx) => (
+                                        <div key={idx} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden relative group transition-all hover:shadow-md mb-4 last:mb-0">
+                                            {/* Header Bar */}
+                                            <div className="bg-slate-50/50 p-3 border-b border-slate-100 flex items-start justify-between gap-3">
+                                                <div className="flex gap-3 items-center flex-1">
+                                                    <button
+                                                        onClick={() => toggleSelection(idx)}
+                                                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${selectedIndices.has(idx) ? 'bg-blue-500 border-blue-500 text-white' : 'border-slate-300 text-transparent hover:border-blue-400'}`}
+                                                    >
+                                                        <CheckCircle className="w-3.5 h-3.5" strokeWidth={3} />
+                                                    </button>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Jadwal Kajian</span>
+                                                        <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                                                            <Calendar className="w-3 h-3 text-slate-400" />
+                                                            <span>{entry.date && parseIndoDate(entry.date) ? formatIndoDate(parseIndoDate(entry.date)!) : '-'}</span>
+                                                            <span className="text-slate-300">|</span>
+                                                            <Clock className="w-3 h-3 text-slate-400" />
+                                                            <span>{entry.waktu}</span>
                                                         </div>
+                                                    </div>
+                                                </div>
 
-                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                            <div className={entry.isRecurring ? 'md:col-span-3' : ''}>
+                                                <div className="flex gap-1">
+                                                    <button onClick={() => setPreviewIndex(idx)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Preview">
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => handleDiscard(idx)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="p-4 space-y-6">
+                                                {/* Main Info */}
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Tema Kajian</label>
+                                                        <textarea
+                                                            rows={2}
+                                                            value={entry.tema}
+                                                            onChange={(e) => updateEntry(idx, 'tema', e.target.value)}
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400 resize-none"
+                                                            placeholder="Judul atau Tema Kajian..."
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Pemateri</label>
+                                                        <AutosuggestInput
+                                                            type="pemateri"
+                                                            value={entry.pemateri}
+                                                            onChange={(val) => updateEntry(idx, 'pemateri', val)}
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
+                                                            placeholder="Nama Ustadz / Pemateri..."
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="h-px bg-slate-100" />
+
+                                                {/* Schedule Info (NEW: User Friendly Date & Time) */}
+                                                <div className="space-y-4">
+                                                    <div className="grid grid-cols-1 gap-4">
+                                                        <div>
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                                    <Calendar className="w-3 h-3" /> Tanggal / Pola
+                                                                </label>
+                                                                <div className="bg-slate-50 border border-slate-200 rounded-lg p-0.5 flex">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => updateEntry(idx, 'isRecurring', false)}
+                                                                        className={`px-2 py-1 text-[9px] font-black uppercase rounded transition-all ${!entry.isRecurring ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-400'}`}
+                                                                    >
+                                                                        Tematik
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => updateEntry(idx, 'isRecurring', true)}
+                                                                        className={`px-2 py-1 text-[9px] font-black uppercase rounded transition-all ${entry.isRecurring ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-400'}`}
+                                                                    >
+                                                                        Rutin
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="relative">
                                                                 {entry.isRecurring ? (
-                                                                    <div className="bg-white rounded-xl border-2 border-purple-100 p-4">
+                                                                    <div className="bg-slate-50 rounded-xl border border-slate-200 p-3">
                                                                         <RecurringPatternSelector
                                                                             pattern={entry.recurringPattern || 'weekly'}
                                                                             dayOfWeek={entry.recurringDay || 0}
@@ -1305,1163 +1749,750 @@ return (
                                                                         />
                                                                     </div>
                                                                 ) : (
-                                                                    <div>
-                                                                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Tanggal</label>
-                                                                        <input
-                                                                            type="date"
-                                                                            value={(() => {
-                                                                                const d = parseIndoDate(entry.date);
-                                                                                return d ? formatYYYYMMDD(d) : '';
-                                                                            })()}
-                                                                            onChange={(e) => {
-                                                                                const val = e.target.valueAsDate;
-                                                                                if (val) updateEntry(idx, 'date', formatIndoDate(val));
-                                                                            }}
-                                                                            className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
-                                                                        />
-                                                                    </div>
+                                                                    <input
+                                                                        type="date"
+                                                                        value={(() => {
+                                                                            const d = parseIndoDate(entry.date);
+                                                                            return d ? formatYYYYMMDD(d) : '';
+                                                                        })()}
+                                                                        onChange={(e) => {
+                                                                            const val = e.target.valueAsDate;
+                                                                            if (val) updateEntry(idx, 'date', formatIndoDate(val));
+                                                                        }}
+                                                                        className="w-full bg-blue-50/50 border border-blue-100 rounded-xl px-4 py-3 text-sm font-bold text-blue-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                                    />
                                                                 )}
                                                             </div>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-3">
                                                             <div>
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Waktu Mulai</label>
-                                                                <div className="relative">
-                                                                    <input
-                                                                        type="text"
-                                                                        value={entry.waktu_mulai || ''}
-                                                                        onChange={(e) => {
-                                                                            updateEntry(idx, 'waktu_mulai', e.target.value);
-                                                                            setActiveWaktuDropdownIndex(idx);
-                                                                        }}
-                                                                        onFocus={() => setActiveWaktuDropdownIndex(idx)}
-                                                                        onBlur={() => setTimeout(() => setActiveWaktuDropdownIndex(null), 200)}
-                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
-                                                                        placeholder="Ba'da Maghrib / 19.00"
-                                                                    />
-                                                                    {activeWaktuDropdownIndex === idx && (
-                                                                        <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border-2 border-slate-200 rounded-xl shadow-xl">
-                                                                            {['Ba\'da Shubuh', 'Ba\'da Dhuhur', 'Ba\'da Ashar', 'Ba\'da Maghrib', 'Ba\'da Isya', 'Shubuh', 'Dhuhur', 'Ashar', 'Maghrib', 'Isya', 'Sholat Jumat']
-                                                                                .filter(w => w.toLowerCase().includes((entry.waktu_mulai || '').toLowerCase()))
-                                                                                .map(waktu => (
-                                                                                    <button
-                                                                                        key={waktu}
-                                                                                        type="button"
-                                                                                        className="w-full text-left px-4 py-2 hover:bg-purple-50 font-medium text-sm"
-                                                                                        onClick={() => {
-                                                                                            updateEntry(idx, 'waktu_mulai', waktu);
-                                                                                            setActiveWaktuDropdownIndex(null);
-                                                                                        }}
-                                                                                    >
-                                                                                        {waktu}
-                                                                                    </button>
-                                                                                ))
-                                                                            }
-                                                                        </div>
-                                                                    )}
-                                                                </div>
+                                                                <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">
+                                                                    <Clock className="w-3 h-3" /> Waktu Mulai
+                                                                </label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={entry.waktu_mulai || ''}
+                                                                    onChange={(e) => updateEntry(idx, 'waktu_mulai', e.target.value)}
+                                                                    placeholder="Cth: 19:00"
+                                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                                />
                                                             </div>
                                                             <div>
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Waktu Selesai</label>
+                                                                <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">
+                                                                    Waktu Selesai
+                                                                </label>
                                                                 <input
                                                                     type="text"
                                                                     value={entry.waktu_selesai || 'Selesai'}
                                                                     onChange={(e) => updateEntry(idx, 'waktu_selesai', e.target.value)}
-                                                                    className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-slate-900"
-                                                                    placeholder="Selesai / 20.00"
+                                                                    placeholder="Selesai"
+                                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                                                                 />
                                                             </div>
                                                         </div>
                                                     </div>
-
-                                                    {/* SECTION 4: Contact & Maps */}
-                                                    <div className="bg-gradient-to-br from-amber-50/50 to-transparent p-5 rounded-2xl border border-amber-100/50">
-                                                        <h3 className="text-xs font-black text-amber-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                                            <MapPin className="w-4 h-4" /> Kontak & Lokasi Digital
-                                                        </h3>
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                            <div>
-                                                                <div className="flex items-center justify-between mb-2">
-                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Contact Person</label>
-                                                                    {entry.cp2 === undefined && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => updateEntry(idx, 'cp2', '')}
-                                                                            className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1"
-                                                                        >
-                                                                            <PlusCircle className="w-3 h-3" /> Tambah
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                                <div className="space-y-2">
-                                                                    <input
-                                                                        type="text"
-                                                                        placeholder="CP (Contact Person)"
-                                                                        value={entry.cp || ''}
-                                                                        onChange={(e) => updateEntry(idx, 'cp', e.target.value)}
-                                                                        className="w-full bg-white border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 outline-none font-bold text-emerald-700"
-                                                                    />
-                                                                    {entry.cp2 !== undefined && (
-                                                                        <div className="relative">
-                                                                            <input
-                                                                                type="text"
-                                                                                placeholder="CP 2..."
-                                                                                value={entry.cp2}
-                                                                                onChange={(e) => updateEntry(idx, 'cp2', e.target.value)}
-                                                                                className="w-full bg-white border-2 border-slate-200 focus:border-amber-500 rounded-xl px-4 py-2.5 pr-10 outline-none font-bold text-emerald-700"
-                                                                            />
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => updateEntry(idx, 'cp2', undefined)}
-                                                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500"
-                                                                            >
-                                                                                <X className="w-3 h-3" />
-                                                                            </button>
-                                                                        </div>
-                                                                    )}
-                                                                    {entry.cp3 !== undefined && (
-                                                                        <div className="relative">
-                                                                            <input
-                                                                                type="text"
-                                                                                placeholder="CP 3..."
-                                                                                value={entry.cp3}
-                                                                                onChange={(e) => updateEntry(idx, 'cp3', e.target.value)}
-                                                                                className="w-full bg-white border-2 border-slate-200 focus:border-amber-500 rounded-xl px-4 py-2.5 pr-10 outline-none font-bold text-emerald-700"
-                                                                            />
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => updateEntry(idx, 'cp3', undefined)}
-                                                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500"
-                                                                            >
-                                                                                <X className="w-3 h-3" />
-                                                                            </button>
-                                                                        </div>
-                                                                    )}
-                                                                    {entry.cp2 !== undefined && entry.cp3 === undefined && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => updateEntry(idx, 'cp3', '')}
-                                                                            className="text-[10px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1"
-                                                                        >
-                                                                            <PlusCircle className="w-3 h-3" /> Tambah CP 3
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <div>
-                                                                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Google Maps URL</label>
-                                                                    <div className="flex gap-2">
-                                                                        <input
-                                                                            type="text"
-                                                                            placeholder="https://maps.google.com/..."
-                                                                            value={entry.gmapsUrl || ''}
-                                                                            onChange={(e) => handleGmapsUrlChange(idx, e.target.value)}
-                                                                            className="flex-1 bg-white border-2 border-slate-200 focus:border-amber-500 rounded-xl px-4 py-2.5 outline-none font-bold text-blue-700 text-sm"
-                                                                        />
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={async () => {
-                                                                                if (!entry.gmapsUrl) return showAlert('Peringatan', 'Masukkan URL Maps terlebih dahulu', 'warning');
-                                                                                setIsGeocoding(true);
-                                                                                try {
-                                                                                    const res = await fetch('/api/tools/extract-gmaps', {
-                                                                                        method: 'POST',
-                                                                                        body: JSON.stringify({ url: entry.gmapsUrl }),
-                                                                                        headers: { 'Content-Type': 'application/json' }
-                                                                                    });
-                                                                                    const data = await res.json();
-                                                                                    if (data.success) {
-                                                                                        updateEntry(idx, 'lat', data.lat);
-                                                                                        updateEntry(idx, 'lng', data.lng);
-                                                                                        updateEntry(idx, 'gmapsUrl', data.expandedUrl);
-                                                                                        showAlert('Berhasil', `Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`, 'info');
-                                                                                    } else {
-                                                                                        showAlert('Gagal', 'Gagal mengekstrak: ' + data.error, 'danger');
-                                                                                    }
-                                                                                } catch (e) {
-                                                                                    showAlert('Kesalahan', 'Terjadi kesalahan sistem', 'danger');
-                                                                                } finally {
-                                                                                    setIsGeocoding(false);
-                                                                                }
-                                                                            }}
-                                                                            disabled={isGeocoding}
-                                                                            className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-bold text-xs whitespace-nowrap"
-                                                                            title="Ekstrak Koordinat dari Link"
-                                                                        >
-                                                                            <MapPin className="w-4 h-4" />
-                                                                            {isGeocoding ? 'Memproses...' : 'Ekstrak'}
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="grid grid-cols-2 gap-2">
-                                                                    <div>
-                                                                        <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Latitude</label>
-                                                                        <input
-                                                                            type="number"
-                                                                            step="any"
-                                                                            placeholder="Latitude"
-                                                                            value={entry.lat || ''}
-                                                                            onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
-                                                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono"
-                                                                        />
-                                                                    </div>
-                                                                    <div>
-                                                                        <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Longitude</label>
-                                                                        <input
-                                                                            type="number"
-                                                                            step="any"
-                                                                            placeholder="Longitude"
-                                                                            value={entry.lng || ''}
-                                                                            onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
-                                                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono"
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                                <div>
-                                                                    <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Link Info/Pendaftaran</label>
-                                                                    <input
-                                                                        type="text"
-                                                                        placeholder="Link Pendaftaran / Info Utama"
-                                                                        value={entry.linkInfo || ''}
-                                                                        onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)}
-                                                                        className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-purple-600"
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* SECTION 5: Additional Options */}
-                                                    <div className="bg-gradient-to-br from-slate-50 to-transparent p-5 rounded-2xl border border-slate-200">
-                                                        <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                                            <Info className="w-4 h-4" /> Informasi Tambahan
-                                                        </h3>
-                                                        <div className="space-y-3">
-                                                            {/* Image Upload */}
-                                                            <ImageUpload
-                                                                value={entry.imageUrl || ''}
-                                                                onChange={(url) => updateEntry(idx, 'imageUrl', url)}
-                                                                label="Gambar / Poster"
-                                                            />
-
-                                                            <div>
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Catatan</label>
-                                                                <textarea
-                                                                    rows={2}
-                                                                    value={entry.catatan || ''}
-                                                                    onChange={(e) => updateEntry(idx, 'catatan', e.target.value)}
-                                                                    className="w-full bg-white border-2 border-slate-200 focus:border-slate-400 rounded-xl px-4 py-2.5 outline-none text-slate-900 resize-y"
-                                                                    placeholder="Misal: Membawa makanan untuk berbuka, Khusus ikhwan, dll"
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 block">Label Kajian</label>
-                                                                <div className="flex flex-wrap gap-2">
-                                                                    <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${entry.khususAkhwat ? 'bg-pink-50 border-pink-300 text-pink-700' : 'bg-white border-slate-200 text-slate-500 hover:border-pink-200'}`}>
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            checked={entry.khususAkhwat || false}
-                                                                            onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
-                                                                            className="hidden"
-                                                                        />
-                                                                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${entry.khususAkhwat ? 'border-pink-500 bg-pink-500' : 'border-slate-300 bg-white'}`}>
-                                                                            {entry.khususAkhwat && <CheckCircle className="w-3 h-3 text-white" />}
-                                                                        </div>
-                                                                        <span className="text-xs font-black uppercase">🌸 Khusus Akhwat</span>
-                                                                    </label>
-                                                                    <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${entry.isOnline ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-slate-200 text-slate-500 hover:border-blue-200'}`}>
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            checked={entry.isOnline || false}
-                                                                            onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
-                                                                            className="hidden"
-                                                                        />
-                                                                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${entry.isOnline ? 'border-blue-500 bg-blue-500' : 'border-slate-300 bg-white'}`}>
-                                                                            {entry.isOnline && <CheckCircle className="w-3 h-3 text-white" />}
-                                                                        </div>
-                                                                        <span className="text-xs font-black uppercase">💻 Online</span>
-                                                                    </label>
-                                                                    <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${entry.isKidsFriendly ? 'bg-orange-50 border-orange-300 text-orange-700' : 'bg-white border-slate-200 text-slate-500 hover:border-orange-200'}`}>
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            checked={entry.isKidsFriendly || false}
-                                                                            onChange={(e) => updateEntry(idx, 'isKidsFriendly', e.target.checked)}
-                                                                            className="hidden"
-                                                                        />
-                                                                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${entry.isKidsFriendly ? 'border-orange-500 bg-orange-500' : 'border-slate-300 bg-white'}`}>
-                                                                            {entry.isKidsFriendly && <CheckCircle className="w-3 h-3 text-white" />}
-                                                                        </div>
-                                                                        <span className="text-xs font-black uppercase">🎈 Kajian Anak</span>
-                                                                    </label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
                                                 </div>
-                                            </td>
-                                            <td className="p-3 align-top text-right">
-                                                <div className="flex flex-col gap-2">
-                                                    <button onClick={() => setPreviewIndex(idx)} className="p-3 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-2xl transition-all opacity-0 group-hover/row:opacity-100" title="Preview Tampilan">
-                                                        <Eye className="w-5 h-5" />
-                                                    </button>
-                                                    <button onClick={() => handleDiscard(idx)} className="p-3 text-red-100 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover/row:opacity-100" title="Hapus">
-                                                        <Trash2 className="w-5 h-5" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table >
-                        </div >
 
-                        {/* Mobile View: Stacked Cards */}
-                        < div className="md:hidden divide-y divide-slate-100" >
-                            {
-                                entries.map((entry, idx) => (
-                                    <div key={idx} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden relative group transition-all hover:shadow-md mb-4 last:mb-0">
-                                        {/* Header Bar */}
-                                        <div className="bg-slate-50/50 p-3 border-b border-slate-100 flex items-start justify-between gap-3">
-                                            <div className="flex gap-3 items-center flex-1">
-                                                <button
-                                                    onClick={() => toggleSelection(idx)}
-                                                    className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${selectedIndices.has(idx) ? 'bg-blue-500 border-blue-500 text-white' : 'border-slate-300 text-transparent hover:border-blue-400'}`}
-                                                >
-                                                    <CheckCircle className="w-3.5 h-3.5" strokeWidth={3} />
-                                                </button>
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Jadwal Kajian</span>
-                                                    <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                                                        <Calendar className="w-3 h-3 text-slate-400" />
-                                                        <span>{entry.date && parseIndoDate(entry.date) ? formatIndoDate(parseIndoDate(entry.date)!) : '-'}</span>
-                                                        <span className="text-slate-300">|</span>
-                                                        <Clock className="w-3 h-3 text-slate-400" />
-                                                        <span>{entry.waktu}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                                <div className="h-px bg-slate-100" />
 
-                                            <div className="flex gap-1">
-                                                <button onClick={() => setPreviewIndex(idx)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Preview">
-                                                    <Eye className="w-4 h-4" />
-                                                </button>
-                                                <button onClick={() => handleDiscard(idx)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
-                                                    <X className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-4 space-y-6">
-                                            {/* Main Info */}
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Tema Kajian</label>
-                                                    <textarea
-                                                        rows={2}
-                                                        value={entry.tema}
-                                                        onChange={(e) => updateEntry(idx, 'tema', e.target.value)}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400 resize-none"
-                                                        placeholder="Judul atau Tema Kajian..."
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Pemateri</label>
-                                                    <AutosuggestInput
-                                                        type="pemateri"
-                                                        value={entry.pemateri}
-                                                        onChange={(val) => updateEntry(idx, 'pemateri', val)}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
-                                                        placeholder="Nama Ustadz / Pemateri..."
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="h-px bg-slate-100" />
-
-                                            {/* Schedule Info (NEW: User Friendly Date & Time) */}
-                                            <div className="space-y-4">
-                                                <div className="grid grid-cols-1 gap-4">
-                                                    <div>
-                                                        <div className="flex items-center justify-between mb-2">
-                                                            <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                                <Calendar className="w-3 h-3" /> Tanggal / Pola
-                                                            </label>
-                                                            <div className="bg-slate-50 border border-slate-200 rounded-lg p-0.5 flex">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => updateEntry(idx, 'isRecurring', false)}
-                                                                    className={`px-2 py-1 text-[9px] font-black uppercase rounded transition-all ${!entry.isRecurring ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-400'}`}
-                                                                >
-                                                                    Tematik
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => updateEntry(idx, 'isRecurring', true)}
-                                                                    className={`px-2 py-1 text-[9px] font-black uppercase rounded transition-all ${entry.isRecurring ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-400'}`}
-                                                                >
-                                                                    Rutin
-                                                                </button>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="relative">
-                                                            {entry.isRecurring ? (
-                                                                <div className="bg-slate-50 rounded-xl border border-slate-200 p-3">
-                                                                    <RecurringPatternSelector
-                                                                        pattern={entry.recurringPattern || 'weekly'}
-                                                                        dayOfWeek={entry.recurringDay || 0}
-                                                                        weekOfMonth={entry.recurringWeek}
-                                                                        onChange={(pattern, day, week) => {
-                                                                            updateEntry(idx, 'recurringPattern', pattern);
-                                                                            updateEntry(idx, 'recurringDay', day);
-                                                                            updateEntry(idx, 'recurringWeek', week);
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                            ) : (
-                                                                <input
-                                                                    type="date"
-                                                                    value={(() => {
-                                                                        const d = parseIndoDate(entry.date);
-                                                                        return d ? formatYYYYMMDD(d) : '';
-                                                                    })()}
-                                                                    onChange={(e) => {
-                                                                        const val = e.target.valueAsDate;
-                                                                        if (val) updateEntry(idx, 'date', formatIndoDate(val));
-                                                                    }}
-                                                                    className="w-full bg-blue-50/50 border border-blue-100 rounded-xl px-4 py-3 text-sm font-bold text-blue-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                                                />
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-3">
+                                                {/* Location Info */}
+                                                <div className="space-y-4">
+                                                    <div className="grid grid-cols-1 gap-4">
                                                         <div>
                                                             <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">
-                                                                <Clock className="w-3 h-3" /> Waktu Mulai
+                                                                <MapPin className="w-3 h-3" /> Lokasi Masjid
                                                             </label>
-                                                            <input
-                                                                type="text"
-                                                                value={entry.waktu_mulai || ''}
-                                                                onChange={(e) => updateEntry(idx, 'waktu_mulai', e.target.value)}
-                                                                placeholder="Cth: 19:00"
-                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">
-                                                                Waktu Selesai
-                                                            </label>
-                                                            <input
-                                                                type="text"
-                                                                value={entry.waktu_selesai || 'Selesai'}
-                                                                onChange={(e) => updateEntry(idx, 'waktu_selesai', e.target.value)}
-                                                                placeholder="Selesai"
-                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="h-px bg-slate-100" />
-
-                                            {/* Location Info */}
-                                            <div className="space-y-4">
-                                                <div className="grid grid-cols-1 gap-4">
-                                                    <div>
-                                                        <label className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">
-                                                            <MapPin className="w-3 h-3" /> Lokasi Masjid
-                                                        </label>
-                                                        <AutosuggestInput
-                                                            type="masjid"
-                                                            value={entry.masjid}
-                                                            onChange={(val) => updateEntry(idx, 'masjid', val)}
-                                                            onSelect={(item) => {
-                                                                if (item.address) updateEntry(idx, 'address', item.address);
-                                                                if (item.city) updateEntry(idx, 'city', item.city);
-                                                                if (item.gmapsUrl || item.gmapsurl) updateEntry(idx, 'gmapsUrl', item.gmapsUrl || item.gmapsurl);
-                                                                if (item.lat !== undefined) updateEntry(idx, 'lat', item.lat);
-                                                                if (item.lng !== undefined) updateEntry(idx, 'lng', item.lng);
-                                                            }}
-                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                                            placeholder="Nama Masjid..."
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Kota / Kabupaten</label>
-                                                        <div className="relative">
-                                                            <input
-                                                                type="text"
-                                                                value={entry.city}
-                                                                onChange={(e) => updateEntry(idx, 'city', e.target.value)} // Fallback
-                                                                onClick={() => {
-                                                                    setActiveCityDropdownIndex(activeCityDropdownIndex === idx ? null : idx);
-                                                                    setCityFilter('');
+                                                            <AutosuggestInput
+                                                                type="masjid"
+                                                                value={entry.masjid}
+                                                                onChange={(val) => updateEntry(idx, 'masjid', val)}
+                                                                onSelect={(item) => {
+                                                                    if (item.address) updateEntry(idx, 'address', item.address);
+                                                                    if (item.city) updateEntry(idx, 'city', item.city);
+                                                                    if (item.gmapsUrl || item.gmapsurl) updateEntry(idx, 'gmapsUrl', item.gmapsUrl || item.gmapsurl);
+                                                                    if (item.lat !== undefined) updateEntry(idx, 'lat', item.lat);
+                                                                    if (item.lng !== undefined) updateEntry(idx, 'lng', item.lng);
                                                                 }}
-                                                                readOnly
-                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer hover:bg-slate-100 transition-all"
-                                                                placeholder="Pilih Kota..."
+                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                                placeholder="Nama Masjid..."
                                                             />
-                                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                                                <LayoutDashboard className="w-4 h-4 rotate-45" />
-                                                            </div>
-
-                                                            {/* Dropdown Kota Mobile */}
-                                                            {activeCityDropdownIndex === idx && (
-                                                                <div className="absolute z-50 mt-2 w-full bg-white rounded-xl shadow-xl border border-slate-100 max-h-60 overflow-y-auto left-0 animate-in fade-in zoom-in-95 duration-100">
-                                                                    <div className="sticky top-0 bg-white p-2 border-b border-slate-100">
-                                                                        <input
-                                                                            type="text"
-                                                                            value={cityFilter}
-                                                                            onChange={(e) => setCityFilter(e.target.value)}
-                                                                            placeholder="Cari kota..."
-                                                                            className="w-full px-3 py-2 bg-slate-50 rounded-lg text-sm border-none focus:ring-2 focus:ring-blue-500"
-                                                                            autoFocus
-                                                                        />
-                                                                    </div>
-                                                                    {indonesianCities
-                                                                        .filter(c => c.toLowerCase().includes(cityFilter.toLowerCase()))
-                                                                        .map(city => (
-                                                                            <button
-                                                                                key={city}
-                                                                                onClick={() => {
-                                                                                    updateEntry(idx, 'city', city);
-                                                                                    setActiveCityDropdownIndex(null);
-                                                                                }}
-                                                                                className="w-full text-left px-4 py-3 text-sm hover:bg-blue-50 hover:text-blue-600 transition-colors border-b border-slate-50 last:border-none"
-                                                                            >
-                                                                                {city}
-                                                                            </button>
-                                                                        ))}
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Kota / Kabupaten</label>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="text"
+                                                                    value={entry.city}
+                                                                    onChange={(e) => updateEntry(idx, 'city', e.target.value)} // Fallback
+                                                                    onClick={() => {
+                                                                        setActiveCityDropdownIndex(activeCityDropdownIndex === idx ? null : idx);
+                                                                        setCityFilter('');
+                                                                    }}
+                                                                    readOnly
+                                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer hover:bg-slate-100 transition-all"
+                                                                    placeholder="Pilih Kota..."
+                                                                />
+                                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                                                    <LayoutDashboard className="w-4 h-4 rotate-45" />
                                                                 </div>
-                                                            )}
+
+                                                                {/* Dropdown Kota Mobile */}
+                                                                {activeCityDropdownIndex === idx && (
+                                                                    <div className="absolute z-50 mt-2 w-full bg-white rounded-xl shadow-xl border border-slate-100 max-h-60 overflow-y-auto left-0 animate-in fade-in zoom-in-95 duration-100">
+                                                                        <div className="sticky top-0 bg-white p-2 border-b border-slate-100">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={cityFilter}
+                                                                                onChange={(e) => setCityFilter(e.target.value)}
+                                                                                placeholder="Cari kota..."
+                                                                                className="w-full px-3 py-2 bg-slate-50 rounded-lg text-sm border-none focus:ring-2 focus:ring-blue-500"
+                                                                                autoFocus
+                                                                            />
+                                                                        </div>
+                                                                        {indonesianCities
+                                                                            .filter(c => c.toLowerCase().includes(cityFilter.toLowerCase()))
+                                                                            .map(city => (
+                                                                                <button
+                                                                                    key={city}
+                                                                                    onClick={() => {
+                                                                                        updateEntry(idx, 'city', city);
+                                                                                        setActiveCityDropdownIndex(null);
+                                                                                    }}
+                                                                                    className="w-full text-left px-4 py-3 text-sm hover:bg-blue-50 hover:text-blue-600 transition-colors border-b border-slate-50 last:border-none"
+                                                                                >
+                                                                                    {city}
+                                                                                </button>
+                                                                            ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            <div className="h-px bg-slate-100" />
+                                                <div className="h-px bg-slate-100" />
 
-                                            {/* Geolocation Section (Mobile Only) */}
-                                            <div className="space-y-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <MapPin className="w-4 h-4 text-blue-500" />
-                                                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Detail Lokasi & Maps</span>
-                                                </div>
+                                                {/* Geolocation Section (Mobile Only) */}
+                                                <div className="space-y-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <MapPin className="w-4 h-4 text-blue-500" />
+                                                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Detail Lokasi & Maps</span>
+                                                    </div>
 
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Link Google Maps</label>
-                                                    <div className="flex gap-2">
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Link Google Maps</label>
+                                                        <div className="flex gap-2">
+                                                            <input
+                                                                type="text"
+                                                                placeholder="https://maps.app.goo.gl/..."
+                                                                value={entry.gmapsUrl || ''}
+                                                                onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)}
+                                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-blue-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-400"
+                                                            />
+                                                            <button
+                                                                onClick={async () => {
+                                                                    if (!entry.gmapsUrl) return showAlert('Peringatan', 'Masukkan URL Maps terlebih dahulu', 'warning');
+                                                                    setIsGeocoding(true);
+                                                                    try {
+                                                                        const res = await fetch('/api/tools/extract-gmaps', {
+                                                                            method: 'POST',
+                                                                            body: JSON.stringify({ url: entry.gmapsUrl }),
+                                                                            headers: { 'Content-Type': 'application/json' }
+                                                                        });
+                                                                        const data = await res.json();
+                                                                        if (data.success) {
+                                                                            updateEntry(idx, 'lat', data.lat);
+                                                                            updateEntry(idx, 'lng', data.lng);
+                                                                            updateEntry(idx, 'gmapsUrl', data.expandedUrl);
+                                                                            showAlert('Berhasil', `Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`, 'info');
+                                                                        } else {
+                                                                            showAlert('Gagal', 'Gagal mengekstrak: ' + data.error, 'danger');
+                                                                        }
+                                                                    } catch (e) {
+                                                                        showAlert('Kesalahan', 'Terjadi kesalahan sistem', 'danger');
+                                                                    } finally {
+                                                                        setIsGeocoding(false);
+                                                                    }
+                                                                }}
+                                                                className="p-3 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-colors flex items-center justify-center shrink-0"
+                                                                title="Ekstrak Koordinat"
+                                                            >
+                                                                <MapPin className="w-5 h-5" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Latitude</label>
+                                                            <input
+                                                                type="number"
+                                                                step="any"
+                                                                value={entry.lat || ''}
+                                                                onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
+                                                                placeholder="-6.123"
+                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono font-bold text-slate-700 outline-none transition-all"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Longitude</label>
+                                                            <input
+                                                                type="number"
+                                                                step="any"
+                                                                value={entry.lng || ''}
+                                                                onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
+                                                                placeholder="106.123"
+                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono font-bold text-slate-700 outline-none transition-all"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Link Pendaftaran / Info Utama</label>
                                                         <input
                                                             type="text"
-                                                            placeholder="https://maps.app.goo.gl/..."
-                                                            value={entry.gmapsUrl || ''}
-                                                            onChange={(e) => updateEntry(idx, 'gmapsUrl', e.target.value)}
-                                                            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-blue-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-400"
+                                                            placeholder="Link pendaftaran (https://...)"
+                                                            value={entry.linkInfo || ''}
+                                                            onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)}
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-purple-700 focus:ring-2 focus:ring-purple-500 outline-none transition-all placeholder:text-slate-400"
                                                         />
-                                                        <button
-                                                            onClick={async () => {
-                                                                if (!entry.gmapsUrl) return showAlert('Peringatan', 'Masukkan URL Maps terlebih dahulu', 'warning');
-                                                                setIsGeocoding(true);
-                                                                try {
-                                                                    const res = await fetch('/api/tools/extract-gmaps', {
-                                                                        method: 'POST',
-                                                                        body: JSON.stringify({ url: entry.gmapsUrl }),
-                                                                        headers: { 'Content-Type': 'application/json' }
-                                                                    });
-                                                                    const data = await res.json();
-                                                                    if (data.success) {
-                                                                        updateEntry(idx, 'lat', data.lat);
-                                                                        updateEntry(idx, 'lng', data.lng);
-                                                                        updateEntry(idx, 'gmapsUrl', data.expandedUrl);
-                                                                        showAlert('Berhasil', `Koordinat berhasil diekstrak!\nLat: ${data.lat}\nLng: ${data.lng}`, 'info');
-                                                                    } else {
-                                                                        showAlert('Gagal', 'Gagal mengekstrak: ' + data.error, 'danger');
-                                                                    }
-                                                                } catch (e) {
-                                                                    showAlert('Kesalahan', 'Terjadi kesalahan sistem', 'danger');
-                                                                } finally {
-                                                                    setIsGeocoding(false);
-                                                                }
-                                                            }}
-                                                            className="p-3 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-colors flex items-center justify-center shrink-0"
-                                                            title="Ekstrak Koordinat"
-                                                        >
-                                                            <MapPin className="w-5 h-5" />
-                                                        </button>
                                                     </div>
                                                 </div>
 
+                                                <div className="h-px bg-slate-100" />
+
+                                                {/* Details & Options */}
                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Latitude</label>
-                                                        <input
-                                                            type="number"
-                                                            step="any"
-                                                            value={entry.lat || ''}
-                                                            onChange={(e) => updateEntry(idx, 'lat', e.target.value)}
-                                                            placeholder="-6.123"
-                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono font-bold text-slate-700 outline-none transition-all"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Longitude</label>
-                                                        <input
-                                                            type="number"
-                                                            step="any"
-                                                            value={entry.lng || ''}
-                                                            onChange={(e) => updateEntry(idx, 'lng', e.target.value)}
-                                                            placeholder="106.123"
-                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono font-bold text-slate-700 outline-none transition-all"
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Link Pendaftaran / Info Utama</label>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Link pendaftaran (https://...)"
-                                                        value={entry.linkInfo || ''}
-                                                        onChange={(e) => updateEntry(idx, 'linkInfo', e.target.value)}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-purple-700 focus:ring-2 focus:ring-purple-500 outline-none transition-all placeholder:text-slate-400"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="h-px bg-slate-100" />
-
-                                            {/* Details & Options */}
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="col-span-2 space-y-2">
-                                                    <div className="flex justify-between items-center">
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Narahubung (CP)</label>
-                                                        {entry.cp2 === undefined && (
-                                                            <button
-                                                                onClick={() => updateEntry(idx, 'cp2', '')}
-                                                                className="text-[10px] text-blue-500 font-bold hover:text-blue-600 flex items-center gap-1 transition-colors"
-                                                            >
-                                                                <PlusCircle className="w-3 h-3" /> Tambah
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                    <input
-                                                        type="text"
-                                                        value={entry.cp || ''}
-                                                        onChange={(e) => updateEntry(idx, 'cp', e.target.value)}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                                        placeholder="CP Utama (08...)"
-                                                    />
-
-                                                    {entry.cp2 !== undefined && (
-                                                        <div className="flex gap-2 animate-in slide-in-from-top-2 duration-200">
-                                                            <input
-                                                                type="text"
-                                                                value={entry.cp2}
-                                                                onChange={(e) => updateEntry(idx, 'cp2', e.target.value)}
-                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                                                placeholder="CP Kedua..."
-                                                            />
-                                                            <button
-                                                                onClick={() => {
-                                                                    // Remove cp2 logic: set explicitly to undefined or empty, 
-                                                                    // but here updateEntry handles 'key': undefined fine.
-                                                                    updateEntry(idx, 'cp2', undefined);
-                                                                    if (entry.cp3) {
-                                                                        // Shift cp3 to cp2 if needed? Or just keep cp3?
-                                                                        // Simpler to just delete cp2.
-                                                                    }
-                                                                }}
-                                                                className="p-3 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-xl border border-slate-200 transition-colors"
-                                                            >
-                                                                <X className="w-4 h-4" />
-                                                            </button>
-                                                            {entry.cp3 === undefined && (
+                                                    <div className="col-span-2 space-y-2">
+                                                        <div className="flex justify-between items-center">
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Narahubung (CP)</label>
+                                                            {entry.cp2 === undefined && (
                                                                 <button
-                                                                    onClick={() => updateEntry(idx, 'cp3', '')}
-                                                                    className="p-3 text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-colors"
-                                                                    title="Tambah CP 3"
+                                                                    onClick={() => updateEntry(idx, 'cp2', '')}
+                                                                    className="text-[10px] text-blue-500 font-bold hover:text-blue-600 flex items-center gap-1 transition-colors"
                                                                 >
-                                                                    <PlusCircle className="w-4 h-4" />
+                                                                    <PlusCircle className="w-3 h-3" /> Tambah
                                                                 </button>
                                                             )}
                                                         </div>
-                                                    )}
+                                                        <input
+                                                            type="text"
+                                                            value={entry.cp || ''}
+                                                            onChange={(e) => updateEntry(idx, 'cp', e.target.value)}
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                            placeholder="CP Utama (08...)"
+                                                        />
 
-                                                    {entry.cp3 !== undefined && (
-                                                        <div className="flex gap-2 animate-in slide-in-from-top-2 duration-200">
-                                                            <input
-                                                                type="text"
-                                                                value={entry.cp3}
-                                                                onChange={(e) => updateEntry(idx, 'cp3', e.target.value)}
-                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                                                placeholder="CP Ketiga..."
-                                                            />
-                                                            <button
-                                                                onClick={() => updateEntry(idx, 'cp3', undefined)}
-                                                                className="p-3 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-xl border border-slate-200 transition-colors"
-                                                            >
-                                                                <X className="w-4 h-4" />
-                                                            </button>
+                                                        {entry.cp2 !== undefined && (
+                                                            <div className="flex gap-2 animate-in slide-in-from-top-2 duration-200">
+                                                                <input
+                                                                    type="text"
+                                                                    value={entry.cp2}
+                                                                    onChange={(e) => updateEntry(idx, 'cp2', e.target.value)}
+                                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                                    placeholder="CP Kedua..."
+                                                                />
+                                                                <button
+                                                                    onClick={() => {
+                                                                        // Remove cp2 logic: set explicitly to undefined or empty, 
+                                                                        // but here updateEntry handles 'key': undefined fine.
+                                                                        updateEntry(idx, 'cp2', undefined);
+                                                                        if (entry.cp3) {
+                                                                            // Shift cp3 to cp2 if needed? Or just keep cp3?
+                                                                            // Simpler to just delete cp2.
+                                                                        }
+                                                                    }}
+                                                                    className="p-3 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-xl border border-slate-200 transition-colors"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                                {entry.cp3 === undefined && (
+                                                                    <button
+                                                                        onClick={() => updateEntry(idx, 'cp3', '')}
+                                                                        className="p-3 text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-colors"
+                                                                        title="Tambah CP 3"
+                                                                    >
+                                                                        <PlusCircle className="w-4 h-4" />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {entry.cp3 !== undefined && (
+                                                            <div className="flex gap-2 animate-in slide-in-from-top-2 duration-200">
+                                                                <input
+                                                                    type="text"
+                                                                    value={entry.cp3}
+                                                                    onChange={(e) => updateEntry(idx, 'cp3', e.target.value)}
+                                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                                                    placeholder="CP Ketiga..."
+                                                                />
+                                                                <button
+                                                                    onClick={() => updateEntry(idx, 'cp3', undefined)}
+                                                                    className="p-3 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-xl border border-slate-200 transition-colors"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="col-span-2">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Catatan (Optional)</label>
+                                                        <textarea
+                                                            value={entry.catatan || ''}
+                                                            onChange={(e) => updateEntry(idx, 'catatan', e.target.value)}
+                                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-y min-h-[80px]"
+                                                            placeholder="Info tambahan, pengumuman, dsb..."
+                                                            rows={3}
+                                                        />
+                                                    </div>
+
+                                                    <div className="col-span-2">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Label Kajian</label>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <label className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.khususAkhwat ? 'bg-pink-50 border-pink-200 text-pink-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={entry.khususAkhwat || false}
+                                                                    onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
+                                                                    className="hidden"
+                                                                />
+                                                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.khususAkhwat ? 'border-pink-500 bg-pink-500 text-white' : 'border-slate-300'}`}>
+                                                                    {entry.khususAkhwat && <CheckCircle className="w-3 h-3" />}
+                                                                </div>
+                                                                <span className="text-xs font-bold uppercase tracking-wide text-center">Akhwat</span>
+                                                            </label>
+
+                                                            <label className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.isOnline ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={entry.isOnline || false}
+                                                                    onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
+                                                                    className="hidden"
+                                                                />
+                                                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.isOnline ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-300'}`}>
+                                                                    {entry.isOnline && <CheckCircle className="w-3 h-3" />}
+                                                                </div>
+                                                                <span className="text-xs font-bold uppercase tracking-wide text-center">Online</span>
+                                                            </label>
+
+                                                            <label className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.isKidsFriendly ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={entry.isKidsFriendly || false}
+                                                                    onChange={(e) => updateEntry(idx, 'isKidsFriendly', e.target.checked)}
+                                                                    className="hidden"
+                                                                />
+                                                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.isKidsFriendly ? 'border-orange-500 bg-orange-500 text-white' : 'border-slate-300'}`}>
+                                                                    {entry.isKidsFriendly && <CheckCircle className="w-3 h-3" />}
+                                                                </div>
+                                                                <span className="text-xs font-bold uppercase tracking-wide text-center">Anak</span>
+                                                            </label>
                                                         </div>
-                                                    )}
+                                                    </div>
                                                 </div>
 
-                                                <div className="col-span-2">
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-1.5 block tracking-widest">Catatan (Optional)</label>
-                                                    <textarea
-                                                        value={entry.catatan || ''}
-                                                        onChange={(e) => updateEntry(idx, 'catatan', e.target.value)}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-y min-h-[80px]"
-                                                        placeholder="Info tambahan, pengumuman, dsb..."
-                                                        rows={3}
+                                                <div className="h-px bg-slate-100" />
+
+                                                {/* Media Upload */}
+                                                <div>
+                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Poster Kajian</label>
+                                                    <ImageUpload
+                                                        label=""
+                                                        value={entry.imageUrl || ''}
+                                                        onChange={(url) => updateEntry(idx, 'imageUrl', url)}
+                                                        className="w-full"
                                                     />
                                                 </div>
 
-                                                <div className="col-span-2">
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Label Kajian</label>
-                                                    <div className="grid grid-cols-3 gap-2">
-                                                        <label className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.khususAkhwat ? 'bg-pink-50 border-pink-200 text-pink-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={entry.khususAkhwat || false}
-                                                                onChange={(e) => updateEntry(idx, 'khususAkhwat', e.target.checked)}
-                                                                className="hidden"
-                                                            />
-                                                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.khususAkhwat ? 'border-pink-500 bg-pink-500 text-white' : 'border-slate-300'}`}>
-                                                                {entry.khususAkhwat && <CheckCircle className="w-3 h-3" />}
-                                                            </div>
-                                                            <span className="text-xs font-bold uppercase tracking-wide text-center">Akhwat</span>
-                                                        </label>
+                                            </div>
+                                        </div>
+                                    ))
+                                }
+                                <div className="h-40" aria-hidden="true" /> {/* Spacer for keyboard */}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="batch-empty-state">
+                            <div className="batch-empty-icon">
+                                <Database className="w-8 h-8 opacity-20" />
+                            </div>
+                            <p className="batch-empty-title">Siap Menunggu Data</p>
+                            <p className="batch-empty-text">Belum ada jadwal yang diekstrak. Silakan tempel teks atau scan poster.</p>
+                        </div>
+                    )
+                    }
 
-                                                        <label className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.isOnline ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={entry.isOnline || false}
-                                                                onChange={(e) => updateEntry(idx, 'isOnline', e.target.checked)}
-                                                                className="hidden"
-                                                            />
-                                                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.isOnline ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-300'}`}>
-                                                                {entry.isOnline && <CheckCircle className="w-3 h-3" />}
-                                                            </div>
-                                                            <span className="text-xs font-bold uppercase tracking-wide text-center">Online</span>
-                                                        </label>
+                    {
+                        message && (
+                            <div className={`mt-10 batch-message ${message.includes('Gagal') ? 'batch-message-error' : 'batch-message-success'} flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-500`}>
+                                <div className={`p-2 rounded-xl ${message.includes('Gagal') ? 'bg-red-100' : 'bg-blue-100'}`}>
+                                    <Info className="w-5 h-5" />
+                                </div>
+                                <span className="font-bold">{message}</span>
+                            </div>
+                        )
+                    }
+                </div >
+            </div >
+            {/* Duplicate Warning Modal */}
+            {
+                showDuplicateModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+                            <div className="p-6 border-b border-slate-100 flex items-center gap-4 bg-gradient-to-r from-amber-50 to-orange-50">
+                                <div className="p-3 bg-amber-100 rounded-full text-amber-600">
+                                    <AlertCircle className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-slate-900 text-lg">Peringatan Duplikat</h3>
+                                    <p className="text-sm text-slate-600">Ditemukan {duplicateEntries.length} jadwal yang mungkin sudah ada.</p>
+                                </div>
+                            </div>
 
-                                                        <label className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer border transition-all ${entry.isKidsFriendly ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={entry.isKidsFriendly || false}
-                                                                onChange={(e) => updateEntry(idx, 'isKidsFriendly', e.target.checked)}
-                                                                className="hidden"
-                                                            />
-                                                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${entry.isKidsFriendly ? 'border-orange-500 bg-orange-500 text-white' : 'border-slate-300'}`}>
-                                                                {entry.isKidsFriendly && <CheckCircle className="w-3 h-3" />}
-                                                            </div>
-                                                            <span className="text-xs font-bold uppercase tracking-wide text-center">Anak</span>
-                                                        </label>
+                            <div className="p-6 max-h-[65vh] overflow-y-auto bg-slate-50">
+                                <div className="space-y-4">
+                                    {duplicateEntries.map((d, i) => (
+                                        <div key={i} className="bg-white p-5 rounded-2xl border-2 border-amber-200 shadow-sm">
+                                            <div className="flex items-start gap-3 mb-4">
+                                                <div className="mt-1">
+                                                    <AlertCircle className="w-5 h-5 text-amber-500" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h4 className="font-bold text-amber-700 text-sm mb-1">Duplikat #{i + 1}</h4>
+                                                    <p className="text-xs text-slate-500">Masjid, kota, tanggal, dan waktu yang sama sudah ada</p>
+                                                </div>
+                                            </div>
+
+                                            {/* Comparison Grid */}
+                                            <div className="grid md:grid-cols-2 gap-3 mb-4">
+                                                {/* New Entry */}
+                                                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border-2 border-blue-200">
+                                                    <p className="text-xs font-black text-blue-700 mb-3 uppercase tracking-wider flex items-center gap-1">
+                                                        ✨ Data Baru
+                                                    </p>
+                                                    <div className="text-xs text-slate-700 space-y-1.5">
+                                                        <p className="font-bold text-sm text-slate-900">{d.new.tema}</p>
+                                                        <p className="flex items-center gap-1">
+                                                            <span className="opacity-60">👤</span> {d.new.pemateri}
+                                                        </p>
+                                                        <p className="flex items-center gap-1">
+                                                            <span className="opacity-60">🕌</span> {d.new.masjid}
+                                                        </p>
+                                                        {d.new.city && (
+                                                            <p className="flex items-center gap-1">
+                                                                <span className="opacity-60">📍</span> {d.new.city}
+                                                            </p>
+                                                        )}
+                                                        <p className="flex items-center gap-1">
+                                                            <span className="opacity-60">📅</span> {d.new.date}
+                                                        </p>
+                                                        <p className="flex items-center gap-1">
+                                                            <span className="opacity-60">⏰</span> {d.new.waktu}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Existing Entry */}
+                                                <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-4 rounded-xl border-2 border-slate-300">
+                                                    <p className="text-xs font-black text-slate-600 mb-3 uppercase tracking-wider flex items-center gap-1">
+                                                        📊 Data Database (ID: {d.existing.id})
+                                                    </p>
+                                                    <div className="text-xs text-slate-700 space-y-1.5">
+                                                        <p className="font-bold text-sm text-slate-900">{d.existing.tema}</p>
+                                                        <p className="flex items-center gap-1">
+                                                            <span className="opacity-60">👤</span> {d.existing.pemateri}
+                                                        </p>
+                                                        <p className="flex items-center gap-1">
+                                                            <span className="opacity-60">🕌</span> {d.existing.masjid}
+                                                        </p>
+                                                        {d.existing.city && (
+                                                            <p className="flex items-center gap-1">
+                                                                <span className="opacity-60">📍</span> {d.existing.city}
+                                                            </p>
+                                                        )}
+                                                        <p className="flex items-center gap-1">
+                                                            <span className="opacity-60">📅</span> {d.existing.date}
+                                                        </p>
+                                                        <p className="flex items-center gap-1">
+                                                            <span className="opacity-60">⏰</span> {d.existing.waktu}
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="h-px bg-slate-100" />
-
-                                            {/* Media Upload */}
-                                            <div>
-                                                <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Poster Kajian</label>
-                                                <ImageUpload
-                                                    label=""
-                                                    value={entry.imageUrl || ''}
-                                                    onChange={(url) => updateEntry(idx, 'imageUrl', url)}
-                                                    className="w-full"
-                                                />
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                ))
-                            }
-                            <div className="h-40" aria-hidden="true" /> {/* Spacer for keyboard */}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="batch-empty-state">
-                        <div className="batch-empty-icon">
-                            <Database className="w-8 h-8 opacity-20" />
-                        </div>
-                        <p className="batch-empty-title">Siap Menunggu Data</p>
-                        <p className="batch-empty-text">Belum ada jadwal yang diekstrak. Silakan tempel teks atau scan poster.</p>
-                    </div>
-                )
-                }
-
-                {
-                    message && (
-                        <div className={`mt-10 batch-message ${message.includes('Gagal') ? 'batch-message-error' : 'batch-message-success'} flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-500`}>
-                            <div className={`p-2 rounded-xl ${message.includes('Gagal') ? 'bg-red-100' : 'bg-blue-100'}`}>
-                                <Info className="w-5 h-5" />
-                            </div>
-                            <span className="font-bold">{message}</span>
-                        </div>
-                    )
-                }
-            </div >
-        </div >
-        {/* Duplicate Warning Modal */}
-        {
-            showDuplicateModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="p-6 border-b border-slate-100 flex items-center gap-4 bg-gradient-to-r from-amber-50 to-orange-50">
-                            <div className="p-3 bg-amber-100 rounded-full text-amber-600">
-                                <AlertCircle className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-slate-900 text-lg">Peringatan Duplikat</h3>
-                                <p className="text-sm text-slate-600">Ditemukan {duplicateEntries.length} jadwal yang mungkin sudah ada.</p>
-                            </div>
-                        </div>
-
-                        <div className="p-6 max-h-[65vh] overflow-y-auto bg-slate-50">
-                            <div className="space-y-4">
-                                {duplicateEntries.map((d, i) => (
-                                    <div key={i} className="bg-white p-5 rounded-2xl border-2 border-amber-200 shadow-sm">
-                                        <div className="flex items-start gap-3 mb-4">
-                                            <div className="mt-1">
-                                                <AlertCircle className="w-5 h-5 text-amber-500" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <h4 className="font-bold text-amber-700 text-sm mb-1">Duplikat #{i + 1}</h4>
-                                                <p className="text-xs text-slate-500">Masjid, kota, tanggal, dan waktu yang sama sudah ada</p>
-                                            </div>
-                                        </div>
-
-                                        {/* Comparison Grid */}
-                                        <div className="grid md:grid-cols-2 gap-3 mb-4">
-                                            {/* New Entry */}
-                                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border-2 border-blue-200">
-                                                <p className="text-xs font-black text-blue-700 mb-3 uppercase tracking-wider flex items-center gap-1">
-                                                    ✨ Data Baru
-                                                </p>
-                                                <div className="text-xs text-slate-700 space-y-1.5">
-                                                    <p className="font-bold text-sm text-slate-900">{d.new.tema}</p>
-                                                    <p className="flex items-center gap-1">
-                                                        <span className="opacity-60">👤</span> {d.new.pemateri}
-                                                    </p>
-                                                    <p className="flex items-center gap-1">
-                                                        <span className="opacity-60">🕌</span> {d.new.masjid}
-                                                    </p>
-                                                    {d.new.city && (
-                                                        <p className="flex items-center gap-1">
-                                                            <span className="opacity-60">📍</span> {d.new.city}
-                                                        </p>
-                                                    )}
-                                                    <p className="flex items-center gap-1">
-                                                        <span className="opacity-60">📅</span> {d.new.date}
-                                                    </p>
-                                                    <p className="flex items-center gap-1">
-                                                        <span className="opacity-60">⏰</span> {d.new.waktu}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            {/* Existing Entry */}
-                                            <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-4 rounded-xl border-2 border-slate-300">
-                                                <p className="text-xs font-black text-slate-600 mb-3 uppercase tracking-wider flex items-center gap-1">
-                                                    📊 Data Database (ID: {d.existing.id})
-                                                </p>
-                                                <div className="text-xs text-slate-700 space-y-1.5">
-                                                    <p className="font-bold text-sm text-slate-900">{d.existing.tema}</p>
-                                                    <p className="flex items-center gap-1">
-                                                        <span className="opacity-60">👤</span> {d.existing.pemateri}
-                                                    </p>
-                                                    <p className="flex items-center gap-1">
-                                                        <span className="opacity-60">🕌</span> {d.existing.masjid}
-                                                    </p>
-                                                    {d.existing.city && (
-                                                        <p className="flex items-center gap-1">
-                                                            <span className="opacity-60">📍</span> {d.existing.city}
-                                                        </p>
-                                                    )}
-                                                    <p className="flex items-center gap-1">
-                                                        <span className="opacity-60">📅</span> {d.existing.date}
-                                                    </p>
-                                                    <p className="flex items-center gap-1">
-                                                        <span className="opacity-60">⏰</span> {d.existing.waktu}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Action Buttons */}
-                                        <div className="grid grid-cols-3 gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    // Skip this duplicate - remove from list
-                                                    const updatedDuplicates = duplicateEntries.filter((_, idx) => idx !== i);
-                                                    setDuplicateEntries(updatedDuplicates);
-
-                                                    if (updatedDuplicates.length === 0) {
-                                                        setShowDuplicateModal(false);
-                                                        setMessage('Semua duplikat dilewati. Data lama di database dipertahankan.');
-                                                    } else {
-                                                        setMessage(`Duplikat dilewati. Masih ada ${updatedDuplicates.length} duplikat lagi.`);
-                                                    }
-                                                }}
-                                                disabled={isSaving}
-                                                className={`px-3 py-2.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-1.5 border-2 border-slate-200 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                title="Gunakan data yang sudah ada di database, abaikan data baru"
-                                            >
-                                                <span>⏭️</span>
-                                                <span className="hidden sm:inline">Lewati</span>
-                                            </button>
-                                            <button
-                                                onClick={async () => {
-                                                    if (isSaving) return;
-                                                    setIsSaving(true);
-                                                    try {
-                                                        // Replace: Update existing with new data
-                                                        const res = await fetch(`/api/kajian/${d.existing.id}`, {
-                                                            method: 'PATCH',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify(d.new)
-                                                        });
-
-                                                        if (res.ok) {
-                                                            // Remove this duplicate from the list
-                                                            const updatedDuplicates = duplicateEntries.filter((_, idx) => idx !== i);
-                                                            setDuplicateEntries(updatedDuplicates);
-
-                                                            if (updatedDuplicates.length === 0) {
-                                                                setShowDuplicateModal(false);
-                                                                setMessage('Data berhasil ditimpa!');
-                                                                fetchStats();
-                                                            }
-                                                        } else {
-                                                            const data = await res.json();
-                                                            showAlert('Gagal', `Gagal menimpa data: ${data.error}`, 'danger');
-                                                        }
-                                                    } catch (e) {
-                                                        console.error('Replace error:', e);
-                                                        showAlert('Kesalahan', 'Terjadi kesalahan saat menimpa data', 'danger');
-                                                    } finally {
-                                                        setIsSaving(false);
-                                                    }
-                                                }}
-                                                disabled={isSaving}
-                                                className={`px-3 py-2.5 bg-blue-500 text-white text-xs font-bold rounded-xl hover:bg-blue-600 transition-colors flex items-center justify-center gap-1.5 border-2 border-blue-600 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                title="Timpa data lama dengan data baru (Update)"
-                                            >
-                                                <span>🔄</span>
-                                                <span className="hidden sm:inline">Timpa</span>
-                                            </button>
-                                            <button
-                                                onClick={async () => {
-                                                    if (isSaving) return;
-
-                                                    // Confirm deletion
-                                                    if (!window.confirm('Yakin ingin menghapus kajian yang sudah ada di database? Data baru akan disimpan sebagai gantinya.')) {
-                                                        return;
-                                                    }
-
-                                                    setIsSaving(true);
-                                                    try {
-                                                        const response = await fetch(`/api/kajian/${d.existing.id}`, {
-                                                            method: 'DELETE'
-                                                        });
-
-                                                        if (!response.ok) {
-                                                            const data = await response.json();
-                                                            throw new Error(data.error || 'Gagal menghapus');
-                                                        }
-
-                                                        // Remove from duplicateEntries
+                                            {/* Action Buttons */}
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        // Skip this duplicate - remove from list
                                                         const updatedDuplicates = duplicateEntries.filter((_, idx) => idx !== i);
                                                         setDuplicateEntries(updatedDuplicates);
 
                                                         if (updatedDuplicates.length === 0) {
                                                             setShowDuplicateModal(false);
-                                                            // Save the new data automatically
-                                                            await handleConfirmSave('all');
-                                                            setMessage(`Kajian ID ${d.existing.id} berhasil dihapus dan data baru disimpan.`);
+                                                            setMessage('Semua duplikat dilewati. Data lama di database dipertahankan.');
                                                         } else {
-                                                            setMessage(`Kajian ID ${d.existing.id} berhasil dihapus. Masih ada ${updatedDuplicates.length} duplikat lagi.`);
-                                                            fetchStats();
+                                                            setMessage(`Duplikat dilewati. Masih ada ${updatedDuplicates.length} duplikat lagi.`);
                                                         }
-                                                    } catch (error: any) {
-                                                        console.error('Delete error:', error);
-                                                        showAlert('Gagal', `Gagal menghapus: ${error.message}`, 'danger');
-                                                    } finally {
-                                                        setIsSaving(false);
-                                                    }
-                                                }}
-                                                disabled={processingDuplicates.has(i) || isSaving}
-                                                className={`px-3 py-2.5 bg-red-500 text-white text-xs font-bold rounded-xl hover:bg-red-600 transition-colors flex items-center justify-center gap-1.5 border-2 border-red-600 ${(processingDuplicates.has(i) || isSaving) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                title="Hapus data lama dari database, data baru akan disimpan"
-                                            >
-                                                {processingDuplicates.has(i) ? (
-                                                    <>
-                                                        <span className="animate-spin">⏳</span>
-                                                        <span className="hidden sm:inline">Proses...</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <span>🗑️</span>
-                                                        <span className="hidden sm:inline">Hapus</span>
-                                                    </>
-                                                )}
-                                            </button>
+                                                    }}
+                                                    disabled={isSaving}
+                                                    className={`px-3 py-2.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-1.5 border-2 border-slate-200 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                    title="Gunakan data yang sudah ada di database, abaikan data baru"
+                                                >
+                                                    <span>⏭️</span>
+                                                    <span className="hidden sm:inline">Lewati</span>
+                                                </button>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (isSaving) return;
+                                                        setIsSaving(true);
+                                                        try {
+                                                            // Replace: Update existing with new data
+                                                            const res = await fetch(`/api/kajian/${d.existing.id}`, {
+                                                                method: 'PATCH',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify(d.new)
+                                                            });
+
+                                                            if (res.ok) {
+                                                                // Remove this duplicate from the list
+                                                                const updatedDuplicates = duplicateEntries.filter((_, idx) => idx !== i);
+                                                                setDuplicateEntries(updatedDuplicates);
+
+                                                                if (updatedDuplicates.length === 0) {
+                                                                    setShowDuplicateModal(false);
+                                                                    setMessage('Data berhasil ditimpa!');
+                                                                    fetchStats();
+                                                                }
+                                                            } else {
+                                                                const data = await res.json();
+                                                                showAlert('Gagal', `Gagal menimpa data: ${data.error}`, 'danger');
+                                                            }
+                                                        } catch (e) {
+                                                            console.error('Replace error:', e);
+                                                            showAlert('Kesalahan', 'Terjadi kesalahan saat menimpa data', 'danger');
+                                                        } finally {
+                                                            setIsSaving(false);
+                                                        }
+                                                    }}
+                                                    disabled={isSaving}
+                                                    className={`px-3 py-2.5 bg-blue-500 text-white text-xs font-bold rounded-xl hover:bg-blue-600 transition-colors flex items-center justify-center gap-1.5 border-2 border-blue-600 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                    title="Timpa data lama dengan data baru (Update)"
+                                                >
+                                                    <span>🔄</span>
+                                                    <span className="hidden sm:inline">Timpa</span>
+                                                </button>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (isSaving) return;
+
+                                                        // Confirm deletion
+                                                        if (!window.confirm('Yakin ingin menghapus kajian yang sudah ada di database? Data baru akan disimpan sebagai gantinya.')) {
+                                                            return;
+                                                        }
+
+                                                        setIsSaving(true);
+                                                        try {
+                                                            const response = await fetch(`/api/kajian/${d.existing.id}`, {
+                                                                method: 'DELETE'
+                                                            });
+
+                                                            if (!response.ok) {
+                                                                const data = await response.json();
+                                                                throw new Error(data.error || 'Gagal menghapus');
+                                                            }
+
+                                                            // Remove from duplicateEntries
+                                                            const updatedDuplicates = duplicateEntries.filter((_, idx) => idx !== i);
+                                                            setDuplicateEntries(updatedDuplicates);
+
+                                                            if (updatedDuplicates.length === 0) {
+                                                                setShowDuplicateModal(false);
+                                                                // Save the new data automatically
+                                                                await handleConfirmSave('all');
+                                                                setMessage(`Kajian ID ${d.existing.id} berhasil dihapus dan data baru disimpan.`);
+                                                            } else {
+                                                                setMessage(`Kajian ID ${d.existing.id} berhasil dihapus. Masih ada ${updatedDuplicates.length} duplikat lagi.`);
+                                                                fetchStats();
+                                                            }
+                                                        } catch (error: any) {
+                                                            console.error('Delete error:', error);
+                                                            showAlert('Gagal', `Gagal menghapus: ${error.message}`, 'danger');
+                                                        } finally {
+                                                            setIsSaving(false);
+                                                        }
+                                                    }}
+                                                    disabled={processingDuplicates.has(i) || isSaving}
+                                                    className={`px-3 py-2.5 bg-red-500 text-white text-xs font-bold rounded-xl hover:bg-red-600 transition-colors flex items-center justify-center gap-1.5 border-2 border-red-600 ${(processingDuplicates.has(i) || isSaving) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                    title="Hapus data lama dari database, data baru akan disimpan"
+                                                >
+                                                    {processingDuplicates.has(i) ? (
+                                                        <>
+                                                            <span className="animate-spin">⏳</span>
+                                                            <span className="hidden sm:inline">Proses...</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span>🗑️</span>
+                                                            <span className="hidden sm:inline">Hapus</span>
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
                                         </div>
+                                    ))}
+                                </div>
+                                <div className="mt-6 text-sm text-center text-slate-600 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                                    <p className="font-bold text-slate-800 mb-2">💡 Pilihan Aksi:</p>
+                                    <div className="text-xs text-left space-y-1">
+                                        <p>• <strong>Lewati:</strong> Gunakan data lama, abaikan data baru</p>
+                                        <p>• <strong>Timpa:</strong> Ganti data lama dengan data baru</p>
+                                        <p>• <strong>Hapus:</strong> Hapus data lama, simpan data baru</p>
                                     </div>
-                                ))}
-                            </div>
-                            <div className="mt-6 text-sm text-center text-slate-600 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                                <p className="font-bold text-slate-800 mb-2">💡 Pilihan Aksi:</p>
-                                <div className="text-xs text-left space-y-1">
-                                    <p>• <strong>Lewati:</strong> Gunakan data lama, abaikan data baru</p>
-                                    <p>• <strong>Timpa:</strong> Ganti data lama dengan data baru</p>
-                                    <p>• <strong>Hapus:</strong> Hapus data lama, simpan data baru</p>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="p-4 border-t border-slate-100 bg-white flex gap-3">
-                            <button
-                                onClick={() => {
-                                    setShowDuplicateModal(false);
-                                    setPendingSaveEntries([]);
-                                    setDuplicateEntries([]);
-                                    setMessage('Penyimpanan dibatalkan.');
-                                }}
-                                disabled={isSaving}
-                                className={`px-6 py-3 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                                Batal
-                            </button>
-                            <button
-                                onClick={() => handleConfirmSave('skip')}
-                                disabled={isSaving}
-                                className={`flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold hover:from-blue-600 hover:to-blue-700 rounded-xl transition-all shadow-lg ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                                {isSaving ? '⏳ Memproses...' : 'Proses Semua'}
-                            </button>
+                            <div className="p-4 border-t border-slate-100 bg-white flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowDuplicateModal(false);
+                                        setPendingSaveEntries([]);
+                                        setDuplicateEntries([]);
+                                        setMessage('Penyimpanan dibatalkan.');
+                                    }}
+                                    disabled={isSaving}
+                                    className={`px-6 py-3 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={() => handleConfirmSave('skip')}
+                                    disabled={isSaving}
+                                    className={`flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold hover:from-blue-600 hover:to-blue-700 rounded-xl transition-all shadow-lg ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    {isSaving ? '⏳ Memproses...' : 'Proses Semua'}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )
-        }
+                )
+            }
 
-        {/* Preview Modal */}
-        {
-            previewIndex !== null && entries[previewIndex] && (
+            {/* Preview Modal */}
+            {
+                previewIndex !== null && entries[previewIndex] && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+                            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                                <h3 className="font-bold text-slate-900">Preview Tampilan</h3>
+                                <button
+                                    onClick={() => setPreviewIndex(null)}
+                                    className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                                >
+                                    <X className="w-5 h-5 text-slate-400" />
+                                </button>
+                            </div>
+                            <div className="p-8 flex justify-center bg-slate-50">
+                                <KajianCard
+                                    id={0}
+                                    title={entries[previewIndex].tema}
+                                    ustadz={entries[previewIndex].pemateri}
+                                    date={entries[previewIndex].date}
+                                    location={entries[previewIndex].masjid}
+                                    imageUrl={entries[previewIndex].imageUrl}
+                                    khususAkhwat={entries[previewIndex].khususAkhwat}
+                                    isOnline={entries[previewIndex].isOnline}
+                                    waktu={entries[previewIndex].waktu}
+                                    className="w-full max-w-[280px] shadow-xl"
+                                />
+                            </div>
+                            <div className="p-4 bg-white text-center">
+                                <p className="text-[10px] text-slate-400 font-medium">Ini adalah tampilan kartu kajian yang akan muncul di halaman depan.</p>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Success Modal */}
+            {successModal.isOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                            <h3 className="font-bold text-slate-900">Preview Tampilan</h3>
-                            <button
-                                onClick={() => setPreviewIndex(null)}
-                                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-                            >
-                                <X className="w-5 h-5 text-slate-400" />
-                            </button>
-                        </div>
-                        <div className="p-8 flex justify-center bg-slate-50">
-                            <KajianCard
-                                id={0}
-                                title={entries[previewIndex].tema}
-                                ustadz={entries[previewIndex].pemateri}
-                                date={entries[previewIndex].date}
-                                location={entries[previewIndex].masjid}
-                                imageUrl={entries[previewIndex].imageUrl}
-                                khususAkhwat={entries[previewIndex].khususAkhwat}
-                                isOnline={entries[previewIndex].isOnline}
-                                waktu={entries[previewIndex].waktu}
-                                className="w-full max-w-[280px] shadow-xl"
-                            />
-                        </div>
-                        <div className="p-4 bg-white text-center">
-                            <p className="text-[10px] text-slate-400 font-medium">Ini adalah tampilan kartu kajian yang akan muncul di halaman depan.</p>
-                        </div>
-                    </div>
-                </div>
-            )
-        }
+                        <div className="p-6 text-center">
+                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <CheckCircle className="w-8 h-8 text-green-600" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800 mb-2">Berhasil Disimpan!</h3>
+                            <p className="text-slate-600 mb-6">
+                                Alhamdulillah, {successModal.count} jadwal kajian berhasil ditambahkan.
+                            </p>
 
-        {/* Success Modal */}
-        {successModal.isOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
-                    <div className="p-6 text-center">
-                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <CheckCircle className="w-8 h-8 text-green-600" />
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-800 mb-2">Berhasil Disimpan!</h3>
-                        <p className="text-slate-600 mb-6">
-                            Alhamdulillah, {successModal.count} jadwal kajian berhasil ditambahkan.
-                        </p>
+                            <div className="space-y-3">
+                                <button
+                                    onClick={() => {
+                                        if (successModal.ids.length === 1) {
+                                            window.open(`/kajian/${successModal.ids[0]}`, '_blank');
+                                        } else {
+                                            router.push('/admin/dashboard');
+                                        }
+                                    }}
+                                    className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <ExternalLink className="w-4 h-4" />
+                                    Lihat Hasil
+                                </button>
 
-                        <div className="space-y-3">
-                            <button
-                                onClick={() => {
-                                    if (successModal.ids.length === 1) {
-                                        window.open(`/kajian/${successModal.ids[0]}`, '_blank');
-                                    } else {
-                                        router.push('/admin/dashboard');
-                                    }
-                                }}
-                                className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
-                            >
-                                <ExternalLink className="w-4 h-4" />
-                                Lihat Hasil
-                            </button>
+                                <button
+                                    onClick={() => setSuccessModal({ isOpen: false, ids: [], count: 0 })}
+                                    className="w-full py-3 bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <PlusCircle className="w-4 h-4" />
+                                    Input Lagi
+                                </button>
 
-                            <button
-                                onClick={() => setSuccessModal({ isOpen: false, ids: [], count: 0 })}
-                                className="w-full py-3 bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
-                            >
-                                <PlusCircle className="w-4 h-4" />
-                                Input Lagi
-                            </button>
-
-                            <button
-                                onClick={() => setSuccessModal({ isOpen: false, ids: [], count: 0 })}
-                                className="w-full py-2 text-slate-400 hover:text-slate-600 text-sm font-semibold transition-colors"
-                            >
-                                Tutup
-                            </button>
+                                <button
+                                    onClick={() => setSuccessModal({ isOpen: false, ids: [], count: 0 })}
+                                    className="w-full py-2 text-slate-400 hover:text-slate-600 text-sm font-semibold transition-colors"
+                                >
+                                    Tutup
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        )}
+            )}
 
 
-        <ConfirmationModal
-            isOpen={alertConfig.isOpen}
-            onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
-            onConfirm={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
-            title={alertConfig.title}
-            message={alertConfig.message}
-            confirmText="OK"
-            showCancel={false}
-            type={alertConfig.type}
-        />
+            <ConfirmationModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmText="OK"
+                showCancel={false}
+                type={alertConfig.type}
+            />
 
-        <ProgressModal
-            isOpen={progressModal.isOpen}
-            title={progressModal.title}
-            message={progressModal.message}
-            progress={progressModal.progress}
-            currentStep={progressModal.currentStep}
-            totalSteps={progressModal.totalSteps}
-            onClose={() => setProgressModal(prev => ({ ...prev, isOpen: false }))}
-            showCloseButton={progressModal.progress === 100}
-            onCancel={progressModal.progress < 100 ? () => {
-                stopSignal.current = true;
-                setProgressModal(prev => ({ ...prev, isOpen: false }));
-                setMessage("Proses ekstraksi dibatalkan.");
-            } : undefined}
-        />
-    </div >
-);
+            <ProgressModal
+                isOpen={progressModal.isOpen}
+                title={progressModal.title}
+                message={progressModal.message}
+                progress={progressModal.progress}
+                currentStep={progressModal.currentStep}
+                totalSteps={progressModal.totalSteps}
+                onClose={() => setProgressModal(prev => ({ ...prev, isOpen: false }))}
+                showCloseButton={progressModal.progress === 100}
+                onCancel={progressModal.progress < 100 ? () => {
+                    stopSignal.current = true;
+                    setProgressModal(prev => ({ ...prev, isOpen: false }));
+                    setMessage("Proses ekstraksi dibatalkan.");
+                } : undefined}
+            />
+        </div >
+    );
 }
 
 export default function BatchInputPage() {
