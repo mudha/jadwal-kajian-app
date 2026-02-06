@@ -314,9 +314,7 @@ function BatchInputPageContent() {
 
 
 
-    // Split by "=== GAMBAR: (url) ==="
-    const parts = fullTextContent.split(/=== GAMBAR: (.*?) ===/);
-    // Result array: [text_before, url1, text1, url2, text2, ...]
+
 
     const handleAiProcess = async () => {
         stopSignal.current = false;
