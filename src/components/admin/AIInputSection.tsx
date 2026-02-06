@@ -138,7 +138,7 @@ export default function AIInputSection({
                                 <div className="grid grid-cols-2 gap-3">
                                     <button
                                         onClick={onProcess}
-                                        disabled={!inputText || isGeocoding}
+                                        disabled={(!inputText && uploadedImages.length === 0) || isGeocoding}
                                         className="batch-btn batch-btn-primary py-3"
                                     >
                                         {isGeocoding ? (
@@ -151,7 +151,7 @@ export default function AIInputSection({
 
                                     <button
                                         onClick={onAiProcess}
-                                        disabled={!inputText || isGeocoding || isAiLoading}
+                                        disabled={(!inputText && uploadedImages.length === 0) || isGeocoding || isAiLoading}
                                         className="batch-btn batch-btn-gradient py-3"
                                     >
                                         {isAiLoading ? (
