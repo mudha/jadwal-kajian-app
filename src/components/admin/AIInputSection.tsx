@@ -7,8 +7,8 @@ interface AIInputSectionProps {
     onImageUpload: (files: File[]) => void;
     inputText: string;
     setInputText: (text: string) => void;
-    uploadedImages: string[];
-    setUploadedImages: (urls: string[]) => void;
+    uploadedImages: { id: string; url: string; file: File | null }[];
+    setUploadedImages: (images: { id: string; url: string; file: File | null }[]) => void;
     isOcrLoading: boolean;
     ocrProgress: number;
     isGeocoding: boolean;
@@ -105,17 +105,17 @@ export default function AIInputSection({
                                     {uploadedImages.length > 0 && (
                                         <div className="absolute top-4 right-4 max-h-[160px] overflow-y-auto">
                                             <div className="grid grid-cols-2 gap-2">
-                                                {uploadedImages.map((url, idx) => (
-                                                    <div key={idx} className="relative group">
+                                                {uploadedImages.map((img, idx) => (
+                                                    <div key={img.id} className="relative group">
                                                         <img
-                                                            src={url}
+                                                            src={img.url}
                                                             className="w-16 h-16 object-cover rounded-xl border-2 border-white shadow-lg animate-in zoom-in-50 duration-300"
                                                         />
                                                         <div className="absolute -top-1 -right-1 bg-blue-600 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-lg">
                                                             {idx + 1}
                                                         </div>
                                                         <button
-                                                            onClick={() => setUploadedImages(uploadedImages.filter((_, i) => i !== idx))}
+                                                            onClick={() => setUploadedImages(uploadedImages.filter((item) => item.id !== img.id))}
                                                             className="absolute -bottom-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity transform scale-75 hover:scale-100"
                                                         >
                                                             <X className="w-3 h-3" />
