@@ -1,8 +1,8 @@
 import db from '@/lib/db';
 import HomeContent from '@/components/HomeContent';
 
-// Force dynamic rendering to ensure fresh settings are fetched on every request
-export const dynamic = 'force-dynamic';
+// Enable ISR with 60 second revalidation
+export const revalidate = 60;
 
 const DEFAULT_LAYOUT = {
   sidebar: ['SidebarBrandWidget', 'SidebarMenuWidget', 'OngoingWidget', 'LatestKajianWidget', 'PrayerTimesWidget', 'ContactWidget'],
