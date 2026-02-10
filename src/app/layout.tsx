@@ -65,6 +65,7 @@ export const metadata: Metadata = {
     title: "PortalKajian",
   },
   icons: {
+    icon: "/icon-512.png",
     apple: "/icon-512.png",
   },
 };

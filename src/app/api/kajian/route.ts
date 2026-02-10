@@ -37,7 +37,7 @@ export async function GET(request: Request) {
             })();
         }
 
-        // Build query with optional filter for canceled
+        // Build query with optional filter for canceled and archived
         let sql = 'SELECT * FROM kajian';
         const args: any[] = [];
 
@@ -46,6 +46,12 @@ export async function GET(request: Request) {
 
         if (!includeCanceled) {
             whereClauses.push('(is_canceled = 0 OR is_canceled IS NULL)');
+        }
+
+        // Exclude archived kajian by default
+        const includeArchived = searchParams.get('include_archived') === 'true';
+        if (!includeArchived) {
+            whereClauses.push('(archivedAt IS NULL)');
         }
 
         if (whereClauses.length > 0) {

@@ -221,17 +221,40 @@ function BatchInputPageContent() {
                 const imageUrl = uploadData.url;
 
                 if (imageUrl) {
-                    setUploadedImages(prev => [...prev, {
-                        id: `img-${Date.now()}-${Math.random()}`,
-                        url: imageUrl,
-                        file: file // Store original file for OCR later
-                    }]);
+                    // CHECK MODE: If Manual Mode, attach directly to entry
+                    if (isManualMode || isContributor) {
+                        setEntries(prev => {
+                            const newEntries = [...prev];
+                            // Target the last entry by default or 0 if only one
+                            // In manual mode typically users add one by one or append.
+                            // Let's attach to the LAST entry since that's likely what they are working on
+                            // OR if they just started (entries.length === 1), it works too.
+                            const targetIndex = newEntries.length > 0 ? newEntries.length - 1 : 0;
+
+                            if (newEntries[targetIndex]) {
+                                newEntries[targetIndex] = { ...newEntries[targetIndex], imageUrl: imageUrl };
+                            }
+                            return newEntries;
+                        });
+                        setMessage('✅ Gambar berhasil dipasang ke form manual!');
+                    } else {
+                        // Batch/AI Mode: Add to queue
+                        setUploadedImages(prev => [...prev, {
+                            id: `img-${Date.now()}-${Math.random()}`,
+                            url: imageUrl,
+                            file: file // Store original file for OCR later
+                        }]);
+                        setMessage(`Siap! ${processedCount + 1} gambar berhasil diupload. Klik "AI Gemini" / "Proses" untuk mengekstrak.`);
+                    }
                 }
 
                 processedCount++;
             }
 
-            setMessage(`Siap! ${processedCount} gambar berhasil diupload. Klik "AI Gemini" / "Proses" untuk mengekstrak.`);
+            if (!isManualMode && !isContributor) {
+                setMessage(`Siap! ${processedCount} gambar berhasil diupload. Klik "AI Gemini" / "Proses" untuk mengekstrak.`);
+            }
+
         } catch (e: any) {
             console.error(e);
             setMessage('Gagal memproses gambar. Pastikan format benar.');

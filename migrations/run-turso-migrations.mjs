@@ -53,6 +53,26 @@ async function runMigrations() {
         }
         console.log('✓ Recurring fields added to kajian table\n');
 
+        // Migration 3: Add archive tracking fields
+        console.log('3. Adding archive tracking fields to kajian table...');
+        const migration3 = fs.readFileSync(
+            path.join(process.cwd(), 'migrations', '003_add_archive_fields.sql'),
+            'utf8'
+        );
+        const statements3 = migration3.split(';').filter(s => s.trim().length > 0);
+        for (const s of statements3) {
+            try {
+                await db.execute(s);
+            } catch (err) {
+                if (err.message.includes('already exists') || err.message.includes('duplicate column')) {
+                    console.warn(`⚠️ Warning: ${err.message.split('\n')[0]}`);
+                } else {
+                    throw err;
+                }
+            }
+        }
+        console.log('✓ Archive tracking fields added to kajian table\n');
+
         console.log('✅ All migrations completed successfully!');
     } catch (error) {
         console.error('❌ Migration failed:', error);

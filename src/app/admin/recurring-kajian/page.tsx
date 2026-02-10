@@ -274,7 +274,7 @@ export default function RecurringKajianPage() {
                 fetchRecurringKajian();
                 setIsFormOpen(false);
             } else {
-                setMessage(`❌ Error: ${data?.error || res.statusText || 'Unknown error'}`);
+                setMessage(`❌ Error: ${data?.error || res.statusText || 'Unknown error'} ${data?.details ? `(${data.details})` : ''}`);
             }
         } catch (error: any) {
             console.error('Save error:', error);
@@ -685,7 +685,22 @@ export default function RecurringKajianPage() {
                     <div className="divide-y divide-slate-100">
                         {recurringList.filter(k => k.isActive).map(kajian => (
                             <div key={kajian.id} className="p-6 hover:bg-slate-50 transition-colors">
-                                <div className="flex items-start justify-between">
+                                <div className="flex items-start gap-4">
+                                    {/* Thumbnail */}
+                                    <div className="flex-shrink-0">
+                                        {kajian.imageUrl ? (
+                                            <img
+                                                src={kajian.imageUrl}
+                                                alt={kajian.tema || 'Kajian Flyer'}
+                                                className="w-20 h-20 object-cover rounded-lg shadow-sm border border-slate-100"
+                                            />
+                                        ) : (
+                                            <div className="w-20 h-20 bg-slate-100 rounded-lg flex items-center justify-center border border-slate-200">
+                                                <Calendar className="w-8 h-8 text-slate-300" />
+                                            </div>
+                                        )}
+                                    </div>
+
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-2">
                                             <h3 className="text-lg font-bold text-slate-900">{kajian.masjid}</h3>
