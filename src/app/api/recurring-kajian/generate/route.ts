@@ -32,12 +32,21 @@ export async function POST(request: Request) {
             });
         }
 
+        // Get all active holiday periods
+        const holidayResult = await db.execute({
+            sql: 'SELECT * FROM holiday_periods WHERE isActive = 1',
+            args: []
+        });
+
+        const holidayPeriods = holidayResult.rows;
+
         const startDate = new Date();
         const endDate = new Date();
         endDate.setMonth(endDate.getMonth() + Number(months));
 
         let generatedCount = 0;
         let skippedCount = 0;
+        let skippedDueToHoliday = 0;
 
         for (const template of templates) {
             // Generate dates based on pattern
@@ -54,6 +63,17 @@ export async function POST(request: Request) {
             // For each date, check if instance already exists
             for (const date of dates) {
                 const dateStr = formatIndoDate(date);
+                const dateYYYYMMDD = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+                // Check if date falls within any holiday period
+                const isInHoliday = holidayPeriods.some((period: any) => {
+                    return dateYYYYMMDD >= period.start_date && dateYYYYMMDD <= period.end_date;
+                });
+
+                if (isInHoliday) {
+                    skippedDueToHoliday++;
+                    continue;
+                }
 
                 // Build waktu string
                 let waktu = template.waktu_mulai || '';
@@ -125,8 +145,9 @@ export async function POST(request: Request) {
             success: true,
             generated: generatedCount,
             skipped: skippedCount,
+            skippedDueToHoliday: skippedDueToHoliday,
             templates: templates.length,
-            message: `Generated ${generatedCount} kajian instances, skipped ${skippedCount} existing`
+            message: `Generated ${generatedCount} kajian instances, skipped ${skippedCount} existing, ${skippedDueToHoliday} during holidays`
         });
     } catch (error: any) {
         console.error('Error generating recurring kajian:', error);

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Bell, Menu } from 'lucide-react';
+import { Bell, Menu, MapPin, RefreshCw } from 'lucide-react';
+import { useSettings } from '@/hooks/useSettings';
 
 interface MobileHeaderProps {
     onOpenSidebar: () => void;
@@ -10,6 +11,8 @@ interface MobileHeaderProps {
 
 export default function MobileHeader({ onOpenSidebar }: MobileHeaderProps) {
     const [hasUnread, setHasUnread] = useState(false);
+    const { refreshLocation } = useSettings();
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
         const checkUnread = async () => {
@@ -38,6 +41,12 @@ export default function MobileHeader({ onOpenSidebar }: MobileHeaderProps) {
         // For now, mount is sufficient as user navigates back to home
     }, []);
 
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        await refreshLocation();
+        setIsRefreshing(false);
+    };
+
     return (
         <header className="bg-teal-600 text-white px-6 py-4 flex items-center justify-between md:hidden sticky top-0 z-40 shadow-md">
             <div className="flex items-center gap-4">
@@ -53,12 +62,23 @@ export default function MobileHeader({ onOpenSidebar }: MobileHeaderProps) {
                     <p className="text-[10px] text-teal-100 uppercase tracking-widest font-medium">Jadwal Kajian Sunnah</p>
                 </div>
             </div>
-            <Link href="/notifikasi" className="p-2 relative hover:bg-white/10 rounded-full transition-colors">
-                {hasUnread && (
-                    <div className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-teal-600"></div>
-                )}
-                <Bell className="w-6 h-6" />
-            </Link>
+
+            <div className="flex items-center gap-1">
+                <button
+                    onClick={handleRefresh}
+                    className="p-2 text-white hover:bg-white/10 rounded-full transition-colors relative"
+                    aria-label="Update Lokasi"
+                >
+                    <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                </button>
+
+                <Link href="/notifikasi" className="p-2 relative hover:bg-white/10 rounded-full transition-colors">
+                    {hasUnread && (
+                        <div className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-teal-600"></div>
+                    )}
+                    <Bell className="w-6 h-6" />
+                </Link>
+            </div>
         </header>
     );
 }

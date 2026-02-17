@@ -1,12 +1,15 @@
-import { Clock, MapPin, Loader2 } from 'lucide-react';
+import { Clock, MapPin, Loader2, RefreshCw } from 'lucide-react';
 import { usePrayerTimes } from '@/hooks/usePrayerTimes';
+import { useSettings } from '@/hooks/useSettings';
 import { useState, useEffect } from 'react';
 import { getHijriDate, formatIndoDate } from '@/lib/date-utils';
 
 export default function PrayerTimeWidget() {
     const { nextPrayer, timeLeft, locationName, loading, error } = usePrayerTimes();
+    const { refreshLocation } = useSettings();
     const [currentTime, setCurrentTime] = useState('');
     const [hijriDate, setHijriDate] = useState('');
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
         setHijriDate(getHijriDate(new Date()));
@@ -17,6 +20,12 @@ export default function PrayerTimeWidget() {
         }, 1000);
         return () => clearInterval(timer);
     }, []);
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        await refreshLocation();
+        setIsRefreshing(false);
+    };
 
     // Safe default values
     const displayName = nextPrayer ? nextPrayer.name : 'Memuat...';
@@ -42,6 +51,13 @@ export default function PrayerTimeWidget() {
                         <div className="flex items-center justify-end gap-1 text-white/80 text-[10px] font-medium mb-1">
                             <MapPin className="w-3 h-3" />
                             <span>Lokasi Anda</span>
+                            <button
+                                onClick={handleRefresh}
+                                disabled={isRefreshing}
+                                className="ml-1 p-0.5 hover:bg-white/20 rounded-full transition-colors"
+                            >
+                                <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            </button>
                         </div>
                         <p className="text-xs font-bold max-w-[160px] leading-tight">{locationName}</p>
                     </div>
@@ -49,7 +65,7 @@ export default function PrayerTimeWidget() {
 
                 <div className="flex items-center gap-4 bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/10">
                     <div className="bg-white/30 p-3 rounded-xl shrink-0">
-                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Clock className="w-6 h-6" />}
+                        {loading || isRefreshing ? <Loader2 className="w-6 h-6 animate-spin" /> : <Clock className="w-6 h-6" />}
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-white/80 text-[10px] font-medium uppercase tracking-widest mb-1">Selanjutnya</p>

@@ -219,6 +219,24 @@ const initDb = async () => {
         value TEXT
     )
   `);
+
+  // Holiday periods table for recurring kajian holidays
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS holiday_periods (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      start_date TEXT NOT NULL,
+      end_date TEXT NOT NULL,
+      description TEXT,
+      isActive INTEGER DEFAULT 1,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Add indexes for holiday_periods
+  try { await db.execute("CREATE INDEX IF NOT EXISTS idx_holiday_periods_active ON holiday_periods(isActive)"); } catch (e) { }
+  try { await db.execute("CREATE INDEX IF NOT EXISTS idx_holiday_periods_dates ON holiday_periods(start_date, end_date)"); } catch (e) { }
+
 };
 
 // Auto-init on import (Note: top-level await needs ES modules or handling in app startup)

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSettings } from './useSettings';
 
 interface PrayerTimes {
     Fajr: string;
@@ -22,77 +23,58 @@ interface PrayerState {
 }
 
 export function usePrayerTimes() {
+    const { settings } = useSettings();
     const [state, setState] = useState<PrayerState>({
         timings: null,
         nextPrayer: null,
         timeLeft: '--:--:--',
-        locationName: 'Mendeteksi lokasi...',
+        locationName: 'Menunggu lokasi...',
         loading: true,
         error: null,
     });
 
     useEffect(() => {
-        if (!navigator.geolocation) {
-            setState(s => ({ ...s, error: 'Geolocation tidak didukung browser ini', loading: false }));
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const { latitude, longitude } = position.coords;
-                try {
-                    // Fetch from Aladhan API
-                    const date = new Date();
-                    const timestamp = Math.floor(date.getTime() / 1000);
-                    // Use method 20 (Kemenag RI) or 11 (Majlis Ugama Islam Singapura) usually good for ID
-                    const res = await fetch(`https://api.aladhan.com/v1/timings/${timestamp}?latitude=${latitude}&longitude=${longitude}&method=20`);
-                    const data = await res.json();
-
-                    let locationName = 'Lokasi Terdeteksi';
-                    try {
-                        // Reverse Geocoding for Kecamatan
-                        const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=id`);
-                        const geoData = await geoRes.json();
-                        // Priority: Locality (Kecamatan) -> City -> PrincipalSubdivision
-                        if (geoData.locality) {
-                            locationName = `Kec. ${geoData.locality}`;
-                            if (geoData.city) locationName += `, ${geoData.city}`;
-                        } else if (geoData.city) {
-                            locationName = geoData.city;
-                        } else if (geoData.principalSubdivision) {
-                            locationName = geoData.principalSubdivision;
-                        }
-                    } catch (geoErr) {
-                        console.error('Reverse geocoding failed', geoErr);
-                        // Fallback to time zone or generic
-                        if (data.data && data.data.meta) {
-                            locationName = data.data.meta.timezone;
-                        }
-                    }
-
-                    if (data.code === 200) {
-                        const timings = data.data.timings;
-
-                        setState(s => ({
-                            ...s,
-                            timings: timings,
-                            locationName: locationName,
-                            loading: false
-                        }));
-                    } else {
-                        throw new Error('Gagal mengambil data jadwal sholat');
-                    }
-                } catch (err) {
-                    setState(s => ({ ...s, error: 'Gagal memuat jadwal', loading: false }));
-                }
-            },
-            (err) => {
-                // Default to Jakarta if denied
-                setState(s => ({ ...s, error: 'Izin lokasi ditolak, menggunakan default (Jakarta)', locationName: 'Jakarta (Default)', loading: false }));
-                // Ideally fetch Jakarta times here as fallback
+        const fetchPrayerTimes = async () => {
+            // Use settings location if available, otherwise default/wait
+            if (!settings.userLocation) {
+                // If no location yet settings provider might be loading or user denied
+                // We can wait or show default.
+                // Let's rely on settings.userLocation updates.
+                // But for initial load if settings is null, we might want to default to Jakarta?
+                // Or just show "Menunggu lokasi..."
+                // Since HomeContent triggers refreshLocation on mount, this should populate soon.
+                return;
             }
-        );
-    }, []);
+
+            const { lat, lng, address } = settings.userLocation;
+
+            try {
+                setState(prev => ({ ...prev, loading: true, error: null }));
+
+                const date = new Date();
+                const timestamp = Math.floor(date.getTime() / 1000);
+                // Method 20: Kemenag RI
+                const res = await fetch(`https://api.aladhan.com/v1/timings/${timestamp}?latitude=${lat}&longitude=${lng}&method=20`);
+                const data = await res.json();
+
+                if (data.code === 200) {
+                    const timings = data.data.timings;
+                    setState(s => ({
+                        ...s,
+                        timings: timings,
+                        locationName: address || 'Lokasi Terkini',
+                        loading: false
+                    }));
+                } else {
+                    throw new Error('Gagal mengambil data jadwal sholat');
+                }
+            } catch (err) {
+                setState(s => ({ ...s, error: 'Gagal memuat jadwal', loading: false }));
+            }
+        };
+
+        fetchPrayerTimes();
+    }, [settings.userLocation]);
 
     // Timer logic for countdown
     useEffect(() => {
@@ -117,8 +99,6 @@ export function usePrayerTimes() {
 
                 let diff = prayerDate.getTime() - now.getTime();
 
-                // If diff < 0, it means prayer passed today. Check if it's the *next* day's Fajr?
-                // Simple logic: find strict positive diff first
                 if (diff > 0 && diff < minDiff) {
                     minDiff = diff;
                     upcomingPrayer = {

@@ -1,12 +1,15 @@
 'use client';
 
-import { Clock, MapPin, Loader2 } from 'lucide-react';
+import { Clock, MapPin, Loader2, RefreshCw, LocateFixed } from 'lucide-react';
 import { usePrayerTimes } from '@/hooks/usePrayerTimes';
+import { useSettings } from '@/hooks/useSettings';
 import { useState, useEffect } from 'react';
 
 export default function MiniPrayerTimeWidget() {
     const { nextPrayer, timeLeft, locationName, loading, error, timings } = usePrayerTimes();
+    const { refreshLocation } = useSettings();
     const [currentTime, setCurrentTime] = useState('');
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -15,6 +18,12 @@ export default function MiniPrayerTimeWidget() {
         }, 1000);
         return () => clearInterval(timer);
     }, []);
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        await refreshLocation();
+        setIsRefreshing(false);
+    };
 
     if (loading) {
         return (
@@ -32,9 +41,6 @@ export default function MiniPrayerTimeWidget() {
         { key: 'Isha', label: 'Isya' },
     ];
 
-    // Don't return null on error, we want to show the container at least
-    // or use the fallback data from the hook
-
     return (
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 overflow-hidden relative group hover:border-teal-200 transition-all">
             <div className="relative z-10">
@@ -45,6 +51,14 @@ export default function MiniPrayerTimeWidget() {
                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-800 truncate block leading-none">{locationName || 'Lokasi'}</span>
                             <span className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">Waktu Sholat</span>
                         </div>
+                        <button
+                            onClick={handleRefresh}
+                            disabled={isRefreshing}
+                            className="p-1 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-teal-600"
+                            title="Update Lokasi Saat Ini"
+                        >
+                            <LocateFixed className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        </button>
                     </div>
                     <div className="text-right shrink-0">
                         <span className="text-xs font-mono font-black text-teal-600 tabular-nums">{currentTime}</span>
