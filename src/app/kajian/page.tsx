@@ -566,7 +566,7 @@ function KajianListContent() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-20 relative overflow-x-hidden">
+        <div className="min-h-screen bg-slate-50 pb-20 relative">
             {/* Mobile Sidebar / Drawer */}
             <div className={`fixed inset-0 z-[100] bg-black/50 transition-opacity md:hidden ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsSidebarOpen(false)}>
                 <div className={`absolute left-0 top-0 bottom-0 w-64 bg-white shadow-2xl transition-transform transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`} onClick={e => e.stopPropagation()}>
@@ -656,7 +656,7 @@ function KajianListContent() {
                         )}
 
                         {/* Sticky Filter Container */}
-                        <div className="sticky top-[120px] md:top-0 z-30 bg-slate-50 pb-4 -mx-4 px-4 md:mx-0 md:px-0">
+                        <div className="sticky top-[120px] md:top-0 z-30 bg-slate-50/95 backdrop-blur-sm pb-3 shadow-sm -mx-4 px-4 md:mx-0 md:px-0">
                             {/* Recurring Type Filter Tabs */}
                             <div className="flex flex-wrap gap-2 mb-4 pt-4">
                                 {[
