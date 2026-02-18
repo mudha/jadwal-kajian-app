@@ -276,9 +276,19 @@ export default function TarawihInputPage() {
         if (failCount === 0) {
             setMessage(`✅ Alhamdulillah! ${successCount} jadwal imam tarawih berhasil disimpan.`);
             setMessageType('success');
+            // Reset semua field untuk input masjid berikutnya
             setEntries([]);
             setIsParsed(false);
             setCoords(null);
+            setMasjid('');
+            setCity('');
+            setAddress('');
+            setGmapsUrl('');
+            setCp('');
+            setScheduleText('');
+            setSelectedMasjid(null);
+            setMasjidSuggestions([]);
+            setShowDropdown(false);
         } else {
             setMessage(`⚠️ ${successCount} berhasil, ${failCount} gagal disimpan.`);
             setMessageType('error');
