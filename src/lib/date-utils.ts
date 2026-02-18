@@ -7,20 +7,24 @@ export function parseIndoDate(dateStr: string): Date | null {
     if (!dateStr) return null;
 
     try {
-        // Clean string: remove day names and commas
+        // Clean string: remove day names, commas, and recurring week markers like "Ke-4"
         // Example: "Selasa, 23 Desember 2025" -> "23 Desember 2025"
         // Example: "Ahad 18 Januari 2026" -> "18 Januari 2026"
+        // Example: "Senin Ke-4, 26 Januari 2026" -> "26 Januari 2026"
         const clean = dateStr
             .replace(/Ahad|Senin|Selasa|Rabu|Kamis|Jum'?at|Sabtu|Minggu/gi, '')
+            .replace(/Ke-\d+/gi, '')  // Remove "Ke-4", "Ke-1", etc.
             .replace(/,/g, '')
             .trim();
 
-        const parts = clean.split(' ');
+        const parts = clean.split(/\s+/).filter(p => p.length > 0);
         if (parts.length < 3) return null;
 
         const day = parseInt(parts[0]);
         const monthName = parts[1];
         const year = parseInt(parts[2]);
+
+        if (isNaN(day) || isNaN(year)) return null;
 
         const monthIndex = monthsIndo.findIndex(m => m.toLowerCase() === monthName.toLowerCase());
         if (monthIndex === -1) return null;
@@ -34,7 +38,8 @@ export function parseIndoDate(dateStr: string): Date | null {
 
 export function getKajianStatus(dateStr: string, waktuStr?: string): 'PAST' | 'TODAY' | 'TOMORROW' | 'DAY_AFTER_TOMORROW' | 'UPCOMING' {
     const kajianDate = parseIndoDate(dateStr);
-    if (!kajianDate) return 'UPCOMING';
+    // If date cannot be parsed, treat as PAST to avoid showing in Mendatang filter
+    if (!kajianDate) return 'PAST';
 
     const now = new Date();
     const today = new Date();
