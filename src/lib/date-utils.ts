@@ -3,6 +3,19 @@ export const monthsIndo = [
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ];
 
+/**
+ * Returns true if today is within the Ramadhan 1447 H period.
+ * Ramadhan 1447 H: 18 Feb 2026 - 19 Mar 2026 (approx).
+ * We use a generous window: 18 Feb - 4 Apr 2026 (includes Syawal awal).
+ * Update this each year as needed.
+ */
+export function isRamadhan(): boolean {
+    const now = new Date();
+    const start = new Date(2026, 1, 18); // 18 Feb 2026
+    const end = new Date(2026, 3, 4);   // 4 Apr 2026
+    return now >= start && now <= end;
+}
+
 export function parseIndoDate(dateStr: string): Date | null {
     if (!dateStr) return null;
 

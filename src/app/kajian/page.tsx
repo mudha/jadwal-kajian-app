@@ -6,7 +6,7 @@ import { Calendar, MapPin, User, Clock, Search, Trash2, ArrowLeft, History, List
 import { useSearchParams } from 'next/navigation';
 
 import Link from 'next/link';
-import { getKajianStatus } from '@/lib/date-utils';
+import { getKajianStatus, isRamadhan } from '@/lib/date-utils';
 import dynamic from 'next/dynamic';
 import MiniPrayerTimeWidget from '@/components/MiniPrayerTimeWidget';
 import CityCarousel from '@/components/CityCarousel';
@@ -16,6 +16,8 @@ import MenuGrid from '@/components/MenuGrid';
 import { shareToWhatsApp } from '@/lib/whatsapp-share';
 import WidgetRenderer from '@/components/WidgetRenderer';
 import SidebarMenuWidget from '@/components/widgets/SidebarMenuWidget';
+import RamadhanBanner from '@/components/RamadhanBanner';
+import ImsakiyahCountdown from '@/components/ImsakiyahCountdown';
 import { useSettings } from '@/hooks/useSettings';
 import { useAdmin } from '@/hooks/useAdmin';
 import EditKajianModal, { KajianDetail } from '@/components/EditKajianModal';
@@ -76,6 +78,7 @@ function KajianListContent() {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState<'all' | 'today' | 'upcoming' | 'past'>('all');
     const [recurringTypeFilter, setRecurringTypeFilter] = useState<'all' | 'tematik' | 'rutin'>('all');
+    const [ramadhanActive] = useState(() => isRamadhan());
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingKajian, setEditingKajian] = useState<KajianWithId | null>(null);
     const [showMap, setShowMap] = useState(false);
@@ -581,7 +584,10 @@ function KajianListContent() {
             </div>
 
             {/* Mobile Header */}
-            <header className="bg-teal-600 text-white px-4 py-3 sticky top-0 z-40 md:hidden shadow-md">
+            <header className={`text-white px-4 py-3 sticky top-0 z-40 md:hidden shadow-md ${ramadhanActive
+                ? 'bg-gradient-to-r from-emerald-900 via-teal-800 to-emerald-900'
+                : 'bg-teal-600'
+                }`}>
                 <div className="flex items-center gap-3 mb-3">
                     <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
@@ -654,6 +660,10 @@ function KajianListContent() {
                                 }}
                             />
                         )}
+
+                        {/* Ramadhan Features - only shown during Ramadhan */}
+                        <RamadhanBanner />
+                        <ImsakiyahCountdown />
 
                         {/* Sticky Filter Container */}
                         <div className="sticky top-[120px] md:top-0 z-30 bg-slate-50/95 backdrop-blur-sm pb-3 shadow-sm -mx-4 px-4 md:mx-0 md:px-0">
