@@ -655,50 +655,53 @@ function KajianListContent() {
                             />
                         )}
 
-                        {/* Recurring Type Filter Tabs */}
-                        <div className="flex flex-wrap gap-2 mb-4">
-                            {[
-                                { id: 'all', label: '📋 Semua Kajian', color: 'slate' },
-                                { id: 'tematik', label: '🎯 Kajian Tematik', color: 'blue' },
-                                { id: 'rutin', label: '🔄 Kajian Rutin', color: 'purple' },
-                            ].map((type) => (
-                                <button
-                                    key={type.id}
-                                    onClick={() => setRecurringTypeFilter(type.id as any)}
-                                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${recurringTypeFilter === type.id
-                                        ? type.id === 'all'
-                                            ? 'bg-slate-600 text-white shadow-lg'
-                                            : type.id === 'tematik'
-                                                ? 'bg-blue-600 text-white shadow-lg'
-                                                : 'bg-purple-600 text-white shadow-lg'
-                                        : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
-                                        }`}
-                                >
-                                    <span>{type.label}</span>
-                                </button>
-                            ))}
-                        </div>
+                        {/* Sticky Filter Container */}
+                        <div className="sticky top-0 md:top-0 z-30 bg-slate-50 pb-4 -mx-4 px-4 md:mx-0 md:px-0">
+                            {/* Recurring Type Filter Tabs */}
+                            <div className="flex flex-wrap gap-2 mb-4 pt-4">
+                                {[
+                                    { id: 'all', label: '📋 Semua Kajian', color: 'slate' },
+                                    { id: 'tematik', label: '🎯 Kajian Tematik', color: 'blue' },
+                                    { id: 'rutin', label: '🔄 Kajian Rutin', color: 'purple' },
+                                ].map((type) => (
+                                    <button
+                                        key={type.id}
+                                        onClick={() => setRecurringTypeFilter(type.id as any)}
+                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${recurringTypeFilter === type.id
+                                            ? type.id === 'all'
+                                                ? 'bg-slate-600 text-white shadow-lg'
+                                                : type.id === 'tematik'
+                                                    ? 'bg-blue-600 text-white shadow-lg'
+                                                    : 'bg-purple-600 text-white shadow-lg'
+                                            : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                                            }`}
+                                    >
+                                        <span>{type.label}</span>
+                                    </button>
+                                ))}
+                            </div>
 
-                        {/* Time-based Tabs Filter */}
-                        <div className="flex flex-wrap gap-1.5 mb-8 bg-white/50 p-1 rounded-2xl border border-slate-200 w-fit">
-                            {[
-                                { id: 'all', label: 'Semua', icon: ListFilter },
-                                { id: 'today', label: 'Hari Ini', icon: Clock },
-                                { id: 'upcoming', label: 'Mendatang', icon: Calendar },
-                                { id: 'past', label: 'Berlalu', icon: History },
-                            ].map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id as any)}
-                                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${activeTab === tab.id
-                                        ? 'bg-teal-600 text-white shadow-lg shadow-teal-200 ring-2 ring-teal-600 ring-offset-2'
-                                        : 'text-slate-500 hover:bg-white hover:text-slate-900'
-                                        }`}
-                                >
-                                    <tab.icon className="w-4 h-4" />
-                                    <span>{tab.label}</span>
-                                </button>
-                            ))}
+                            {/* Time-based Tabs Filter */}
+                            <div className="flex flex-wrap gap-1.5 bg-white/50 p-1 rounded-2xl border border-slate-200 w-fit">
+                                {[
+                                    { id: 'all', label: 'Semua', icon: ListFilter },
+                                    { id: 'today', label: 'Hari Ini', icon: Clock },
+                                    { id: 'upcoming', label: 'Mendatang', icon: Calendar },
+                                    { id: 'past', label: 'Berlalu', icon: History },
+                                ].map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id as any)}
+                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${activeTab === tab.id
+                                            ? 'bg-teal-600 text-white shadow-lg shadow-teal-200 ring-2 ring-teal-600 ring-offset-2'
+                                            : 'text-slate-500 hover:bg-white hover:text-slate-900'
+                                            }`}
+                                    >
+                                        <tab.icon className="w-4 h-4" />
+                                        <span>{tab.label}</span>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
 
