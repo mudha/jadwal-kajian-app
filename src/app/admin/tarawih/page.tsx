@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { parseTarawihSchedule, KajianEntry } from '@/lib/parser';
 import { geocodeAddress, extractCoordsFromUrl } from '@/lib/geocoding';
@@ -7,18 +7,41 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
     Save, CheckCircle, AlertCircle, ArrowLeft,
-    Loader2, Eye, Trash2, MapPin, Phone, Building2, User, Navigation
+    Loader2, Eye, Trash2, MapPin, Phone, Building2, User, Navigation, Search, X
 } from 'lucide-react';
+
+interface MasjidOption {
+    id: string;
+    name: string;
+    city: string;
+    address: string;
+    gmapsUrl: string;
+    lat: number | null;
+    lng: number | null;
+    kajianCount: number;
+}
 
 export default function TarawihInputPage() {
     const router = useRouter();
     const { role, isLoading: isAdminLoading } = useAdmin();
+    const masjidInputRef = useRef<HTMLInputElement>(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
+    // Masjid info fields
     const [masjid, setMasjid] = useState('');
     const [city, setCity] = useState('');
     const [address, setAddress] = useState('');
     const [gmapsUrl, setGmapsUrl] = useState('');
     const [cp, setCp] = useState('');
+
+    // Masjid autocomplete
+    const [allMasjid, setAllMasjid] = useState<MasjidOption[]>([]);
+    const [masjidSuggestions, setMasjidSuggestions] = useState<MasjidOption[]>([]);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [isMasjidLoading, setIsMasjidLoading] = useState(false);
+    const [selectedMasjid, setSelectedMasjid] = useState<MasjidOption | null>(null);
+
+    // Schedule
     const [scheduleText, setScheduleText] = useState('');
     const [entries, setEntries] = useState<KajianEntry[]>([]);
     const [message, setMessage] = useState('');
@@ -34,6 +57,87 @@ export default function TarawihInputPage() {
             router.push('/admin');
         }
     }, [role, isAdminLoading]);
+
+    // Fetch all masjid on mount
+    useEffect(() => {
+        const fetchMasjid = async () => {
+            setIsMasjidLoading(true);
+            try {
+                const res = await fetch('/api/admin/masjid');
+                if (res.ok) {
+                    const data = await res.json();
+                    setAllMasjid(data);
+                }
+            } catch (e) {
+                console.error('Failed to fetch masjid list', e);
+            } finally {
+                setIsMasjidLoading(false);
+            }
+        };
+        fetchMasjid();
+    }, []);
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (
+                dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+                masjidInputRef.current && !masjidInputRef.current.contains(e.target as Node)
+            ) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleMasjidInput = (value: string) => {
+        setMasjid(value);
+        setSelectedMasjid(null); // clear selection when typing manually
+
+        if (value.trim().length < 2) {
+            setMasjidSuggestions([]);
+            setShowDropdown(false);
+            return;
+        }
+
+        const q = value.toLowerCase();
+        const filtered = allMasjid.filter(m =>
+            m.name.toLowerCase().includes(q) || m.city.toLowerCase().includes(q)
+        ).slice(0, 8);
+
+        setMasjidSuggestions(filtered);
+        setShowDropdown(filtered.length > 0);
+    };
+
+    const handleSelectMasjid = (option: MasjidOption) => {
+        setMasjid(option.name);
+        setCity(option.city);
+        setAddress(option.address || '');
+        setGmapsUrl(option.gmapsUrl || '');
+        setSelectedMasjid(option);
+        setShowDropdown(false);
+
+        // If masjid already has coords, set them immediately
+        if (option.lat && option.lng) {
+            const resolvedGmapsUrl = option.gmapsUrl || `https://www.google.com/maps?q=${option.lat},${option.lng}`;
+            setCoords({ lat: option.lat, lng: option.lng, gmapsUrl: resolvedGmapsUrl });
+        } else {
+            setCoords(null);
+        }
+    };
+
+    const handleClearMasjid = () => {
+        setMasjid('');
+        setCity('');
+        setAddress('');
+        setGmapsUrl('');
+        setSelectedMasjid(null);
+        setCoords(null);
+        setMasjidSuggestions([]);
+        setShowDropdown(false);
+        masjidInputRef.current?.focus();
+    };
 
     const handleParse = async () => {
         if (!masjid.trim() || !city.trim()) {
@@ -62,19 +166,32 @@ export default function TarawihInputPage() {
             return;
         }
 
+        // If masjid already has coords from selection, apply immediately
+        let resolvedLat: number | undefined = selectedMasjid?.lat ?? undefined;
+        let resolvedLng: number | undefined = selectedMasjid?.lng ?? undefined;
+        let resolvedGmapsUrl = gmapsUrl.trim();
+
+        if (resolvedLat && resolvedLng) {
+            // Already have coords from DB selection
+            if (!resolvedGmapsUrl) resolvedGmapsUrl = `https://www.google.com/maps?q=${resolvedLat},${resolvedLng}`;
+            const withCoords = parsed.map(e => ({ ...e, lat: resolvedLat, lng: resolvedLng, gmapsUrl: resolvedGmapsUrl }));
+            setEntries(withCoords);
+            setIsParsed(true);
+            setCoords({ lat: resolvedLat, lng: resolvedLng, gmapsUrl: resolvedGmapsUrl });
+            setMessage(`✅ Berhasil memparse ${parsed.length} jadwal imam tarawih. Koordinat dari database (${resolvedLat.toFixed(5)}, ${resolvedLng.toFixed(5)}).`);
+            setMessageType('success');
+            return;
+        }
+
+        // Need to geocode
         setEntries(parsed);
         setIsParsed(true);
         setMessage(`✅ Berhasil memparse ${parsed.length} jadwal. Sedang mencari koordinat lokasi masjid...`);
         setMessageType('info');
 
-        // Geocoding — cukup sekali untuk 1 masjid, lalu apply ke semua entry
         setIsGeocoding(true);
         try {
-            let resolvedLat: number | undefined;
-            let resolvedLng: number | undefined;
-            let resolvedGmapsUrl = gmapsUrl.trim();
-
-            // 1. Coba extract dari GMaps URL yang diinput
+            // 1. Try extract from GMaps URL
             if (resolvedGmapsUrl) {
                 const urlCoords = extractCoordsFromUrl(resolvedGmapsUrl);
                 if (urlCoords) {
@@ -83,7 +200,7 @@ export default function TarawihInputPage() {
                 }
             }
 
-            // 2. Jika belum dapat, geocode via nama masjid + alamat + kota
+            // 2. Geocode via name + address + city
             if (!resolvedLat || !resolvedLng) {
                 const geocoded = await geocodeAddress(
                     masjid.trim(),
@@ -100,7 +217,6 @@ export default function TarawihInputPage() {
             }
 
             if (resolvedLat && resolvedLng) {
-                // Apply koordinat ke semua entry
                 setEntries(prev => prev.map(e => ({
                     ...e,
                     lat: resolvedLat,
@@ -181,7 +297,6 @@ export default function TarawihInputPage() {
         <div className="max-w-4xl mx-auto space-y-6">
             {/* Header */}
             <div className="relative overflow-hidden bg-gradient-to-br from-emerald-900 via-teal-800 to-emerald-900 rounded-3xl p-8 text-white shadow-2xl">
-                {/* Stars decoration */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     {[...Array(20)].map((_, i) => (
                         <div
@@ -232,20 +347,99 @@ export default function TarawihInputPage() {
                 <div className="flex items-center gap-3 mb-5">
                     <div className="w-8 h-8 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center font-black text-sm">1</div>
                     <h2 className="text-lg font-bold text-slate-800">Info Masjid</h2>
+                    {isMasjidLoading && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+
+                    {/* Masjid name with autocomplete */}
+                    <div className="md:col-span-2">
                         <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
                             <Building2 className="w-3.5 h-3.5 inline mr-1" />Nama Masjid *
                         </label>
-                        <input
-                            type="text"
-                            value={masjid}
-                            onChange={e => setMasjid(e.target.value)}
-                            placeholder="Masjid Al Furqon"
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
-                        />
+                        <div className="relative">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                <input
+                                    ref={masjidInputRef}
+                                    type="text"
+                                    value={masjid}
+                                    onChange={e => handleMasjidInput(e.target.value)}
+                                    onFocus={() => {
+                                        if (masjidSuggestions.length > 0) setShowDropdown(true);
+                                    }}
+                                    placeholder="Ketik nama masjid untuk mencari..."
+                                    className={`w-full pl-10 pr-10 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm transition-colors ${selectedMasjid
+                                        ? 'border-emerald-300 bg-emerald-50'
+                                        : 'border-slate-200'
+                                        }`}
+                                />
+                                {masjid && (
+                                    <button
+                                        onClick={handleClearMasjid}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 transition-colors"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Dropdown suggestions */}
+                            {showDropdown && (
+                                <div
+                                    ref={dropdownRef}
+                                    className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden"
+                                >
+                                    {masjidSuggestions.map((option) => (
+                                        <button
+                                            key={option.id}
+                                            type="button"
+                                            onClick={() => handleSelectMasjid(option)}
+                                            className="w-full flex items-start gap-3 px-4 py-3 hover:bg-emerald-50 transition-colors text-left border-b border-slate-50 last:border-0"
+                                        >
+                                            <div className={`mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${option.lat && option.lng
+                                                ? 'bg-emerald-100 text-emerald-600'
+                                                : 'bg-slate-100 text-slate-400'
+                                                }`}>
+                                                <MapPin className="w-4 h-4" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-semibold text-slate-800 text-sm truncate">{option.name}</div>
+                                                <div className="text-xs text-slate-500 truncate">{option.city}{option.address ? ` · ${option.address}` : ''}</div>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    {option.lat && option.lng ? (
+                                                        <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                                                            <Navigation className="w-2.5 h-2.5" />
+                                                            Ada koordinat
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-xs text-slate-400">Belum ada koordinat</span>
+                                                    )}
+                                                    <span className="text-xs text-slate-400">· {option.kajianCount} kajian</span>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Selected masjid badge */}
+                        {selectedMasjid && (
+                            <div className="mt-2 flex items-center gap-2 flex-wrap">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-semibold">
+                                    <CheckCircle className="w-3 h-3" />
+                                    Dipilih dari database
+                                </span>
+                                {selectedMasjid.lat && selectedMasjid.lng && (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-xs font-semibold">
+                                        <Navigation className="w-3 h-3" />
+                                        {Number(selectedMasjid.lat).toFixed(5)}, {Number(selectedMasjid.lng).toFixed(5)}
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
+
                     <div>
                         <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
                             <MapPin className="w-3.5 h-3.5 inline mr-1" />Kota *
@@ -255,6 +449,18 @@ export default function TarawihInputPage() {
                             value={city}
                             onChange={e => setCity(e.target.value)}
                             placeholder="Tangerang Selatan"
+                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                            <Phone className="w-3.5 h-3.5 inline mr-1" />CP / Kontak DKM
+                        </label>
+                        <input
+                            type="text"
+                            value={cp}
+                            onChange={e => setCp(e.target.value)}
+                            placeholder="08xxxxxxxxxx"
                             className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
                         />
                     </div>
@@ -271,18 +477,6 @@ export default function TarawihInputPage() {
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                            <Phone className="w-3.5 h-3.5 inline mr-1" />CP / Kontak DKM
-                        </label>
-                        <input
-                            type="text"
-                            value={cp}
-                            onChange={e => setCp(e.target.value)}
-                            placeholder="08xxxxxxxxxx"
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
-                        />
-                    </div>
-                    <div className="md:col-span-2">
                         <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
                             Google Maps URL (opsional)
                         </label>
@@ -334,7 +528,7 @@ export default function TarawihInputPage() {
             {isParsed && entries.length > 0 && (
                 <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
                     <div className="flex items-center justify-between mb-5">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 flex-wrap">
                             <div className="w-8 h-8 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center font-black text-sm">3</div>
                             <h2 className="text-lg font-bold text-slate-800">
                                 Preview ({entries.length} jadwal)
@@ -352,15 +546,9 @@ export default function TarawihInputPage() {
                             className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-emerald-600/20"
                         >
                             {isSaving ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    Menyimpan {savedCount}/{entries.length}...
-                                </>
+                                <><Loader2 className="w-4 h-4 animate-spin" />Menyimpan {savedCount}/{entries.length}...</>
                             ) : (
-                                <>
-                                    <Save className="w-4 h-4" />
-                                    Simpan Semua ({entries.length})
-                                </>
+                                <><Save className="w-4 h-4" />Simpan Semua ({entries.length})</>
                             )}
                         </button>
                     </div>
