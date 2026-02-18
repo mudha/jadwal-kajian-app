@@ -675,3 +675,111 @@ function parseNarrativeFormat(text: string): KajianEntry[] {
 
     return [];
 }
+
+export interface TarawihMasjidInfo {
+    masjid: string;
+    city: string;
+    address: string;
+    gmapsUrl?: string;
+    cp?: string;
+    tahun?: number;
+}
+
+export function parseTarawihSchedule(text: string, masjidInfo: TarawihMasjidInfo): KajianEntry[] {
+    const tahun = masjidInfo.tahun || 2026;
+    const entries: KajianEntry[] = [];
+
+    const BULAN_MAP: Record<string, number> = {
+        'januari': 1, 'februari': 2, 'maret': 3, 'april': 4,
+        'mei': 5, 'juni': 6, 'juli': 7, 'agustus': 8,
+        'september': 9, 'oktober': 10, 'november': 11, 'desember': 12,
+        'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4,
+        'jun': 6, 'jul': 7, 'agu': 8, 'sep': 9, 'okt': 10, 'nov': 11, 'des': 12
+    };
+
+    const HARI_MAP: Record<string, string> = {
+        'senin': 'Senin', 'selasa': 'Selasa', 'rabu': 'Rabu',
+        'kamis': 'Kamis', 'jumat': "Jum'at", "jum'at": "Jum'at",
+        'sabtu': 'Sabtu', 'ahad': 'Ahad', 'minggu': 'Ahad', 'sunday': 'Ahad'
+    };
+
+    const BULAN_NAMES: Record<number, string> = {
+        1: 'Januari', 2: 'Februari', 3: 'Maret', 4: 'April',
+        5: 'Mei', 6: 'Juni', 7: 'Juli', 8: 'Agustus',
+        9: 'September', 10: 'Oktober', 11: 'November', 12: 'Desember'
+    };
+
+    const cleanText = text.replace(/[\u200B\u200C\u200D\uFEFF]/g, '').trim();
+    const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+    for (const line of lines) {
+        const normalized = line.replace(/\t+/g, '|').replace(/\s{2,}/g, '|').replace(/\|+/g, '|').trim();
+        const cols = normalized.split('|').map(c => c.trim()).filter(c => c.length > 0);
+        if (cols.length < 3) continue;
+
+        const malamMatch = cols[0].match(/^(\d+)\s*(?:Ramadhan|Ramadan)?/i);
+        if (!malamMatch) continue;
+        const malam = parseInt(malamMatch[1]);
+        if (malam < 1 || malam > 30) continue;
+
+        let dateStr = '';
+        for (let i = 1; i < cols.length; i++) {
+            const dateMatch = cols[i].match(/^(\d{1,2})\s+([A-Za-z]+)$/i);
+            if (dateMatch) {
+                const day = parseInt(dateMatch[1]);
+                const bulanKey = dateMatch[2].toLowerCase();
+                const bulanNum = BULAN_MAP[bulanKey];
+                if (bulanNum && day >= 1 && day <= 31) {
+                    dateStr = `${day} ${BULAN_NAMES[bulanNum]} ${tahun}`;
+                    break;
+                }
+            }
+        }
+        if (!dateStr) continue;
+
+        let hariStr = '';
+        for (const col of cols) {
+            const hariKey = col.toLowerCase().replace(/[^a-z']/g, '');
+            if (HARI_MAP[hariKey]) { hariStr = HARI_MAP[hariKey]; break; }
+        }
+
+        const skipPatterns = /^\d+\s*(Ramadhan|Syawal)?$|^(Senin|Selasa|Rabu|Kamis|Jumat|Jum'at|Sabtu|Ahad|Minggu|Syawal)$/i;
+        const datePattern = /^\d{1,2}\s+[A-Za-z]+(\s+\d{4})?$/;
+        const catatanPattern = /^(ganjil|genap|10 malam|malam terakhir|lailatul|catatan)/i;
+
+        let imamName = '';
+        let catatanExtra = '';
+        for (let i = cols.length - 1; i >= 0; i--) {
+            const col = cols[i];
+            if (skipPatterns.test(col)) continue;
+            if (datePattern.test(col)) continue;
+            if (catatanPattern.test(col)) { catatanExtra = col; continue; }
+            if (col.length > 2 && !/^\d+$/.test(col)) { imamName = col; break; }
+        }
+        if (!imamName) continue;
+
+        const tema = `Imam Tarawih Ramadhan 1447 H - Malam ke-${malam}`;
+        const fullDate = hariStr ? `${hariStr}, ${dateStr}` : dateStr;
+        const gmapsUrl = masjidInfo.gmapsUrl ||
+            `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(masjidInfo.masjid + ' ' + masjidInfo.city)}`;
+
+        entries.push({
+            region: 'INDONESIA',
+            city: masjidInfo.city,
+            masjid: masjidInfo.masjid,
+            address: masjidInfo.address || masjidInfo.masjid,
+            gmapsUrl,
+            pemateri: imamName,
+            tema,
+            waktu: "Ba'da Isya - Selesai",
+            waktu_mulai: "Ba'da Isya",
+            waktu_selesai: 'Selesai',
+            cp: masjidInfo.cp || '',
+            date: fullDate,
+            imageUrl: '/images/tarawih-cover.svg',
+            catatan: catatanExtra || undefined,
+        });
+    }
+
+    return entries;
+}

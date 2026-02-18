@@ -10,7 +10,8 @@ import {
     Upload,
     Map as MapIconImport,
     Users,
-    AlertTriangle
+    AlertTriangle,
+    Moon
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -191,6 +192,29 @@ export default async function AdminDashboardPage() {
                         </div>
                     </div>
                 </Link>
+
+                {/* 5. Imam Tarawih (Ramadhan Feature) */}
+                {isAdmin && (
+                    <Link href="/admin/tarawih" className="group relative overflow-hidden bg-gradient-to-br from-emerald-900 to-teal-800 text-white rounded-[2rem] p-8 shadow-lg hover:shadow-2xl hover:shadow-emerald-900/40 hover:-translate-y-1 transition-all duration-300">
+                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Moon className="w-32 h-32 -mr-8 -mt-8 rotate-12" />
+                        </div>
+                        <div className="relative z-10 flex flex-col h-full justify-between">
+                            <div>
+                                <div className="w-12 h-12 bg-yellow-400/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-2xl">
+                                    🌙
+                                </div>
+                                <h2 className="text-xl font-bold mb-2">Imam Tarawih</h2>
+                                <p className="text-emerald-200 text-sm leading-relaxed">
+                                    Input jadwal imam tarawih Ramadhan dari tabel DKM secara massal.
+                                </p>
+                            </div>
+                            <div className="mt-8 flex items-center text-yellow-300 font-bold text-sm">
+                                Input Jadwal <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                            </div>
+                        </div>
+                    </Link>
+                )}
             </div>
 
             {/* Footer Links */}
