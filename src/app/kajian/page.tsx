@@ -712,116 +712,100 @@ function KajianListContent() {
                                     </button>
                                 ))}
                             </div>
-                        </div>
 
+                            {/* Radius Sliders - inside sticky container */}
+                            {(filterMode === 'nearby' || filterNearby) && userLocation && (
+                                <div className="bg-white rounded-xl px-4 py-3 mb-2 shadow-sm border border-slate-200">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div>
+                                            <h4 className="text-xs font-black text-slate-700">Jarak Maksimal</h4>
+                                            <p className="text-[9px] text-slate-500 font-medium">Tampilkan kajian dalam radius</p>
+                                        </div>
+                                        <div className="bg-blue-50 px-3 py-1 rounded-lg">
+                                            <span className="text-lg font-black text-blue-600">{radius}</span>
+                                            <span className="text-xs text-blue-500 font-bold ml-1">km</span>
+                                        </div>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="100"
+                                        value={radius}
+                                        onChange={async (e) => {
+                                            const newRadius = parseInt(e.target.value);
+                                            setRadius(newRadius);
+                                            await fetch('/api/settings/layout', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ ...settings, radius: newRadius })
+                                            });
+                                        }}
+                                        className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                        style={{ background: `linear-gradient(to right, rgb(37 99 235) 0%, rgb(37 99 235) ${(radius / 100) * 100}%, rgb(226 232 240) ${(radius / 100) * 100}%, rgb(226 232 240) 100%)` }}
+                                    />
+                                    <div className="flex justify-between text-[9px] text-slate-400 font-bold mt-1">
+                                        <span>1 km</span><span>50 km</span><span>100 km</span>
+                                    </div>
+                                </div>
+                            )}
 
-                        {/* Radius Slider for Nearby Mode */}
-                        {(filterMode === 'nearby' || filterNearby) && userLocation && (
-                            <div className="bg-white rounded-2xl p-5 mb-8 shadow-sm border border-slate-200">
-                                <div className="flex items-center justify-between mb-3">
-                                    <div>
-                                        <h4 className="text-sm font-black text-slate-700">Jarak Maksimal</h4>
-                                        <p className="text-[10px] text-slate-500 font-medium">Tampilkan kajian dalam radius</p>
+                            {/* Radius Slider for Muslimah/Akhwat Mode */}
+                            {(filterMode === 'akhwat' || filterMuslimah) && userLocation && (
+                                <div className="bg-white rounded-xl px-4 py-3 mb-2 shadow-sm border border-slate-200">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div>
+                                            <h4 className="text-xs font-black text-slate-700">Jarak Maksimal</h4>
+                                            <p className="text-[9px] text-slate-500 font-medium">Tampilkan kajian muslimah dalam radius</p>
+                                        </div>
+                                        <div className="bg-pink-50 px-3 py-1 rounded-lg">
+                                            <span className="text-lg font-black text-pink-600">{radius}</span>
+                                            <span className="text-xs text-pink-500 font-bold ml-1">km</span>
+                                        </div>
                                     </div>
-                                    <div className="bg-blue-50 px-4 py-2 rounded-xl">
-                                        <span className="text-2xl font-black text-blue-600">{radius}</span>
-                                        <span className="text-sm text-blue-500 font-bold ml-1">km</span>
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="100"
+                                        value={radius}
+                                        onChange={(e) => setRadius(parseInt(e.target.value))}
+                                        className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-pink-600"
+                                        style={{ background: `linear-gradient(to right, rgb(219 39 119) 0%, rgb(219 39 119) ${(radius / 100) * 100}%, rgb(226 232 240) ${(radius / 100) * 100}%, rgb(226 232 240) 100%)` }}
+                                    />
+                                    <div className="flex justify-between text-[9px] text-slate-400 font-bold mt-1">
+                                        <span>1 km</span><span>50 km</span><span>100 km</span>
                                     </div>
                                 </div>
-                                <input
-                                    type="range"
-                                    min="1"
-                                    max="100"
-                                    value={radius}
-                                    onChange={async (e) => {
-                                        const newRadius = parseInt(e.target.value);
-                                        setRadius(newRadius);
-                                        // Update settings
-                                        await fetch('/api/settings/layout', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({
-                                                ...settings,
-                                                radius: newRadius
-                                            })
-                                        });
-                                    }}
-                                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                                    style={{
-                                        background: `linear-gradient(to right, rgb(37 99 235) 0%, rgb(37 99 235) ${(radius / 100) * 100}%, rgb(226 232 240) ${(radius / 100) * 100}%, rgb(226 232 240) 100%)`
-                                    }}
-                                />
-                                <div className="flex justify-between text-[10px] text-slate-400 font-bold mt-2">
-                                    <span>1 km</span>
-                                    <span>50 km</span>
-                                    <span>100 km</span>
-                                </div>
-                            </div>
-                        )}
+                            )}
 
-                        {/* Radius Slider for Muslimah/Akhwat Mode */}
-                        {(filterMode === 'akhwat' || filterMuslimah) && userLocation && (
-                            <div className="bg-white rounded-2xl p-5 mb-8 shadow-sm border border-slate-200">
-                                <div className="flex items-center justify-between mb-3">
-                                    <div>
-                                        <h4 className="text-sm font-black text-slate-700">Jarak Maksimal</h4>
-                                        <p className="text-[10px] text-slate-500 font-medium">Tampilkan kajian muslimah dalam radius</p>
+                            {/* Radius Slider for Kids Mode */}
+                            {filterMode === 'anak' && userLocation && (
+                                <div className="bg-white rounded-xl px-4 py-3 mb-2 shadow-sm border border-slate-200">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div>
+                                            <h4 className="text-xs font-black text-slate-700">Jarak Maksimal</h4>
+                                            <p className="text-[9px] text-slate-500 font-medium">Tampilkan kajian anak dalam radius</p>
+                                        </div>
+                                        <div className="bg-orange-50 px-3 py-1 rounded-lg">
+                                            <span className="text-lg font-black text-orange-600">{radius}</span>
+                                            <span className="text-xs text-orange-500 font-bold ml-1">km</span>
+                                        </div>
                                     </div>
-                                    <div className="bg-pink-50 px-4 py-2 rounded-xl">
-                                        <span className="text-2xl font-black text-pink-600">{radius}</span>
-                                        <span className="text-sm text-pink-500 font-bold ml-1">km</span>
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="100"
+                                        value={radius}
+                                        onChange={(e) => setRadius(parseInt(e.target.value))}
+                                        className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-orange-600"
+                                        style={{ background: `linear-gradient(to right, rgb(249 115 22) 0%, rgb(249 115 22) ${(radius / 100) * 100}%, rgb(226 232 240) ${(radius / 100) * 100}%, rgb(226 232 240) 100%)` }}
+                                    />
+                                    <div className="flex justify-between text-[9px] text-slate-400 font-bold mt-1">
+                                        <span>1 km</span><span>50 km</span><span>100 km</span>
                                     </div>
                                 </div>
-                                <input
-                                    type="range"
-                                    min="1"
-                                    max="100"
-                                    value={radius}
-                                    onChange={(e) => setRadius(parseInt(e.target.value))}
-                                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-pink-600"
-                                    style={{
-                                        background: `linear-gradient(to right, rgb(219 39 119) 0%, rgb(219 39 119) ${(radius / 100) * 100}%, rgb(226 232 240) ${(radius / 100) * 100}%, rgb(226 232 240) 100%)`
-                                    }}
-                                />
-                                <div className="flex justify-between text-[10px] text-slate-400 font-bold mt-2">
-                                    <span>1 km</span>
-                                    <span>50 km</span>
-                                    <span>100 km</span>
-                                </div>
-                            </div>
-                        )}
+                            )}
 
-                        {/* Radius Slider for Kids Mode */}
-                        {filterMode === 'anak' && userLocation && (
-                            <div className="bg-white rounded-2xl p-5 mb-8 shadow-sm border border-slate-200">
-                                <div className="flex items-center justify-between mb-3">
-                                    <div>
-                                        <h4 className="text-sm font-black text-slate-700">Jarak Maksimal</h4>
-                                        <p className="text-[10px] text-slate-500 font-medium">Tampilkan kajian anak dalam radius</p>
-                                    </div>
-                                    <div className="bg-orange-50 px-4 py-2 rounded-xl">
-                                        <span className="text-2xl font-black text-orange-600">{radius}</span>
-                                        <span className="text-sm text-orange-500 font-bold ml-1">km</span>
-                                    </div>
-                                </div>
-                                <input
-                                    type="range"
-                                    min="1"
-                                    max="100"
-                                    value={radius}
-                                    onChange={(e) => setRadius(parseInt(e.target.value))}
-                                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-orange-600"
-                                    style={{
-                                        background: `linear-gradient(to right, rgb(249 115 22) 0%, rgb(249 115 22) ${(radius / 100) * 100}%, rgb(226 232 240) ${(radius / 100) * 100}%, rgb(226 232 240) 100%)`
-                                    }}
-                                />
-                                <div className="flex justify-between text-[10px] text-slate-400 font-bold mt-2">
-                                    <span>1 km</span>
-                                    <span>50 km</span>
-                                    <span>100 km</span>
-                                </div>
-                            </div>
-                        )}
+                        </div>{/* End Sticky Filter Container */}
 
                         {
                             filteredKajian.length === 0 ? (
