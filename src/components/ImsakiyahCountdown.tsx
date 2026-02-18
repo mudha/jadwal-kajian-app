@@ -38,18 +38,15 @@ export default function ImsakiyahCountdown() {
         return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 
-    const imsak = timings['Imsak'] ? parseTime(timings['Imsak']) : null;
     const fajr = timings['Fajr'] ? parseTime(timings['Fajr']) : null;
     const maghrib = timings['Maghrib'] ? parseTime(timings['Maghrib']) : null;
 
-    // Determine current state: before imsak, before maghrib (fasting), or after maghrib (buka)
+    // Determine if still fasting (before maghrib)
     const isPuasa = maghrib && now < maghrib;
-    const isSahurTime = imsak && now < imsak;
 
     const targetTime = isPuasa ? maghrib : null;
     const countdown = targetTime ? formatCountdown(targetTime) : null;
 
-    const imsakStr = timings['Imsak'] || '--:--';
     const subuhStr = timings['Fajr'] || '--:--';
     const maghribStr = timings['Maghrib'] || '--:--';
     const isyaStr = timings['Isha'] || '--:--';
@@ -96,25 +93,24 @@ export default function ImsakiyahCountdown() {
 
                 {/* Countdown */}
                 {countdown && (
-                    <div className={`rounded-xl p-4 mb-4 text-center ${isPuasa ? 'bg-amber-500/20 border border-amber-400/30' : 'bg-emerald-500/20 border border-emerald-400/30'}`}>
-                        <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isPuasa ? 'text-amber-300' : 'text-emerald-300'}`}>
-                            {isSahurTime ? '⏰ Sahur Berakhir Dalam' : isPuasa ? '🌅 Buka Puasa Dalam' : '🌙 Imsak Dalam'}
+                    <div className="rounded-xl p-4 mb-4 text-center bg-amber-500/20 border border-amber-400/30">
+                        <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-amber-300">
+                            🌅 Buka Puasa Dalam
                         </p>
-                        <p className={`font-mono font-black text-3xl tabular-nums tracking-tighter ${isPuasa ? 'text-amber-300' : 'text-emerald-300'}`}>
+                        <p className="font-mono font-black text-3xl tabular-nums tracking-tighter text-amber-300">
                             {countdown}
                         </p>
-                        <p className={`text-[10px] font-bold mt-1 ${isPuasa ? 'text-amber-200/70' : 'text-emerald-200/70'}`}>
-                            {isPuasa ? `Maghrib pukul ${maghribStr}` : ''}
+                        <p className="text-[10px] font-bold mt-1 text-amber-200/70">
+                            Maghrib pukul {maghribStr}
                         </p>
                     </div>
                 )}
 
                 {/* Schedule grid */}
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                     {[
-                        { label: 'Imsak', time: imsakStr, icon: '🌒', highlight: isSahurTime },
                         { label: 'Subuh', time: subuhStr, icon: '🌄', highlight: false },
-                        { label: 'Maghrib', time: maghribStr, icon: '🌅', highlight: isPuasa },
+                        { label: 'Maghrib', time: maghribStr, icon: '🌅', highlight: !!isPuasa },
                         { label: 'Isya', time: isyaStr, icon: '🌙', highlight: false },
                     ].map((item) => (
                         <div
