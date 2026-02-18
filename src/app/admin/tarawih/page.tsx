@@ -2,11 +2,12 @@
 import { useState, useEffect } from 'react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { parseTarawihSchedule, KajianEntry } from '@/lib/parser';
+import { geocodeAddress, extractCoordsFromUrl } from '@/lib/geocoding';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-    Moon, Save, CheckCircle, AlertCircle, ArrowLeft,
-    Loader2, Eye, Trash2, MapPin, Phone, Building2, User
+    Save, CheckCircle, AlertCircle, ArrowLeft,
+    Loader2, Eye, Trash2, MapPin, Phone, Building2, User, Navigation
 } from 'lucide-react';
 
 export default function TarawihInputPage() {
@@ -23,8 +24,10 @@ export default function TarawihInputPage() {
     const [message, setMessage] = useState('');
     const [messageType, setMessageType] = useState<'success' | 'error' | 'info'>('info');
     const [isSaving, setIsSaving] = useState(false);
+    const [isGeocoding, setIsGeocoding] = useState(false);
     const [savedCount, setSavedCount] = useState(0);
     const [isParsed, setIsParsed] = useState(false);
+    const [coords, setCoords] = useState<{ lat: number; lng: number; gmapsUrl: string } | null>(null);
 
     useEffect(() => {
         if (!isAdminLoading && role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
@@ -32,7 +35,7 @@ export default function TarawihInputPage() {
         }
     }, [role, isAdminLoading]);
 
-    const handleParse = () => {
+    const handleParse = async () => {
         if (!masjid.trim() || !city.trim()) {
             setMessage('Nama masjid dan kota wajib diisi terlebih dahulu.');
             setMessageType('error');
@@ -61,8 +64,63 @@ export default function TarawihInputPage() {
 
         setEntries(parsed);
         setIsParsed(true);
-        setMessage(`✅ Berhasil memparse ${parsed.length} jadwal imam tarawih. Silakan review sebelum menyimpan.`);
-        setMessageType('success');
+        setMessage(`✅ Berhasil memparse ${parsed.length} jadwal. Sedang mencari koordinat lokasi masjid...`);
+        setMessageType('info');
+
+        // Geocoding — cukup sekali untuk 1 masjid, lalu apply ke semua entry
+        setIsGeocoding(true);
+        try {
+            let resolvedLat: number | undefined;
+            let resolvedLng: number | undefined;
+            let resolvedGmapsUrl = gmapsUrl.trim();
+
+            // 1. Coba extract dari GMaps URL yang diinput
+            if (resolvedGmapsUrl) {
+                const urlCoords = extractCoordsFromUrl(resolvedGmapsUrl);
+                if (urlCoords) {
+                    resolvedLat = urlCoords.lat;
+                    resolvedLng = urlCoords.lng;
+                }
+            }
+
+            // 2. Jika belum dapat, geocode via nama masjid + alamat + kota
+            if (!resolvedLat || !resolvedLng) {
+                const geocoded = await geocodeAddress(
+                    masjid.trim(),
+                    address.trim() || masjid.trim(),
+                    city.trim()
+                );
+                if (geocoded) {
+                    resolvedLat = geocoded.lat;
+                    resolvedLng = geocoded.lng;
+                    if (!resolvedGmapsUrl) {
+                        resolvedGmapsUrl = `https://www.google.com/maps?q=${geocoded.lat},${geocoded.lng}`;
+                    }
+                }
+            }
+
+            if (resolvedLat && resolvedLng) {
+                // Apply koordinat ke semua entry
+                setEntries(prev => prev.map(e => ({
+                    ...e,
+                    lat: resolvedLat,
+                    lng: resolvedLng,
+                    gmapsUrl: resolvedGmapsUrl || e.gmapsUrl,
+                })));
+                setCoords({ lat: resolvedLat, lng: resolvedLng, gmapsUrl: resolvedGmapsUrl });
+                setMessage(`✅ Berhasil memparse ${parsed.length} jadwal imam tarawih. Koordinat ditemukan (${resolvedLat.toFixed(5)}, ${resolvedLng.toFixed(5)}).`);
+                setMessageType('success');
+            } else {
+                setMessage(`✅ Berhasil memparse ${parsed.length} jadwal. Koordinat tidak ditemukan — filter terdekat tidak akan bekerja untuk jadwal ini.`);
+                setMessageType('success');
+            }
+        } catch (e) {
+            console.error('Geocoding error:', e);
+            setMessage(`✅ Berhasil memparse ${parsed.length} jadwal. Geocoding gagal — silakan isi Google Maps URL secara manual.`);
+            setMessageType('success');
+        } finally {
+            setIsGeocoding(false);
+        }
     };
 
     const handleRemoveEntry = (index: number) => {
@@ -104,6 +162,7 @@ export default function TarawihInputPage() {
             setMessageType('success');
             setEntries([]);
             setIsParsed(false);
+            setCoords(null);
         } else {
             setMessage(`⚠️ ${successCount} berhasil, ${failCount} gagal disimpan.`);
             setMessageType('error');
@@ -260,10 +319,14 @@ export default function TarawihInputPage() {
                 />
                 <button
                     onClick={handleParse}
-                    className="mt-4 flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-emerald-600/20"
+                    disabled={isGeocoding}
+                    className="mt-4 flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-emerald-600/20"
                 >
-                    <Eye className="w-4 h-4" />
-                    Parse & Preview Jadwal
+                    {isGeocoding ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" />Mencari koordinat...</>
+                    ) : (
+                        <><Eye className="w-4 h-4" />Parse & Preview Jadwal</>
+                    )}
                 </button>
             </div>
 
@@ -276,6 +339,12 @@ export default function TarawihInputPage() {
                             <h2 className="text-lg font-bold text-slate-800">
                                 Preview ({entries.length} jadwal)
                             </h2>
+                            {coords && (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-semibold">
+                                    <Navigation className="w-3 h-3" />
+                                    {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
+                                </span>
+                            )}
                         </div>
                         <button
                             onClick={handleSaveAll}
