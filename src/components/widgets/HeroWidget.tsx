@@ -2,10 +2,36 @@
 
 import Link from 'next/link';
 import { Search } from 'lucide-react';
+import { isRamadhan } from '@/lib/date-utils';
+import { useEffect, useState } from 'react';
+import ImsakiyahCountdown from '@/components/ImsakiyahCountdown';
 
 export default function HeroWidget({ data }: { data?: any }) {
     const todayCount = data?.stats?.todayCount || 0;
+    const [ramadhan, setRamadhan] = useState(false);
 
+    useEffect(() => {
+        setRamadhan(isRamadhan());
+    }, []);
+
+    // During Ramadhan: show ImsakiyahCountdown as the hero
+    if (ramadhan) {
+        return (
+            <div>
+                <ImsakiyahCountdown />
+                {/* Kajian CTA below the widget */}
+                <Link
+                    href="/kajian"
+                    className="flex items-center justify-center gap-2 w-full bg-teal-600 hover:bg-teal-700 text-white font-bold px-6 py-3 rounded-2xl transition-colors shadow-sm"
+                >
+                    <Search className="w-4 h-4" />
+                    Cari Kajian Ramadhan
+                </Link>
+            </div>
+        );
+    }
+
+    // Default: normal welcome hero
     return (
         <div className="bg-teal-600 rounded-2xl md:rounded-3xl p-6 md:p-8 text-white relative overflow-hidden shadow-lg shadow-teal-900/10">
             <div className="relative z-10">
