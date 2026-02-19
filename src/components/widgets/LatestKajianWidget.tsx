@@ -32,13 +32,26 @@ export default function LatestKajianWidget({ data }: WidgetProps) {
                     <Link href={`/kajian/${k.id}`} key={k.id} className="block group">
                         <div className="flex gap-3 items-start p-2 rounded-xl hover:bg-white/10 transition-colors">
                             <div className="w-12 h-16 bg-white/20 backdrop-blur-sm rounded-lg shrink-0 overflow-hidden relative border border-white/10">
-                                {k.imageUrl ? (
-                                    <img src={k.imageUrl} className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-teal-100">
-                                        <User className="w-6 h-6" />
-                                    </div>
-                                )}
+                                {(() => {
+                                    const title = k.tema;
+                                    const waktu = k.waktu;
+                                    const imageUrl = k.imageUrl;
+
+                                    const isTarawih = title?.toLowerCase().includes('tarawih') || waktu?.toLowerCase().includes('tarawih') || waktu?.toLowerCase().includes('tarweh');
+                                    const isFriday = !isTarawih && (waktu?.toLowerCase().includes('jumat') || waktu?.toLowerCase().includes("jum'at") || title?.toLowerCase().includes('jumat'));
+
+                                    const finalImage = (isTarawih) ? '/images/tarawih-cover.svg' : (imageUrl || (isFriday ? '/images/khutbah-jumat-cover.png' : null));
+
+                                    if (finalImage) {
+                                        return <img src={finalImage} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />;
+                                    } else {
+                                        return (
+                                            <div className="w-full h-full flex items-center justify-center text-teal-100">
+                                                <User className="w-6 h-6" />
+                                            </div>
+                                        );
+                                    }
+                                })()}
                                 <div className="absolute top-0 left-0 bg-red-500 text-white text-[8px] font-bold px-1 py-0.5 rounded-br-lg">NEW</div>
                             </div>
                             <div className="flex-1 min-w-0">

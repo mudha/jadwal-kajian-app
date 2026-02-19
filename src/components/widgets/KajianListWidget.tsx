@@ -121,7 +121,22 @@ export default function KajianListWidget({ data }: WidgetProps) {
                 {rawKajian.map((kajian: any) => (
                     <Link href={`/kajian/${kajian.id}`} key={kajian.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex gap-4 block">
                         <div className="w-24 h-24 bg-slate-200 rounded-xl shrink-0 overflow-hidden relative">
-                            <img src={kajian.imageUrl || '/images/default-kajian.png'} alt={kajian.tema} className="w-full h-full object-cover" />
+                            <img
+                                src={(() => {
+                                    const title = kajian.tema;
+                                    const waktu = kajian.waktu;
+                                    const imageUrl = kajian.imageUrl;
+
+                                    const isTarawih = title?.toLowerCase().includes('tarawih') || waktu?.toLowerCase().includes('tarawih') || waktu?.toLowerCase().includes('tarweh');
+                                    const isFriday = !isTarawih && (waktu?.toLowerCase().includes('jumat') || waktu?.toLowerCase().includes("jum'at") || title?.toLowerCase().includes('jumat'));
+
+                                    if (isTarawih) return '/images/tarawih-cover.svg';
+                                    return imageUrl || (isFriday ? '/images/khutbah-jumat-cover.png' : '/images/default-kajian.png');
+                                })()}
+                                alt={kajian.tema}
+                                onError={(e) => { e.currentTarget.src = '/images/default-kajian.png'; }}
+                                className="w-full h-full object-cover"
+                            />
                             {/* Canceled Overlay (Desktop) */}
                             {kajian.is_canceled && (
                                 <div className="absolute inset-0 bg-red-600/80 backdrop-blur-sm flex items-center justify-center z-10">
