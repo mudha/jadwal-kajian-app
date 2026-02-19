@@ -172,6 +172,13 @@ export function getKajianStatus(dateStr: string, waktuStr?: string): 'PAST' | 'T
             shubuhDone.setHours(7, 0, 0, 0); // Default end time for Shubuh
             if (now.getTime() > shubuhDone.getTime()) return 'PAST';
         }
+
+        // Sholat Tarawih (Max 21:00)
+        if (lowerWaktu.includes('tarawih') || lowerWaktu.includes('tarweh')) {
+            const tarawihDone = new Date();
+            tarawihDone.setHours(21, 0, 0, 0); // Max 21:00 as per user request
+            if (now.getTime() > tarawihDone.getTime()) return 'PAST';
+        }
     }
 
     return 'TODAY';
@@ -224,6 +231,7 @@ export function isKajianOngoing(dateStr: string, waktuStr: string): boolean {
         { key: /maghrib/i, start: 18 * 60, end: 19 * 60 + 30 }, // 18:00 - 19:30
         { key: /(isya|isa)/i, start: 19 * 60 + 45, end: 21 * 60 }, // 19:45 - 21:00
         { key: /(jumat|jum'at)/i, start: 11 * 60 + 45, end: 13 * 60 }, // 11:45 - 13:00 (Approx for Jumat)
+        { key: /(tarawih|tarweh)/i, start: 19 * 60 + 30, end: 21 * 60 }, // 19:30 - 21:00 (Tarawih)
     ];
 
     // Priority 1: Check keyword mappings
