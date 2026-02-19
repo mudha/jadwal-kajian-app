@@ -46,10 +46,17 @@ export async function generateMetadata(
         let imageUrl = (kajian.imageUrl as string);
         if (!imageUrl) {
             // Fallback logic similar to parser
-            const isFriday = tema.toLowerCase().includes('jumat') || waktu.toLowerCase().includes('jumat');
-            imageUrl = isFriday
-                ? 'https://portalkajian.online/images/khutbah-jumat-cover.png'
-                : 'https://portalkajian.online/images/default-kajian.png';
+            // Fallback logic similar to parser
+            const isTarawih = tema.toLowerCase().includes('tarawih') || waktu.toLowerCase().includes('tarawih');
+            const isFriday = !isTarawih && (tema.toLowerCase().includes('jumat') || waktu.toLowerCase().includes('jumat'));
+
+            if (isTarawih) {
+                imageUrl = 'https://portalkajian.online/images/tarawih-cover.svg';
+            } else if (isFriday) {
+                imageUrl = 'https://portalkajian.online/images/khutbah-jumat-cover.png';
+            } else {
+                imageUrl = 'https://portalkajian.online/images/default-kajian.png';
+            }
         }
 
         return {

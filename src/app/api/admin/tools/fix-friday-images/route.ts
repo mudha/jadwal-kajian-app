@@ -14,8 +14,10 @@ export async function POST() {
                 AND (
                     waktu LIKE '%Jumat%' 
                     OR waktu LIKE '%Jum''at%' 
-                    OR waktu LIKE '%Sholat Jumat%'
+                    waktu LIKE '%Sholat Jumat%'
                 )
+                AND tema NOT LIKE '%Tarawih%' 
+                AND tema NOT LIKE '%Tarweh%'
             `,
             args: []
         });

@@ -306,8 +306,9 @@ function BatchInputPageContent() {
             const parsed = parseKajianBroadcast(inputText);
 
             const enrichedEntries = parsed.map(entry => {
-                const isFriday = entry.waktu?.toLowerCase().includes('jumat') || entry.waktu?.toLowerCase().includes("jum'at") || entry.tema?.toLowerCase().includes('jumat') || entry.tema === '';
-                const defaultImg = isFriday ? '/images/khutbah-jumat-cover.png' : undefined;
+                const isTarawih = entry.tema?.toLowerCase().includes('tarawih') || entry.waktu?.toLowerCase().includes('tarawih');
+                const isFriday = !isTarawih && (entry.waktu?.toLowerCase().includes('jumat') || entry.waktu?.toLowerCase().includes("jum'at") || entry.tema?.toLowerCase().includes('jumat') || entry.tema === '');
+                const defaultImg = isTarawih ? '/images/tarawih-cover.svg' : (isFriday ? '/images/khutbah-jumat-cover.png' : undefined);
 
                 // Auto-split waktu and pemateri
                 const waktuSplit = splitWaktu(entry.waktu);
@@ -578,8 +579,9 @@ function BatchInputPageContent() {
             }));
 
             const enrichedEntries = parsed.map(entry => {
-                const isFriday = entry.waktu?.toLowerCase().includes('jumat') || entry.waktu?.toLowerCase().includes("jum'at") || entry.tema?.toLowerCase().includes('jumat') || entry.tema === '';
-                const defaultImg = isFriday ? '/images/khutbah-jumat-cover.png' : undefined;
+                const isTarawih = entry.tema?.toLowerCase().includes('tarawih') || entry.waktu?.toLowerCase().includes('tarawih');
+                const isFriday = !isTarawih && (entry.waktu?.toLowerCase().includes('jumat') || entry.waktu?.toLowerCase().includes("jum'at") || entry.tema?.toLowerCase().includes('jumat') || entry.tema === '');
+                const defaultImg = isTarawih ? '/images/tarawih-cover.svg' : (isFriday ? '/images/khutbah-jumat-cover.png' : undefined);
 
                 const waktuSplit = entry.waktu_mulai ? {} : splitWaktu(entry.waktu);
                 const pemateriSplit = entry.pemateri2 ? {} : splitPemateri(entry.pemateri);
