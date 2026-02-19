@@ -11,7 +11,8 @@ import {
     Map as MapIconImport,
     Users,
     AlertTriangle,
-    Moon
+    Moon,
+    Layers
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -193,7 +194,28 @@ export default async function AdminDashboardPage() {
                     </div>
                 </Link>
 
-                {/* 5. Imam Tarawih (Ramadhan Feature) */}
+                {/* 5. Kajian Seri (New Feature) */}
+                <Link href="/admin/kajian-seri" className="group relative overflow-hidden bg-white text-slate-900 border border-slate-200 rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:border-teal-200 hover:-translate-y-1 transition-all duration-300">
+                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <Layers className="w-32 h-32 -mr-8 -mt-8 rotate-12 text-teal-600" />
+                    </div>
+                    <div className="relative z-10 flex flex-col h-full justify-between">
+                        <div>
+                            <div className="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <Layers className="w-6 h-6" />
+                            </div>
+                            <h2 className="text-xl font-bold mb-2">Kajian Seri</h2>
+                            <p className="text-slate-500 text-sm leading-relaxed">
+                                Input kajian yang berlangsung beberapa hari berturut-turut (mis. 1–10 Ramadhan) sekaligus.
+                            </p>
+                        </div>
+                        <div className="mt-8 flex items-center text-teal-600 font-bold text-sm">
+                            Buat Seri <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                    </div>
+                </Link>
+
+                {/* 6. Imam Tarawih (Ramadhan Feature) */}
                 {isAdmin && (
                     <Link href="/admin/tarawih" className="group relative overflow-hidden bg-gradient-to-br from-emerald-900 to-teal-800 text-white rounded-[2rem] p-8 shadow-lg hover:shadow-2xl hover:shadow-emerald-900/40 hover:-translate-y-1 transition-all duration-300">
                         <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
