@@ -22,10 +22,21 @@ export async function POST() {
             args: []
         });
 
+        // NEW: Fix Tarawih Thumbnails (Correct existing data)
+        const fixTarawihResult = await db.execute({
+            sql: `
+                UPDATE kajian 
+                SET imageUrl = '/images/tarawih-cover.svg' 
+                WHERE (tema LIKE '%Tarawih%' OR waktu LIKE '%Tarawih%') 
+                AND imageUrl = '/images/khutbah-jumat-cover.png'
+            `,
+            args: []
+        });
+
         return NextResponse.json({
             success: true,
-            message: `Berhasil memperbarui gambar untuk Jadwal Sholat Jumat yang kosong.`,
-            details: result
+            message: `Berhasil memperbarui gambar Jumat & Tarawih.`,
+            details: { friday: result, tarawih: fixTarawihResult }
         });
     } catch (error: any) {
         console.error('Fix Friday Images Error:', error);
