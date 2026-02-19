@@ -205,7 +205,7 @@ export function getHijriDate(date: Date): string {
 export function isKajianOngoing(dateStr: string, waktuStr: string): boolean {
     // 1. Check if date is TODAY
     const status = getKajianStatus(dateStr, waktuStr);
-    if (status === 'PAST' || status === 'TOMORROW' || status === 'UPCOMING') return false;
+    if (status !== 'TODAY') return false;
 
     // It's TODAY. Now check precise time.
     const now = new Date();
