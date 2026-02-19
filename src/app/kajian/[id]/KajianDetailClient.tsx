@@ -472,7 +472,7 @@ export default function KajianDetailPage() {
                                         </div>
 
                                         {/* Thumbnail Image - Always Render with Fallback */}
-                                        {true ? (
+                                        {true && (
                                             <button
                                                 onClick={() => setIsImageModalOpen(true)}
                                                 className="shrink-0 w-32 h-32 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all hover:scale-105 cursor-pointer group relative"
@@ -499,19 +499,6 @@ export default function KajianDetailPage() {
                                                     </div>
                                                 </div>
                                             </button>
-                                            // Always show image container if we can derive a default, even if imageUrl in DB is null
-                                        ) : (
-                                            <div className="shrink-0 w-32 h-32 rounded-2xl overflow-hidden shadow-md group relative">
-                                                <img
-                                                    src={(() => {
-                                                        const isTarawih = kajian.tema?.toLowerCase().includes('tarawih') || kajian.waktu?.toLowerCase().includes('tarawih');
-                                                        const isFriday = !isTarawih && (kajian.waktu?.toLowerCase().includes('jumat') || kajian.waktu?.toLowerCase().includes("jum'at") || kajian.tema?.toLowerCase().includes('jumat'));
-                                                        return isTarawih ? '/images/tarawih-cover.svg' : (isFriday ? '/images/khutbah-jumat-cover.png' : '/images/default-kajian.png');
-                                                    })()}
-                                                    alt={kajian.tema}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            </div>
                                         )}
                                     </div>
                                 </div>
