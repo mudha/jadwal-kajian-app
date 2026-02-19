@@ -81,12 +81,16 @@ export default function KajianCard({ id, date, location, title, ustadz, ustadz2,
         <Link href={`/kajian/${id}`} className={`group flex-shrink-0 ${className} bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 block hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative`}>
             <div className="relative aspect-[3/4] overflow-hidden bg-slate-100">
                 <img
-                    src={imageUrl || '/images/default-kajian.png'}
+                    src={(() => {
+                        const isTarawih = title?.toLowerCase().includes('tarawih') || waktu?.toLowerCase().includes('tarawih') || waktu?.toLowerCase().includes('tarweh');
+                        const isFriday = !isTarawih && (waktu?.toLowerCase().includes('jumat') || waktu?.toLowerCase().includes("jum'at") || title?.toLowerCase().includes('jumat'));
+
+                        if (isTarawih) return '/images/tarawih-cover.svg';
+                        return imageUrl || (isFriday ? '/images/khutbah-jumat-cover.png' : '/images/default-kajian.png');
+                    })()}
                     alt={title}
                     onError={(e) => {
                         e.currentTarget.src = '/images/default-kajian.png';
-                        // Optional: Add a small visual indicator that the image is missing?
-                        // For now just fallback cleanly so it looks nice.
                     }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
