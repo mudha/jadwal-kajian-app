@@ -15,6 +15,7 @@ import {
     CheckCircle,
     Layers,
     X,
+    RotateCcw,
 } from 'lucide-react';
 import Link from 'next/link';
 import { indonesianCities } from '@/data/cities';
@@ -243,9 +244,12 @@ export default function KajianSeriPage() {
             } else {
                 setIsSuccess(true);
                 setMessage(`✅ Alhamdulillah! ${entries.length} kajian berhasil disimpan.`);
-                // Reset dates but keep form info for possible re-use
+
+                // Reset form completely for new input
+                setFormData(DEFAULT_FORM);
                 setStartDateStr('');
                 setEndDateStr('');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         } catch (err) {
             setMessage('❌ Kesalahan koneksi atau sistem.');
@@ -601,23 +605,39 @@ export default function KajianSeriPage() {
                                 {formatIndoDateFromDate(previewDates[previewDates.length - 1])}.
                             </div>
                         )}
-                        <button
-                            type="submit"
-                            disabled={isSaving || previewDates.length === 0}
-                            className="w-full px-6 py-4 bg-teal-600 text-white rounded-xl font-black hover:bg-teal-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base shadow-lg shadow-teal-600/20 hover:shadow-teal-600/40 hover:-translate-y-0.5"
-                        >
-                            {isSaving ? (
-                                <>
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                    Menyimpan {previewDates.length} kajian...
-                                </>
-                            ) : (
-                                <>
-                                    <Save className="w-5 h-5" />
-                                    Simpan Semua ({previewDates.length} Kajian)
-                                </>
-                            )}
-                        </button>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (confirm('Reset semua form? Data yang belum disimpan akan hilang.')) {
+                                        setFormData(DEFAULT_FORM);
+                                        setStartDateStr('');
+                                        setEndDateStr('');
+                                        setMessage('');
+                                    }
+                                }}
+                                className="px-4 py-4 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <RotateCcw className="w-5 h-5" />
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isSaving || previewDates.length === 0}
+                                className="flex-1 px-6 py-4 bg-teal-600 text-white rounded-xl font-black hover:bg-teal-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base shadow-lg shadow-teal-600/20 hover:shadow-teal-600/40 hover:-translate-y-0.5"
+                            >
+                                {isSaving ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        Menyimpan {previewDates.length} kajian...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="w-5 h-5" />
+                                        Simpan Semua ({previewDates.length} Kajian)
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                 </form>
