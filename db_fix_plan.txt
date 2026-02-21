@@ -1,0 +1,10 @@
+
+const db = require('./src/lib/db'); // Adjust import based on actual db location/export
+// Note: verify if we can run this with npx tsx or if we need a specific setup.
+// Since it's a Next.js app with `src/lib/db.ts`, likely need to access DB directly or via an API route. 
+// A safer bet is to create a temporary API route to do the check/fix.
+
+// Plan:
+// 1. Create `src/app/api/admin/tools/fix-tarawih-thumbnails/route.ts`
+// 2. Logic: Select all kajian where (tema like '%Tarawih%' OR waktu like '%Tarawih%') AND imageUrl = '/images/khutbah-jumat-cover.png'
+// 3. Update them to '/images/tarawih-cover.svg'
