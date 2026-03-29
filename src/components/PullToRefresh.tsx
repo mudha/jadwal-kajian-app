@@ -11,6 +11,8 @@ interface PullToRefreshProps {
 export default function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
     const [currentY, setCurrentY] = useState(0);
     const [refreshing, setRefreshing] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
 
     // Refs for mutable state in event listeners
     const startYRef = useRef(0);
@@ -21,6 +23,10 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
     const PULL_THRESHOLD = 80;
     // Maximum pull distance visual
     const MAX_PULL = 150;
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         const container = containerRef.current;
@@ -131,6 +137,10 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
             container.removeEventListener('touchend', handleTouchEnd);
         };
     }, [onRefresh]); // Re-bind if onRefresh changes
+
+    if (!mounted) {
+        return <div className="min-h-screen relative">{children}</div>;
+    }
 
     return (
         <div

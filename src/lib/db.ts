@@ -237,6 +237,35 @@ const initDb = async () => {
   try { await db.execute("CREATE INDEX IF NOT EXISTS idx_holiday_periods_active ON holiday_periods(isActive)"); } catch (e) { }
   try { await db.execute("CREATE INDEX IF NOT EXISTS idx_holiday_periods_dates ON holiday_periods(start_date, end_date)"); } catch (e) { }
 
+  // Drafts table for Telegram/AI sources
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS kajian_drafts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      source TEXT DEFAULT 'telegram',
+      source_id TEXT, -- telegram message id
+      raw_text TEXT,
+      
+      -- Extracted fields (similar to kajian)
+      region TEXT,
+      city TEXT,
+      masjid TEXT,
+      address TEXT,
+      lat REAL,
+      lng REAL,
+      pemateri TEXT,
+      tema TEXT,
+      waktu TEXT,
+      date TEXT,
+      cp TEXT,
+      cp2 TEXT,
+      cp3 TEXT,
+      catatan TEXT,
+      isOnline BOOLEAN DEFAULT 0,
+      
+      status TEXT DEFAULT 'pending', -- pending, approved, rejected
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 };
 
 // Auto-init on import (Note: top-level await needs ES modules or handling in app startup)

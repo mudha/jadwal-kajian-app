@@ -69,7 +69,7 @@ export default function HomeContent({ initialLayout, initialQuickMenu }: HomeCon
     // Initial Location Check on Mount
     useEffect(() => {
         if (isLoaded && !settings.userLocation) {
-            refreshLocation(); // Ask for location if not set yet
+            refreshLocation(false); // Ask for location silently without alerting if it fails
         }
     }, [isLoaded, settings.userLocation, refreshLocation]);
 

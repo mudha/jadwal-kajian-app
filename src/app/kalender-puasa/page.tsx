@@ -26,12 +26,16 @@ const GREGORIAN_MONTHS = [
 // Simplified Hijri conversion using Intl API
 function toHijri(gregorianDate: Date): HijriDate {
     try {
+        // Offset -1 hari untuk menyesuaikan dengan penetapan pemerintah (misal: 1 Ramadhan jatuh pada 19 Feb 2026)
+        const adjustedDate = new Date(gregorianDate);
+        adjustedDate.setDate(adjustedDate.getDate() - 1);
+
         const formatter = new Intl.DateTimeFormat('en-TN-u-ca-islamic', {
             day: 'numeric',
             month: 'numeric',
             year: 'numeric'
         });
-        const parts = formatter.formatToParts(gregorianDate);
+        const parts = formatter.formatToParts(adjustedDate);
 
         const yearPart = parts.find(p => p.type === 'year')?.value;
         const monthPart = parts.find(p => p.type === 'month')?.value;

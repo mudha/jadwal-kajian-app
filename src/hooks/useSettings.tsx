@@ -32,7 +32,7 @@ interface SettingsContextType {
     isLoaded: boolean;
     updateRadius: (radius: number) => void;
     updateLocation: (location: UserLocation) => void;
-    refreshLocation: () => Promise<boolean>;
+    refreshLocation: (showErrorAlert?: boolean) => Promise<boolean>;
     toggleNotification: (type: 'adzan' | 'kajian') => void;
 }
 
@@ -83,9 +83,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     };
 
     // Helper to trigger geolocation update
-    const refreshLocation = async (): Promise<boolean> => {
+    const refreshLocation = async (showErrorAlert: boolean = true): Promise<boolean> => {
         if (!navigator.geolocation) {
-            alert('Geolocation tidak didukung browser ini');
+            if (showErrorAlert) alert('Geolocation tidak didukung browser ini');
             return false;
         }
 
@@ -113,8 +113,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
                     resolve(true);
                 },
                 (err) => {
-                    console.error('Geo error', err);
-                    alert('Gagal mengambil lokasi. Pastikan GPS aktif.');
+                    console.warn('Geo error:', err.message);
+                    if (showErrorAlert) alert('Gagal mengambil lokasi. Pastikan GPS aktif.');
                     resolve(false);
                 }
             );
@@ -131,8 +131,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <SettingsContext.Provider value= { value } >
-        { children }
+        <SettingsContext.Provider value={value} >
+            {children}
         </SettingsContext.Provider>
     );
 }

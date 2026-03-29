@@ -21,7 +21,8 @@ import {
     Database,
     ChevronDown,
     ChevronRight,
-    Briefcase
+    Briefcase,
+    MessageSquare
 } from 'lucide-react';
 import LogoutButton from '@/components/LogoutButton';
 
@@ -89,6 +90,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     const menuItems: MenuItem[] = [
         { href: '/admin', icon: Home, label: 'Dashboard' },
         { href: '/admin/stats', icon: BarChart2, label: 'Stats' },
+        { href: '/admin/telegram-inbox', icon: MessageSquare, label: 'Telegram Inbox (AI)' },
         { href: '/admin/input', icon: FileInput, label: 'Input Kajian' },
         {
             icon: Database,
@@ -144,8 +146,8 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                     <button
                         onClick={() => toggleMenu(item.label)}
                         className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${activeChild || isExpanded
-                                ? 'bg-slate-800 text-white'
-                                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                            ? 'bg-slate-800 text-white'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                             }`}
                     >
                         <div className="flex items-center gap-3">
@@ -164,8 +166,8 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                                     href={sub.href}
                                     onClick={() => isMobileMenuOpen && setIsMobileMenuOpen(false)}
                                     className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-sm transition-all border-l-2 ml-4 ${isActive(sub.href)
-                                            ? 'border-blue-500 bg-blue-500/10 text-blue-400 font-bold'
-                                            : 'border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-200'
+                                        ? 'border-blue-500 bg-blue-500/10 text-blue-400 font-bold'
+                                        : 'border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-200'
                                         }`}
                                 >
                                     <div className="flex items-center gap-3">
@@ -193,8 +195,8 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                 href={item.href!}
                 onClick={() => isMobileMenuOpen && setIsMobileMenuOpen(false)}
                 className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all ${isActive(item.href!)
-                        ? 'bg-blue-600 text-white'
-                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                     }`}
             >
                 <div className="flex items-center gap-3">

@@ -5,15 +5,23 @@ export const monthsIndo = [
 
 /**
  * Returns true if today is within the Ramadhan 1447 H period.
- * Ramadhan 1447 H: 18 Feb 2026 - 19 Mar 2026 (approx).
- * We use a generous window: 18 Feb - 4 Apr 2026 (includes Syawal awal).
+ * Ramadhan 1447 H: 19 Feb 2026 - 20 Mar 2026 (approx).
+ * We use a generous window: 19 Feb - 4 Apr 2026 (includes Syawal awal).
  * Update this each year as needed.
+ *
+ * NOTE: Dinonaktifkan sementara karena Ramadhan 1447 H telah berakhir.
+ * Untuk mengaktifkan kembali tahun berikutnya, update tanggal start/end
+ * dan ganti `return false` dengan `return now >= start && now <= end`.
  */
 export function isRamadhan(): boolean {
-    const now = new Date();
-    const start = new Date(2026, 1, 18); // 18 Feb 2026
-    const end = new Date(2026, 3, 4);   // 4 Apr 2026
-    return now >= start && now <= end;
+    // DINONAKTIFKAN — Ramadhan 1447 H telah berlalu (selesai sekitar 20 Mar 2026)
+    return false;
+
+    // Aktifkan kembali untuk Ramadhan berikutnya dengan update tanggal:
+    // const now = new Date();
+    // const start = new Date(2027, 0, 9);  // ~9 Jan 2027 (Ramadhan 1448 H)
+    // const end = new Date(2027, 1, 15);   // ~15 Feb 2027
+    // return now >= start && now <= end;
 }
 
 export function parseIndoDate(dateStr: string): Date | null {
@@ -202,11 +210,15 @@ export function formatYYYYMMDD(date: Date): string {
 }
 
 export function getHijriDate(date: Date): string {
+    // Offset -1 hari untuk menyesuaikan penetapan pemerintah
+    const adjustedDate = new Date(date);
+    adjustedDate.setDate(adjustedDate.getDate() - 1);
+
     return new Intl.DateTimeFormat('id-ID-u-ca-islamic', {
         day: 'numeric',
         month: 'long',
         year: 'numeric'
-    }).format(date).replace(/Syakban/g, "Sya'ban");
+    }).format(adjustedDate).replace(/Syakban/g, "Sya'ban");
 }
 
 export function isKajianOngoing(dateStr: string, waktuStr: string): boolean {
