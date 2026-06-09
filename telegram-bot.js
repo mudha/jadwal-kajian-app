@@ -5,14 +5,19 @@ require('dotenv').config({ path: '.env.local' });
 // Replace with your Bot Token from BotFather
 const token = process.env.TELEGRAM_BOT_TOKEN;
 // Replace with your deployed/local webhook URL
-const WEBHOOK_URL = process.env.WEBHOOK_URL || 'http://localhost:3000/api/telegram-webhook?secret=portalkajian_bot_secret_123';
+const WEBHOOK_URL = process.env.WEBHOOK_URL;
 
 if (!token) {
     console.error('Error: TELEGRAM_BOT_TOKEN environment variable not set.');
     process.exit(1);
 }
 
-if (!process.env.GEMINI_API_KEY && !process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
+if (!WEBHOOK_URL) {
+    console.error('Error: WEBHOOK_URL environment variable not set.');
+    process.exit(1);
+}
+
+if (!process.env.GEMINI_API_KEY) {
     console.error('⚠️ Warning: GEMINI_API_KEY is not found in .env.local!');
 } else {
     console.log('✅ Found GEMINI_API_KEY in .env.local');
@@ -43,7 +48,7 @@ bot.on('message', async (msg) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-gemini-key': process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || ''
+                'x-gemini-key': process.env.GEMINI_API_KEY || ''
             },
             body: JSON.stringify({
                 message_id: messageId,

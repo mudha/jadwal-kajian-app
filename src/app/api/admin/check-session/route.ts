@@ -1,23 +1,16 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { getAdminSession } from '@/lib/auth';
 
 export async function GET() {
-    const session = (await cookies()).get('admin_session');
+    const session = await getAdminSession();
 
     if (session) {
-        try {
-            // Parse the session data to get role and username
-            const sessionData = JSON.parse(session.value);
-            return NextResponse.json({
-                isAdmin: true,
-                role: sessionData.role || null,
-                username: sessionData.username || null,
-                fullName: sessionData.fullName || null
-            });
-        } catch (e) {
-            // If parsing fails, return basic authenticated response
-            return NextResponse.json({ isAdmin: true, role: null, username: null });
-        }
+        return NextResponse.json({
+            isAdmin: true,
+            role: session.role,
+            username: session.username,
+            fullName: session.fullName || null
+        });
     }
 
     return NextResponse.json({ isAdmin: false, role: null, username: null }, { status: 401 });

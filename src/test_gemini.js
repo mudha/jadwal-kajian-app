@@ -21,7 +21,7 @@ try {
 }
 
 async function listModels() {
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     console.log("Using API Key:", apiKey ? apiKey.substring(0, 10) + "..." : "UNDEFINED");
 
     if (!apiKey || apiKey.includes("PLACE_YOUR_API_KEY")) {

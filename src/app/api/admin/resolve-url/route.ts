@@ -1,7 +1,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdminSession } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
+    const session = await requireAdminSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const body = await request.json();
         const { url } = body;

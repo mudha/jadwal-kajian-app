@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { normalize, similarity } from '@/lib/string-similarity';
+import { requireAdminSession } from '@/lib/auth';
 
 export async function POST(request: Request) {
+    const session = await requireAdminSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const body = await request.json();
         const { date, masjid, pemateri, waktu, excludeId } = body;

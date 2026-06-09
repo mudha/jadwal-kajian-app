@@ -7,8 +7,14 @@ export async function POST(request: Request) {
     try {
         const { username, password, email, secretKey } = await request.json();
 
-        // Validate secret key (you should set this in environment variables)
-        const ADMIN_SECRET_KEY = process.env.ADMIN_REGISTRATION_SECRET || 'kajian-sunnah-2024';
+        const ADMIN_SECRET_KEY = process.env.ADMIN_REGISTRATION_SECRET;
+
+        if (!ADMIN_SECRET_KEY) {
+            return NextResponse.json(
+                { error: 'Registrasi admin belum dikonfigurasi' },
+                { status: 500 }
+            );
+        }
 
         if (secretKey !== ADMIN_SECRET_KEY) {
             return NextResponse.json(

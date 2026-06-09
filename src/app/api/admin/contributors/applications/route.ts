@@ -1,18 +1,13 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import db from '@/lib/db';
+import { requireAdminSession } from '@/lib/auth';
 
 export async function GET() {
     try {
         // Check admin session
-        const session = (await cookies()).get('admin_session');
+        const session = await requireAdminSession(['SUPER_ADMIN', 'ADMIN']);
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        const sessionData = JSON.parse(session.value);
-        if (sessionData.role !== 'SUPER_ADMIN' && sessionData.role !== 'ADMIN') {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
         // Fetch pending applications

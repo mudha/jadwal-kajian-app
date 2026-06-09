@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { requireAdminSession } from '@/lib/auth';
 
 // PUT - Update masjid data across all kajian
 export async function PUT(
     request: Request,
     context: { params: Promise<{ id: string }> }
 ) {
+    const session = await requireAdminSession(['SUPER_ADMIN', 'ADMIN']);
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const { name, city, address, gmapsUrl, lat, lng } = await request.json();
         const { id } = await context.params;
@@ -33,6 +37,9 @@ export async function DELETE(
     request: Request,
     context: { params: Promise<{ id: string }> }
 ) {
+    const session = await requireAdminSession(['SUPER_ADMIN', 'ADMIN']);
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const { id } = await context.params;
         const masjidName = decodeURIComponent(id);

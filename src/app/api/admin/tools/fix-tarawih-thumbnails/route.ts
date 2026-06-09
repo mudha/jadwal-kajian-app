@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { requireAdminSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST() {
+    const session = await requireAdminSession(['SUPER_ADMIN', 'ADMIN']);
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         // 1. Identify records that are Tarawih but have the Jumat cover
         const checkQuery = `

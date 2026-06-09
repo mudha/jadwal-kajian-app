@@ -1,18 +1,17 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import db from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import { requireAdminSession } from '@/lib/auth';
 
 export async function POST(request: Request) {
     try {
         // 1. Check Session
-        const session = (await cookies()).get('admin_session');
+        const session = await requireAdminSession();
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const sessionData = JSON.parse(session.value);
-        const username = sessionData.username;
+        const username = session.username;
 
         if (!username) {
             return NextResponse.json({ error: 'Invalid Session' }, { status: 401 });

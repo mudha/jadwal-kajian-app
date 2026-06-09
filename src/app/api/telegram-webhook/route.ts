@@ -5,14 +5,14 @@ import { parseWithGemini } from '@/lib/ai-parser';
 // In a real app, you'd want to verify a secret token from Telegram
 // to prevent unauthorized POST requests to this endpoint.
 // For now, we'll use a simple query parameter check.
-const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET || 'portalkajian_bot_secret_123';
+const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
 
 export async function POST(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const secret = searchParams.get('secret');
 
-        if (secret !== WEBHOOK_SECRET) {
+        if (!WEBHOOK_SECRET || secret !== WEBHOOK_SECRET) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
         // 1. Process text with Gemini AI using the app's robust parser
         let extractedData = [];
         try {
-            // parseWithGemini uses NEXT_PUBLIC_GEMINI_API_KEY from the server environment
+            // parseWithGemini uses GEMINI_API_KEY from the server environment
             extractedData = await parseWithGemini(text);
         } catch (e: any) {
             console.error('AI Response Parsing Error from Telegram Webhook:', e.message);

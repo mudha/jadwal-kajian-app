@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import ImageKit from 'imagekit';
+import { requireAdminSession } from '@/lib/auth';
 
 const imagekit = new ImageKit({
     publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
@@ -8,6 +9,9 @@ const imagekit = new ImageKit({
 });
 
 export async function GET() {
+    const session = await requireAdminSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         if (!process.env.IMAGEKIT_PRIVATE_KEY || !process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY) {
             console.error('ImageKit keys missing in server');

@@ -11,11 +11,16 @@ const db = createClient({
 });
 
 async function createAdmin() {
-    const username = 'admin';
-    const password = 'admin123';
-    const role = 'SUPER_ADMIN';
-    const fullName = 'Super Admin';
-    const email = 'admin@portalkajian.online';
+    const username = process.env.ADMIN_USERNAME || 'admin';
+    const password = process.env.ADMIN_PASSWORD;
+    const role = process.env.ADMIN_ROLE || 'SUPER_ADMIN';
+    const fullName = process.env.ADMIN_FULL_NAME || 'Super Admin';
+    const email = process.env.ADMIN_EMAIL || 'admin@portalkajian.online';
+
+    if (!password) {
+        console.error('Error: ADMIN_PASSWORD environment variable must be set.');
+        process.exit(1);
+    }
 
     try {
         // 1. Check if user already exists in DB
@@ -42,7 +47,6 @@ async function createAdmin() {
 
         console.log(`✅ Admin user created successfully!`);
         console.log(`Username: ${username}`);
-        console.log(`Password: ${password}`);
         console.log(`Role: ${role}`);
 
     } catch (error) {

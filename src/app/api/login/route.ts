@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import db from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import { ADMIN_SESSION_COOKIE, serializeAdminSession } from '@/lib/auth';
 
 export async function POST(request: Request) {
     try {
@@ -20,9 +21,6 @@ export async function POST(request: Request) {
         if (admin) {
             // Compare hashed password from DB
             isValid = await bcrypt.compare(password, admin.password as string);
-        } else if (username === 'admin' && password === 'admin123') {
-            // Fallback for default admin if no DB user found
-            isValid = true;
         }
 
         if (isValid) {
@@ -32,13 +30,13 @@ export async function POST(request: Request) {
             const cookieStore = await cookies();
             const sessionData = JSON.stringify({
                 isLoggedIn: true,
-                id: admin ? admin.id : 0, // 0 for default admin
-                username: admin ? (admin.username as string) : 'admin',
-                role: admin ? (admin.role as string) : 'SUPER_ADMIN', // 'admin' hardcoded is Super Admin
-                fullName: admin ? (admin.fullName as string) : 'Admin Local'
+                id: Number(admin.id),
+                username: admin.username as string,
+                role: (admin.role as string) || 'ADMIN',
+                fullName: admin.fullName as string | null
             });
 
-            cookieStore.set('admin_session', sessionData, {
+            cookieStore.set(ADMIN_SESSION_COOKIE, serializeAdminSession(JSON.parse(sessionData)), {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'strict',
@@ -57,6 +55,6 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE() {
-    (await cookies()).delete('admin_session');
+    (await cookies()).delete(ADMIN_SESSION_COOKIE);
     return NextResponse.json({ success: true });
 }

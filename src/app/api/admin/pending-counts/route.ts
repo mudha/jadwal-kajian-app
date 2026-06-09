@@ -1,17 +1,16 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import db from '@/lib/db';
+import { requireAdminSession } from '@/lib/auth';
 
 export async function GET() {
     try {
-        const session = (await cookies()).get('admin_session');
+        const session = await requireAdminSession();
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const sessionData = JSON.parse(session.value);
         // Only Admin/Super Admin care about this
-        if (sessionData.role !== 'SUPER_ADMIN' && sessionData.role !== 'ADMIN') {
+        if (session.role !== 'SUPER_ADMIN' && session.role !== 'ADMIN') {
             return NextResponse.json({ contributors: 0 });
         }
 

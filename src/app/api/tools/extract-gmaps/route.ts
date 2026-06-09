@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireAdminSession } from '@/lib/auth';
 
 /**
  * Expand shortened Google Maps URL by following redirects
@@ -139,6 +140,9 @@ function extractPlaceName(url: string, html?: string): string | null {
 }
 
 export async function POST(request: Request) {
+    const session = await requireAdminSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const { url } = await request.json();
 

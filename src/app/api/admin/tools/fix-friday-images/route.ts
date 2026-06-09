@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { requireAdminSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST() {
+    const session = await requireAdminSession(['SUPER_ADMIN', 'ADMIN']);
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         // Update records where imageUrl is missing AND it is a Friday Prayer (Jumat)
         const result = await db.execute({
@@ -14,6 +18,7 @@ export async function POST() {
                 AND (
                     waktu LIKE '%Jumat%' 
                     OR waktu LIKE '%Jum''at%' 
+                    OR
                     waktu LIKE '%Sholat Jumat%'
                 )
                 AND tema NOT LIKE '%Tarawih%' 

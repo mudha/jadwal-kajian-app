@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { cookies } from 'next/headers';
+import { requireAdminSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,15 +41,13 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         // Check authentication
-        const cookieStore = await cookies();
-        const session = cookieStore.get('admin_session');
+        const session = await requireAdminSession();
 
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const sessionData = JSON.parse(session.value);
-        const username = sessionData.username;
+        const username = session.username;
 
         const data = await request.json();
 

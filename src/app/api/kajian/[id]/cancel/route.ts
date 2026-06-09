@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { cookies } from 'next/headers';
+import { requireAdminSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,8 +15,7 @@ export async function POST(
 ) {
     try {
         // Check authentication
-        const cookieStore = await cookies();
-        const session = cookieStore.get('admin_session');
+        const session = await requireAdminSession();
 
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -77,8 +76,7 @@ export async function DELETE(
 ) {
     try {
         // Check authentication
-        const cookieStore = await cookies();
-        const session = cookieStore.get('admin_session');
+        const session = await requireAdminSession();
 
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

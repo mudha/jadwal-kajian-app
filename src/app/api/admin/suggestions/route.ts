@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { indonesianCities } from '@/data/cities';
+import { requireAdminSession } from '@/lib/auth';
 
 // GET - Get autocomplete suggestions for masjid, pemateri, and city
 export async function GET(request: Request) {
+    const session = await requireAdminSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const { searchParams } = new URL(request.url);
         const type = searchParams.get('type'); // 'masjid', 'pemateri', 'city'

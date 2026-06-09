@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { requireAdminSession } from '@/lib/auth';
 
 export async function POST(request: Request) {
     try {
-        const apiKey = request.headers.get('x-gemini-key');
+        const session = await requireAdminSession();
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            return NextResponse.json({ error: 'Missing Gemini API Key' }, { status: 400 });
+            return NextResponse.json({ error: 'Missing Gemini API Key' }, { status: 500 });
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);

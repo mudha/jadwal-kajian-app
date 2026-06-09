@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { generateRecurringDates } from '@/lib/recurring-generator';
 import { formatIndoDate } from '@/lib/date-utils';
+import { requireAdminSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +13,9 @@ export const dynamic = 'force-dynamic';
  * Generates for the next N months (default: 1.5 months ≈ 6 weeks)
  */
 export async function POST(request: Request) {
+    const session = await requireAdminSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const { months = 1.5 } = await request.json().catch(() => ({}));
 

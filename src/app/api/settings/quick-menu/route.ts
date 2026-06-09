@@ -1,5 +1,6 @@
 import db from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { requireAdminSession } from '@/lib/auth';
 
 const SETTING_KEY = 'quick_menu_items';
 
@@ -23,6 +24,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+    const session = await requireAdminSession(['SUPER_ADMIN', 'ADMIN']);
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const body = await req.json(); // Array of menu items
 

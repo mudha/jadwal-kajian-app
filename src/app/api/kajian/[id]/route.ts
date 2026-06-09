@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { cookies } from 'next/headers';
+import { requireAdminSession } from '@/lib/auth';
 
 // GET single by ID
 export async function GET(
@@ -30,7 +30,7 @@ export async function DELETE(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const session = (await cookies()).get('admin_session');
+    const session = await requireAdminSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     try {
         const { id } = await params;
@@ -46,7 +46,7 @@ export async function PATCH(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const session = (await cookies()).get('admin_session');
+    const session = await requireAdminSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     try {
         const { id } = await params;

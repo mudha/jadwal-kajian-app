@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { requireAdminSession } from '@/lib/auth';
 
 // Simple string similarity using Levenshtein distance
 function levenshteinDistance(str1: string, str2: string): number {
@@ -45,6 +46,9 @@ function similarity(str1: string, str2: string): number {
 
 // POST - Normalize name (find similar existing names)
 export async function POST(request: Request) {
+    const session = await requireAdminSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const { name, type = 'ustadz', threshold = 0.7 } = await request.json();
 

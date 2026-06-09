@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
+import { requireAdminSession } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
+    const session = await requireAdminSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const data = await request.formData();
         const file: File | null = data.get('file') as unknown as File;

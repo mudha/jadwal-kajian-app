@@ -1,24 +1,13 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import db from '@/lib/db';
 import bcrypt from 'bcryptjs';
-
-async function getSession() {
-    const cookieStore = await cookies();
-    const session = cookieStore.get('admin_session');
-    if (!session) return null;
-    try {
-        return JSON.parse(session.value);
-    } catch (e) {
-        return null;
-    }
-}
+import { requireAdminSession } from '@/lib/auth';
 
 // GET - List all admins
 export async function GET() {
     try {
-        const session = await getSession();
-        if (!session || (session.role !== 'SUPER_ADMIN' && session.role !== 'ADMIN')) {
+        const session = await requireAdminSession(['SUPER_ADMIN', 'ADMIN']);
+        if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
@@ -34,8 +23,8 @@ export async function GET() {
 // POST - Create new admin
 export async function POST(request: Request) {
     try {
-        const session = await getSession();
-        if (!session || (session.role !== 'SUPER_ADMIN' && session.role !== 'ADMIN')) {
+        const session = await requireAdminSession(['SUPER_ADMIN', 'ADMIN']);
+        if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { cookies } from 'next/headers';
+import { requireAdminSession } from '@/lib/auth';
 
 // Helper function to parse Indonesian date format to ISO date
 function parseIndonesianDate(dateStr: string): Date | null {
@@ -106,7 +106,7 @@ async function deleteFromCloudinary(imageUrl: string): Promise<boolean> {
 export async function POST(request: NextRequest) {
     try {
         // Check admin authentication
-        const session = (await cookies()).get('admin_session');
+        const session = await requireAdminSession(['SUPER_ADMIN', 'ADMIN']);
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -195,6 +195,11 @@ export async function POST(request: NextRequest) {
 
 // GET endpoint to preview what would be archived (dry run)
 export async function GET(request: NextRequest) {
+    const session = await requireAdminSession(['SUPER_ADMIN', 'ADMIN']);
+    if (!session) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const { searchParams } = new URL(request.url);
         const thresholdMonths = parseInt(searchParams.get('thresholdMonths') || '1');

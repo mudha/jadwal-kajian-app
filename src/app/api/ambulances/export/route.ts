@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
+import { requireAdminSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+    const session = await requireAdminSession(['SUPER_ADMIN', 'ADMIN']);
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const { format, region } = await request.json();
 

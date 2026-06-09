@@ -15,7 +15,7 @@ const db = createClient({
 });
 
 // Initialize table (Async wrapper)
-const initDb = async () => {
+export const initDb = async () => {
   await db.execute(`
     CREATE TABLE IF NOT EXISTS kajian (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -268,9 +268,8 @@ const initDb = async () => {
   `);
 };
 
-// Auto-init on import (Note: top-level await needs ES modules or handling in app startup)
-// For Next.js API routes, it's safer to call this or rely on lazy init strategies, 
-// but for simplicity we'll let it run.
-initDb().catch(console.error);
+if (process.env.INIT_DB_ON_IMPORT === 'true') {
+  initDb().catch(console.error);
+}
 
 export default db;

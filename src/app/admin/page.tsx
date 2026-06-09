@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { cookies } from 'next/headers';
 import db from '@/lib/db';
+import { getAdminSession } from '@/lib/auth';
 import {
     ShieldCheck,
     ArrowRight,
@@ -19,20 +19,9 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboardPage() {
     // Get Session Data for Greeting & Permissions
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('admin_session');
-    let fullName = 'Admin';
-    let role = '';
-
-    if (sessionCookie) {
-        try {
-            const session = JSON.parse(sessionCookie.value);
-            fullName = session.fullName || session.username || 'Admin';
-            role = session.role || '';
-        } catch (e) {
-            console.error("Failed to parse session", e);
-        }
-    }
+    const session = await getAdminSession();
+    const fullName = session?.fullName || session?.username || 'Admin';
+    const role = session?.role || '';
 
     const isContributor = role === 'CONTRIBUTOR';
     const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';

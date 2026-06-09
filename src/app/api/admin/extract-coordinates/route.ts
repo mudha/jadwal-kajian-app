@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { isValidCoordinates } from '@/lib/gmaps-utils';
+import { requireAdminSession } from '@/lib/auth';
 
 /**
  * Expand shortened Google Maps URL by following redirects
@@ -116,6 +117,9 @@ function extractCoordinates(url: string, html?: string): { lat: number; lng: num
 }
 
 export async function POST() {
+    const session = await requireAdminSession(['SUPER_ADMIN', 'ADMIN']);
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         // Get all kajian with gmapsUrl but no coordinates
         const result = await db.execute({

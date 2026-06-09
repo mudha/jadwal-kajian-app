@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { requireAdminSession } from '@/lib/auth';
 
 // GET - Fetch all ustadz with kajian count
 export async function GET() {
+    const session = await requireAdminSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const ustadzList = await db.execute(`
             SELECT 
@@ -29,6 +33,9 @@ export async function GET() {
 
 // POST - Add new ustadz (this will be used when creating kajian)
 export async function POST(request: Request) {
+    const session = await requireAdminSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const { name } = await request.json();
 

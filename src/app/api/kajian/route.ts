@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { KajianEntry } from '@/lib/parser';
-import { cookies } from 'next/headers';
 import { formatMasjidName } from '@/lib/date-utils';
+import { requireAdminSession } from '@/lib/auth';
 
 // Enable ISR with 60 second revalidation for better performance under high traffic
 export const revalidate = 60; // Cache for 60 seconds
@@ -13,7 +13,7 @@ export async function GET(request: Request) {
         const includeCanceled = searchParams.get('include_canceled') === 'true';
 
         // Auto-generate recurring instances if enabled (NON-BLOCKING)
-        const autoGenerate = searchParams.get('auto_generate') !== 'false'; // Default: true
+        const autoGenerate = searchParams.get('auto_generate') === 'true';
 
         if (autoGenerate) {
             // Fire and forget - don't wait for generation to complete
@@ -85,7 +85,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-    const session = (await cookies()).get('admin_session');
+    const session = await requireAdminSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     try {
         const body = await request.json();
@@ -219,7 +219,7 @@ export async function POST(request: Request) {
                 item.isOnline ? 1 : 0,
                 item.isKidsFriendly ? 1 : 0,
                 item.catatan || null,
-                (JSON.parse(session.value) as any).id || 0
+                session.id
             ]
         }));
 
@@ -237,6 +237,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE() {
+    const session = await requireAdminSession(['SUPER_ADMIN', 'ADMIN']);
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         await db.execute('DELETE FROM kajian');
         return NextResponse.json({ success: true });

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { requireAdminSession } from '@/lib/auth';
 
 /**
  * Calculate similarity between two strings using Levenshtein distance
@@ -138,6 +139,9 @@ function findDuplicateGroupsWithInfo(data: MasjidData[], type: 'masjid'): Duplic
 }
 
 export async function GET() {
+    const session = await requireAdminSession(['SUPER_ADMIN', 'ADMIN']);
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         // Get all unique masjid names with their locations
         const masjidResult = await db.execute({

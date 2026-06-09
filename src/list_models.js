@@ -10,7 +10,7 @@ try {
         const envConfig = fs.readFileSync(envPath, 'utf8');
         envConfig.split('\n').forEach(line => {
             const [key, value] = line.split('=');
-            if (key && key.trim() === 'NEXT_PUBLIC_GEMINI_API_KEY') {
+            if (key && key.trim() === 'GEMINI_API_KEY') {
                 apiKey = value.trim();
             }
         });
